@@ -22,6 +22,10 @@ export const employeeSchema = z.object({
 export type EmployeeRegistration = z.input<typeof employeeSchema>;
 export const canApproveEmployees = (roles: readonly string[], status: string) => status === "approved" && roles.some((r) => r === "admin" || r === "super_admin");
 export const canCreateAdmins = (roles: readonly string[], status: string) => status === "approved" && roles.includes("super_admin");
+export function filterEmployees<T extends { status: string; full_name: string; username: string; email: string; job_function: string }>(employees: T[], status: string, query: string) {
+  const term = query.trim().toLocaleLowerCase("pt-BR");
+  return employees.filter((employee) => (status === "all" || employee.status === status) && [employee.full_name, employee.username, employee.email, employee.job_function].some((value) => value.toLocaleLowerCase("pt-BR").includes(term)));
+}
 export function clinicalProfile(job: string, roles: readonly string[]): Profile {
   if (roles.includes("super_admin") || roles.includes("admin")) return "Administrador";
   if (job === "Recepcionista") return "Recepção";

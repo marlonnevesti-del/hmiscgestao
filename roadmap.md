@@ -10,3 +10,5 @@
 - [x] Liberação exclusiva por administradores; Marlonneves como administrador principal e cadastro de outros administradores.
 - [ ] Ajustar cadastro aos campos do formulário mencionado — aguarda envio do formulário.
 - [ ] Marlonneves definir senha segura pelo e-mail de recuperação — senha solicitada recusada pela proteção de senhas.
+- [x] Verificar envio pelo site publicado e aprovação real; adicionar atalho aos pendentes que limpa filtros e busca.
+- [ ] Identificar o cadastro relatado caso continue ausente — aguarda nome do colaborador; nenhum cadastro real pendente foi encontrado.
