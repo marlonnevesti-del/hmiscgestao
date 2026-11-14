@@ -14,7 +14,7 @@ export interface Evolution { time: string; prof: Professional; author: string; t
 export interface Vital { time: string; pas: number; pad: number; fc: number; fr: number; tax: number; sat: number; dor: number; ingest: number; elim: number }
 export interface PartoPoint { hour: number; dilat: number; altura: number; bcf: number; contr: number }
 export interface Prescription { cat: "Dieta" | "Hidratação" | "Medicamento" | "Cuidados" | "Exames"; item: string; posologia: string; status: "Ativo" | "Suspenso" | "Checado" }
-export interface Newborn { apgar1: number; apgar5: number; pesoNascer: number; tipagem: string; vacinas: string[]; motherId?: string; babyIds?: string[] }
+export interface Newborn { apgar1: number; apgar5: number; pesoNascer: number; tipagem: string; vacinas: string[]; motherId?: string | undefined; babyIds?: string[] }
 
 export interface Patient {
   id: string; prontuario: string; name: string; cpf: string; motherName?: string; guardian?: string;
@@ -137,7 +137,7 @@ export const PATIENTS: Patient[] = [
 ];
 
 export type BedStatus = "livre" | "ocupado" | "higienizacao" | "isolamento" | "alta";
-export interface Bed { id: string; ward: Ward; status: BedStatus; patientId?: string }
+export interface Bed { id: string; ward: Ward; status: BedStatus; patientId?: string | undefined }
 const occ = Object.fromEntries(PATIENTS.map((p) => [p.bed, p.id]));
 const mk = (ward: Ward, prefix: string, n: number, special: Record<number, BedStatus> = {}): Bed[] =>
   Array.from({ length: n }, (_, i) => {
