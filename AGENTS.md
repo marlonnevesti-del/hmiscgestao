@@ -28,3 +28,7 @@ use the editor.
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
+
+## Project rules
+- All demo clinical data lives in `src/lib/hospital-data.ts` (no backend yet); screens read from it so a future database swap touches one module.
+- App shell (sidebar + topbar) is `src/components/AppShell.tsx`, mounted once in `__root.tsx`.
