@@ -4,7 +4,7 @@ export const CID_SPECIALTIES: { id: CidSpecialty; label: string }[] = [
   { id: 'obstetricia', label: 'Obstetrícia' }, { id: 'pediatria', label: 'Pediatria' },
   { id: 'neonatologia', label: 'Neonatologia' }, { id: 'geral', label: 'Geral / Urgência' },
 ];
-const raw: [string, string, CidSpecialty, boolean?][] = [
+const raw: Array<[string, string, CidSpecialty] | [string, string, CidSpecialty, boolean]> = [
   ['O80', 'Parto único espontâneo', 'obstetricia', true], ['O82', 'Parto único por cesariana', 'obstetricia', true],
   ['O47', 'Falso trabalho de parto', 'obstetricia', true], ['O60', 'Trabalho de parto pré-termo', 'obstetricia', true],
   ['O14', 'Hipertensão gestacional com proteinúria (pré-eclâmpsia)', 'obstetricia', true], ['O13', 'Hipertensão gestacional sem proteinúria', 'obstetricia', true],
@@ -40,7 +40,7 @@ const raw: [string, string, CidSpecialty, boolean?][] = [
   ['T14', 'Traumatismo de região não especificada', 'geral'], ['S09', 'Traumatismo da cabeça', 'geral'], ['T30', 'Queimadura', 'geral'],
   ['T65', 'Intoxicação', 'geral'], ['F41', 'Transtorno de ansiedade', 'geral'], ['D64', 'Anemia', 'geral'], ['Z00', 'Exame geral sem queixa', 'geral'],
 ];
-export const CID10: Cid[] = raw.map(([code, name, specialty, frequent]) => ({ code, name, specialty, frequent }));
+export const CID10: Cid[] = raw.map((r) => ({ code: r[0], name: r[1], specialty: r[2], frequent: r[3] ?? false }));
 const norm = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
 export function searchCid(q: string, limit = 12): Cid[] {
   const n = norm(q); if (!n) return [];
