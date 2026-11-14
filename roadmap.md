@@ -1,6 +1,9 @@
 # Roadmap
+- [x] Interligar BE, recepção, triagem, médico, prescrição, farmácia, enfermagem e desfechos sem pacientes fictícios (estado reativo na sessão; não persiste ao recarregar e não compartilha entre dispositivos).
+- [x] Adicionar remoção administrativa de acessos, protegendo administrador principal e histórico.
+- [x] Testar a esteira assistencial e as restrições de remoção.
 - [x] Profiles (Médico/Enfermeiro/Farmacêutico/Recepção) + 6 wards + alerts bell
-- [x] 10 patients, shared live store
+- [x] Estado clínico compartilhado entre telas, sem pacientes de exemplo.
 - [x] Dashboard type icons; triage tabs + required weight
 - [x] PEP: wristband print, SOAP, clone prescription, pediatric calc w/ allergy/interaction, 06/12/18/00 vitals, register birth -> auto RN chart
 - [x] Centro Cirúrgico/Obstétrico (agenda, status, OMS checklist, gastos)

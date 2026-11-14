@@ -16,8 +16,10 @@ import { Route as PendenteRouteImport } from './routes/pendente'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated.index'
 import { Route as AuthenticatedAcolhimentoRouteImport } from './routes/_authenticated.acolhimento'
+import { Route as AuthenticatedAtendimentoRouteImport } from './routes/_authenticated.atendimento'
 import { Route as AuthenticatedCentroCirurgicoRouteImport } from './routes/_authenticated.centro-cirurgico'
 import { Route as AuthenticatedColaboradoresRouteImport } from './routes/_authenticated.colaboradores'
+import { Route as AuthenticatedEnfermagemRouteImport } from './routes/_authenticated.enfermagem'
 import { Route as AuthenticatedFarmaciaRouteImport } from './routes/_authenticated.farmacia'
 import { Route as AuthenticatedFaturamentoRouteImport } from './routes/_authenticated.faturamento'
 import { Route as AuthenticatedRecepcaoRouteImport } from './routes/_authenticated.recepcao'
@@ -59,6 +61,12 @@ const AuthenticatedAcolhimentoRoute =
     path: '/acolhimento',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedAtendimentoRoute =
+  AuthenticatedAtendimentoRouteImport.update({
+    id: '/atendimento',
+    path: '/atendimento',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedCentroCirurgicoRoute =
   AuthenticatedCentroCirurgicoRouteImport.update({
     id: '/centro-cirurgico',
@@ -71,6 +79,11 @@ const AuthenticatedColaboradoresRoute =
     path: '/colaboradores',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedEnfermagemRoute = AuthenticatedEnfermagemRouteImport.update({
+  id: '/enfermagem',
+  path: '/enfermagem',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedFarmaciaRoute = AuthenticatedFarmaciaRouteImport.update({
   id: '/farmacia',
   path: '/farmacia',
@@ -107,8 +120,10 @@ export interface FileRoutesByFullPath {
   '/pendente': typeof PendenteRoute
   '/reset-password': typeof ResetPasswordRoute
   '/acolhimento': typeof AuthenticatedAcolhimentoRoute
+  '/atendimento': typeof AuthenticatedAtendimentoRoute
   '/centro-cirurgico': typeof AuthenticatedCentroCirurgicoRoute
   '/colaboradores': typeof AuthenticatedColaboradoresRoute
+  '/enfermagem': typeof AuthenticatedEnfermagemRoute
   '/farmacia': typeof AuthenticatedFarmaciaRoute
   '/faturamento': typeof AuthenticatedFaturamentoRoute
   '/recepcao': typeof AuthenticatedRecepcaoRoute
@@ -121,8 +136,10 @@ export interface FileRoutesByTo {
   '/pendente': typeof PendenteRoute
   '/reset-password': typeof ResetPasswordRoute
   '/acolhimento': typeof AuthenticatedAcolhimentoRoute
+  '/atendimento': typeof AuthenticatedAtendimentoRoute
   '/centro-cirurgico': typeof AuthenticatedCentroCirurgicoRoute
   '/colaboradores': typeof AuthenticatedColaboradoresRoute
+  '/enfermagem': typeof AuthenticatedEnfermagemRoute
   '/farmacia': typeof AuthenticatedFarmaciaRoute
   '/faturamento': typeof AuthenticatedFaturamentoRoute
   '/recepcao': typeof AuthenticatedRecepcaoRoute
@@ -138,8 +155,10 @@ export interface FileRoutesById {
   '/pendente': typeof PendenteRoute
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/acolhimento': typeof AuthenticatedAcolhimentoRoute
+  '/_authenticated/atendimento': typeof AuthenticatedAtendimentoRoute
   '/_authenticated/centro-cirurgico': typeof AuthenticatedCentroCirurgicoRoute
   '/_authenticated/colaboradores': typeof AuthenticatedColaboradoresRoute
+  '/_authenticated/enfermagem': typeof AuthenticatedEnfermagemRoute
   '/_authenticated/farmacia': typeof AuthenticatedFarmaciaRoute
   '/_authenticated/faturamento': typeof AuthenticatedFaturamentoRoute
   '/_authenticated/recepcao': typeof AuthenticatedRecepcaoRoute
@@ -156,8 +175,10 @@ export interface FileRouteTypes {
     | '/pendente'
     | '/reset-password'
     | '/acolhimento'
+    | '/atendimento'
     | '/centro-cirurgico'
     | '/colaboradores'
+    | '/enfermagem'
     | '/farmacia'
     | '/faturamento'
     | '/recepcao'
@@ -170,8 +191,10 @@ export interface FileRouteTypes {
     | '/pendente'
     | '/reset-password'
     | '/acolhimento'
+    | '/atendimento'
     | '/centro-cirurgico'
     | '/colaboradores'
+    | '/enfermagem'
     | '/farmacia'
     | '/faturamento'
     | '/recepcao'
@@ -186,8 +209,10 @@ export interface FileRouteTypes {
     | '/pendente'
     | '/reset-password'
     | '/_authenticated/acolhimento'
+    | '/_authenticated/atendimento'
     | '/_authenticated/centro-cirurgico'
     | '/_authenticated/colaboradores'
+    | '/_authenticated/enfermagem'
     | '/_authenticated/farmacia'
     | '/_authenticated/faturamento'
     | '/_authenticated/recepcao'
@@ -255,6 +280,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAcolhimentoRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/atendimento': {
+      id: '/_authenticated/atendimento'
+      path: '/atendimento'
+      fullPath: '/atendimento'
+      preLoaderRoute: typeof AuthenticatedAtendimentoRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/centro-cirurgico': {
       id: '/_authenticated/centro-cirurgico'
       path: '/centro-cirurgico'
@@ -267,6 +299,13 @@ declare module '@tanstack/react-router' {
       path: '/colaboradores'
       fullPath: '/colaboradores'
       preLoaderRoute: typeof AuthenticatedColaboradoresRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/enfermagem': {
+      id: '/_authenticated/enfermagem'
+      path: '/enfermagem'
+      fullPath: '/enfermagem'
+      preLoaderRoute: typeof AuthenticatedEnfermagemRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/farmacia': {
@@ -309,8 +348,10 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteChildren {
   AuthenticatedAcolhimentoRoute: typeof AuthenticatedAcolhimentoRoute
+  AuthenticatedAtendimentoRoute: typeof AuthenticatedAtendimentoRoute
   AuthenticatedCentroCirurgicoRoute: typeof AuthenticatedCentroCirurgicoRoute
   AuthenticatedColaboradoresRoute: typeof AuthenticatedColaboradoresRoute
+  AuthenticatedEnfermagemRoute: typeof AuthenticatedEnfermagemRoute
   AuthenticatedFarmaciaRoute: typeof AuthenticatedFarmaciaRoute
   AuthenticatedFaturamentoRoute: typeof AuthenticatedFaturamentoRoute
   AuthenticatedRecepcaoRoute: typeof AuthenticatedRecepcaoRoute
@@ -321,8 +362,10 @@ interface AuthenticatedRouteChildren {
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAcolhimentoRoute: AuthenticatedAcolhimentoRoute,
+  AuthenticatedAtendimentoRoute: AuthenticatedAtendimentoRoute,
   AuthenticatedCentroCirurgicoRoute: AuthenticatedCentroCirurgicoRoute,
   AuthenticatedColaboradoresRoute: AuthenticatedColaboradoresRoute,
+  AuthenticatedEnfermagemRoute: AuthenticatedEnfermagemRoute,
   AuthenticatedFarmaciaRoute: AuthenticatedFarmaciaRoute,
   AuthenticatedFaturamentoRoute: AuthenticatedFaturamentoRoute,
   AuthenticatedRecepcaoRoute: AuthenticatedRecepcaoRoute,

@@ -47,6 +47,14 @@ export const reviewEmployee = createServerFn({ method: "POST" }).middleware([req
     return { ok: true };
   });
 
+export const removeEmployee = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase.rpc('remove_employee_access', { target_id: data.id });
+    if (error) throw new Error('Não foi possível remover este acesso. A conta principal e sua própria conta são protegidas.');
+    return { ok: true };
+  });
+
 export const createAdministrator = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({ full_name: z.string().trim().min(3).max(150), email: z.string().email().max(200), username: z.string().min(3).max(50), password: z.string().min(8).max(128) }).parse(input))
   .handler(async ({ data, context }) => {

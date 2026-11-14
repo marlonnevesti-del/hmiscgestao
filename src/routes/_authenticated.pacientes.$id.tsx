@@ -1,3 +1,6 @@
+import { EncounterTimeline } from "@/components/EncounterTimeline";
+import { MedicalAssessment, PrescriptionRelease } from "@/components/CareMedical";
+import { Button } from "@/components/ui/button";
 import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -7,12 +10,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { NoPermission } from "@/components/AppShell";
 import { PatientIcon } from "@/components/PatientIcon";
-import { DRUGS, PATIENTS, WARDS, allergyConflict, can, interactionsWith, pediatricDose, type EvoCat, type Patient, type PrescCat, type Vital } from "@/lib/hospital-data";
-import { nowHM, professionalName, registerBirth, updatePatient, useStore } from "@/lib/hospital-store";
+import { DRUGS, WARDS, allergyConflict, can, interactionsWith, pediatricDose, type EvoCat, type Patient, type PrescCat, type Vital } from "@/lib/hospital-data";
+import { getState, nowHM, professionalName, registerBirth, updatePatient, useStore } from "@/lib/hospital-store";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/pacientes/$id")({
-  loader: ({ params }) => { const p = PATIENTS.find((x) => x.id === params.id); if (!p && !params.id.startsWith("rn-")) throw notFound(); return { name: p?.name ?? "Recém-nascido" }; },
+  loader: ({ params }) => { const p = getState().patients.find((x) => x.id === params.id); if (!p) throw notFound(); return { name: p.name }; },
   head: ({ loaderData }) => ({ meta: [
     { title: loaderData ? `PEP · ${loaderData.name} – HMI Gestão` : "Prontuário – HMI Gestão" },
     { name: "description", content: "Prontuário eletrônico do paciente: evolução, prescrição, sinais vitais, partograma e RN." },
@@ -50,6 +53,7 @@ function PEP() {
           </div>
         </div>
         <div className="mt-1 text-xs"><span className="font-medium">Diagnóstico:</span> {p.diagnosis}</div>
+        <EncounterTimeline patientId={p.id} />
       </div>
       <Tabs defaultValue="resumo" className="print:hidden">
         <TabsList className="flex-wrap">
@@ -59,8 +63,8 @@ function PEP() {
           {obst && <TabsTrigger value="partograma">Obstetrícia & Partograma</TabsTrigger>}
           {showNB && <TabsTrigger value="rn">Recém-nascido & Vínculo</TabsTrigger>}
         </TabsList>
-        <TabsContent value="resumo"><Evolucao p={p} /></TabsContent>
-        <TabsContent value="prescricao"><Prescricao p={p} /></TabsContent>
+        <TabsContent value="resumo"><MedicalAssessment p={p} /><Evolucao p={p} /></TabsContent>
+        <TabsContent value="prescricao"><PrescriptionRelease patientId={p.id} /><Prescricao p={p} /></TabsContent>
         <TabsContent value="sinais"><Sinais p={p} /></TabsContent>
         {obst && <TabsContent value="partograma"><Partograma p={p} /></TabsContent>}
         {showNB && <TabsContent value="rn"><RN p={p} /></TabsContent>}
@@ -125,18 +129,25 @@ function Prescricao({ p }: { p: Patient }) {
   const allowed = can(profile, "prescrever");
   const ped = p.type === "pediatria" || p.type === "neonato";
   const [cat, setCat] = useState<PrescCat>("Medicamento");
-  const [drugName, setDrugName] = useState(DRUGS[0]!.name);
+  const [drugName, setDrugName] = useState(DRUGS[0]?.name ?? "");
   const [free, setFree] = useState(""); const [pos, setPos] = useState("");
-  const drug = DRUGS.find((d) => d.name === drugName)!;
+  const drug = DRUGS.find((d) => d.name === drugName);
+  if (!drug) return null;
+  const encounter = getState().encounters.slice().reverse().find((e) => e.patientId === p.id);
+  const editable = allowed && encounter?.status_fluxo === "EM_ATENDIMENTO_MEDICO";
   const dose = pediatricDose(drug, p.weight);
   const allergy = allergyConflict(drug, p.allergies);
   const inter = interactionsWith(drug, p.prescriptions);
   const cats: PrescCat[] = ["Dieta", "Hidratação", "Medicamento", "Cuidados", "Exames"];
   const add = () => {
     const isMed = cat === "Medicamento";
-    if (isMed && allergy && !confirm(`ALERGIA a ${allergy}. Prescrever mesmo assim?`)) return;
+    if (!editable) { toast.error("Inicie ou retome o atendimento médico para editar a prescrição."); return; }
+    if (isMed && (ped && !(p.weight > 0))) { toast.error("Peso obrigatório para dose pediátrica"); return; }
+    if (isMed && allergy) { toast.error(`Conflito de alergia: ${allergy}`); return; }
     const every = 24 / drug.doses;
-    const times = isMed ? Array.from({ length: drug.doses }, (_, i) => `${String((6 + i * every) % 24).padStart(2, "0")}:00`) : undefined;
+    const startHour = new Date().getHours();
+    const minute = new Date().getMinutes();
+    const times = isMed ? Array.from({ length: drug.doses }, (_, i) => `${String((startHour + i * every) % 24).padStart(2, "0")}:${String(minute).padStart(2, "0")}`) : undefined;
     const item = isMed ? (ped ? `${drug.name} ${dose.perDose} mg (${drug.mgKgDay} mg/kg/dia)` : `${drug.name} ${free || ""}`.trim()) : free;
     if (!item) return;
     updatePatient(p.id, (x) => ({ prescriptions: [...x.prescriptions, { id: `rx-${Date.now()}`, cat, item, posologia: isMed ? (pos || `${every}/${every}h`) : pos || "—", ...(times ? { times, pharmacy: "Pendente" as const } : {}) }] }));
@@ -144,17 +155,17 @@ function Prescricao({ p }: { p: Patient }) {
   };
   return (
     <div className="grid gap-4 lg:grid-cols-[1fr_360px]">
-      <Card title="Prescrição vigente – 14/11/2026" action={allowed && <button onClick={() => { updatePatient(p.id, (x) => ({ prescriptions: (x.previousPrescriptions ?? []).map((r, i) => ({ ...r, id: `rx-c${Date.now()}-${i}`, ...(r.cat === "Medicamento" ? { pharmacy: "Pendente" as const } : {}) })) })); toast.success("Prescrição anterior clonada – revise e assine"); }} className="flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium hover:bg-muted"><Copy className="h-3.5 w-3.5" />Clonar Prescrição Anterior</button>}>
+      <Card title="Prescrição vigente – 14/11/2026" action={editable && <button onClick={() => { updatePatient(p.id, (x) => ({ prescriptions: (x.previousPrescriptions ?? []).map((r, i) => ({ ...r, id: `rx-c${Date.now()}-${i}`, ...(r.cat === "Medicamento" ? { pharmacy: "Pendente" as const } : {}) })) })); toast.success("Prescrição anterior clonada – revise e assine"); }} className="flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium hover:bg-muted"><Copy className="h-3.5 w-3.5" />Clonar Prescrição Anterior</button>}>
         {cats.map((c) => { const it = p.prescriptions.filter((x) => x.cat === c); return (
           <div key={c} className="mb-3"><div className="mb-1 text-xs font-semibold uppercase text-primary">{c === "Hidratação" ? "Hidratação / Venóclise" : c === "Exames" ? "Solicitação de exames" : c === "Cuidados" ? "Cuidados de enfermagem" : c}</div>
             {it.length === 0 ? <div className="text-xs text-muted-foreground">—</div> : it.map((x) => (
               <div key={x.id} className="flex items-center justify-between gap-2 border-b py-1.5 text-sm"><div><span className="font-medium">{x.item}</span> <span className="text-muted-foreground">· {x.posologia}</span>{x.times && <span className="ml-1 font-mono text-[10px] text-muted-foreground">[{x.times.join(" ")}]</span>}</div>
                 <div className="flex items-center gap-2">{x.pharmacy && <span className={cn("rounded px-2 py-0.5 text-[10px] font-semibold", x.pharmacy === "Pendente" ? "bg-mt-yellow text-foreground" : "bg-clinical-soft text-clinical")}>{x.pharmacy}</span>}
-                  {allowed && <button onClick={() => updatePatient(p.id, (y) => ({ prescriptions: y.prescriptions.filter((r) => r.id !== x.id) }))} aria-label="Suspender" className="text-muted-foreground hover:text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>}</div></div>
+                  {editable && <button onClick={() => updatePatient(p.id, (y) => ({ prescriptions: y.prescriptions.filter((r) => r.id !== x.id) }))} aria-label="Suspender" className="text-muted-foreground hover:text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>}</div></div>
             ))}</div>); })}
       </Card>
       <Card title="Adicionar item">
-        {!allowed ? <NoPermission action="prescrever" /> : <div className="space-y-2 text-sm">
+        {!editable ? <NoPermission action="editar a prescrição nesta etapa" /> : <div className="space-y-2 text-sm">
           <select value={cat} onChange={(e) => setCat(e.target.value as PrescCat)} className="h-8 w-full rounded-md border bg-background px-2 text-xs">{cats.map((c) => <option key={c}>{c}</option>)}</select>
           {cat === "Medicamento" ? <>
             <select value={drugName} onChange={(e) => setDrugName(e.target.value)} className="h-8 w-full rounded-md border bg-background px-2 text-xs">{DRUGS.map((d) => <option key={d.name}>{d.name}</option>)}</select>
@@ -269,7 +280,7 @@ function RN({ p }: { p: Patient }) {
   const nb = p.newborn;
   if (!nb) return <Card title="Recém-nascido"><p className="text-sm text-muted-foreground">Sem registro de sala de parto.</p></Card>;
   const mother = nb.motherId ? patients.find((x) => x.id === nb.motherId) : undefined;
-  const setNb = (patch: Partial<typeof nb>) => updatePatient(p.id, (x) => ({ newborn: { ...x.newborn!, ...patch } }));
+  const setNb = (patch: Partial<typeof nb>) => updatePatient(p.id, (x) => ({ newborn: { ...(x.newborn ?? nb), ...patch } }));
   const Box = ({ l, v, s }: { l: string; v: string | number; s?: string }) => <div className="rounded-md bg-muted p-3"><div className="text-xs text-muted-foreground">{l}</div><div className="font-mono text-xl font-semibold text-primary">{v}</div>{s && <div className="text-[10px] text-muted-foreground">{s}</div>}</div>;
   const Sel = ({ l, k }: { l: string; k: "coracaozinho" | "olhinho" }) => <label className="flex items-center justify-between border-b py-1.5 text-sm">{l}<select value={nb[k]} onChange={(e) => setNb({ [k]: e.target.value })} className="h-7 rounded border bg-background px-1 text-xs"><option>Pendente</option><option>Normal</option><option>Alterado</option></select></label>;
   return (

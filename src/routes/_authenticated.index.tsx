@@ -1,3 +1,4 @@
+import { EncounterTimeline } from "@/components/EncounterTimeline";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -34,7 +35,7 @@ function Dashboard() {
   const [selId, setSelId] = useState<string | null>(null);
   const beds = useMemo<BedView[]>(() => {
     const list: BedView[] = BASE_BEDS.map((b) => ({ ...b }));
-    patients.forEach((p) => {
+    patients.filter((p) => p.bed).forEach((p) => {
       const b = list.find((x) => x.id === p.bed);
       if (b) { b.status = bedStatusFor(p); b.patientId = p.id; }
       else list.push({ id: p.bed, ward: p.ward, status: bedStatusFor(p), patientId: p.id });
@@ -43,7 +44,7 @@ function Dashboard() {
   }, [patients]);
   const occupied = beds.filter((b) => ["ocupado", "isolamento", "alta"].includes(b.status)).length;
   const free = (ws: Ward[]) => beds.filter((b) => ws.includes(b.ward) && b.status === "livre").length;
-  const births = 6 + patients.filter((p) => p.id.startsWith("rn-")).length;
+  const births = patients.filter((p) => p.id.startsWith("rn-")).length;
   const kpis = [
     { label: "Taxa de ocupação", value: `${Math.round((occupied / beds.length) * 100)}%`, sub: `${occupied}/${beds.length} leitos` },
     { label: "Leitos livres", value: `${free(["PSO", "CO", "AC"])} | ${free(["PSP", "UTIN", "ENFP"])}`, sub: "Obstetrícia | Pediatria/UTI Neo" },
@@ -99,6 +100,7 @@ function Dashboard() {
             <span className={cn("inline-block rounded px-2 py-0.5 text-xs text-primary-foreground", sel && STATUS[sel.status].cls)}>{sel && STATUS[sel.status].label}</span>
             {p ? (
               <>
+                <EncounterTimeline patientId={p.id} />
                 <div className="flex items-center gap-2 text-base font-semibold"><PatientIcon type={p.type} className="h-4 w-4 text-primary" />{p.name}</div>
                 <div className="text-muted-foreground">{TYPE_LABEL[p.type]} · {p.age}{p.ig ? ` · IG ${p.ig}` : ""} · {p.weight} kg · {p.insurance}</div>
                 <div><span className="font-medium">Diagnóstico:</span> {p.diagnosis}</div>

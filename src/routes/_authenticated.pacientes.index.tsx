@@ -7,10 +7,10 @@ import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/pacientes/")({
   head: () => ({ meta: [
-    { title: "Pacientes internados – HMI Gestão" },
-    { name: "description", content: "Lista de pacientes internados com acesso ao prontuário eletrônico." },
-    { property: "og:title", content: "Pacientes internados – HMI Gestão" },
-    { property: "og:description", content: "Lista de pacientes internados com acesso ao prontuário eletrônico." },
+    { title: "Pacientes e Boletins de Atendimento – HMISC" },
+    { name: "description", content: "Pacientes cadastrados, atendimentos ativos e prontuários do HMISC." },
+    { property: "og:title", content: "Pacientes e Boletins de Atendimento – HMISC" },
+    { property: "og:description", content: "Pacientes cadastrados, atendimentos ativos e prontuários do HMISC." },
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary_large_image" },
   ] }),
@@ -22,9 +22,9 @@ function List() {
   const [f, setF] = useState<PatientType | "todos">("todos");
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-2"><h1 className="text-xl font-semibold">Pacientes internados ({patients.length})</h1>
+      <div className="flex flex-wrap items-center justify-between gap-2"><h1 className="text-xl font-semibold">Pacientes / PEP ({patients.length})</h1>
         <div className="flex gap-1">{(["todos", "gestante", "puerpera", "neonato", "pediatria"] as const).map((t) => <button key={t} onClick={() => setF(t)} className={cn("rounded-full border px-3 py-1 text-xs", f === t && "bg-primary text-primary-foreground")}>{t === "todos" ? "Todos" : TYPE_LABEL[t]}</button>)}</div></div>
-      <div className="overflow-hidden rounded-lg border bg-card">
+      <div className="overflow-x-auto rounded-lg border bg-card">
         <table className="w-full text-sm">
           <thead className="bg-muted text-left text-xs uppercase text-muted-foreground"><tr>{["Leito", "Paciente", "Idade/IG", "Diagnóstico", "Unidade", "Convênio", ""].map((h) => <th key={h} className="px-3 py-2">{h}</th>)}</tr></thead>
           <tbody>

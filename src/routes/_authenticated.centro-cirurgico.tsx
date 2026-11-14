@@ -1,3 +1,5 @@
+import { EncounterTimeline } from "@/components/EncounterTimeline";
+import { Button } from "@/components/ui/button";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -25,6 +27,7 @@ const updateSurg = (id: string, fn: (s: Surgery) => Partial<Surgery>) => setStat
 function Centro() {
   const surgeries = useStore((s) => s.surgeries);
   const profile = useStore((s) => s.profile);
+  const encounters = useStore((s) => s.encounters);
   const [selId, setSelId] = useState<string | null>(null);
   const sel = surgeries.find((s) => s.id === selId);
   return (
@@ -33,6 +36,7 @@ function Centro() {
         <div><h1 className="text-xl font-semibold">Centro cirúrgico e obstétrico</h1><p className="text-sm text-muted-foreground">Mapa do dia · 14/11/2026 · {surgeries.length} procedimentos</p></div>
         <div className="flex flex-wrap gap-1">{SURG_STATUS.map((s) => <span key={s} className={cn("rounded px-2 py-1 text-[10px] font-semibold", STATUS_CLS[s])}>{s} ({surgeries.filter((x) => x.status === s).length})</span>)}</div>
       </div>
+      <section className="space-y-2">{surgeries.filter((s) => encounters.some((e) => e.patientId === s.patientId && e.status_fluxo === "ENCAMINHADO_CO")).map((s) => <div key={s.id} className="border-y py-3"><Button variant="link" onClick={() => setSelId(s.id)}>Urgência Obstétrica · {s.patient}</Button>{s.patientId && <EncounterTimeline patientId={s.patientId} />}</div>)}</section>
       <div className="overflow-x-auto rounded-lg border bg-card p-4">
         <div className="min-w-[900px]">
           <div className="grid grid-cols-[140px_1fr] text-[10px] text-muted-foreground"><div />
@@ -57,6 +61,7 @@ function Centro() {
             <SheetHeader><SheetTitle>{sel.type} – {sel.patient}</SheetTitle></SheetHeader>
             <div className="space-y-4 px-4 pb-6 text-sm">
               <div className="text-xs text-muted-foreground">{sel.room} · {sel.start}h–{sel.start + sel.duration}h · {sel.surgeon} · TUSS {sel.tuss}</div>
+              {sel.patientId && <EncounterTimeline patientId={sel.patientId} />}
               {sel.patientId && <Link to="/pacientes/$id" params={{ id: sel.patientId }} className="text-xs font-medium text-clinical">Abrir prontuário →</Link>}
               <div><div className="mb-1 text-xs font-semibold uppercase text-primary">Status</div>
                 <div className="flex flex-wrap gap-1">{SURG_STATUS.map((s) => <button key={s} disabled={!can(profile, "cirurgia")} onClick={() => { updateSurg(sel.id, () => ({ status: s })); toast.success(`Status: ${s}`); }} className={cn("rounded px-2 py-1 text-xs font-semibold disabled:opacity-40", sel.status === s ? STATUS_CLS[s] : "border")}>{s}</button>)}</div></div>

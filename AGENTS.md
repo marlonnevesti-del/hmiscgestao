@@ -30,7 +30,8 @@ use the editor.
 <!-- LOVABLE:END -->
 
 ## Project rules
-- Seed data and pure clinical/billing rules live in `src/lib/hospital-data.ts`; live in-memory state (profile, patients, queue, surgeries, med checks) lives in `src/lib/hospital-store.ts` and screens read via `useStore` — a future database swap touches only these two modules.
+- Clinical/billing catalogs live in `src/lib/hospital-data.ts`, BE transition rules in `src/lib/care-flow.ts`, and the single reactive in-memory clinical state in `src/lib/hospital-store.ts`; screens use `useStore` and centralized actions to prevent sector queues from diverging. Clinical state is session-local, not shared between devices or durable across reloads.
+- Employee removal uses the authenticated transactional `remove_employee_access` database function; revoke access and roles while retaining profile history, and protect the principal administrator and caller's own account.
 - Profile permissions are centralized in `can(profile, action)`; screens never hardcode role checks.
 - App shell (sidebar + topbar) is `src/components/AppShell.tsx`, mounted once in `__root.tsx`.
 - Employee identities and approval are persisted in Cloud profiles, with roles in a separate protected user_roles table; only server-authorized operations change access to prevent self-approval.

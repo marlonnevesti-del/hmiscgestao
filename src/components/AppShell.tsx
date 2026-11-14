@@ -16,11 +16,13 @@ const GROUPS = [
     { to: "/", label: "Dashboard & Leitos", icon: Activity },
     { to: "/recepcao", label: "Recepção & Cadastro", icon: UserPlus },
     { to: "/acolhimento", label: "Acolhimento", icon: ClipboardList },
+    { to: "/atendimento", label: "Consultório Médico", icon: HeartPulse },
     { to: "/pacientes", label: "Pacientes / PEP", icon: Users },
   ] },
   { label: "Apoio", items: [
     { to: "/centro-cirurgico", label: "Centro Cirúrgico", icon: Scissors },
-    { to: "/farmacia", label: "Farmácia & Checagem", icon: Pill },
+    { to: "/farmacia", label: "Farmácia", icon: Pill },
+    { to: "/enfermagem", label: "Posto de Enfermagem", icon: HeartPulse },
   ] },
   { label: "Administrativo", items: [{ to: "/faturamento", label: "Faturamento TISS", icon: Receipt }] },
 ] as const;
@@ -81,7 +83,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </button>
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b bg-card px-4 print:hidden">
+        <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b bg-card px-2 sm:px-4 print:hidden">
           <div className="relative w-full max-w-md">
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
             <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar: nome, CPF, prontuário ou nome da mãe" className="h-9 w-full rounded-md border bg-background pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-ring" />
@@ -96,7 +98,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               </div>
             )}
           </div>
-          <select value={ward} onChange={(e) => setWard(e.target.value)} className="h-9 rounded-md border bg-background px-2 text-sm" aria-label="Unidade">
+          <select value={ward} onChange={(e) => setWard(e.target.value)} className="hidden h-9 rounded-md border bg-background px-2 text-sm lg:block" aria-label="Unidade">
             {WARDS.map((w) => <option key={w.id} value={w.id}>{w.name}</option>)}
           </select>
           <div className="ml-auto flex items-center gap-3">
@@ -113,7 +115,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 ))}
               </PopoverContent>
             </Popover>
-            <label className="flex items-center gap-2 text-sm">
+            <label className="hidden items-center gap-2 text-sm md:flex">
               <UserCog className="h-4 w-4 text-clinical" />
               <span className="text-xs font-medium">{profile}</span>
               <span className="hidden text-xs text-muted-foreground xl:inline">{professionalName(profile)}</span>

@@ -102,6 +102,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      remove_employee_access: {
+        Args: { target_id: string }
+        Returns: undefined
+      }
       review_employee: {
         Args: { new_status: string; target_id: string }
         Returns: undefined
