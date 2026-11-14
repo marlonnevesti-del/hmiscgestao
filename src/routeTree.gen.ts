@@ -14,6 +14,7 @@ import { Route as AcolhimentoRouteImport } from './routes/acolhimento'
 import { Route as CentroCirurgicoRouteImport } from './routes/centro-cirurgico'
 import { Route as FarmaciaRouteImport } from './routes/farmacia'
 import { Route as FaturamentoRouteImport } from './routes/faturamento'
+import { Route as RecepcaoRouteImport } from './routes/recepcao'
 import { Route as PacientesIndexRouteImport } from './routes/pacientes.index'
 import { Route as PacientesIdRouteImport } from './routes/pacientes.$id'
 
@@ -42,6 +43,11 @@ const FaturamentoRoute = FaturamentoRouteImport.update({
   path: '/faturamento',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RecepcaoRoute = RecepcaoRouteImport.update({
+  id: '/recepcao',
+  path: '/recepcao',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PacientesIndexRoute = PacientesIndexRouteImport.update({
   id: '/pacientes/',
   path: '/pacientes/',
@@ -59,6 +65,7 @@ export interface FileRoutesByFullPath {
   '/centro-cirurgico': typeof CentroCirurgicoRoute
   '/farmacia': typeof FarmaciaRoute
   '/faturamento': typeof FaturamentoRoute
+  '/recepcao': typeof RecepcaoRoute
   '/pacientes/$id': typeof PacientesIdRoute
   '/pacientes/': typeof PacientesIndexRoute
 }
@@ -68,6 +75,7 @@ export interface FileRoutesByTo {
   '/centro-cirurgico': typeof CentroCirurgicoRoute
   '/farmacia': typeof FarmaciaRoute
   '/faturamento': typeof FaturamentoRoute
+  '/recepcao': typeof RecepcaoRoute
   '/pacientes/$id': typeof PacientesIdRoute
   '/pacientes': typeof PacientesIndexRoute
 }
@@ -78,6 +86,7 @@ export interface FileRoutesById {
   '/centro-cirurgico': typeof CentroCirurgicoRoute
   '/farmacia': typeof FarmaciaRoute
   '/faturamento': typeof FaturamentoRoute
+  '/recepcao': typeof RecepcaoRoute
   '/pacientes/$id': typeof PacientesIdRoute
   '/pacientes/': typeof PacientesIndexRoute
 }
@@ -89,6 +98,7 @@ export interface FileRouteTypes {
     | '/centro-cirurgico'
     | '/farmacia'
     | '/faturamento'
+    | '/recepcao'
     | '/pacientes/$id'
     | '/pacientes/'
   fileRoutesByTo: FileRoutesByTo
@@ -98,6 +108,7 @@ export interface FileRouteTypes {
     | '/centro-cirurgico'
     | '/farmacia'
     | '/faturamento'
+    | '/recepcao'
     | '/pacientes/$id'
     | '/pacientes'
   id:
@@ -107,6 +118,7 @@ export interface FileRouteTypes {
     | '/centro-cirurgico'
     | '/farmacia'
     | '/faturamento'
+    | '/recepcao'
     | '/pacientes/$id'
     | '/pacientes/'
   fileRoutesById: FileRoutesById
@@ -117,6 +129,7 @@ export interface RootRouteChildren {
   CentroCirurgicoRoute: typeof CentroCirurgicoRoute
   FarmaciaRoute: typeof FarmaciaRoute
   FaturamentoRoute: typeof FaturamentoRoute
+  RecepcaoRoute: typeof RecepcaoRoute
   PacientesIdRoute: typeof PacientesIdRoute
   PacientesIndexRoute: typeof PacientesIndexRoute
 }
@@ -158,6 +171,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FaturamentoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/recepcao': {
+      id: '/recepcao'
+      path: '/recepcao'
+      fullPath: '/recepcao'
+      preLoaderRoute: typeof RecepcaoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/pacientes/': {
       id: '/pacientes/'
       path: '/pacientes'
@@ -181,6 +201,7 @@ const rootRouteChildren: RootRouteChildren = {
   CentroCirurgicoRoute: CentroCirurgicoRoute,
   FarmaciaRoute: FarmaciaRoute,
   FaturamentoRoute: FaturamentoRoute,
+  RecepcaoRoute: RecepcaoRoute,
   PacientesIdRoute: PacientesIdRoute,
   PacientesIndexRoute: PacientesIndexRoute,
 }

@@ -1,6 +1,6 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useMemo, useState, type ReactNode } from "react";
-import { Activity, BedDouble, Bell, ChevronLeft, ClipboardList, HeartPulse, Pill, Receipt, Scissors, Search, UserCog, Users } from "lucide-react";
+import { Activity, BedDouble, Bell, ChevronLeft, ClipboardList, HeartPulse, Pill, Receipt, Scissors, Search, UserCog, UserPlus, Users } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { PROFILES, WARDS, type Profile } from "@/lib/hospital-data";
 import { professionalName, setState, useStore } from "@/lib/hospital-store";
@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 const GROUPS = [
   { label: "Assistência", items: [
     { to: "/", label: "Dashboard & Leitos", icon: Activity },
+    { to: "/recepcao", label: "Recepção & Cadastro", icon: UserPlus },
     { to: "/acolhimento", label: "Acolhimento", icon: ClipboardList },
     { to: "/pacientes", label: "Pacientes / PEP", icon: Users },
   ] },
