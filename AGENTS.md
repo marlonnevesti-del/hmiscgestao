@@ -30,5 +30,6 @@ use the editor.
 <!-- LOVABLE:END -->
 
 ## Project rules
-- All demo clinical data lives in `src/lib/hospital-data.ts` (no backend yet); screens read from it so a future database swap touches one module.
+- Seed data and pure clinical/billing rules live in `src/lib/hospital-data.ts`; live in-memory state (profile, patients, queue, surgeries, med checks) lives in `src/lib/hospital-store.ts` and screens read via `useStore` — a future database swap touches only these two modules.
+- Profile permissions are centralized in `can(profile, action)`; screens never hardcode role checks.
 - App shell (sidebar + topbar) is `src/components/AppShell.tsx`, mounted once in `__root.tsx`.
