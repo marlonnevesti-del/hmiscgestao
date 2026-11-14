@@ -33,3 +33,6 @@ use the editor.
 - Seed data and pure clinical/billing rules live in `src/lib/hospital-data.ts`; live in-memory state (profile, patients, queue, surgeries, med checks) lives in `src/lib/hospital-store.ts` and screens read via `useStore` — a future database swap touches only these two modules.
 - Profile permissions are centralized in `can(profile, action)`; screens never hardcode role checks.
 - App shell (sidebar + topbar) is `src/components/AppShell.tsx`, mounted once in `__root.tsx`.
+- Employee identities and approval are persisted in Cloud profiles, with roles in a separate protected user_roles table; only server-authorized operations change access to prevent self-approval.
+- The client-only _authenticated layout validates identity and approval before clinical routes; EmployeeAccessBoundary owns the sole auth listener and mounts AppShell only for approved users, preventing public clinical rendering.
+- Employee registration validation is shared with its server function; admin review and role grants use transactional authenticated database functions to prevent privilege escalation.

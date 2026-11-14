@@ -6,12 +6,14 @@ import { can, type Prescription } from "@/lib/hospital-data";
 import { nowHM, professionalName, setState, updatePatient, useStore } from "@/lib/hospital-store";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/farmacia")({
+export const Route = createFileRoute("/_authenticated/farmacia")({
   head: () => ({ meta: [
     { title: "Farmácia e Checagem Beira-Leito – HMI Gestão" },
     { name: "description", content: "Triagem farmacêutica, dispensação por kit e aprazamento com checagem de medicações." },
     { property: "og:title", content: "Farmácia e Checagem Beira-Leito – HMI Gestão" },
     { property: "og:description", content: "Triagem farmacêutica, dispensação e checagem de medicações." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary_large_image" },
   ] }),
   component: Farmacia,
 });

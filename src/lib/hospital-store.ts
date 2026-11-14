@@ -1,8 +1,8 @@
 import { useSyncExternalStore } from "react";
 import { PATIENTS, QUEUE, SURGERIES, type Admin, type Newborn, type Patient, type Profile, type QueueItem, type Surgery } from "./hospital-data";
 
-interface State { profile: Profile; patients: Patient[]; queue: QueueItem[]; surgeries: Surgery[]; admins: Record<string, Admin> }
-let state: State = { profile: "Médico", patients: structuredClone(PATIENTS), queue: QUEUE, surgeries: SURGERIES, admins: { "p2|rx7|06:00": { status: "checado", by: "Enf. Carla Souza", at: "06:05" }, "p1|rx3|06:00": { status: "checado", by: "Enf. Carla Souza", at: "06:10" } } };
+interface State { profile: Profile; employeeName: string; patients: Patient[]; queue: QueueItem[]; surgeries: Surgery[]; admins: Record<string, Admin> }
+let state: State = { profile: "Outro", employeeName: "", patients: structuredClone(PATIENTS), queue: QUEUE, surgeries: SURGERIES, admins: { "p2|rx7|06:00": { status: "checado", by: "Enf. Carla Souza", at: "06:05" }, "p1|rx3|06:00": { status: "checado", by: "Enf. Carla Souza", at: "06:10" } } };
 const ls = new Set<() => void>();
 export const getState = () => state;
 export function setState(fn: (s: State) => Partial<State>) { state = { ...state, ...fn(state) }; ls.forEach((l) => l()); }
@@ -11,7 +11,7 @@ export function useStore<T>(sel: (s: State) => T): T { return useSyncExternalSto
 
 export const updatePatient = (id: string, fn: (p: Patient) => Partial<Patient>) =>
   setState((s) => ({ patients: s.patients.map((p) => (p.id === id ? { ...p, ...fn(p) } : p)) }));
-export const professionalName = (p: Profile) => ({ Médico: "Dra. Helena Prado", Enfermeiro: "Enf. Carla Souza", Farmacêutico: "Farm. João Vieira", Recepção: "Rec. Ana Lopes" })[p];
+export const professionalName = (p: Profile) => state.employeeName || ({ Médico: "Dra. Helena Prado", Enfermeiro: "Enf. Carla Souza", Farmacêutico: "Farm. João Vieira", Recepção: "Rec. Ana Lopes", Administrador: "Administrador", Outro: "Colaborador" })[p];
 export const nowHM = () => new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
 
 /** Registra o parto: cria prontuário "RN de <mãe>" vinculado e converte a mãe em puérpera. */

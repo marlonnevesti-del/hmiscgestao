@@ -8,10 +8,12 @@ export const WARDS: { id: Ward; name: string }[] = [
   { id: "ENFP", name: "Enfermaria Pediátrica" },
 ];
 
-export type Profile = "Médico" | "Enfermeiro" | "Farmacêutico" | "Recepção";
+export type Profile = "Médico" | "Enfermeiro" | "Farmacêutico" | "Recepção" | "Administrador" | "Outro";
 export const PROFILES: Profile[] = ["Médico", "Enfermeiro", "Farmacêutico", "Recepção"];
 export type Action = "prescrever" | "evoluir" | "parto" | "checar" | "triagem" | "farmacia" | "faturar" | "cirurgia";
 const PERMS: Record<Profile, Action[]> = {
+  Administrador: ["prescrever", "evoluir", "parto", "checar", "triagem", "farmacia", "faturar", "cirurgia"],
+  Outro: [],
   Médico: ["prescrever", "evoluir", "parto", "triagem", "cirurgia"],
   Enfermeiro: ["evoluir", "checar", "triagem", "cirurgia"],
   Farmacêutico: ["farmacia"],

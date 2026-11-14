@@ -6,12 +6,14 @@ import { BASE_BEDS, WARDS, can, type Patient, type Ward } from "@/lib/hospital-d
 import { setState, useStore, nowHM } from "@/lib/hospital-store";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/recepcao")({
+export const Route = createFileRoute("/_authenticated/recepcao")({
   head: () => ({ meta: [
     { title: "Recepção e Cadastro de Pacientes – HMI Gestão" },
     { name: "description", content: "Cadastro de gestantes e crianças, abertura de atendimento e encaminhamento para triagem ou internação." },
     { property: "og:title", content: "Recepção e Cadastro – HMI Gestão" },
     { property: "og:description", content: "Cadastro de pacientes e abertura de atendimento." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary_large_image" },
   ] }),
   component: Recepcao,
 });
@@ -65,7 +67,7 @@ function Recepcao() {
   return (
     <div className="space-y-4">
       <div><h1 className="text-xl font-semibold">Recepção e cadastro</h1><p className="text-sm text-muted-foreground">Cadastro do paciente, abertura do atendimento e encaminhamento</p></div>
-      {!can(profile, "triagem") || profile === "Farmacêutico" ? <NoPermission action="cadastrar pacientes (perfil Recepção, Médico ou Enfermeiro)" /> : null}
+      {!can(profile, "triagem") ? <NoPermission action="cadastrar pacientes" /> : null}
       <div className="grid gap-4 xl:grid-cols-[1fr_360px]">
         <div className="space-y-4 rounded-lg border bg-card p-4">
           <div className="flex gap-1">{([["gestante", "Gestante / Puérpera"], ["pediatria", "Criança / RN"]] as const).map(([k, l]) => <button key={k} onClick={() => setF({ ...f, tipo: k })} className={cn("rounded-md border px-4 py-1.5 text-sm font-medium", f.tipo === k && (k === "gestante" ? "border-maternal bg-maternal text-primary-foreground" : "bg-primary text-primary-foreground"))}>{l}</button>)}</div>

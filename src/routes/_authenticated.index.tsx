@@ -6,12 +6,14 @@ import { BASE_BEDS, WARDS, bedStatusFor, type BedStatus, type Ward } from "@/lib
 import { useStore } from "@/lib/hospital-store";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/_authenticated/")({
   head: () => ({ meta: [
     { title: "Dashboard Operacional – HMI Gestão" },
     { name: "description", content: "Ocupação, mapa de leitos e indicadores do hospital materno-infantil em tempo real." },
     { property: "og:title", content: "Dashboard Operacional – HMI Gestão" },
     { property: "og:description", content: "Ocupação, mapa de leitos e indicadores do hospital materno-infantil em tempo real." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary_large_image" },
   ] }),
   component: Dashboard,
 });

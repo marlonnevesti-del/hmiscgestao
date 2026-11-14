@@ -12,7 +12,7 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
-import { AppShell } from "@/components/AppShell";
+import { EmployeeAccessBoundary } from "@/components/EmployeeAccessBoundary";
 import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
@@ -127,9 +127,9 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <AppShell>
+      <EmployeeAccessBoundary>
         <Outlet />
-      </AppShell>
+      </EmployeeAccessBoundary>
       <Toaster />
     </QueryClientProvider>
   );

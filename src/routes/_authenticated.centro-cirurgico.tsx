@@ -6,12 +6,14 @@ import { CHECKLIST, ROOMS, SURG_STATUS, can, type SurgStatus, type Surgery } fro
 import { setState, useStore } from "@/lib/hospital-store";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/centro-cirurgico")({
+export const Route = createFileRoute("/_authenticated/centro-cirurgico")({
   head: () => ({ meta: [
     { title: "Mapa Cirúrgico e Obstétrico – HMI Gestão" },
     { name: "description", content: "Agenda diária das salas de parto e cirúrgicas com checklist de cirurgia segura da OMS." },
     { property: "og:title", content: "Mapa Cirúrgico e Obstétrico – HMI Gestão" },
     { property: "og:description", content: "Agenda das salas, status em tempo real e checklist OMS." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary_large_image" },
   ] }),
   component: Centro,
 });

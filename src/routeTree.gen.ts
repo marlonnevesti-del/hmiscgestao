@@ -9,93 +9,155 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as AcolhimentoRouteImport } from './routes/acolhimento'
-import { Route as CentroCirurgicoRouteImport } from './routes/centro-cirurgico'
-import { Route as FarmaciaRouteImport } from './routes/farmacia'
-import { Route as FaturamentoRouteImport } from './routes/faturamento'
-import { Route as RecepcaoRouteImport } from './routes/recepcao'
-import { Route as PacientesIndexRouteImport } from './routes/pacientes.index'
-import { Route as PacientesIdRouteImport } from './routes/pacientes.$id'
+import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as CadastroColaboradorRouteImport } from './routes/cadastro-colaborador'
+import { Route as PendenteRouteImport } from './routes/pendente'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated.index'
+import { Route as AuthenticatedAcolhimentoRouteImport } from './routes/_authenticated.acolhimento'
+import { Route as AuthenticatedCentroCirurgicoRouteImport } from './routes/_authenticated.centro-cirurgico'
+import { Route as AuthenticatedColaboradoresRouteImport } from './routes/_authenticated.colaboradores'
+import { Route as AuthenticatedFarmaciaRouteImport } from './routes/_authenticated.farmacia'
+import { Route as AuthenticatedFaturamentoRouteImport } from './routes/_authenticated.faturamento'
+import { Route as AuthenticatedRecepcaoRouteImport } from './routes/_authenticated.recepcao'
+import { Route as AuthenticatedPacientesIndexRouteImport } from './routes/_authenticated.pacientes.index'
+import { Route as AuthenticatedPacientesIdRouteImport } from './routes/_authenticated.pacientes.$id'
 
-const IndexRoute = IndexRouteImport.update({
+const AuthenticatedRoute = AuthenticatedRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CadastroColaboradorRoute = CadastroColaboradorRouteImport.update({
+  id: '/cadastro-colaborador',
+  path: '/cadastro-colaborador',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PendenteRoute = PendenteRouteImport.update({
+  id: '/pendente',
+  path: '/pendente',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AcolhimentoRoute = AcolhimentoRouteImport.update({
-  id: '/acolhimento',
-  path: '/acolhimento',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CentroCirurgicoRoute = CentroCirurgicoRouteImport.update({
-  id: '/centro-cirurgico',
-  path: '/centro-cirurgico',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const FarmaciaRoute = FarmaciaRouteImport.update({
+const AuthenticatedAcolhimentoRoute =
+  AuthenticatedAcolhimentoRouteImport.update({
+    id: '/acolhimento',
+    path: '/acolhimento',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedCentroCirurgicoRoute =
+  AuthenticatedCentroCirurgicoRouteImport.update({
+    id: '/centro-cirurgico',
+    path: '/centro-cirurgico',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedColaboradoresRoute =
+  AuthenticatedColaboradoresRouteImport.update({
+    id: '/colaboradores',
+    path: '/colaboradores',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedFarmaciaRoute = AuthenticatedFarmaciaRouteImport.update({
   id: '/farmacia',
   path: '/farmacia',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRoute,
 } as any)
-const FaturamentoRoute = FaturamentoRouteImport.update({
-  id: '/faturamento',
-  path: '/faturamento',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RecepcaoRoute = RecepcaoRouteImport.update({
+const AuthenticatedFaturamentoRoute =
+  AuthenticatedFaturamentoRouteImport.update({
+    id: '/faturamento',
+    path: '/faturamento',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedRecepcaoRoute = AuthenticatedRecepcaoRouteImport.update({
   id: '/recepcao',
   path: '/recepcao',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRoute,
 } as any)
-const PacientesIndexRoute = PacientesIndexRouteImport.update({
-  id: '/pacientes/',
-  path: '/pacientes/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PacientesIdRoute = PacientesIdRouteImport.update({
-  id: '/pacientes/$id',
-  path: '/pacientes/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
+const AuthenticatedPacientesIndexRoute =
+  AuthenticatedPacientesIndexRouteImport.update({
+    id: '/pacientes/',
+    path: '/pacientes/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedPacientesIdRoute =
+  AuthenticatedPacientesIdRouteImport.update({
+    id: '/pacientes/$id',
+    path: '/pacientes/$id',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/acolhimento': typeof AcolhimentoRoute
-  '/centro-cirurgico': typeof CentroCirurgicoRoute
-  '/farmacia': typeof FarmaciaRoute
-  '/faturamento': typeof FaturamentoRoute
-  '/recepcao': typeof RecepcaoRoute
-  '/pacientes/$id': typeof PacientesIdRoute
-  '/pacientes/': typeof PacientesIndexRoute
+  '/': typeof AuthenticatedIndexRoute
+  '/auth': typeof AuthRoute
+  '/cadastro-colaborador': typeof CadastroColaboradorRoute
+  '/pendente': typeof PendenteRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/acolhimento': typeof AuthenticatedAcolhimentoRoute
+  '/centro-cirurgico': typeof AuthenticatedCentroCirurgicoRoute
+  '/colaboradores': typeof AuthenticatedColaboradoresRoute
+  '/farmacia': typeof AuthenticatedFarmaciaRoute
+  '/faturamento': typeof AuthenticatedFaturamentoRoute
+  '/recepcao': typeof AuthenticatedRecepcaoRoute
+  '/pacientes/$id': typeof AuthenticatedPacientesIdRoute
+  '/pacientes/': typeof AuthenticatedPacientesIndexRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/acolhimento': typeof AcolhimentoRoute
-  '/centro-cirurgico': typeof CentroCirurgicoRoute
-  '/farmacia': typeof FarmaciaRoute
-  '/faturamento': typeof FaturamentoRoute
-  '/recepcao': typeof RecepcaoRoute
-  '/pacientes/$id': typeof PacientesIdRoute
-  '/pacientes': typeof PacientesIndexRoute
+  '/auth': typeof AuthRoute
+  '/cadastro-colaborador': typeof CadastroColaboradorRoute
+  '/pendente': typeof PendenteRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/acolhimento': typeof AuthenticatedAcolhimentoRoute
+  '/centro-cirurgico': typeof AuthenticatedCentroCirurgicoRoute
+  '/colaboradores': typeof AuthenticatedColaboradoresRoute
+  '/farmacia': typeof AuthenticatedFarmaciaRoute
+  '/faturamento': typeof AuthenticatedFaturamentoRoute
+  '/recepcao': typeof AuthenticatedRecepcaoRoute
+  '/': typeof AuthenticatedIndexRoute
+  '/pacientes/$id': typeof AuthenticatedPacientesIdRoute
+  '/pacientes': typeof AuthenticatedPacientesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/acolhimento': typeof AcolhimentoRoute
-  '/centro-cirurgico': typeof CentroCirurgicoRoute
-  '/farmacia': typeof FarmaciaRoute
-  '/faturamento': typeof FaturamentoRoute
-  '/recepcao': typeof RecepcaoRoute
-  '/pacientes/$id': typeof PacientesIdRoute
-  '/pacientes/': typeof PacientesIndexRoute
+  '/_authenticated': typeof AuthenticatedRouteWithChildren
+  '/auth': typeof AuthRoute
+  '/cadastro-colaborador': typeof CadastroColaboradorRoute
+  '/pendente': typeof PendenteRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/_authenticated/acolhimento': typeof AuthenticatedAcolhimentoRoute
+  '/_authenticated/centro-cirurgico': typeof AuthenticatedCentroCirurgicoRoute
+  '/_authenticated/colaboradores': typeof AuthenticatedColaboradoresRoute
+  '/_authenticated/farmacia': typeof AuthenticatedFarmaciaRoute
+  '/_authenticated/faturamento': typeof AuthenticatedFaturamentoRoute
+  '/_authenticated/recepcao': typeof AuthenticatedRecepcaoRoute
+  '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/_authenticated/pacientes/$id': typeof AuthenticatedPacientesIdRoute
+  '/_authenticated/pacientes/': typeof AuthenticatedPacientesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/auth'
+    | '/cadastro-colaborador'
+    | '/pendente'
+    | '/reset-password'
     | '/acolhimento'
     | '/centro-cirurgico'
+    | '/colaboradores'
     | '/farmacia'
     | '/faturamento'
     | '/recepcao'
@@ -103,107 +165,182 @@ export interface FileRouteTypes {
     | '/pacientes/'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/'
+    | '/auth'
+    | '/cadastro-colaborador'
+    | '/pendente'
+    | '/reset-password'
     | '/acolhimento'
     | '/centro-cirurgico'
+    | '/colaboradores'
     | '/farmacia'
     | '/faturamento'
     | '/recepcao'
+    | '/'
     | '/pacientes/$id'
     | '/pacientes'
   id:
     | '__root__'
-    | '/'
-    | '/acolhimento'
-    | '/centro-cirurgico'
-    | '/farmacia'
-    | '/faturamento'
-    | '/recepcao'
-    | '/pacientes/$id'
-    | '/pacientes/'
+    | '/_authenticated'
+    | '/auth'
+    | '/cadastro-colaborador'
+    | '/pendente'
+    | '/reset-password'
+    | '/_authenticated/acolhimento'
+    | '/_authenticated/centro-cirurgico'
+    | '/_authenticated/colaboradores'
+    | '/_authenticated/farmacia'
+    | '/_authenticated/faturamento'
+    | '/_authenticated/recepcao'
+    | '/_authenticated/'
+    | '/_authenticated/pacientes/$id'
+    | '/_authenticated/pacientes/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  AcolhimentoRoute: typeof AcolhimentoRoute
-  CentroCirurgicoRoute: typeof CentroCirurgicoRoute
-  FarmaciaRoute: typeof FarmaciaRoute
-  FaturamentoRoute: typeof FaturamentoRoute
-  RecepcaoRoute: typeof RecepcaoRoute
-  PacientesIdRoute: typeof PacientesIdRoute
-  PacientesIndexRoute: typeof PacientesIndexRoute
+  AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
+  AuthRoute: typeof AuthRoute
+  CadastroColaboradorRoute: typeof CadastroColaboradorRoute
+  PendenteRoute: typeof PendenteRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cadastro-colaborador': {
+      id: '/cadastro-colaborador'
+      path: '/cadastro-colaborador'
+      fullPath: '/cadastro-colaborador'
+      preLoaderRoute: typeof CadastroColaboradorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pendente': {
+      id: '/pendente'
+      path: '/pendente'
+      fullPath: '/pendente'
+      preLoaderRoute: typeof PendenteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/': {
+      id: '/_authenticated/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
-    '/acolhimento': {
-      id: '/acolhimento'
+    '/_authenticated/acolhimento': {
+      id: '/_authenticated/acolhimento'
       path: '/acolhimento'
       fullPath: '/acolhimento'
-      preLoaderRoute: typeof AcolhimentoRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedAcolhimentoRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
-    '/centro-cirurgico': {
-      id: '/centro-cirurgico'
+    '/_authenticated/centro-cirurgico': {
+      id: '/_authenticated/centro-cirurgico'
       path: '/centro-cirurgico'
       fullPath: '/centro-cirurgico'
-      preLoaderRoute: typeof CentroCirurgicoRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedCentroCirurgicoRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
-    '/farmacia': {
-      id: '/farmacia'
+    '/_authenticated/colaboradores': {
+      id: '/_authenticated/colaboradores'
+      path: '/colaboradores'
+      fullPath: '/colaboradores'
+      preLoaderRoute: typeof AuthenticatedColaboradoresRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/farmacia': {
+      id: '/_authenticated/farmacia'
       path: '/farmacia'
       fullPath: '/farmacia'
-      preLoaderRoute: typeof FarmaciaRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedFarmaciaRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
-    '/faturamento': {
-      id: '/faturamento'
+    '/_authenticated/faturamento': {
+      id: '/_authenticated/faturamento'
       path: '/faturamento'
       fullPath: '/faturamento'
-      preLoaderRoute: typeof FaturamentoRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedFaturamentoRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
-    '/recepcao': {
-      id: '/recepcao'
+    '/_authenticated/recepcao': {
+      id: '/_authenticated/recepcao'
       path: '/recepcao'
       fullPath: '/recepcao'
-      preLoaderRoute: typeof RecepcaoRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedRecepcaoRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
-    '/pacientes/': {
-      id: '/pacientes/'
+    '/_authenticated/pacientes/': {
+      id: '/_authenticated/pacientes/'
       path: '/pacientes'
       fullPath: '/pacientes/'
-      preLoaderRoute: typeof PacientesIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedPacientesIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
-    '/pacientes/$id': {
-      id: '/pacientes/$id'
+    '/_authenticated/pacientes/$id': {
+      id: '/_authenticated/pacientes/$id'
       path: '/pacientes/$id'
       fullPath: '/pacientes/$id'
-      preLoaderRoute: typeof PacientesIdRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedPacientesIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
   }
 }
 
+interface AuthenticatedRouteChildren {
+  AuthenticatedAcolhimentoRoute: typeof AuthenticatedAcolhimentoRoute
+  AuthenticatedCentroCirurgicoRoute: typeof AuthenticatedCentroCirurgicoRoute
+  AuthenticatedColaboradoresRoute: typeof AuthenticatedColaboradoresRoute
+  AuthenticatedFarmaciaRoute: typeof AuthenticatedFarmaciaRoute
+  AuthenticatedFaturamentoRoute: typeof AuthenticatedFaturamentoRoute
+  AuthenticatedRecepcaoRoute: typeof AuthenticatedRecepcaoRoute
+  AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+  AuthenticatedPacientesIdRoute: typeof AuthenticatedPacientesIdRoute
+  AuthenticatedPacientesIndexRoute: typeof AuthenticatedPacientesIndexRoute
+}
+
+const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedAcolhimentoRoute: AuthenticatedAcolhimentoRoute,
+  AuthenticatedCentroCirurgicoRoute: AuthenticatedCentroCirurgicoRoute,
+  AuthenticatedColaboradoresRoute: AuthenticatedColaboradoresRoute,
+  AuthenticatedFarmaciaRoute: AuthenticatedFarmaciaRoute,
+  AuthenticatedFaturamentoRoute: AuthenticatedFaturamentoRoute,
+  AuthenticatedRecepcaoRoute: AuthenticatedRecepcaoRoute,
+  AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+  AuthenticatedPacientesIdRoute: AuthenticatedPacientesIdRoute,
+  AuthenticatedPacientesIndexRoute: AuthenticatedPacientesIndexRoute,
+}
+
+const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
+  AuthenticatedRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
-  AcolhimentoRoute: AcolhimentoRoute,
-  CentroCirurgicoRoute: CentroCirurgicoRoute,
-  FarmaciaRoute: FarmaciaRoute,
-  FaturamentoRoute: FaturamentoRoute,
-  RecepcaoRoute: RecepcaoRoute,
-  PacientesIdRoute: PacientesIdRoute,
-  PacientesIndexRoute: PacientesIndexRoute,
+  AuthenticatedRoute: AuthenticatedRouteWithChildren,
+  AuthRoute: AuthRoute,
+  CadastroColaboradorRoute: CadastroColaboradorRoute,
+  PendenteRoute: PendenteRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

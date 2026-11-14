@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1794656439343,
+      "tag": "0000_employee_registration_and_approval",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1794656535865,
+      "tag": "0001_atomic_employee_access_management",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794657005602,
+      "tag": "0002_restrict_employee_table_writes",
+      "breakpoints": true
+    }
+  ]
+}

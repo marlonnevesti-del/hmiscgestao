@@ -7,12 +7,14 @@ import { MANCHESTER, can, type Manchester, type QueueItem } from "@/lib/hospital
 import { setState, useStore } from "@/lib/hospital-store";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/acolhimento")({
+export const Route = createFileRoute("/_authenticated/acolhimento")({
   head: () => ({ meta: [
     { title: "Acolhimento e Classificação de Risco – HMI Gestão" },
     { name: "description", content: "Fila em tempo real e triagem pelo Protocolo de Manchester para obstetrícia e pediatria." },
     { property: "og:title", content: "Acolhimento e Classificação de Risco – HMI Gestão" },
     { property: "og:description", content: "Fila em tempo real e triagem pelo Protocolo de Manchester." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary_large_image" },
   ] }),
   component: Acolhimento,
 });

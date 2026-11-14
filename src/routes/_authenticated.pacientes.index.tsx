@@ -5,12 +5,14 @@ import { WARDS, type PatientType } from "@/lib/hospital-data";
 import { useStore } from "@/lib/hospital-store";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/pacientes/")({
+export const Route = createFileRoute("/_authenticated/pacientes/")({
   head: () => ({ meta: [
     { title: "Pacientes internados – HMI Gestão" },
     { name: "description", content: "Lista de pacientes internados com acesso ao prontuário eletrônico." },
     { property: "og:title", content: "Pacientes internados – HMI Gestão" },
     { property: "og:description", content: "Lista de pacientes internados com acesso ao prontuário eletrônico." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary_large_image" },
   ] }),
   component: List,
 });

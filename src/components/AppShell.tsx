@@ -1,9 +1,14 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useMemo, useState, type ReactNode } from "react";
-import { Activity, BedDouble, Bell, ChevronLeft, ClipboardList, HeartPulse, Pill, Receipt, Scissors, Search, UserCog, UserPlus, Users } from "lucide-react";
+import { Activity, BedDouble, Bell, ChevronLeft, ClipboardList, HeartPulse, Pill, Receipt, Scissors, Search, UserCog, UserPlus, Users, LogOut } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
+import { loadEmployeeAccess } from "@/lib/employee-access";
+import { canApproveEmployees } from "@/lib/employee-rules";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { PROFILES, WARDS, type Profile } from "@/lib/hospital-data";
-import { professionalName, setState, useStore } from "@/lib/hospital-store";
+import { WARDS } from "@/lib/hospital-data";
+import { professionalName, useStore } from "@/lib/hospital-store";
 import { cn } from "@/lib/utils";
 
 const GROUPS = [
@@ -26,6 +31,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [ward, setWard] = useState("CO");
   const patients = useStore((s) => s.patients);
   const profile = useStore((s) => s.profile);
+  const { data: access } = useQuery({ queryKey: ["employee-access"], queryFn: loadEmployeeAccess });
   const queue = useStore((s) => s.queue);
   const path = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
@@ -62,6 +68,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               })}
             </div>
           ))}
+          {canApproveEmployees(access?.roles ?? [], access?.profile.status ?? "") && <Link to="/colaboradores" title="Colaboradores" className="flex items-center gap-3 rounded-md px-3 py-2 text-sm hover:bg-sidebar-accent"><UserCog className="h-4 w-4 shrink-0" />{!collapsed && "Colaboradores"}</Link>}
           {!collapsed && <div className="px-3 pt-2 text-[10px] uppercase tracking-wider opacity-60">Acesso rápido</div>}
           {!collapsed && patients.slice(0, 5).map((p) => (
             <Link key={p.id} to="/pacientes/$id" params={{ id: p.id }} className="flex items-center gap-2 rounded-md px-3 py-1.5 text-xs hover:bg-sidebar-accent">
@@ -108,11 +115,10 @@ export function AppShell({ children }: { children: ReactNode }) {
             </Popover>
             <label className="flex items-center gap-2 text-sm">
               <UserCog className="h-4 w-4 text-clinical" />
-              <select value={profile} onChange={(e) => setState(() => ({ profile: e.target.value as Profile }))} className="h-9 rounded-md border bg-background px-2 text-sm" aria-label="Perfil">
-                {PROFILES.map((p) => <option key={p}>{p}</option>)}
-              </select>
+              <span className="text-xs font-medium">{profile}</span>
               <span className="hidden text-xs text-muted-foreground xl:inline">{professionalName(profile)}</span>
             </label>
+            <Button variant="ghost" size="icon" aria-label="Sair do sistema" title="Sair do sistema" onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/auth" }); }}><LogOut /></Button>
           </div>
         </header>
         <main className="flex-1 p-5">{children}</main>
@@ -122,5 +128,5 @@ export function AppShell({ children }: { children: ReactNode }) {
 }
 
 export function NoPermission({ action }: { action: string }) {
-  return <div className="rounded-md border border-dashed bg-muted p-3 text-xs text-muted-foreground">Seu perfil atual não permite {action}. Troque o perfil no topo da tela.</div>;
+  return <div className="rounded-md border border-dashed bg-muted p-3 text-xs text-muted-foreground">Seu acesso não permite {action}. Procure a administração do hospital.</div>;
 }

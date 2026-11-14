@@ -6,12 +6,14 @@ import { buildBill, can } from "@/lib/hospital-data";
 import { useStore } from "@/lib/hospital-store";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/faturamento")({
+export const Route = createFileRoute("/_authenticated/faturamento")({
   head: () => ({ meta: [
     { title: "Faturamento Hospitalar TISS – HMI Gestão" },
     { name: "description", content: "Pré-faturamento por internação com diárias, taxas, materiais, medicamentos e guias TISS." },
     { property: "og:title", content: "Faturamento Hospitalar TISS – HMI Gestão" },
     { property: "og:description", content: "Pré-faturamento por internação e guias TISS." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary_large_image" },
   ] }),
   component: Fat,
 });

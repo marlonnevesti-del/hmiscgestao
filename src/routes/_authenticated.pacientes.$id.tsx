@@ -11,13 +11,15 @@ import { DRUGS, PATIENTS, WARDS, allergyConflict, can, interactionsWith, pediatr
 import { nowHM, professionalName, registerBirth, updatePatient, useStore } from "@/lib/hospital-store";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/pacientes/$id")({
+export const Route = createFileRoute("/_authenticated/pacientes/$id")({
   loader: ({ params }) => { const p = PATIENTS.find((x) => x.id === params.id); if (!p && !params.id.startsWith("rn-")) throw notFound(); return { name: p?.name ?? "Recém-nascido" }; },
   head: ({ loaderData }) => ({ meta: [
     { title: loaderData ? `PEP · ${loaderData.name} – HMI Gestão` : "Prontuário – HMI Gestão" },
     { name: "description", content: "Prontuário eletrônico do paciente: evolução, prescrição, sinais vitais, partograma e RN." },
     { property: "og:title", content: "Prontuário eletrônico – HMI Gestão" },
     { property: "og:description", content: "Evolução, prescrição, sinais vitais, partograma e RN." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary_large_image" },
   ] }),
   component: PEP,
 });
@@ -199,7 +201,7 @@ function Sinais({ p }: { p: Patient }) {
           <div className="mt-2 text-right text-sm">Balanço acumulado 24h: <b className="font-mono text-clinical">{total > 0 ? "+" : ""}{total} mL</b>{p.type === "neonato" && <span className="ml-2 text-xs text-muted-foreground">({Math.round(data.reduce((s, v) => s + v.ingesta, 0) / p.weight)} mL/kg ofertados)</span>}</div>
         </Card>
         <Card title="Registrar aferição">
-          {profile === "Médico" || profile === "Enfermeiro" ? <div className="space-y-2">
+          {can(profile, "evoluir") ? <div className="space-y-2">
             <select value={slot} onChange={(e) => setSlot(e.target.value)} className="h-8 w-full rounded-md border bg-background px-2 text-xs">{SLOTS.map((s) => <option key={s}>{s}</option>)}</select>
             <div className="grid grid-cols-2 gap-2">{(Object.keys(f) as (keyof typeof f)[]).map((k) => <input key={k} value={f[k]} onChange={(e) => setF({ ...f, [k]: e.target.value })} placeholder={k.toUpperCase()} className="h-8 rounded-md border bg-background px-2 text-xs" />)}</div>
             <button onClick={save} className="w-full rounded-md bg-clinical py-2 text-sm font-medium text-accent-foreground">Salvar</button>
