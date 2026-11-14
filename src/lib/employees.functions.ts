@@ -2,17 +2,10 @@ import { createServerFn } from "@tanstack/react-start";
 import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { employeeSchema } from "./employee-rules";
+import { employeeRegistrationInputSchema } from "./employee-rules";
 
 export const registerEmployee = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) => {
-    const registration = employeeSchema.parse(input);
-    const { origin } = z.object({ origin: z.string().url() }).parse(input);
-    const url = new URL(origin);
-    if (url.protocol !== "https:" && origin !== "http://localhost:8080") throw new Error("Origem inválida");
-    if (!["hmiscgestao.lovable.app", "id-preview--99c05fd0-634e-424c-a006-6c577d58a502.lovable.app", "localhost"].includes(url.hostname)) throw new Error("Origem inválida");
-    return { ...registration, origin: url.origin };
-  })
+  .inputValidator((input: unknown) => employeeRegistrationInputSchema.parse(input))
   .handler(async ({ data }) => {
     const url = process.env["SUPABASE_URL"];
     const key = process.env["SUPABASE_PUBLISHABLE_KEY"];

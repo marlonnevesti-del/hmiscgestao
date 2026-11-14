@@ -20,6 +20,15 @@ export const employeeSchema = z.object({
   if (needsCouncil(v.job_function) && (!v.council_type || !v.council_number || v.council_state.length !== 2)) ctx.addIssue({ code: "custom", path: ["council_number"], message: "Informe conselho, número e UF" });
 });
 export type EmployeeRegistration = z.input<typeof employeeSchema>;
+// Preview hostnames change; validate the protocol, not a fixed deployment list.
+export const employeeRegistrationInputSchema = employeeSchema.and(z.object({
+  origin: z.string().url().refine((origin) => {
+    try {
+      const url = new URL(origin);
+      return url.protocol === "https:" || origin === "http://localhost:8080";
+    } catch { return false; }
+  }, "Origem inválida").transform((origin) => new URL(origin).origin),
+}));
 export const canApproveEmployees = (roles: readonly string[], status: string) => status === "approved" && roles.some((r) => r === "admin" || r === "super_admin");
 export const canCreateAdmins = (roles: readonly string[], status: string) => status === "approved" && roles.includes("super_admin");
 export const canRemoveEmployee = (callerRoles: readonly string[], callerStatus: string, callerId: string, targetId: string, targetRoles: readonly string[]) => canApproveEmployees(callerRoles, callerStatus) && callerId !== targetId && !targetRoles.includes('super_admin') && (!targetRoles.includes('admin') || callerRoles.includes('super_admin'));

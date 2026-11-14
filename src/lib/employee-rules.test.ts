@@ -1,7 +1,22 @@
 import { describe, expect, it } from "vitest";
-import { canApproveEmployees, canCreateAdmins, canRemoveEmployee, clinicalProfile, employeeSchema, needsCouncil, filterEmployees } from "./employee-rules";
+import { canApproveEmployees, canCreateAdmins, canRemoveEmployee, clinicalProfile, employeeSchema, employeeRegistrationInputSchema, needsCouncil, filterEmployees } from "./employee-rules";
 import { can } from "./hospital-data";
 describe("acesso de colaboradores", () => {
+  const registration = { full_name: "Colaborador Teste", username: "colaborador", email: "teste@example.com", password: "Example-test!42", cpf: "12345678901", phone: "11999999999", birth_date: "1990-01-01", address: "Rua de Teste 10", job_function: "Recepcionista", council_type: "", council_number: "", council_state: "" };
+  it.each([
+    "https://hmiscgestao.lovable.app",
+    "https://id-preview--99c05fd0-634e-424c-a006-6c577d58a502.lovable.app",
+    "https://hmisc-preview.lovableproject.com",
+    "https://outro-preview.lovable.app",
+  ])("aceita cadastro na origem HTTPS %s", (origin) => {
+    expect(employeeRegistrationInputSchema.parse({ ...registration, origin }).origin).toBe(origin);
+  });
+  it("mantém suporte ao preview local", () => {
+    expect(employeeRegistrationInputSchema.parse({ ...registration, origin: "http://localhost:8080" }).origin).toBe("http://localhost:8080");
+  });
+  it.each(["javascript:alert(1)", "ftp://example.com", "http://example.com", "não é URL"])("recusa origem insegura %s", (origin) => {
+    expect(employeeRegistrationInputSchema.safeParse({ ...registration, origin }).success).toBe(false);
+  });
   it('administradores removem colaboradores', () => expect(canRemoveEmployee(['admin'],'approved','a','b',['employee'])).toBe(true));
   it('somente principal remove administradores', () => { expect(canRemoveEmployee(['admin'],'approved','a','b',['admin'])).toBe(false); expect(canRemoveEmployee(['super_admin'],'approved','a','b',['admin'])).toBe(true); });
   it('protege o administrador principal', () => expect(canRemoveEmployee(['super_admin'],'approved','a','b',['super_admin'])).toBe(false));

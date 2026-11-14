@@ -18,7 +18,7 @@ function Employees() {
   const { data: access } = useQuery({ queryKey: ["employee-access"], queryFn: loadEmployeeAccess });
   const allowed = canApproveEmployees(access?.roles ?? [], access?.profile.status ?? "");
   const principal = canCreateAdmins(access?.roles ?? [], access?.profile.status ?? "");
-  const { data: employees = [], error, isLoading, refetch } = useQuery({ queryKey: ["employees"], queryFn: () => list(), enabled: allowed, refetchInterval: 15000, retry: false });
+   const { data: employees = [], error, isLoading, refetch } = useQuery({ queryKey: ["employees"], queryFn: () => list(), enabled: allowed, refetchInterval: 1000, refetchIntervalInBackground: true, refetchOnWindowFocus: "always", retry: false });
   const [q, setQ] = useState(""); const [filter, setFilter] = useState("pending"); const [open, setOpen] = useState(false); const [busy, setBusy] = useState(false);
   const [form, setForm] = useState({ full_name: "", username: "", email: "", password: "" });
   const [selected, setSelected] = useState<(typeof employees)[number] | null>(null);

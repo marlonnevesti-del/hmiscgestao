@@ -14,4 +14,5 @@
 - [ ] Ajustar cadastro aos campos do formulário mencionado — aguarda envio do formulário.
 - [ ] Marlonneves definir senha segura pelo e-mail de recuperação — senha solicitada recusada pela proteção de senhas.
 - [x] Verificar envio pelo site publicado e aprovação real; adicionar atalho aos pendentes que limpa filtros e busca.
-- [ ] Identificar o cadastro relatado caso continue ausente — aguarda nome do colaborador; nenhum cadastro real pendente foi encontrado.
+- [x] Remover bloqueio por hostname do cadastro em previews e produção, mantendo validação de protocolo seguro.
+- [x] Verificar cadastro real e atualização automática dos pendentes na tela administrativa, sem recarregar; acesso de verificação removido após o teste.
