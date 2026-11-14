@@ -15,6 +15,9 @@ export const registerEmployee = createServerFn({ method: "POST" })
       if (key.startsWith("sb_") && headers.get("Authorization") === `Bearer ${key}`) headers.delete("Authorization");
       headers.set("apikey", key); return fetch(input, { ...init, headers });
     } } });
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: taken } = await supabaseAdmin.from("profiles").select("id").ilike("username", data.username.trim().replace(/[%_\\]/g, "\\$&")).limit(1);
+    if (taken?.length) return { ok: false, message: "Este nome de usuário já está em uso. Escolha outro." };
     const { password, other_function, origin, ...fields } = data;
     const { error } = await client.auth.signUp({ email: data.email, password, options: { data: { ...fields, job_function: data.job_function === "Outro" ? other_function : data.job_function }, emailRedirectTo: origin } });
     if (error) return { ok: false, message: error.code === "weak_password" ? "Escolha uma senha mais segura, com letras, números e símbolos." : "Não foi possível cadastrar. Verifique os dados ou tente novamente mais tarde." };
@@ -59,4 +62,31 @@ export const createAdministrator = createServerFn({ method: "POST" }).middleware
     const { error: grantError } = await context.supabase.rpc("grant_administrator", { target_id: created.user.id });
     if (grantError) { await supabaseAdmin.auth.admin.deleteUser(created.user.id); throw new Error("Não foi possível conceder o acesso administrativo"); }
     return { ok: true, message: "Administrador cadastrado e liberado" };
+  });
+export const loginWithUsername = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => z.object({ username: z.string().trim().min(1).max(50), password: z.string().min(1).max(128) }).parse(input))
+  .handler(async ({ data }) => {
+    const fail = { ok: false as const, message: "Usuário ou senha inválidos, ou e-mail ainda não confirmado." };
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: rows } = await supabaseAdmin.from("profiles").select("email").ilike("username", data.username.replace(/[%_\\]/g, "\\$&")).limit(2);
+    if (!rows || rows.length !== 1 || !rows[0]?.email) return fail;
+    const url = process.env["SUPABASE_URL"]; const key = process.env["SUPABASE_PUBLISHABLE_KEY"];
+    if (!url || !key) return fail;
+    const client = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: (input, init) => {
+      const headers = new Headers(init?.headers);
+      if (key.startsWith("sb_") && headers.get("Authorization") === `Bearer ${key}`) headers.delete("Authorization");
+      headers.set("apikey", key); return fetch(input, { ...init, headers });
+    } } });
+    const { data: auth, error } = await client.auth.signInWithPassword({ email: rows[0].email, password: data.password });
+    if (error || !auth.session) return fail;
+    return { ok: true as const, access_token: auth.session.access_token, refresh_token: auth.session.refresh_token };
+  });
+
+export const resolveUsernameForReset = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => z.object({ username: z.string().trim().min(1).max(50), redirectTo: z.string().url() }).parse(input))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: rows } = await supabaseAdmin.from("profiles").select("email").ilike("username", data.username.replace(/[%_\\]/g, "\\$&")).limit(2);
+    if (rows?.length === 1 && rows[0]?.email && /^https?:$/.test(new URL(data.redirectTo).protocol)) await supabaseAdmin.auth.resetPasswordForEmail(rows[0].email, { redirectTo: data.redirectTo });
+    return { ok: true };
   });
