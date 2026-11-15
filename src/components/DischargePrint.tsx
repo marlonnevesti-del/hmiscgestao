@@ -1,6 +1,15 @@
 import { createPortal } from 'react-dom';
 import type { Encounter } from '@/lib/care-flow';
 import type { Patient } from '@/lib/hospital-data';
+import logo from '@/assets/logo-santa-casa-hmisc.png.asset.json';
+
+/** Cabeçalho timbrado usado em todos os documentos impressos. */
+export function Letterhead({ title }: { title: string }) {
+  return <div className="doc-head"><img src={logo.url} alt="Santa Casa · Hospital Materno-Infantil Santa Catarina" className="doc-logo" /><div className="doc-title">{title}</div></div>;
+}
+export function LetterFooter() {
+  return <div className="doc-foot">Hospital Materno-Infantil Santa Catarina · Santa Casa de São Bernardo do Campo</div>;
+}
 
 /** Imprime somente o documento de alta/receita (oculta o resto da tela). */
 export function printDischarge() {
@@ -14,7 +23,7 @@ const fmt = (d?: string) => (d ? new Date(d).toLocaleString('pt-BR') : '—');
 
 function Header({ title, e, p }: { title: string; e: Encounter; p: Patient }) {
   return <>
-    <div className="doc-head"><div><b>HMISC · Hospital Materno-Infantil</b><div>Documento clínico</div></div><div className="doc-title">{title}</div></div>
+    <Letterhead title={title} />
     <table className="doc-id"><tbody>
       <tr><td><b>Paciente:</b> {p.name}</td><td><b>Prontuário:</b> {p.prontuario}</td></tr>
       <tr><td><b>Idade:</b> {p.age}{p.weight ? ` · ${p.weight} kg` : ''}</td><td><b>Convênio:</b> {p.insurance}</td></tr>
@@ -36,12 +45,14 @@ export function DischargePrint({ e, p }: { e: Encounter; p: Patient }) {
       <h3>Resumo e orientações de alta</h3>
       <p className="pre">{e.discharge.summary}</p>
       <Sign e={e} />
+      <LetterFooter />
     </section>
     <section className="doc-page">
       <Header title="RECEITUÁRIO" e={e} p={p} />
       <h3>Uso domiciliar</h3>
       <p className="pre">{e.discharge.recipe || 'Sem receita domiciliar.'}</p>
       <Sign e={e} />
+      <LetterFooter />
     </section>
   </div>, document.body);
 }
