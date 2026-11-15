@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { employeeRegistrationInputSchema } from "./employee-rules";
+import { employeeRegistrationInputSchema, employeeFunctionSchema } from "./employee-rules";
 
 export const registerEmployee = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => employeeRegistrationInputSchema.parse(input))
@@ -40,6 +40,13 @@ export const reviewEmployee = createServerFn({ method: "POST" }).middleware([req
   .handler(async ({ data, context }) => {
     const { error } = await context.supabase.rpc("review_employee", { target_id: data.id, new_status: data.status });
     if (error) throw new Error("Não foi possível alterar o acesso deste colaborador");
+    return { ok: true };
+  });
+export const updateEmployeeFunction = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => employeeFunctionSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase.rpc("set_employee_function", { target_id: data.id, new_function: data.job_function === "Outro" ? `Outro: ${data.other_function}` : data.job_function });
+    if (error) throw new Error("Não foi possível definir a função deste colaborador");
     return { ok: true };
   });
 

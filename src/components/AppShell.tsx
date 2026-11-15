@@ -7,7 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { loadEmployeeAccess } from "@/lib/employee-access";
 import { canApproveEmployees } from "@/lib/employee-rules";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { WARDS } from "@/lib/hospital-data";
+import { WARDS, canAccessPage } from "@/lib/hospital-data";
 import { professionalName, useStore } from "@/lib/hospital-store";
 import { cn } from "@/lib/utils";
 
@@ -44,8 +44,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   }, [q, patients]);
   const alerts = useMemo(() => [
     ...queue.filter((x) => x.risk === "vermelho").map((x) => ({ text: `Emergência na fila: ${x.name} – ${x.complaint}`, to: "/acolhimento" as const })),
-    ...patients.filter((p) => p.vitals.at(-1) && p.vitals.at(-1)!.sat < 92).map((p) => ({ text: `SatO2 ${p.vitals.at(-1)!.sat}% – ${p.name} (${p.bed})`, id: p.id })),
-    ...patients.filter((p) => p.vitals.at(-1) && p.vitals.at(-1)!.pas >= 140).map((p) => ({ text: `PA ${p.vitals.at(-1)!.pas}/${p.vitals.at(-1)!.pad} – ${p.name}`, id: p.id })),
+    ...patients.filter((p) => p.vitals.at(-1) && (p.vitals.at(-1)?.sat ?? 100) < 92).map((p) => ({ text: `SatO2 ${(p.vitals.at(-1)?.sat ?? 100)}% – ${p.name} (${p.bed})`, id: p.id })),
+    ...patients.filter((p) => p.vitals.at(-1) && (p.vitals.at(-1)?.pas ?? 0) >= 140).map((p) => ({ text: `PA ${(p.vitals.at(-1)?.pas ?? 0)}/${(p.vitals.at(-1)?.pad ?? 0)} – ${p.name}`, id: p.id })),
     ...patients.filter((p) => p.prescriptions.some((r) => r.pharmacy === "Pendente")).map((p) => ({ text: `Medicação aguardando farmácia – ${p.name}`, to: "/farmacia" as const })),
   ], [queue, patients]);
 
@@ -60,7 +60,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           {GROUPS.map((g) => (
             <div key={g.label} className="space-y-1">
               {!collapsed && <div className="px-3 text-[10px] uppercase tracking-wider opacity-60">{g.label}</div>}
-              {g.items.map((n) => {
+              {g.items.filter((n) => canAccessPage(profile, n.to)).map((n) => {
                 const active = n.to === "/" ? path === "/" : path.startsWith(n.to);
                 return (
                   <Link key={n.to} to={n.to} title={n.label} className={cn("flex items-center gap-3 rounded-md px-3 py-2 text-sm", active ? "bg-sidebar-primary text-sidebar-primary-foreground" : "hover:bg-sidebar-accent")}>
@@ -72,7 +72,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           ))}
           {canApproveEmployees(access?.roles ?? [], access?.profile.status ?? "") && <Link to="/colaboradores" title="Colaboradores" className="flex items-center gap-3 rounded-md px-3 py-2 text-sm hover:bg-sidebar-accent"><UserCog className="h-4 w-4 shrink-0" />{!collapsed && "Colaboradores"}</Link>}
           {!collapsed && <div className="px-3 pt-2 text-[10px] uppercase tracking-wider opacity-60">Acesso rápido</div>}
-          {!collapsed && patients.slice(0, 5).map((p) => (
+          {!collapsed && canAccessPage(profile, "/pacientes") && patients.slice(0, 5).map((p) => (
             <Link key={p.id} to="/pacientes/$id" params={{ id: p.id }} className="flex items-center gap-2 rounded-md px-3 py-1.5 text-xs hover:bg-sidebar-accent">
               <BedDouble className="h-3.5 w-3.5 opacity-70" /><span className="truncate">{p.bed} · {p.name.split(" ").slice(0, 2).join(" ")}</span>
             </Link>
@@ -87,7 +87,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="relative w-full max-w-md">
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
             <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar: nome, CPF, prontuário ou nome da mãe" className="h-9 w-full rounded-md border bg-background pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-ring" />
-            {results.length > 0 && (
+            {canAccessPage(profile, "/pacientes") && results.length > 0 && (
               <div className="absolute left-0 right-0 top-11 rounded-md border bg-popover p-1 shadow-lg">
                 {results.map((p) => (
                   <button key={p.id} onClick={() => { setQ(""); navigate({ to: "/pacientes/$id", params: { id: p.id } }); }} className="flex w-full flex-col items-start rounded px-3 py-2 text-left hover:bg-muted">

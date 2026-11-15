@@ -135,6 +135,10 @@ export type Database = {
         Args: { new_status: string; target_id: string }
         Returns: undefined
       }
+      set_employee_function: {
+        Args: { new_function: string; target_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "super_admin" | "admin" | "employee"

@@ -17,7 +17,8 @@ function apply(data: Partial<Snapshot>, v: number) {
   version = v;
   if (!data || !Object.keys(data).length) return;
   applying = true;
-  setState(() => ({ ...data, stock: normalizeStock(data.stock) }) as never);
+  const clinical = Object.fromEntries(KEYS.filter((key) => key in data).map((key) => [key, data[key]]));
+  setState(() => ({ ...clinical, stock: normalizeStock(data.stock) }) as never);
   applying = false;
 }
 

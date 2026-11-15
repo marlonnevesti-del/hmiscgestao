@@ -8,7 +8,7 @@ export const WARDS: { id: Ward; name: string }[] = [
   { id: "ENFP", name: "Enfermaria Pediátrica" },
 ];
 
-export type Profile = "Médico" | "Enfermeiro" | "Farmacêutico" | "Recepção" | "Administrador" | "Outro";
+export type Profile = "Médico" | "Enfermeiro" | "Técnico de enfermagem" | "Fisioterapeuta" | "Administrativo" | "Farmacêutico" | "Recepção" | "Administrador" | "Outro";
 export const PROFILES: Profile[] = ["Médico", "Enfermeiro", "Farmacêutico", "Recepção"];
 export type Action = "recepcao" | "prescrever" | "evoluir" | "parto" | "checar" | "triagem" | "farmacia" | "faturar" | "cirurgia";
 const PERMS: Record<Profile, Action[]> = {
@@ -16,10 +16,26 @@ const PERMS: Record<Profile, Action[]> = {
   Outro: [],
   Médico: ["prescrever", "evoluir", "parto", "triagem", "cirurgia"],
   Enfermeiro: ["evoluir", "checar", "triagem", "cirurgia"],
+  "Técnico de enfermagem": ["checar"],
+  Fisioterapeuta: ["evoluir"],
+  Administrativo: ["faturar"],
   Farmacêutico: ["farmacia"],
-  Recepção: ["faturar", "recepcao"],
+  Recepção: ["recepcao"],
 };
 export const can = (p: Profile, a: Action) => PERMS[p].includes(a);
+export function canAccessPage(profile: Profile, path: string) {
+  if (profile === "Administrador") return true;
+  if (path === "/") return true;
+  if (path === "/recepcao") return can(profile, "recepcao");
+  if (path === "/acolhimento") return can(profile, "triagem");
+  if (path === "/atendimento") return can(profile, "prescrever");
+  if (path.startsWith("/pacientes")) return can(profile, "evoluir") || can(profile, "prescrever") || can(profile, "checar");
+  if (path === "/centro-cirurgico") return can(profile, "cirurgia");
+  if (path === "/farmacia") return can(profile, "farmacia");
+  if (path === "/enfermagem") return can(profile, "checar");
+  if (path === "/faturamento") return can(profile, "faturar");
+  return false;
+}
 
 export type PatientType = "gestante" | "puerpera" | "pediatria" | "neonato";
 export type EvoCat = "Médica" | "Enfermagem" | "Fisioterapia" | "Serviço Social";

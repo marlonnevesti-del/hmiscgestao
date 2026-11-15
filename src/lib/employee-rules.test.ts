@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { canApproveEmployees, canCreateAdmins, canRemoveEmployee, clinicalProfile, employeeSchema, employeeRegistrationInputSchema, needsCouncil, filterEmployees } from "./employee-rules";
-import { can } from "./hospital-data";
+import { can, canAccessPage } from "./hospital-data";
+import { ATTENDANCE_TYPES } from "./care-flow";
 describe("acesso de colaboradores", () => {
   const registration = { full_name: "Colaborador Teste", username: "colaborador", email: "teste@example.com", password: "Example-test!42", cpf: "12345678901", phone: "11999999999", birth_date: "1990-01-01", address: "Rua de Teste 10", job_function: "Recepcionista", council_type: "", council_number: "", council_state: "" };
   it.each([
@@ -38,4 +39,31 @@ describe("acesso de colaboradores", () => {
   it("só o administrador principal cadastra outros adms", () => { expect(canCreateAdmins(["admin"], "approved")).toBe(false); expect(canCreateAdmins(["super_admin"], "approved")).toBe(true); });
   it("administrador tem todas as ações hospitalares", () => { for (const action of ["prescrever", "evoluir", "parto", "checar", "triagem", "farmacia", "faturar", "cirurgia"] as const) expect(can("Administrador", action)).toBe(true); });
   it("função de recepção não recebe prescrição", () => expect(can(clinicalProfile("Recepcionista", ["employee"]), "prescrever")).toBe(false));
+  it("recepção tem somente as três opções solicitadas", () => expect(ATTENDANCE_TYPES).toEqual(["Maternidade", "Pronto socorro", "Ambulatório"]));
+  it("recepção abre cadastros mas não acessa áreas clínicas nem faturamento", () => {
+    const profile = clinicalProfile("Recepcionista", ["employee"]);
+    expect(canAccessPage(profile, "/recepcao")).toBe(true);
+    for (const path of ["/atendimento", "/acolhimento", "/farmacia", "/enfermagem", "/colaboradores", "/faturamento", "/pacientes/123"]) expect(canAccessPage(profile, path)).toBe(false);
+  });
+  it("médico não recebe acesso de recepção ou farmácia", () => {
+    expect(canAccessPage(clinicalProfile("Médico", ["employee"]), "/atendimento")).toBe(true);
+    expect(canAccessPage(clinicalProfile("Médico", ["employee"]), "/recepcao")).toBe(false);
+    expect(canAccessPage(clinicalProfile("Médico", ["employee"]), "/farmacia")).toBe(false);
+  });
+  it("farmacêutico recebe somente a área da farmácia", () => {
+    expect(canAccessPage(clinicalProfile("Farmacêutico", ["employee"]), "/farmacia")).toBe(true);
+    expect(canAccessPage(clinicalProfile("Farmacêutico", ["employee"]), "/atendimento")).toBe(false);
+  });
+  it("técnico não herda classificação de risco do enfermeiro", () => {
+    expect(can(clinicalProfile("Técnico de enfermagem", ["employee"]), "checar")).toBe(true);
+    expect(can(clinicalProfile("Técnico de enfermagem", ["employee"]), "triagem")).toBe(false);
+  });
+  it("administrativo recebe faturamento sem prescrição", () => {
+    expect(canAccessPage(clinicalProfile("Administrativo", ["employee"]), "/faturamento")).toBe(true);
+    expect(can(clinicalProfile("Administrativo", ["employee"]), "prescrever")).toBe(false);
+  });
+  it("principal mantém acesso a todas as áreas independentemente da função", () => {
+    const profile = clinicalProfile("Recepcionista", ["super_admin"]);
+    for (const path of ["/recepcao", "/acolhimento", "/atendimento", "/farmacia", "/enfermagem", "/colaboradores"]) expect(canAccessPage(profile, path)).toBe(true);
+  });
 });

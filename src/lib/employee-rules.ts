@@ -20,6 +20,9 @@ export const employeeSchema = z.object({
   if (needsCouncil(v.job_function) && (!v.council_type || !v.council_number || v.council_state.length !== 2)) ctx.addIssue({ code: "custom", path: ["council_number"], message: "Informe conselho, número e UF" });
 });
 export type EmployeeRegistration = z.input<typeof employeeSchema>;
+export const employeeFunctionSchema = z.object({ id: z.string().uuid(), job_function: z.enum(JOBS), other_function: z.string().trim().max(100).default("") }).superRefine((v, ctx) => {
+  if (v.job_function === "Outro" && !v.other_function) ctx.addIssue({ code: "custom", path: ["other_function"], message: "Informe a função" });
+});
 // Preview hostnames change; validate the protocol, not a fixed deployment list.
 export const employeeRegistrationInputSchema = employeeSchema.and(z.object({
   origin: z.string().url().refine((origin) => {
@@ -39,8 +42,7 @@ export function filterEmployees<T extends { status: string; full_name: string; u
 export function clinicalProfile(job: string, roles: readonly string[]): Profile {
   if (roles.includes("super_admin") || roles.includes("admin")) return "Administrador";
   if (job === "Recepcionista") return "Recepção";
-  if (job === "Técnico de enfermagem") return "Enfermeiro";
-  if (job === "Médico" || job === "Enfermeiro" || job === "Farmacêutico") return job;
+  if (job === "Médico" || job === "Enfermeiro" || job === "Farmacêutico" || job === "Técnico de enfermagem" || job === "Fisioterapeuta" || job === "Administrativo") return job;
   return "Outro";
 }
 export function employeeHead(title: string, description: string) {

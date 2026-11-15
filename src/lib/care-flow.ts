@@ -5,7 +5,7 @@ export type FlowStatus = typeof FLOW[number];
 export const FLOW_LABELS: Record<FlowStatus, string> = {
   AGUARDANDO_TRIAGEM: 'Aguardando triagem', AGUARDANDO_MEDICO: 'Aguardando médico', EM_ATENDIMENTO_MEDICO: 'Em atendimento médico', AGUARDANDO_FARMACIA: 'Aguardando farmácia', AGUARDANDO_MEDICACAO: 'Liberado para administração', EM_OBSERVACAO_REAVALIACAO: 'Pronto para reavaliação', ENCAMINHADO_INTERNACAO: 'Encaminhado à internação', ENCAMINHADO_CO: 'Encaminhado ao Centro Obstétrico', ALTA_HOSPITALAR: 'Alta hospitalar',
 };
-export const ATTENDANCE_TYPES = ['Pronto-Socorro Obstétrico', 'Pronto-Socorro Pediátrico', 'Consulta Ambulatorial', 'Internação Eletiva'] as const;
+export const ATTENDANCE_TYPES = ['Maternidade', 'Pronto socorro', 'Ambulatório'] as const;
 export interface Triage {
   risk: Manchester; weight: number; vital: Vital; complaint: string; allergies: string[]; ig: string; dum: string; bcf: string; contractions: string; fluid: string; bleeding: string; height: string; head: string; guardian: string;
   flowchart?: string; descriptors?: string[]; maxWait?: number;
