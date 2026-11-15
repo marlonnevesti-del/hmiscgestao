@@ -1,6 +1,6 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useMemo, useState, type ReactNode } from "react";
-import { Activity, BedDouble, Bell, ChevronLeft, ClipboardList, HeartPulse, Pill, Receipt, Scissors, Search, UserCog, UserPlus, Users, LogOut } from "lucide-react";
+import { Activity, BedDouble, Bell, ChevronLeft, ClipboardList, HeartPulse, Pill, Receipt, Scissors, Search, Tv, UserCog, UserPlus, Users, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
@@ -18,6 +18,7 @@ const GROUPS = [
     { to: "/acolhimento", label: "Acolhimento", icon: ClipboardList },
     { to: "/atendimento", label: "Consultório Médico", icon: HeartPulse },
     { to: "/pacientes", label: "Pacientes / PEP", icon: Users },
+    { to: "/painel-tv", label: "Painel de Chamadas (TV)", icon: Tv },
   ] },
   { label: "Apoio", items: [
     { to: "/centro-cirurgico", label: "Centro Cirúrgico", icon: Scissors },

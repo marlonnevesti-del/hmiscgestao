@@ -3,10 +3,11 @@ import { PATIENTS, QUEUE, SURGERIES, type Admin, type Newborn, type Patient, typ
 
 import { transition, validateTriage, type Encounter, type Triage, type FlowStatus } from "./care-flow";
 import { BASE_BEDS, can } from "./hospital-data";
+import { DEFAULT_ROOMS, addRoomName, pushCall, removeRoomName, type PanelCall } from "./panel-calls";
 import { findStockMedication, medicationKey, type StockMedication } from "./pharmacy-stock";
 
-interface State { encounters: Encounter[]; beSequence: number; stock: StockMedication[]; profile: Profile; employeeName: string; patients: Patient[]; queue: QueueItem[]; surgeries: Surgery[]; admins: Record<string, Admin> }
-let state: State = { profile: "Outro", employeeName: "", patients: [], queue: [], surgeries: [], admins: {}, encounters: [], beSequence: 0, stock: [] };
+interface State { encounters: Encounter[]; beSequence: number; stock: StockMedication[]; profile: Profile; employeeName: string; patients: Patient[]; queue: QueueItem[]; surgeries: Surgery[]; admins: Record<string, Admin>; rooms: string[]; calls: PanelCall[] }
+let state: State = { profile: "Outro", employeeName: "", patients: [], queue: [], surgeries: [], admins: {}, encounters: [], beSequence: 0, stock: [], rooms: DEFAULT_ROOMS, calls: [] };
 const ls = new Set<() => void>();
 export const getState = () => state;
 export function setState(fn: (s: State) => Partial<State>) { state = { ...state, ...fn(state) }; ls.forEach((l) => l()); }
@@ -165,3 +166,12 @@ export function registerBirth(motherId: string, nb: Omit<Newborn, "motherId">, m
   if (rn.bed.endsWith("-RN")) updatePatient(id, () => ({ bed: "AC-05B" }));
   return id;
 }
+
+export function announcePatient(patientId: string, room: string) {
+  if (!state.rooms.includes(room)) throw new Error('Selecione o consultório.');
+  const p = state.patients.find((x) => x.id === patientId); if (!p) throw new Error('Paciente não encontrado.');
+  const e = encounterFor(patientId);
+  setState((s) => ({ calls: pushCall(s.calls, { id: crypto.randomUUID(), patientName: p.name, room, risk: e?.triage?.risk, at: new Date().toISOString() }) }));
+}
+export function addRoom(name: string) { if (state.profile !== 'Administrador') throw new Error('Apenas administradores gerenciam consultórios.'); setState((s) => ({ rooms: addRoomName(s.rooms, name) })); }
+export function removeRoom(name: string) { if (state.profile !== 'Administrador') throw new Error('Apenas administradores gerenciam consultórios.'); setState((s) => ({ rooms: removeRoomName(s.rooms, name) })); }

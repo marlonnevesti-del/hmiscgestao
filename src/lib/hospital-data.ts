@@ -25,7 +25,7 @@ const PERMS: Record<Profile, Action[]> = {
 export const can = (p: Profile, a: Action) => PERMS[p].includes(a);
 export function canAccessPage(profile: Profile, path: string) {
   if (profile === "Administrador") return true;
-  if (path === "/") return true;
+  if (path === "/" || path === "/painel-tv") return true;
   if (path === "/recepcao") return can(profile, "recepcao");
   if (path === "/acolhimento") return can(profile, "triagem");
   if (path === "/atendimento") return can(profile, "prescrever");

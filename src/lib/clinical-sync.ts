@@ -1,10 +1,11 @@
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getState, setState, subscribeState } from "./hospital-store";
+import { DEFAULT_ROOMS } from "./panel-calls";
 import { normalizeStock } from "./pharmacy-stock";
 
 // Shared clinical data persisted as one snapshot row; keys below are the durable part of the store.
-const KEYS = ["encounters", "beSequence", "stock", "patients", "queue", "surgeries", "admins"] as const;
+const KEYS = ["encounters", "beSequence", "stock", "patients", "queue", "surgeries", "admins", "rooms", "calls"] as const;
 type Snapshot = Record<(typeof KEYS)[number], unknown>;
 const pick = () => Object.fromEntries(KEYS.map((k) => [k, getState()[k]])) as Snapshot;
 
@@ -18,7 +19,7 @@ function apply(data: Partial<Snapshot>, v: number) {
   if (!data || !Object.keys(data).length) return;
   applying = true;
   const clinical = Object.fromEntries(KEYS.filter((key) => key in data).map((key) => [key, data[key]]));
-  setState(() => ({ ...clinical, stock: normalizeStock(data.stock) }) as never);
+  setState(() => ({ ...clinical, stock: normalizeStock(data.stock), ...(Array.isArray(data.rooms) && data.rooms.length ? {} : { rooms: DEFAULT_ROOMS }), ...(Array.isArray(data.calls) ? {} : { calls: [] }) }) as never);
   applying = false;
 }
 
