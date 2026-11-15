@@ -23,7 +23,7 @@ export const Route = createFileRoute("/_authenticated/painel-tv")({
 
 function gong() {
   const ctx = new AudioContext();
-  [[659, 0], [523, 0.55]].forEach(([f, t]) => {
+  ([[659, 0], [523, 0.55]] as const).forEach(([f, t]) => {
     const o = ctx.createOscillator(); const g = ctx.createGain();
     o.frequency.value = f; o.connect(g); g.connect(ctx.destination);
     const s = ctx.currentTime + t; g.gain.setValueAtTime(0.0001, s); g.gain.exponentialRampToValueAtTime(0.5, s + 0.03); g.gain.exponentialRampToValueAtTime(0.0001, s + 1.4);
