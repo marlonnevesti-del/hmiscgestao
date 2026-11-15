@@ -8,6 +8,7 @@ export const FLOW_LABELS: Record<FlowStatus, string> = {
 export const ATTENDANCE_TYPES = ['Pronto-Socorro Obstétrico', 'Pronto-Socorro Pediátrico', 'Consulta Ambulatorial', 'Internação Eletiva'] as const;
 export interface Triage {
   risk: Manchester; weight: number; vital: Vital; complaint: string; allergies: string[]; ig: string; dum: string; bcf: string; contractions: string; fluid: string; bleeding: string; height: string; head: string; guardian: string;
+  flowchart?: string; descriptors?: string[]; maxWait?: number;
 }
 export interface Encounter {
   id: string; number: string; patientId: string; status_fluxo: FlowStatus; openedAt: string; type: string; specialty: string; complaint: string;

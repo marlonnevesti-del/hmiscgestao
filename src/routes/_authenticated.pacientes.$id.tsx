@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { NoPermission } from "@/components/AppShell";
 import { PatientIcon } from "@/components/PatientIcon";
+import { SpecialConditionsBanner } from "@/components/SpecialConditions";
 import { DRUGS, WARDS, allergyConflict, can, interactionsWith, pediatricDose, type EvoCat, type Patient, type PrescCat, type Vital } from "@/lib/hospital-data";
 import { getState, nowHM, professionalName, registerBirth, updatePatient, useStore } from "@/lib/hospital-store";
 import { cn } from "@/lib/utils";
@@ -55,6 +56,7 @@ function PEP() {
         <div className="mt-1 text-xs"><span className="font-medium">Diagnóstico:</span> {p.diagnosis}</div>
         <EncounterTimeline patientId={p.id} />
       </div>
+      <SpecialConditionsBanner patient={p} />
       <Tabs defaultValue="resumo" className="print:hidden">
         <TabsList className="flex-wrap">
           <TabsTrigger value="resumo">Resumo & Evolução</TabsTrigger>

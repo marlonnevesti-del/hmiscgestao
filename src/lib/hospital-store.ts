@@ -3,9 +3,10 @@ import { PATIENTS, QUEUE, SURGERIES, type Admin, type Newborn, type Patient, typ
 
 import { transition, validateTriage, type Encounter, type Triage, type FlowStatus } from "./care-flow";
 import { BASE_BEDS, can } from "./hospital-data";
+import { findStockMedication, medicationKey, type StockMedication } from "./pharmacy-stock";
 
-interface State { encounters: Encounter[]; beSequence: number; stock: Record<string, number>; profile: Profile; employeeName: string; patients: Patient[]; queue: QueueItem[]; surgeries: Surgery[]; admins: Record<string, Admin> }
-let state: State = { profile: "Outro", employeeName: "", patients: [], queue: [], surgeries: [], admins: {}, encounters: [], beSequence: 0, stock: {} };
+interface State { encounters: Encounter[]; beSequence: number; stock: StockMedication[]; profile: Profile; employeeName: string; patients: Patient[]; queue: QueueItem[]; surgeries: Surgery[]; admins: Record<string, Admin> }
+let state: State = { profile: "Outro", employeeName: "", patients: [], queue: [], surgeries: [], admins: {}, encounters: [], beSequence: 0, stock: [] };
 const ls = new Set<() => void>();
 export const getState = () => state;
 export function setState(fn: (s: State) => Partial<State>) { state = { ...state, ...fn(state) }; ls.forEach((l) => l()); }
@@ -45,7 +46,9 @@ export function completeTriage(id: string, t: Triage) {
   requireAction('triagem');
   const { e, p } = getEncounter(id);
   validateTriage(p.type === 'pediatria' || p.type === 'neonato', t);
-  const next = transition(e, 'AGUARDANDO_MEDICO', professionalName(state.profile), 'Triagem concluída');
+  const next = e.status_fluxo === 'AGUARDANDO_MEDICO'
+    ? { ...e, history: [...e.history, { status: e.status_fluxo, at: new Date().toISOString(), by: professionalName(state.profile), note: 'Reclassificação de risco pelo PCACR' }] }
+    : transition(e, 'AGUARDANDO_MEDICO', professionalName(state.profile), 'Triagem concluída');
   commitEncounter({ ...next, triage: t, complaint: t.complaint }, { patients: state.patients.map((x) => x.id === p.id ? { ...x, weight: t.weight, ...(Number(t.height) > 0 ? { height: Number(t.height) } : {}), guardian: t.guardian, ig: t.ig, dum: t.dum, allergies: t.allergies, risks: t.allergies.length ? [...new Set([...x.risks, 'Alergia' as const])] : x.risks.filter((r) => r !== 'Alergia'), vitals: [...x.vitals, t.vital] } : x) });
 }
 export function callPatient(id: string) {
@@ -76,15 +79,41 @@ export function dispenseKit(id: string, intervention: string) {
   requireAction('farmacia'); const { e, p } = getEncounter(id);
   const meds = p.prescriptions.filter((r) => r.pharmacy);
   if (!meds.length || meds.some((r) => r.pharmacy !== 'Validada')) throw new Error('Valide todos os itens do kit antes de dispensar.');
-  const quantities: Record<string, number> = {};
-  meds.forEach((r) => { const key = r.item.split(' ')[0] ?? r.item; quantities[key] = (quantities[key] ?? 0) + (r.times?.length ?? 1); });
-  const stock = { ...state.stock };
-  for (const [key, qty] of Object.entries(quantities)) { if ((stock[key] ?? 0) < qty) throw new Error(`Estoque insuficiente: ${key}. Registre a entrada no estoque virtual.`); stock[key] = (stock[key] ?? 0) - qty; }
+  const required = new Map<string, number>();
+  meds.forEach((r) => {
+    const medication = findStockMedication(state.stock, r.item);
+    if (!medication) throw new Error(`Estoque insuficiente: ${medicationKey(r.item)}. Cadastre o medicamento e registre a entrada.`);
+    required.set(medication.id, (required.get(medication.id) ?? 0) + (r.times?.length ?? 1));
+  });
+  for (const [medicationId, qty] of required) {
+    const medication = state.stock.find((item) => item.id === medicationId);
+    if (!medication || medication.quantity < qty) throw new Error(`Estoque insuficiente: ${medication?.name ?? medicationId}. Disponível: ${medication?.quantity ?? 0}; necessário: ${qty}.`);
+  }
+  const stock = state.stock.map((item) => ({ ...item, quantity: item.quantity - (required.get(item.id) ?? 0) }));
   commitEncounter({ ...transition(e, 'AGUARDANDO_MEDICACAO', professionalName(state.profile), 'Kit dispensado'), intervention }, { stock, patients: state.patients.map((x) => x.id === p.id ? { ...x, prescriptions: x.prescriptions.map((r) => r.pharmacy ? { ...r, pharmacy: 'Dispensada' } : r) } : x) });
 }
+export function createStockMedication(input: Omit<StockMedication, 'id'>) {
+  requireAction('farmacia');
+  const name = input.name.trim();
+  if (!name) throw new Error('Informe o nome e a concentração do medicamento.');
+  if (![input.quantity, input.minimum].every((n) => Number.isInteger(n) && n >= 0)) throw new Error('Estoque e mínimo devem ser números inteiros não negativos.');
+  if (state.stock.some((item) => item.name.toLocaleLowerCase('pt-BR') === name.toLocaleLowerCase('pt-BR'))) throw new Error('Este medicamento já está cadastrado.');
+  const medication: StockMedication = { id: crypto.randomUUID(), name, presentation: input.presentation.trim(), unit: input.unit.trim() || 'un', quantity: input.quantity, minimum: input.minimum };
+  setState((s) => ({ stock: [...s.stock, medication].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')) }));
+}
+export function adjustStock(id: string, delta: number) {
+  requireAction('farmacia');
+  if (!Number.isInteger(delta) || delta === 0) throw new Error('Informe uma entrada ou saída inteira diferente de zero.');
+  const medication = state.stock.find((item) => item.id === id);
+  if (!medication) throw new Error('Medicamento não encontrado.');
+  if (medication.quantity + delta < 0) throw new Error('O ajuste não pode deixar o estoque negativo.');
+  setState((s) => ({ stock: s.stock.map((item) => item.id === id ? { ...item, quantity: item.quantity + delta } : item) }));
+}
+/** Atalho usado pela integração da prescrição para acrescentar unidades a um item. */
 export function addStock(item: string, qty: number) {
-  requireAction('farmacia'); if (!item.trim() || !Number.isInteger(qty) || qty <= 0) throw new Error('Informe item e quantidade positiva.');
-  setState((s) => ({ stock: { ...s.stock, [item.trim().split(' ')[0] ?? item]: (s.stock[item.trim().split(' ')[0] ?? item] ?? 0) + qty } }));
+  const existing = findStockMedication(state.stock, item);
+  if (existing) { adjustStock(existing.id, qty); return; }
+  createStockMedication({ name: medicationKey(item), presentation: '', unit: 'un', quantity: qty, minimum: 0 });
 }
 export function recordMedication(id: string, rxId: string, time: string, status: Admin['status'], reason = '') {
   requireAction('checar'); const { e, p } = getEncounter(id);

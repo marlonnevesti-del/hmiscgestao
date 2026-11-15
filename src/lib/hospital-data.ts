@@ -35,7 +35,8 @@ export interface Newborn { apgar1: number; apgar5: number; pesoNascer: number; c
 export interface Patient {
   id: string; prontuario: string; name: string; cpf: string; motherName?: string; guardian?: string;
   type: PatientType; age: string; ig?: string; dum?: string; weight: number; height?: number;
-  allergies: string[]; risks: Risk[]; ward: Ward; bed: string; insurance: string; guia?: string; authorized: boolean;
+  allergies: string[]; risks: Risk[]; specialConditions?: string[]; otherSpecialCondition?: string;
+  ward: Ward; bed: string; insurance: string; guia?: string; authorized: boolean;
   diagnosis: string; admission: string; days: number; dischargeForecast?: string;
   evolutions: Evolution[]; vitals: Vital[]; prescriptions: Prescription[]; previousPrescriptions?: Prescription[];
   partograma?: PartoPoint[]; newborn?: Newborn; babyIds?: string[];

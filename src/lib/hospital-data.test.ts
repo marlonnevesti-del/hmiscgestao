@@ -22,3 +22,8 @@ it("conta inclui diárias e medicamento checado", () => {
   expect(b.total).toBe(2 * 420 + 18.5);
 });
 it("não apresenta pacientes fictícios", () => expect(PATIENTS).toHaveLength(0));
+it("guarda as condições especiais no prontuário", () => {
+  const p: Patient = { id:'special',prontuario:'2',name:'Paciente',cpf:'',type:'pediatria',age:'8',weight:25,allergies:[],risks:[],specialConditions:['Autismo / TEA','Outra'],otherSpecialCondition:'Necessita acompanhante',ward:'PSP',bed:'',insurance:'SUS',authorized:true,diagnosis:'',admission:'',days:1,evolutions:[],vitals:[],prescriptions:[] };
+  expect(p.specialConditions).toContain('Autismo / TEA');
+  expect(p.otherSpecialCondition).toBe('Necessita acompanhante');
+});

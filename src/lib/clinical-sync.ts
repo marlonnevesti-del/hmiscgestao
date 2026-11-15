@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getState, setState, subscribeState } from "./hospital-store";
+import { normalizeStock } from "./pharmacy-stock";
 
 // Shared clinical data persisted as one snapshot row; keys below are the durable part of the store.
 const KEYS = ["encounters", "beSequence", "stock", "patients", "queue", "surgeries", "admins"] as const;
@@ -16,7 +17,7 @@ function apply(data: Partial<Snapshot>, v: number) {
   version = v;
   if (!data || !Object.keys(data).length) return;
   applying = true;
-  setState(() => data as never);
+  setState(() => ({ ...data, stock: normalizeStock(data.stock) }) as never);
   applying = false;
 }
 
