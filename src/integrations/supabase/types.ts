@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      clinical_state: {
+        Row: {
+          data: Json
+          id: string
+          updated_at: string
+          updated_by: string | null
+          version: number
+        }
+        Insert: {
+          data?: Json
+          id?: string
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+        }
+        Update: {
+          data?: Json
+          id?: string
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           address: string
@@ -102,6 +126,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_approved_employee: { Args: { _user_id: string }; Returns: boolean }
       remove_employee_access: {
         Args: { target_id: string }
         Returns: undefined

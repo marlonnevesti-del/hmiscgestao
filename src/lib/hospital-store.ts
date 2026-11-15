@@ -9,7 +9,8 @@ let state: State = { profile: "Outro", employeeName: "", patients: [], queue: []
 const ls = new Set<() => void>();
 export const getState = () => state;
 export function setState(fn: (s: State) => Partial<State>) { state = { ...state, ...fn(state) }; ls.forEach((l) => l()); }
-const sub = (l: () => void) => { ls.add(l); return () => ls.delete(l); };
+const sub = (l: () => void) => { ls.add(l); return () => { ls.delete(l); }; };
+export const subscribeState = sub;
 export function useStore<T>(sel: (s: State) => T): T { return useSyncExternalStore(sub, () => sel(state), () => sel(state)); }
 
 export const updatePatient = (id: string, fn: (p: Patient) => Partial<Patient>) =>

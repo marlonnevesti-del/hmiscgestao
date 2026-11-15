@@ -29,6 +29,13 @@
       "when": 1794687635108,
       "tag": "0003_remove_employee_access",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794738833468,
+      "tag": "0004_clinical_state",
+      "breakpoints": true
     }
   ]
 }
