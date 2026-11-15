@@ -151,3 +151,19 @@
 
 @keyframes allergy-pulse { 0%,100% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--maternal) 55%, transparent);} 50% { box-shadow: 0 0 0 6px transparent; } }
 @utility pulse-alert { animation: allergy-pulse 1.6s ease-in-out infinite; }
+
+.print-doc-root { display: none; }
+@media print {
+  body.print-doc > *:not(.print-doc-root) { display: none !important; }
+  body.print-doc .print-doc-root { display: block !important; color: #000; background: #fff; font-size: 12pt; }
+  .print-doc-root .doc-page { page-break-after: always; padding: 1.5cm; min-height: 25cm; position: relative; }
+  .print-doc-root .doc-page:last-child { page-break-after: auto; }
+  .print-doc-root .doc-head { display: flex; justify-content: space-between; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 12px; }
+  .print-doc-root .doc-title { font-size: 16pt; font-weight: 700; }
+  .print-doc-root .doc-id { width: 100%; border: 1px solid #000; border-collapse: collapse; margin-bottom: 12px; }
+  .print-doc-root .doc-id td { border: 1px solid #000; padding: 4px 6px; }
+  .print-doc-root h3 { font-weight: 700; margin: 12px 0 6px; }
+  .print-doc-root .pre { white-space: pre-wrap; }
+  .print-doc-root .doc-sign { position: absolute; bottom: 2cm; left: 0; right: 0; text-align: center; }
+  .print-doc-root .doc-sign .line { width: 8cm; border-top: 1px solid #000; margin: 0 auto 4px; }
+}
