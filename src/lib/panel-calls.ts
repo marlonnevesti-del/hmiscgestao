@@ -1,5 +1,5 @@
 // Pure rules for the waiting-room TV panel: call rooms and announcements.
-export interface PanelCall { id: string; patientName: string; room: string; risk?: string; at: string }
+export interface PanelCall { id: string; patientName: string; room: string; risk?: string | undefined; at: string }
 export const DEFAULT_ROOMS = ["Triagem", "Consultório 01", "Consultório 02"];
 export function addRoomName(rooms: string[], name: string) {
   const n = name.trim().replace(/\s+/g, " ");
