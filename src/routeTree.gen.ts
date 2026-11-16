@@ -16,6 +16,7 @@ import { Route as PendenteRouteImport } from './routes/pendente'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated.index'
 import { Route as AuthenticatedAcolhimentoRouteImport } from './routes/_authenticated.acolhimento'
+import { Route as AuthenticatedAlmoxarifadoRouteImport } from './routes/_authenticated.almoxarifado'
 import { Route as AuthenticatedAtendimentoRouteImport } from './routes/_authenticated.atendimento'
 import { Route as AuthenticatedCentroCirurgicoRouteImport } from './routes/_authenticated.centro-cirurgico'
 import { Route as AuthenticatedColaboradoresRouteImport } from './routes/_authenticated.colaboradores'
@@ -60,6 +61,12 @@ const AuthenticatedAcolhimentoRoute =
   AuthenticatedAcolhimentoRouteImport.update({
     id: '/acolhimento',
     path: '/acolhimento',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedAlmoxarifadoRoute =
+  AuthenticatedAlmoxarifadoRouteImport.update({
+    id: '/almoxarifado',
+    path: '/almoxarifado',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedAtendimentoRoute =
@@ -126,6 +133,7 @@ export interface FileRoutesByFullPath {
   '/pendente': typeof PendenteRoute
   '/reset-password': typeof ResetPasswordRoute
   '/acolhimento': typeof AuthenticatedAcolhimentoRoute
+  '/almoxarifado': typeof AuthenticatedAlmoxarifadoRoute
   '/atendimento': typeof AuthenticatedAtendimentoRoute
   '/centro-cirurgico': typeof AuthenticatedCentroCirurgicoRoute
   '/colaboradores': typeof AuthenticatedColaboradoresRoute
@@ -143,6 +151,7 @@ export interface FileRoutesByTo {
   '/pendente': typeof PendenteRoute
   '/reset-password': typeof ResetPasswordRoute
   '/acolhimento': typeof AuthenticatedAcolhimentoRoute
+  '/almoxarifado': typeof AuthenticatedAlmoxarifadoRoute
   '/atendimento': typeof AuthenticatedAtendimentoRoute
   '/centro-cirurgico': typeof AuthenticatedCentroCirurgicoRoute
   '/colaboradores': typeof AuthenticatedColaboradoresRoute
@@ -163,6 +172,7 @@ export interface FileRoutesById {
   '/pendente': typeof PendenteRoute
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/acolhimento': typeof AuthenticatedAcolhimentoRoute
+  '/_authenticated/almoxarifado': typeof AuthenticatedAlmoxarifadoRoute
   '/_authenticated/atendimento': typeof AuthenticatedAtendimentoRoute
   '/_authenticated/centro-cirurgico': typeof AuthenticatedCentroCirurgicoRoute
   '/_authenticated/colaboradores': typeof AuthenticatedColaboradoresRoute
@@ -184,6 +194,7 @@ export interface FileRouteTypes {
     | '/pendente'
     | '/reset-password'
     | '/acolhimento'
+    | '/almoxarifado'
     | '/atendimento'
     | '/centro-cirurgico'
     | '/colaboradores'
@@ -201,6 +212,7 @@ export interface FileRouteTypes {
     | '/pendente'
     | '/reset-password'
     | '/acolhimento'
+    | '/almoxarifado'
     | '/atendimento'
     | '/centro-cirurgico'
     | '/colaboradores'
@@ -220,6 +232,7 @@ export interface FileRouteTypes {
     | '/pendente'
     | '/reset-password'
     | '/_authenticated/acolhimento'
+    | '/_authenticated/almoxarifado'
     | '/_authenticated/atendimento'
     | '/_authenticated/centro-cirurgico'
     | '/_authenticated/colaboradores'
@@ -290,6 +303,13 @@ declare module '@tanstack/react-router' {
       path: '/acolhimento'
       fullPath: '/acolhimento'
       preLoaderRoute: typeof AuthenticatedAcolhimentoRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/almoxarifado': {
+      id: '/_authenticated/almoxarifado'
+      path: '/almoxarifado'
+      fullPath: '/almoxarifado'
+      preLoaderRoute: typeof AuthenticatedAlmoxarifadoRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/atendimento': {
@@ -367,6 +387,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteChildren {
   AuthenticatedAcolhimentoRoute: typeof AuthenticatedAcolhimentoRoute
+  AuthenticatedAlmoxarifadoRoute: typeof AuthenticatedAlmoxarifadoRoute
   AuthenticatedAtendimentoRoute: typeof AuthenticatedAtendimentoRoute
   AuthenticatedCentroCirurgicoRoute: typeof AuthenticatedCentroCirurgicoRoute
   AuthenticatedColaboradoresRoute: typeof AuthenticatedColaboradoresRoute
@@ -382,6 +403,7 @@ interface AuthenticatedRouteChildren {
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAcolhimentoRoute: AuthenticatedAcolhimentoRoute,
+  AuthenticatedAlmoxarifadoRoute: AuthenticatedAlmoxarifadoRoute,
   AuthenticatedAtendimentoRoute: AuthenticatedAtendimentoRoute,
   AuthenticatedCentroCirurgicoRoute: AuthenticatedCentroCirurgicoRoute,
   AuthenticatedColaboradoresRoute: AuthenticatedColaboradoresRoute,

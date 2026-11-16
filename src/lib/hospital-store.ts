@@ -4,12 +4,15 @@ import { PATIENTS, QUEUE, SURGERIES, type Admin, type Newborn, type Patient, typ
 import { transition, validateTriage, type Encounter, type Triage, type FlowStatus } from "./care-flow";
 import { BASE_BEDS, can } from "./hospital-data";
 import { DEFAULT_ROOMS, addRoomName, pushCall, removeRoomName, type PanelCall } from "./panel-calls";
-import { findStockMedication, medicationKey, type StockMedication } from "./pharmacy-stock";
+import { catalogToStock, findStockMedication, medicationKey, type StockMedication } from "./pharmacy-stock";
+import CATALOG from "./stock-catalog.json";
+export const PHARMACY_CATALOG = catalogToStock(CATALOG.farm, 'farm');
+export const WAREHOUSE_CATALOG = catalogToStock(CATALOG.almox, 'almox');
 import { registrationPatch } from "./patient-registration-mapping";
 import type { PatientRegistration } from "./patient-registration";
 
-interface State { encounters: Encounter[]; beSequence: number; stock: StockMedication[]; profile: Profile; employeeName: string; patients: Patient[]; queue: QueueItem[]; surgeries: Surgery[]; admins: Record<string, Admin>; rooms: string[]; calls: PanelCall[] }
-let state: State = { profile: "Outro", employeeName: "", patients: [], queue: [], surgeries: [], admins: {}, encounters: [], beSequence: 0, stock: [], rooms: DEFAULT_ROOMS, calls: [] };
+interface State { encounters: Encounter[]; beSequence: number; stock: StockMedication[]; warehouse: StockMedication[]; profile: Profile; employeeName: string; patients: Patient[]; queue: QueueItem[]; surgeries: Surgery[]; admins: Record<string, Admin>; rooms: string[]; calls: PanelCall[] }
+let state: State = { profile: "Outro", employeeName: "", patients: [], queue: [], surgeries: [], admins: {}, encounters: [], beSequence: 0, stock: PHARMACY_CATALOG, warehouse: WAREHOUSE_CATALOG, rooms: DEFAULT_ROOMS, calls: [] };
 const ls = new Set<() => void>();
 export const getState = () => state;
 export function setState(fn: (s: State) => Partial<State>) { state = { ...state, ...fn(state) }; ls.forEach((l) => l()); }
@@ -118,6 +121,14 @@ export function adjustStock(id: string, delta: number) {
   if (!medication) throw new Error('Medicamento não encontrado.');
   if (medication.quantity + delta < 0) throw new Error('O ajuste não pode deixar o estoque negativo.');
   setState((s) => ({ stock: s.stock.map((item) => item.id === id ? { ...item, quantity: item.quantity + delta } : item) }));
+}
+export function adjustWarehouse(id: string, delta: number) {
+  requireAction('almoxarifado');
+  if (!Number.isInteger(delta) || delta === 0) throw new Error('Informe uma entrada ou saída inteira diferente de zero.');
+  const item = state.warehouse.find((x) => x.id === id);
+  if (!item) throw new Error('Item não encontrado.');
+  if (item.quantity + delta < 0) throw new Error('O ajuste não pode deixar o estoque negativo.');
+  setState((s) => ({ warehouse: s.warehouse.map((x) => x.id === id ? { ...x, quantity: x.quantity + delta } : x) }));
 }
 /** Atalho usado pela integração da prescrição para acrescentar unidades a um item. */
 export function addStock(item: string, qty: number) {

@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { StockTable } from "./StockTable";
 import { EncounterTimeline } from "./EncounterTimeline";
 import { can } from "@/lib/hospital-data";
 import { adjustStock, createStockMedication, dispenseKit, recordMedication, useStore, validatePrescription } from "@/lib/hospital-store";
@@ -61,12 +62,8 @@ function StockManager() {
   const profile = useStore((state) => state.profile);
   const allowed = can(profile, "farmacia");
   const [form, setForm] = useState(EMPTY_MEDICATION);
-  const [adjustments, setAdjustments] = useState<Record<string, string>>({});
   return <div className="space-y-4">
-    <div className="overflow-x-auto rounded-xl border bg-card"><table className="w-full text-sm"><thead className="bg-muted text-left text-xs uppercase text-muted-foreground"><tr><th className="p-3">Medicamento</th><th className="p-3">Estoque</th><th className="p-3">Mínimo</th><th className="p-3">Entrada / ajuste</th></tr></thead><tbody>
-      {stock.map((medication) => <tr key={medication.id} className="border-t"><td className="p-3"><div className="font-medium">{medication.name}</div><div className="text-xs text-muted-foreground">{medication.presentation || "Apresentação não informada"}</div></td><td className={cn("p-3 font-mono font-semibold", isStockLow(medication) && "text-destructive")}>{medication.quantity} {medication.unit}{isStockLow(medication) && <AlertTriangle className="ml-1 inline h-3.5 w-3.5" />}</td><td className="p-3 font-mono">{medication.minimum}</td><td className="p-3"><div className="flex gap-2"><Input aria-label={`Ajuste de ${medication.name}`} className="w-24" type="number" placeholder="+/- qtd" value={adjustments[medication.id] ?? ""} onChange={(event) => setAdjustments((current) => ({ ...current, [medication.id]: event.target.value }))} /><Button size="sm" variant="secondary" disabled={!allowed || !Number(adjustments[medication.id])} onClick={() => run(() => { adjustStock(medication.id, Number(adjustments[medication.id])); setAdjustments((current) => ({ ...current, [medication.id]: "" })); toast.success("Estoque atualizado"); })}>Lançar</Button></div></td></tr>)}
-      {!stock.length && <tr><td colSpan={4} className="p-8 text-center text-sm text-muted-foreground">Nenhum medicamento cadastrado. Use o formulário abaixo para montar o estoque.</td></tr>}
-    </tbody></table></div>
+    <StockTable items={stock} allowed={allowed} onAdjust={adjustStock} label="Medicamento" />
     <form className="rounded-xl border bg-card p-4" onSubmit={(event) => { event.preventDefault(); run(() => { createStockMedication({ name: form.name, presentation: form.presentation, unit: form.unit, quantity: Number(form.quantity), minimum: Number(form.minimum) }); setForm(EMPTY_MEDICATION); toast.success("Medicamento cadastrado"); }); }}><h3 className="mb-3 text-sm font-semibold">Cadastrar medicamento</h3><div className="grid gap-2 md:grid-cols-[2fr_1fr_80px_100px_100px_auto]"><Input aria-label="Nome e concentração" placeholder="Nome e concentração" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} required /><Input aria-label="Apresentação" placeholder="Apresentação" value={form.presentation} onChange={(event) => setForm({ ...form, presentation: event.target.value })} /><Input aria-label="Unidade" placeholder="Unid." value={form.unit} onChange={(event) => setForm({ ...form, unit: event.target.value })} required /><Input aria-label="Estoque inicial" type="number" min="0" placeholder="Estoque" value={form.quantity} onChange={(event) => setForm({ ...form, quantity: event.target.value })} required /><Input aria-label="Estoque mínimo" type="number" min="0" placeholder="Mínimo" value={form.minimum} onChange={(event) => setForm({ ...form, minimum: event.target.value })} required /><Button type="submit" disabled={!allowed}>Cadastrar</Button></div></form>
   </div>;
 }

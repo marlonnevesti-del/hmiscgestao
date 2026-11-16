@@ -11,16 +11,16 @@ export const WARDS: { id: Ward; name: string }[] = [
 
 export type Profile = "Médico" | "Enfermeiro" | "Técnico de enfermagem" | "Fisioterapeuta" | "Administrativo" | "Farmacêutico" | "Recepção" | "Administrador" | "Outro";
 export const PROFILES: Profile[] = ["Médico", "Enfermeiro", "Farmacêutico", "Recepção"];
-export type Action = "recepcao" | "prescrever" | "evoluir" | "parto" | "checar" | "triagem" | "farmacia" | "faturar" | "cirurgia";
+export type Action = "recepcao" | "prescrever" | "evoluir" | "parto" | "checar" | "triagem" | "farmacia" | "faturar" | "cirurgia" | "almoxarifado";
 const PERMS: Record<Profile, Action[]> = {
-  Administrador: ["recepcao", "prescrever", "evoluir", "parto", "checar", "triagem", "farmacia", "faturar", "cirurgia"],
+  Administrador: ["recepcao", "prescrever", "evoluir", "parto", "checar", "triagem", "farmacia", "faturar", "cirurgia", "almoxarifado"],
   Outro: [],
   Médico: ["prescrever", "evoluir", "parto", "triagem", "cirurgia"],
   Enfermeiro: ["evoluir", "checar", "triagem", "cirurgia"],
   "Técnico de enfermagem": ["checar"],
   Fisioterapeuta: ["evoluir"],
-  Administrativo: ["faturar"],
-  Farmacêutico: ["farmacia"],
+  Administrativo: ["faturar", "almoxarifado"],
+  Farmacêutico: ["farmacia", "almoxarifado"],
   Recepção: ["recepcao"],
 };
 export const can = (p: Profile, a: Action) => PERMS[p].includes(a);
@@ -33,6 +33,7 @@ export function canAccessPage(profile: Profile, path: string) {
   if (path.startsWith("/pacientes")) return can(profile, "evoluir") || can(profile, "prescrever") || can(profile, "checar");
   if (path === "/centro-cirurgico") return can(profile, "cirurgia");
   if (path === "/farmacia") return can(profile, "farmacia");
+  if (path === "/almoxarifado") return can(profile, "almoxarifado");
   if (path === "/enfermagem") return can(profile, "checar");
   if (path === "/faturamento") return can(profile, "faturar");
   return false;

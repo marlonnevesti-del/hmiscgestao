@@ -16,3 +16,25 @@ describe("estoque da farmácia", () => {
     expect(findStockMedication(stock, "Paracetamol 180 mg (60 mg/kg/dia)")?.id).toBe("1");
   });
 });
+
+import { catalogToStock, mergeCatalog } from "./pharmacy-stock";
+import CATALOG from "./stock-catalog.json";
+import { canAccessPage } from "./hospital-data";
+describe("importação de saldos", () => {
+  it("separa almoxarifado e farmácia conforme o relatório", () => {
+    expect(CATALOG.almox.every((r) => r.location === "Almoxarifado Geral")).toBe(true);
+    expect(CATALOG.farm.some((r) => r.location === "Almoxarifado Geral")).toBe(false);
+    expect(CATALOG.almox.find((r) => r.code === "7426")?.quantity).toBe(30);
+  });
+  it("não sobrescreve saldos já movimentados", () => {
+    const cat = catalogToStock([{ code: "1", name: "X", unit: "AMP", quantity: 10, unitCost: 1, antibiotic: false, location: "Farmacia Central", lots: [] }], "farm");
+    const moved = [{ ...cat[0]!, quantity: 3 }];
+    expect(mergeCatalog(moved, cat)[0]!.quantity).toBe(3);
+    expect(mergeCatalog([], cat)).toHaveLength(1);
+  });
+  it("almoxarifado liberado a farmacêutico e administrativo, não à recepção", () => {
+    expect(canAccessPage("Farmacêutico", "/almoxarifado")).toBe(true);
+    expect(canAccessPage("Administrativo", "/almoxarifado")).toBe(true);
+    expect(canAccessPage("Recepção", "/almoxarifado")).toBe(false);
+  });
+});

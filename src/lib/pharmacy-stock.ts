@@ -5,6 +5,24 @@ export interface StockMedication {
   unit: string;
   quantity: number;
   minimum: number;
+  code?: string;
+  location?: string;
+  unitCost?: number;
+  antibiotic?: boolean;
+  lots?: StockLot[];
+}
+export interface StockLot { lot: string; expiry: string; quantity: number }
+export interface CatalogRow { code: string; name: string; unit: string; quantity: number; unitCost: number; antibiotic: boolean; location: string; lots: StockLot[] }
+
+/** Converte as linhas do relatório de saldos em itens de estoque com id estável por código e local. */
+export function catalogToStock(rows: CatalogRow[], prefix: string): StockMedication[] {
+  return rows.map((r) => ({ id: `${prefix}-${r.code}-${r.location.toLocaleLowerCase("pt-BR").replace(/\W+/g, "-")}`, code: r.code, name: r.name, presentation: r.location, location: r.location, unit: r.unit, quantity: r.quantity, minimum: 0, unitCost: r.unitCost, antibiotic: r.antibiotic, lots: r.lots }));
+}
+/** Acrescenta itens importados que ainda não existem, sem sobrescrever saldos já movimentados. */
+export function mergeCatalog(stock: StockMedication[], catalog: StockMedication[]) {
+  const ids = new Set(stock.map((i) => i.id));
+  const missing = catalog.filter((i) => !ids.has(i.id));
+  return missing.length ? [...stock, ...missing].sort((a, b) => a.name.localeCompare(b.name, "pt-BR")) : stock;
 }
 
 export function isStockLow(item: Pick<StockMedication, "quantity" | "minimum">) {
@@ -35,6 +53,11 @@ export function normalizeStock(value: unknown): StockMedication[] {
         unit: raw.unit || "un",
         quantity: Math.max(0, Number(raw.quantity) || 0),
         minimum: Math.max(0, Number(raw.minimum) || 0),
+        ...(raw.code ? { code: raw.code } : {}),
+        ...(raw.location ? { location: raw.location } : {}),
+        ...(raw.unitCost != null ? { unitCost: Number(raw.unitCost) || 0 } : {}),
+        ...(raw.antibiotic != null ? { antibiotic: !!raw.antibiotic } : {}),
+        ...(Array.isArray(raw.lots) ? { lots: raw.lots } : {}),
       }];
     });
   }

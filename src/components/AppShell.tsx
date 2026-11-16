@@ -1,6 +1,6 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useMemo, useState, type ReactNode } from "react";
-import { Activity, BedDouble, Bell, ChevronLeft, ClipboardList, HeartPulse, Pill, Receipt, Scissors, Search, Tv, UserCog, UserPlus, Users, LogOut } from "lucide-react";
+import { Package, BedDouble, Bell, ChevronLeft, ClipboardList, HeartPulse, Pill, Receipt, Scissors, Search, Tv, UserCog, UserPlus, Users, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
@@ -13,7 +13,6 @@ import { cn } from "@/lib/utils";
 
 const GROUPS = [
   { label: "Assistência", items: [
-    { to: "/", label: "Dashboard & Leitos", icon: Activity },
     { to: "/recepcao", label: "Recepção & Cadastro", icon: UserPlus },
     { to: "/acolhimento", label: "Acolhimento", icon: ClipboardList },
     { to: "/atendimento", label: "Consultório Médico", icon: HeartPulse },
@@ -24,6 +23,7 @@ const GROUPS = [
     { to: "/centro-cirurgico", label: "Centro Cirúrgico", icon: Scissors },
     { to: "/farmacia", label: "Farmácia", icon: Pill },
     { to: "/enfermagem", label: "Posto de Enfermagem", icon: HeartPulse },
+    { to: "/almoxarifado", label: "Almoxarifado", icon: Package },
   ] },
   { label: "Administrativo", items: [{ to: "/faturamento", label: "Faturamento TISS", icon: Receipt }] },
 ] as const;
@@ -62,7 +62,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <div key={g.label} className="space-y-1">
               {!collapsed && <div className="px-3 text-[10px] uppercase tracking-wider opacity-60">{g.label}</div>}
               {g.items.filter((n) => canAccessPage(profile, n.to)).map((n) => {
-                const active = n.to === "/" ? path === "/" : path.startsWith(n.to);
+                const active = path.startsWith(n.to);
                 return (
                   <Link key={n.to} to={n.to} title={n.label} className={cn("flex items-center gap-3 rounded-md px-3 py-2 text-sm", active ? "bg-sidebar-primary text-sidebar-primary-foreground" : "hover:bg-sidebar-accent")}>
                     <n.icon className="h-4 w-4 shrink-0" />{!collapsed && n.label}
