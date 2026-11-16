@@ -13,7 +13,7 @@ import { registrationFor, registrationPatch } from "@/lib/patient-registration-m
 import { registrationSchema } from "@/lib/patient-registration";
 import { ATTENDANCE_TYPES, type Encounter } from "@/lib/care-flow";
 import { can, type Patient } from "@/lib/hospital-data";
-import { openEncounter, professionalName, savePatientRegistration, useStore } from "@/lib/hospital-store";
+import { deleteEncounter, openEncounter, professionalName, savePatientRegistration, useStore } from "@/lib/hospital-store";
 import { SPECIAL_CONDITIONS } from "@/lib/special-conditions";
 
 const INITIAL_FORM = {
@@ -55,8 +55,10 @@ export function CareReception() {
     try {
       const parsed = registrationSchema.safeParse(registration);
       if (!parsed.success) throw new Error(parsed.error.issues[0]?.message || "Confira os dados do cadastro.");
-      if (!f.specialty.trim() || !f.complaint.trim() || (["pediatria", "neonato"].includes(f.patientType) && !registration.guardian.trim())) {
-        throw new Error("Preencha nome, especialidade, queixa e responsável da criança.");
+      if (!f.specialty.trim()) throw new Error("Preencha a especialidade em Abertura de atendimento.");
+      if (!f.complaint.trim()) throw new Error("Preencha a queixa principal em Abertura de atendimento.");
+      if (["pediatria", "neonato"].includes(f.patientType) && !registration.guardian.trim() && !registration.parent1.trim()) {
+        throw new Error("Para criança ou recém-nascido, preencha o nome do responsável ou da mãe (filiação 1).");
       }
       if (f.conditions.includes("Outra") && !f.otherCondition.trim()) throw new Error("Descreva a outra condição especial.");
       const old = patients.find((patient) => patient.id === existing || (registration.cpf.replace(/\D/g, "").length === 11 && patient.cpf.replace(/\D/g, "") === registration.cpf.replace(/\D/g, "")));
@@ -66,7 +68,7 @@ export function CareReception() {
           id, prontuario: `PR-${new Date().getFullYear()}-${String(patients.length + 1).padStart(6, "0")}`,
           weight: 0, allergies: [], risks: [], diagnosis: "Em avaliação", days: 1, evolutions: [], vitals: [], prescriptions: [],
         }),
-        name: f.name.trim(), cpf: f.cpf || "—", age: f.birth || "—", motherName: f.mother, guardian: f.guardian,
+        name: f.name.trim(), cpf: f.cpf || "—", age: f.birth || "—", motherName: f.mother, guardian: f.guardian || registration.parent1,
         ...registrationPatch(registration, professionalName(profile), old),
         type: f.patientType, insurance: registration.insurance, authorized: registration.insurance === "SUS" || registration.insurance === "Particular",
         ward: f.patientType === "gestante" || f.patientType === "puerpera" ? "PSO" : "PSP", bed: "",
@@ -120,7 +122,7 @@ export function CareReception() {
     <h2 className="font-semibold">Atendimentos abertos ({encounters.filter((encounter) => encounter.status_fluxo !== "ALTA_HOSPITALAR").length})</h2>
     {encounters.slice().reverse().map((encounter) => {
       const patient = patients.find((item) => item.id === encounter.patientId);
-      return <div key={encounter.id} className="border-b py-2"><div className="flex flex-wrap items-center gap-2"><Button variant="link" asChild><Link to="/pacientes/$id" params={{ id: encounter.patientId }}>{patient?.name}</Link></Button><SpecialConditionBadges patient={patient} /></div><EncounterTimeline patientId={encounter.patientId} /></div>;
+      return <div key={encounter.id} className="border-b py-2"><div className="flex flex-wrap items-center gap-2"><Button variant="link" asChild><Link to="/pacientes/$id" params={{ id: encounter.patientId }}>{patient?.name}</Link></Button><SpecialConditionBadges patient={patient} /><span className="text-xs text-muted-foreground">{encounter.number}</span>{profile === "Administrador" && <Button size="sm" variant="ghost" className="text-destructive" onClick={() => { if (!window.confirm(`Apagar o atendimento ${encounter.number} de ${patient?.name ?? "paciente"}? Esta ação não pode ser desfeita.`)) return; try { deleteEncounter(encounter.id); toast.success("Atendimento apagado"); } catch (error) { toast.error(error instanceof Error ? error.message : "Não foi possível apagar"); } }}>Apagar</Button>}</div><EncounterTimeline patientId={encounter.patientId} /></div>;
     })}
     {!encounters.length && <p className="py-6 text-sm text-muted-foreground">Nenhum atendimento aberto.</p>}
 

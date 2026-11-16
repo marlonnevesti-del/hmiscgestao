@@ -195,3 +195,8 @@ export function announcePatient(patientId: string, room: string) {
 }
 export function addRoom(name: string) { if (state.profile !== 'Administrador') throw new Error('Apenas administradores gerenciam consultórios.'); setState((s) => ({ rooms: addRoomName(s.rooms, name) })); }
 export function removeRoom(name: string) { if (state.profile !== 'Administrador') throw new Error('Apenas administradores gerenciam consultórios.'); setState((s) => ({ rooms: removeRoomName(s.rooms, name) })); }
+
+export function deleteEncounter(id: string) {
+  if (state.profile !== 'Administrador') throw new Error('Apenas administradores podem apagar atendimentos.');
+  setState((s) => ({ encounters: s.encounters.filter((e) => e.id !== id), queue: s.queue.filter((q) => q.id !== id), calls: s.calls }));
+}

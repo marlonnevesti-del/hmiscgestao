@@ -7,9 +7,10 @@ import { useQuery } from "@tanstack/react-query";
 import { loadEmployeeAccess } from "@/lib/employee-access";
 import { canApproveEmployees } from "@/lib/employee-rules";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { WARDS, canAccessPage } from "@/lib/hospital-data";
+import { canAccessPage, can } from "@/lib/hospital-data";
 import { professionalName, useStore } from "@/lib/hospital-store";
 import { cn } from "@/lib/utils";
+import { PharmacyCallAlert } from "./PharmacyCallAlert";
 
 const GROUPS = [
   { label: "Assistência", items: [
@@ -31,7 +32,6 @@ const GROUPS = [
 export function AppShell({ children }: { children: ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   const [q, setQ] = useState("");
-  const [ward, setWard] = useState("CO");
   const patients = useStore((s) => s.patients);
   const profile = useStore((s) => s.profile);
   const { data: access } = useQuery({ queryKey: ["employee-access"], queryFn: loadEmployeeAccess });
@@ -52,6 +52,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex min-h-screen w-full bg-background">
+      {can(profile, "farmacia") && <PharmacyCallAlert />}
       <aside className={cn("sticky top-0 flex h-screen flex-col bg-sidebar text-sidebar-foreground transition-all print:hidden", collapsed ? "w-16" : "w-60")}>
         <div className="flex h-14 items-center gap-2 border-b border-sidebar-border px-4">
           <HeartPulse className="h-6 w-6 shrink-0 text-sidebar-primary" />
@@ -99,9 +100,6 @@ export function AppShell({ children }: { children: ReactNode }) {
               </div>
             )}
           </div>
-          <select value={ward} onChange={(e) => setWard(e.target.value)} className="hidden h-9 rounded-md border bg-background px-2 text-sm lg:block" aria-label="Unidade">
-            {WARDS.map((w) => <option key={w.id} value={w.id}>{w.name}</option>)}
-          </select>
           <div className="ml-auto flex items-center gap-3">
             <Popover>
               <PopoverTrigger className="relative flex items-center gap-1.5 rounded-full bg-maternal-soft px-3 py-1.5 text-xs font-medium text-maternal" aria-label="Alertas críticos">
