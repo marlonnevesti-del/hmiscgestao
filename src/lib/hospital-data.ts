@@ -1,3 +1,4 @@
+import type { Presentation, Regimen } from "./dose-calc";
 import type { PatientRegistration } from "./patient-registration";
 export type Ward = "PSO" | "PSP" | "CO" | "AC" | "UTIN" | "ENFP";
 export const WARDS: { id: Ward; name: string }[] = [
@@ -111,18 +112,27 @@ export interface Surgery {
 export const SURGERIES: Surgery[] = [];
 
 // ---------- Medicamentos / regras clínicas ----------
-export interface Drug { name: string; cls: string; mgKgDay: number; doses: number; maxDay: number; unit: string }
+export interface Drug { name: string; cls: string; mgKgDay: number; doses: number; maxDay: number; unit: string; regimens?: Regimen[]; presentations?: Presentation[] }
+const P = (label: string, mgPerMl: number, dropsPerMl?: number): Presentation => ({ label, mgPerMl, ...(dropsPerMl ? { dropsPerMl } : {}) });
 export const DRUGS: Drug[] = [
-  { name: "Paracetamol", cls: "analgésico", mgKgDay: 60, doses: 4, maxDay: 4000, unit: "mg" },
-  { name: "Dipirona", cls: "dipirona", mgKgDay: 100, doses: 4, maxDay: 4000, unit: "mg" },
-  { name: "Ibuprofeno", cls: "aine", mgKgDay: 30, doses: 3, maxDay: 1200, unit: "mg" },
-  { name: "Amoxicilina", cls: "penicilina", mgKgDay: 50, doses: 3, maxDay: 3000, unit: "mg" },
-  { name: "Ampicilina", cls: "penicilina", mgKgDay: 200, doses: 4, maxDay: 12000, unit: "mg" },
-  { name: "Gentamicina", cls: "aminoglicosídeo", mgKgDay: 5, doses: 1, maxDay: 400, unit: "mg" },
-  { name: "Prednisolona", cls: "corticoide", mgKgDay: 2, doses: 1, maxDay: 60, unit: "mg" },
-  { name: "Ondansetrona", cls: "antiemético", mgKgDay: 0.45, doses: 3, maxDay: 24, unit: "mg" },
-  { name: "Azitromicina", cls: "macrolídeo", mgKgDay: 10, doses: 1, maxDay: 500, unit: "mg" },
-  { name: "Furosemida", cls: "diurético", mgKgDay: 2, doses: 2, maxDay: 80, unit: "mg" },
+  { name: "Paracetamol", cls: "analgésico", mgKgDay: 60, doses: 4, maxDay: 4000, unit: "mg", presentations: [P("gotas 200 mg/mL", 200, 20), P("solução 32 mg/mL", 32)] },
+  { name: "Dipirona", cls: "dipirona", mgKgDay: 100, doses: 4, maxDay: 4000, unit: "mg", presentations: [P("gotas 500 mg/mL", 500, 20), P("ampola 500 mg/mL EV/IM", 500)] },
+  { name: "Ibuprofeno", cls: "aine", mgKgDay: 30, doses: 3, maxDay: 1200, unit: "mg", presentations: [P("gotas 100 mg/mL", 100, 10), P("suspensão 50 mg/mL", 50)] },
+  { name: "Amoxicilina", cls: "penicilina", mgKgDay: 50, doses: 3, maxDay: 3000, unit: "mg", regimens: [{ label: "Padrão", mgKgDay: 50, doses: 3, maxDay: 3000 }, { label: "Dose alta (OMA / pneumonia)", mgKgDay: 90, doses: 2, maxDay: 4000 }], presentations: [P("suspensão 250 mg/5 mL", 50), P("suspensão 400 mg/5 mL", 80)] },
+  { name: "Ampicilina", cls: "penicilina", mgKgDay: 200, doses: 4, maxDay: 12000, unit: "mg", regimens: [{ label: "Padrão", mgKgDay: 100, doses: 4, maxDay: 8000 }, { label: "Grave / meningite", mgKgDay: 200, doses: 4, maxDay: 12000 }], presentations: [P("FA 1 g reconstituído em 10 mL", 100)] },
+  { name: "Gentamicina", cls: "aminoglicosídeo", mgKgDay: 5, doses: 1, maxDay: 400, unit: "mg", presentations: [P("ampola 40 mg/mL", 40)] },
+  { name: "Prednisolona", cls: "corticoide", mgKgDay: 2, doses: 1, maxDay: 60, unit: "mg", presentations: [P("solução oral 3 mg/mL", 3)] },
+  { name: "Ondansetrona", cls: "antiemético", mgKgDay: 0.45, doses: 3, maxDay: 24, unit: "mg", presentations: [P("ampola/solução 2 mg/mL", 2)] },
+  { name: "Azitromicina", cls: "macrolídeo", mgKgDay: 10, doses: 1, maxDay: 500, unit: "mg", presentations: [P("suspensão 200 mg/5 mL", 40)] },
+  { name: "Furosemida", cls: "diurético", mgKgDay: 2, doses: 2, maxDay: 80, unit: "mg", presentations: [P("ampola 10 mg/mL", 10)] },
+  { name: "Ceftriaxona", cls: "cefalosporina", mgKgDay: 50, doses: 1, maxDay: 2000, unit: "mg", regimens: [{ label: "Padrão", mgKgDay: 50, doses: 1, maxDay: 2000 }, { label: "Meningite / SNC", mgKgDay: 100, doses: 2, maxDay: 4000 }], presentations: [P("FA 1 g reconstituído em 10 mL", 100)] },
+  { name: "Cefazolina", cls: "cefalosporina", mgKgDay: 75, doses: 3, maxDay: 6000, unit: "mg", regimens: [{ label: "Padrão", mgKgDay: 75, doses: 3, maxDay: 6000 }, { label: "Grave", mgKgDay: 100, doses: 3, maxDay: 6000 }], presentations: [P("FA 1 g reconstituído em 10 mL", 100)] },
+  { name: "Oxacilina", cls: "penicilina", mgKgDay: 150, doses: 4, maxDay: 12000, unit: "mg", regimens: [{ label: "Padrão", mgKgDay: 100, doses: 4, maxDay: 12000 }, { label: "Grave", mgKgDay: 200, doses: 4, maxDay: 12000 }], presentations: [P("FA 500 mg reconstituído em 5 mL", 100)] },
+  { name: "Dexametasona", cls: "corticoide", mgKgDay: 0.15, doses: 1, maxDay: 10, unit: "mg", regimens: [{ label: "Anti-inflamatória", mgKgDay: 0.15, doses: 1, maxDay: 10 }, { label: "Laringite / ataque", mgKgDay: 0.6, doses: 1, maxDay: 16 }], presentations: [P("ampola 4 mg/mL", 4)] },
+  { name: "Hidrocortisona", cls: "corticoide", mgKgDay: 20, doses: 4, maxDay: 1000, unit: "mg", regimens: [{ label: "Manutenção (5 mg/kg/dose 6/6h)", mgKgDay: 20, doses: 4, maxDay: 1000 }, { label: "Ataque (10 mg/kg dose única)", mgKgDay: 10, doses: 1, maxDay: 500 }], presentations: [P("FA 100 mg reconstituído em 2 mL", 50), P("FA 500 mg reconstituído em 4 mL", 125)] },
+  { name: "Sulfametoxazol + Trimetoprima", cls: "sulfonamida", mgKgDay: 40, doses: 2, maxDay: 1600, unit: "mg (SMX)", presentations: [P("suspensão 200+40 mg/5 mL (SMX)", 40)] },
+  { name: "Salbutamol", cls: "broncodilatador", mgKgDay: 0.45, doses: 3, maxDay: 15, unit: "mg", presentations: [P("solução inalação 5 mg/mL", 5, 20)] },
+  { name: "Ipratrópio", cls: "broncodilatador", mgKgDay: 0.75, doses: 3, maxDay: 1.5, unit: "mg", presentations: [P("gotas inalação 0,25 mg/mL", 0.25, 20)] },
 ];
 const INTERACTIONS: [string, string, string][] = [
   ["Ibuprofeno", "Prednisolona", "Risco aumentado de sangramento gastrointestinal"],

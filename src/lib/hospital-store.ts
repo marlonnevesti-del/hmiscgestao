@@ -89,6 +89,13 @@ export function validatePrescription(id: string, rxId: string) {
   if (e.status_fluxo !== 'AGUARDANDO_FARMACIA') throw new Error('Prescrição não está na farmácia.');
   updatePatient(p.id, (x) => ({ prescriptions: x.prescriptions.map((r) => r.id === rxId ? { ...r, pharmacy: 'Validada' } : r) }));
 }
+/** Farmacêutico ajusta dose/apresentação de um item ainda na farmácia; registra o ajuste no próprio item. */
+export function adjustPrescription(id: string, rxId: string, item: string, posologia: string) {
+  requireAction('farmacia'); const { e, p } = getEncounter(id);
+  if (e.status_fluxo !== 'AGUARDANDO_FARMACIA') throw new Error('Prescrição não está na farmácia.');
+  if (!item.trim()) throw new Error('Informe a dose do item.');
+  updatePatient(p.id, (x) => ({ prescriptions: x.prescriptions.map((r) => r.id === rxId ? { ...r, item: item.trim().replace(/ · ajuste farmácia$/, '') + ' · ajuste farmácia', posologia: posologia.trim() || r.posologia } : r) }));
+}
 export function dispenseKit(id: string, intervention: string) {
   requireAction('farmacia'); const { e, p } = getEncounter(id);
   const meds = p.prescriptions.filter((r) => r.pharmacy);

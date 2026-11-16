@@ -14,7 +14,9 @@ import { SpecialConditionsBanner } from "@/components/SpecialConditions";
 import { PatientSheetPrint, printSheet } from "@/components/PatientSheetPrint";
 import { PatientRegistrationFields } from "@/components/PatientRegistrationFields";
 import { registrationFor } from "@/lib/patient-registration-mapping";
-import { DRUGS, WARDS, allergyConflict, can, interactionsWith, pediatricDose, type EvoCat, type Patient, type PrescCat, type Vital } from "@/lib/hospital-data";
+import { DoseCalculator, calcResult, initCalc } from "@/components/DoseCalculator";
+import { doseText } from "@/lib/dose-calc";
+import { DRUGS, WARDS, allergyConflict, can, interactionsWith, type EvoCat, type Patient, type PrescCat, type Vital } from "@/lib/hospital-data";
 import { getState, nowHM, professionalName, registerBirth, updatePatient, useStore } from "@/lib/hospital-store";
 import { cn } from "@/lib/utils";
 
@@ -144,10 +146,11 @@ function Prescricao({ p }: { p: Patient }) {
   const [drugName, setDrugName] = useState(DRUGS[0]?.name ?? "");
   const [free, setFree] = useState(""); const [pos, setPos] = useState("");
   const drug = DRUGS.find((d) => d.name === drugName);
+  const [calc, setCalc] = useState(() => initCalc(DRUGS[0]!));
   if (!drug) return null;
   const encounter = getState().encounters.slice().reverse().find((e) => e.patientId === p.id);
   const editable = allowed && encounter?.status_fluxo === "EM_ATENDIMENTO_MEDICO";
-  const dose = pediatricDose(drug, p.weight);
+  const dose = calcResult(drug, calc, p.weight);
   const allergy = allergyConflict(drug, p.allergies);
   const inter = interactionsWith(drug, p.prescriptions);
   const cats: PrescCat[] = ["Dieta", "Hidratação", "Medicamento", "Cuidados", "Exames"];
@@ -156,11 +159,11 @@ function Prescricao({ p }: { p: Patient }) {
     if (!editable) { toast.error("Inicie ou retome o atendimento médico para editar a prescrição."); return; }
     if (isMed && (ped && !(p.weight > 0))) { toast.error("Peso obrigatório para dose pediátrica"); return; }
     if (isMed && allergy) { toast.error(`Conflito de alergia: ${allergy}`); return; }
-    const every = 24 / drug.doses;
+    const nDoses = Math.max(1, Math.round(parseFloat(calc.doses.replace(",", ".")) || 1)); const every = Math.round((24 / nDoses) * 10) / 10;
     const startHour = new Date().getHours();
     const minute = new Date().getMinutes();
-    const times = isMed ? Array.from({ length: drug.doses }, (_, i) => `${String((startHour + i * every) % 24).padStart(2, "0")}:${String(minute).padStart(2, "0")}`) : undefined;
-    const item = isMed ? (ped ? `${drug.name} ${dose.perDose} mg (${drug.mgKgDay} mg/kg/dia)` : `${drug.name} ${free || ""}`.trim()) : free;
+    const times = isMed ? Array.from({ length: nDoses }, (_, i) => `${String(Math.floor(startHour + i * every) % 24).padStart(2, "0")}:${String(minute).padStart(2, "0")}`) : undefined;
+    const item = isMed ? (ped || calc.perDose || p.weight > 0 ? doseText(drug.name, dose, parseFloat(calc.mgKgDay.replace(",", ".")) || 0, drug.presentations?.[calc.presentation]) : `${drug.name} ${free || ""}`.trim()) : free;
     if (!item) return;
     updatePatient(p.id, (x) => ({ prescriptions: [...x.prescriptions, { id: `rx-${Date.now()}`, cat, item, posologia: isMed ? (pos || `${every}/${every}h`) : pos || "—", ...(times ? { times, pharmacy: "Pendente" as const } : {}) }] }));
     setFree(""); setPos(""); toast.success("Item adicionado à prescrição");
@@ -180,13 +183,9 @@ function Prescricao({ p }: { p: Patient }) {
         {!editable ? <NoPermission action="editar a prescrição nesta etapa" /> : <div className="space-y-2 text-sm">
           <select value={cat} onChange={(e) => setCat(e.target.value as PrescCat)} className="h-8 w-full rounded-md border bg-background px-2 text-xs">{cats.map((c) => <option key={c}>{c}</option>)}</select>
           {cat === "Medicamento" ? <>
-            <select value={drugName} onChange={(e) => setDrugName(e.target.value)} className="h-8 w-full rounded-md border bg-background px-2 text-xs">{DRUGS.map((d) => <option key={d.name}>{d.name}</option>)}</select>
-            {ped ? (
-              <div className="rounded-md bg-clinical-soft p-3">
-                <div className="text-[11px] text-muted-foreground">Calculadora pediátrica · peso da triagem <b className="text-foreground">{p.weight} kg</b> · {drug.mgKgDay} mg/kg/dia ÷ {drug.doses}x</div>
-                <div className="mt-1 flex items-baseline justify-between"><span className="font-mono text-2xl font-semibold text-clinical">{dose.perDose} mg</span><span className="font-mono text-xs">{dose.day} mg/dia</span></div>
-                {dose.capped && <div className="text-[11px] text-maternal">Limitada à dose máxima diária ({drug.maxDay} mg)</div>}
-              </div>
+            <select value={drugName} onChange={(e) => { setDrugName(e.target.value); const d = DRUGS.find((x) => x.name === e.target.value); if (d) setCalc(initCalc(d)); }} className="h-8 w-full rounded-md border bg-background px-2 text-xs">{DRUGS.map((d) => <option key={d.name}>{d.name}</option>)}</select>
+            {ped || p.weight > 0 ? (
+              <DoseCalculator drug={drug} weight={p.weight} value={calc} onChange={setCalc} />
             ) : <input value={free} onChange={(e) => setFree(e.target.value)} placeholder="Dose (ex.: 500 mg)" className="h-8 w-full rounded-md border bg-background px-2 text-xs" />}
             {allergy && <div className="pulse-alert flex items-start gap-2 rounded-md bg-maternal p-2 text-xs font-semibold text-primary-foreground"><AlertTriangle className="h-4 w-4 shrink-0" />Paciente alérgico(a) a {allergy}!</div>}
             {inter.map((m) => <div key={m} className="flex items-start gap-2 rounded-md bg-mt-orange p-2 text-xs font-medium text-primary-foreground"><AlertTriangle className="h-4 w-4 shrink-0" />Interação: {m}</div>)}

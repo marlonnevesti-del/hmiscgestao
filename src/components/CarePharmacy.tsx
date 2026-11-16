@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StockTable } from "./StockTable";
 import { EncounterTimeline } from "./EncounterTimeline";
 import { can } from "@/lib/hospital-data";
-import { adjustStock, deleteStockItem, createStockMedication, dispenseKit, recordMedication, useStore, validatePrescription } from "@/lib/hospital-store";
+import { adjustPrescription, adjustStock, deleteStockItem, createStockMedication, dispenseKit, recordMedication, useStore, validatePrescription } from "@/lib/hospital-store";
 import { findStockMedication, isStockLow } from "@/lib/pharmacy-stock";
 import { cn } from "@/lib/utils";
 
@@ -48,7 +48,7 @@ function PrescriptionQueue() {
         const medication = findStockMedication(stock, prescription.item);
         const needed = prescription.times?.length ?? 1;
         const insufficient = !medication || medication.quantity < needed;
-        return <div key={prescription.id} className="flex flex-wrap justify-between gap-2 border-b py-2 text-sm"><div><b>{prescription.item}</b><div className="text-xs text-muted-foreground">{prescription.posologia} · Horários: {prescription.times?.join(", ")} · {prescription.pharmacy}</div><div className={cn("text-xs", insufficient ? "text-destructive" : "text-muted-foreground")}>{medication ? `Estoque: ${medication.quantity} ${medication.unit} · necessário: ${needed}` : "Medicamento ainda não cadastrado no estoque"}</div></div><Button variant="outline" disabled={!can(profile, "farmacia") || prescription.pharmacy !== "Pendente"} onClick={() => run(() => validatePrescription(encounter.id, prescription.id))}>Validar item</Button></div>;
+        return <div key={prescription.id} className="flex flex-wrap justify-between gap-2 border-b py-2 text-sm"><div><b>{prescription.item}</b><div className="text-xs text-muted-foreground">{prescription.posologia} · Horários: {prescription.times?.join(", ")} · {prescription.pharmacy}</div><div className={cn("text-xs", insufficient ? "text-destructive" : "text-muted-foreground")}>{medication ? `Estoque: ${medication.quantity} ${medication.unit} · necessário: ${needed}` : "Medicamento ainda não cadastrado no estoque"}</div></div><div className="flex gap-2"><Button variant="ghost" disabled={!can(profile, "farmacia") || prescription.pharmacy !== "Pendente"} onClick={() => { const item = window.prompt("Ajustar dose / apresentação", prescription.item); if (item == null) return; const pos = window.prompt("Via / posologia", prescription.posologia) ?? prescription.posologia; run(() => adjustPrescription(encounter.id, prescription.id, item, pos)); }}>Ajustar dose</Button><Button variant="outline" disabled={!can(profile, "farmacia") || prescription.pharmacy !== "Pendente"} onClick={() => run(() => validatePrescription(encounter.id, prescription.id))}>Validar item</Button></div></div>;
       })}
       <label className="grid gap-1 text-xs">Intervenção farmacêutica<textarea aria-label={`Intervenção farmacêutica de ${patient.name}`} className="min-h-16 rounded-md border bg-background p-2" value={notes[encounter.id] ?? ""} onChange={(event) => setNotes((current) => ({ ...current, [encounter.id]: event.target.value }))} /></label>
       <Button disabled={!can(profile, "farmacia")} onClick={() => run(() => { dispenseKit(encounter.id, notes[encounter.id] ?? ""); toast.success("Kit dispensado para enfermagem"); })}>Dispensar Kit para Enfermagem</Button>
