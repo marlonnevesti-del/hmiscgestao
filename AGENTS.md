@@ -39,3 +39,4 @@ use the editor.
 - The client-only _authenticated layout validates identity and approval before clinical routes; EmployeeAccessBoundary owns the sole auth listener and mounts AppShell only for approved users, preventing public clinical rendering.
 - Employee registration validation is shared with its server function; admin review and role grants use transactional authenticated database functions to prevent privilege escalation.
 - Registration origins are validated by protocol, not deployment hostnames, so ephemeral HTTPS previews can register employees; the administrator list refreshes every second, including in background tabs, to expose new pending profiles without manual refresh.
+- Patient demographics use the shared registration schema, mapping and field editor; store them additively in the clinical snapshot and update clinical display fields centrally to retain legacy records and keep queues consistent.

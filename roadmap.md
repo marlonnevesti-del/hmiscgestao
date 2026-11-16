@@ -12,7 +12,7 @@
 - [x] Faturamento TISS
 - [x] Cadastro de colaboradores, função e conselho opcional para recepção.
 - [x] Liberação exclusiva por administradores; Marlonneves como administrador principal e cadastro de outros administradores.
-- [ ] Ajustar cadastro aos campos do formulário mencionado — aguarda envio do formulário.
+- [x] Adaptar cadastro de pacientes aos três anexos: dados gerais, endereços/contatos e outras informações; preservar registros existentes e verificar gravação.
 - [ ] Marlonneves definir senha segura pelo e-mail de recuperação — senha solicitada recusada pela proteção de senhas.
 - [x] Verificar envio pelo site publicado e aprovação real; adicionar atalho aos pendentes que limpa filtros e busca.
 - [x] Remover bloqueio por hostname do cadastro em previews e produção, mantendo validação de protocolo seguro.

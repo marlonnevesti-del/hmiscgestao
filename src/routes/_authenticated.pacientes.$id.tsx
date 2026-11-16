@@ -11,6 +11,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { NoPermission } from "@/components/AppShell";
 import { PatientIcon } from "@/components/PatientIcon";
 import { SpecialConditionsBanner } from "@/components/SpecialConditions";
+import { PatientRegistrationFields } from "@/components/PatientRegistrationFields";
+import { registrationFor } from "@/lib/patient-registration-mapping";
 import { DRUGS, WARDS, allergyConflict, can, interactionsWith, pediatricDose, type EvoCat, type Patient, type PrescCat, type Vital } from "@/lib/hospital-data";
 import { getState, nowHM, professionalName, registerBirth, updatePatient, useStore } from "@/lib/hospital-store";
 import { cn } from "@/lib/utils";
@@ -60,6 +62,7 @@ function PEP() {
       <Tabs defaultValue="resumo" className="print:hidden">
         <TabsList className="flex-wrap">
           <TabsTrigger value="resumo">Resumo & Evolução</TabsTrigger>
+          <TabsTrigger value="cadastro">Cadastro do paciente</TabsTrigger>
           <TabsTrigger value="prescricao">Prescrição</TabsTrigger>
           <TabsTrigger value="sinais">Sinais vitais & BH</TabsTrigger>
           {obst && <TabsTrigger value="partograma">Obstetrícia & Partograma</TabsTrigger>}
@@ -68,6 +71,7 @@ function PEP() {
         <TabsContent value="resumo"><MedicalAssessment p={p} /><Evolucao p={p} /></TabsContent>
         <TabsContent value="prescricao"><PrescriptionRelease patientId={p.id} /><Prescricao p={p} /></TabsContent>
         <TabsContent value="sinais"><Sinais p={p} /></TabsContent>
+        <TabsContent value="cadastro"><PatientRegistrationFields key={p.id} readOnly value={registrationFor(p)} onChange={() => {}} recordNumber={p.prontuario} /></TabsContent>
         {obst && <TabsContent value="partograma"><Partograma p={p} /></TabsContent>}
         {showNB && <TabsContent value="rn"><RN p={p} /></TabsContent>}
       </Tabs>

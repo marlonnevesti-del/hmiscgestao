@@ -5,6 +5,8 @@ import { transition, validateTriage, type Encounter, type Triage, type FlowStatu
 import { BASE_BEDS, can } from "./hospital-data";
 import { DEFAULT_ROOMS, addRoomName, pushCall, removeRoomName, type PanelCall } from "./panel-calls";
 import { findStockMedication, medicationKey, type StockMedication } from "./pharmacy-stock";
+import { registrationPatch } from "./patient-registration-mapping";
+import type { PatientRegistration } from "./patient-registration";
 
 interface State { encounters: Encounter[]; beSequence: number; stock: StockMedication[]; profile: Profile; employeeName: string; patients: Patient[]; queue: QueueItem[]; surgeries: Surgery[]; admins: Record<string, Admin>; rooms: string[]; calls: PanelCall[] }
 let state: State = { profile: "Outro", employeeName: "", patients: [], queue: [], surgeries: [], admins: {}, encounters: [], beSequence: 0, stock: [], rooms: DEFAULT_ROOMS, calls: [] };
@@ -42,6 +44,13 @@ export function openEncounter(patient: Patient, type: string, specialty: string,
   const e: Encounter = { id: crypto.randomUUID(), patientId: patient.id, number, type, specialty, complaint, status_fluxo: 'AGUARDANDO_TRIAGEM', openedAt: at, history: [{ status: 'AGUARDANDO_TRIAGEM', at, by: professionalName(state.profile), note: 'Recepção: abertura de BE' }] };
   setState((s) => ({ beSequence: s.beSequence + 1, patients: [...s.patients.filter((p) => p.id !== patient.id), patient], encounters: [...s.encounters, e], queue: [...s.queue, { id: e.id, name: patient.name, group: patient.type === 'gestante' || patient.type === 'puerpera' ? 'obstetrica' : 'pediatria', complaint, arrivedMinAgo: 0, detail: patient.age }] }));
   return e;
+}
+export function savePatientRegistration(id: string, input: PatientRegistration) {
+  requireAction('recepcao');
+  const patient = state.patients.find(p => p.id === id);
+  if (!patient) throw new Error('Paciente não encontrado.');
+  const patch = registrationPatch(input, professionalName(state.profile), patient);
+  setState(s => ({ patients: s.patients.map(p => p.id === id ? { ...p, ...patch } : p), queue: s.queue.map(q => s.encounters.some(e => e.id === q.id && e.patientId === id) ? { ...q, name: patch.name ?? q.name, detail: patch.age ?? q.detail } : q) }));
 }
 export function completeTriage(id: string, t: Triage) {
   requireAction('triagem');

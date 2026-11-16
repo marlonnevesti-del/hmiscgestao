@@ -1,3 +1,4 @@
+import type { PatientRegistration } from "./patient-registration";
 export type Ward = "PSO" | "PSP" | "CO" | "AC" | "UTIN" | "ENFP";
 export const WARDS: { id: Ward; name: string }[] = [
   { id: "PSO", name: "PS Obstétrico" },
@@ -49,6 +50,7 @@ export interface Prescription { id: string; cat: PrescCat; item: string; posolog
 export interface Newborn { apgar1: number; apgar5: number; pesoNascer: number; comprimento: number; pc: number; tipagem: string; coracaozinho: string; olhinho: string; vacinas: string[]; motherId?: string | undefined }
 
 export interface Patient {
+  registration?: PatientRegistration;
   id: string; prontuario: string; name: string; cpf: string; motherName?: string; guardian?: string;
   type: PatientType; age: string; ig?: string; dum?: string; weight: number; height?: number;
   allergies: string[]; risks: Risk[]; specialConditions?: string[]; otherSpecialCondition?: string;
