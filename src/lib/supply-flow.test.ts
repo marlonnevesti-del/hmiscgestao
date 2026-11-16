@@ -20,3 +20,12 @@ describe("lotes por validade", () => {
     expect(r.map((l) => l.lot)).toEqual(["A", "B"]);
   });
 });
+
+import { changeQty as cq } from "./supply-flow";
+describe("entrada de lote novo", () => {
+  it("cria lote com validade e soma ao saldo", () => {
+    const r = cq([{ id: "a", name: "X", unit: "UN", quantity: 5, minimum: 0, lots: [{ lot: "L1", expiry: "2027-01-01", quantity: 5 }] } as never], "a", 10, "L2", "2028-05-01");
+    expect(r[0]!.quantity).toBe(15);
+    expect(r[0]!.lots).toContainEqual({ lot: "L2", expiry: "2028-05-01", quantity: 10 });
+  });
+});

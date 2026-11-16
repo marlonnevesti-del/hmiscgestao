@@ -14,7 +14,7 @@ import { LabelPrint, printLabels, type Label } from "./LabelPrint";
 import { adjustPrescription, adjustStock, deleteStockItem, createStockMedication, dispenseKit, recordMedication, useStore, validatePrescription } from "@/lib/hospital-store";
 import { findStockMedication, fmtExpiry, isStockLow, lotsByExpiry } from "@/lib/pharmacy-stock";
 import { cn } from "@/lib/utils";
-import { BreakageForm, MovementLog, NursingRequestForm, RequestInbox, ReturnForm, TransferForm } from "./SupplyPanels";
+import { BreakageForm, MovementLog, NursingRequestForm, RequestInbox, ReturnForm, TransferForm, EntryForm, LoanPanel } from "./SupplyPanels";
 import { RequisitionPrint, printRequisition } from "./RequisitionPrint";
 
 function run(action: () => void) { try { action(); } catch (error) { toast.error(error instanceof Error ? error.message : "Ação não concluída"); } }
@@ -32,12 +32,12 @@ function Pharmacy() {
   const low = stock.filter(isStockLow);
   const pending = useStore((s) => s.requests.filter((r) => r.target === "farmacia" && r.status === "Pendente").length);
   return <Tabs defaultValue="fila" className="space-y-4">
-    <TabsList><TabsTrigger value="fila">Fila de prescrições ({list.length})</TabsTrigger><TabsTrigger value="estoque">Estoque ({stock.length})</TabsTrigger><TabsTrigger value="pedidos">Pedidos da enfermagem ({pending})</TabsTrigger><TabsTrigger value="transferencia">Transferência</TabsTrigger><TabsTrigger value="devolucao">Devolução</TabsTrigger><TabsTrigger value="quebra">Quebra/Extravio</TabsTrigger><TabsTrigger value="dispensados">Kits dispensados</TabsTrigger></TabsList>
+    <TabsList><TabsTrigger value="fila">Fila de prescrições ({list.length})</TabsTrigger><TabsTrigger value="estoque">Estoque ({stock.length})</TabsTrigger><TabsTrigger value="pedidos">Pedidos da enfermagem ({pending})</TabsTrigger><TabsTrigger value="entrada">Entrada NF</TabsTrigger><TabsTrigger value="emprestimo">Empréstimos</TabsTrigger><TabsTrigger value="transferencia">Transferência</TabsTrigger><TabsTrigger value="devolucao">Devolução</TabsTrigger><TabsTrigger value="quebra">Quebra/Extravio</TabsTrigger><TabsTrigger value="dispensados">Kits dispensados</TabsTrigger></TabsList>
     {low.length > 0 && <div role="alert" className="flex items-start gap-2 rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm"><AlertTriangle className="mt-0.5 h-4 w-4 text-destructive" /><div><span className="font-medium">Estoque baixo:</span> {low.map((item) => `${item.name} (${item.quantity} ${item.unit})`).join(", ")}</div></div>}
     <TabsContent value="fila"><PrescriptionQueue /></TabsContent>
     <TabsContent value="estoque"><StockManager /></TabsContent>
     <TabsContent value="pedidos"><RequestInbox target="farmacia" /></TabsContent>
-    <TabsContent value="transferencia" className="space-y-3"><TransferForm from="farmacia" /><MovementLog kinds={["transferencia"]} depot="farmacia" /></TabsContent>
+    <TabsContent value="entrada" className="space-y-3"><EntryForm depot="farmacia" /><MovementLog kinds={["entrada"]} depot="farmacia" /></TabsContent><TabsContent value="emprestimo"><LoanPanel depot="farmacia" /></TabsContent><TabsContent value="transferencia" className="space-y-3"><TransferForm from="farmacia" /><MovementLog kinds={["transferencia"]} depot="farmacia" /></TabsContent>
     <TabsContent value="devolucao" className="space-y-3"><ReturnForm depot="farmacia" /><MovementLog kinds={["devolucao"]} depot="farmacia" /></TabsContent>
     <TabsContent value="quebra" className="space-y-3"><BreakageForm /><MovementLog kinds={["quebra"]} /></TabsContent>
     <TabsContent value="dispensados"><DispensedKits /></TabsContent>

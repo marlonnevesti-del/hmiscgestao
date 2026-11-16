@@ -149,6 +149,48 @@ export function registerBreakage(itemId: string, qty: number, lot: string, reaso
   const item = items.find((i) => i.id === itemId)!;
   setState(() => ({ stock: items, movements: logMovement({ kind: 'quebra', from: 'Farmácia', to: 'Perda', item: item.name, code: item.code, qty, lot: lot.trim(), reason: reason.trim() }) }));
 }
+export interface EntryLine { id: string; lot: string; expiry: string; qty: number }
+function applyLines(items: StockMedication[], lines: EntryLine[], sign: 1 | -1, needExpiry: boolean) {
+  if (!lines.length) throw new Error('Adicione ao menos um produto.');
+  let next = items;
+  for (const l of lines) {
+    checkQty(l.qty);
+    if (!l.lot.trim()) throw new Error('Informe o lote de cada produto.');
+    if (needExpiry && sign > 0 && !l.expiry && !items.find((i) => i.id === l.id)?.lots?.some((x) => x.lot === l.lot.trim())) throw new Error(`Informe a validade do novo lote ${l.lot}.`);
+    next = changeQty(next, l.id, sign * l.qty, l.lot, l.expiry);
+  }
+  return next;
+}
+/** Entrada por nota fiscal: soma em lote existente ou cria lote novo com validade. */
+export function receiveStock(depot: Depot, nf: { number: string; supplier: string }, lines: EntryLine[]) {
+  requireAction(depotAction(depot));
+  if (!nf.number.trim() || !nf.supplier.trim()) throw new Error('Informe número da NF e fornecedor.');
+  const items = applyLines(state[depotKey(depot)], lines, 1, true);
+  let movements = state.movements;
+  for (const l of lines) { const it = items.find((i) => i.id === l.id)!; movements = [{ id: crypto.randomUUID(), at: new Date().toISOString(), by: professionalName(state.profile), kind: 'entrada', from: nf.supplier.trim(), to: DEPOT_NAME[depot], item: it.name, code: it.code, qty: l.qty, lot: l.lot.trim(), expiry: l.expiry, doc: `NF ${nf.number.trim()}`, reason: '' }, ...movements]; }
+  setState(() => ({ [depotKey(depot)]: items, movements }) as Partial<State>);
+}
+/** Empréstimo: saída baixa o estoque, entrada soma; ambos ficam pendentes até a devolução. */
+export function registerLoan(depot: Depot, direction: 'saida' | 'entrada', partner: string, due: string, lines: EntryLine[]) {
+  requireAction(depotAction(depot));
+  if (!partner.trim()) throw new Error(direction === 'saida' ? 'Informe para quem foi emprestado.' : 'Informe quem emprestou.');
+  const items = applyLines(state[depotKey(depot)], lines, direction === 'saida' ? -1 : 1, direction === 'entrada');
+  const doc = `EMP ${String(state.movements.filter((m) => m.kind.startsWith('emprestimo')).length + 1).padStart(4, '0')}/${new Date().getFullYear()}`;
+  let movements = state.movements;
+  for (const l of lines) { const it = items.find((i) => i.id === l.id)!; movements = [{ id: crypto.randomUUID(), at: new Date().toISOString(), by: professionalName(state.profile), kind: direction === 'saida' ? 'emprestimo_saida' : 'emprestimo_entrada', from: direction === 'saida' ? DEPOT_NAME[depot] : partner.trim(), to: direction === 'saida' ? partner.trim() : DEPOT_NAME[depot], item: it.name, code: it.code, qty: l.qty, lot: l.lot.trim(), expiry: l.expiry, doc, due, reason: '' }, ...movements]; }
+  setState(() => ({ [depotKey(depot)]: items, movements }) as Partial<State>);
+}
+/** Baixa do empréstimo: produto emprestado volta ao estoque, ou o que pegamos é devolvido (sai). */
+export function settleLoan(depot: Depot, movementId: string) {
+  requireAction(depotAction(depot));
+  const m = state.movements.find((x) => x.id === movementId);
+  if (!m || !m.kind.startsWith('emprestimo') || m.settledAt) throw new Error('Empréstimo não encontrado ou já devolvido.');
+  const list = state[depotKey(depot)];
+  const it = list.find((i) => (m.code && i.code === m.code) || i.name === m.item);
+  if (!it) throw new Error('Produto não está mais no estoque.');
+  const items = changeQty(list, it.id, m.kind === 'emprestimo_saida' ? m.qty : -m.qty, m.lot, m.expiry ?? '');
+  setState(() => ({ [depotKey(depot)]: items, movements: state.movements.map((x) => x.id === movementId ? { ...x, settledAt: new Date().toISOString(), settledBy: professionalName(state.profile) } : x) }) as Partial<State>);
+}
 /** Pedido do posto de enfermagem para farmácia ou almoxarifado. */
 /** Pedido de qualquer setor ao almoxarifado (colaborador aprovado). */
 export function createSectorRequest(sector: string, items: string, note: string) {

@@ -1,8 +1,8 @@
 import type { StockMedication } from "./pharmacy-stock";
 
 export type Depot = "farmacia" | "almoxarifado";
-export type MovementKind = "transferencia" | "devolucao" | "quebra";
-export interface Movement { id: string; kind: MovementKind; from: string; to: string; item: string; code?: string | undefined; qty: number; lot: string; reason: string; at: string; by: string }
+export type MovementKind = "transferencia" | "devolucao" | "quebra" | "entrada" | "emprestimo_saida" | "emprestimo_entrada";
+export interface Movement { id: string; kind: MovementKind; from: string; to: string; item: string; code?: string | undefined; qty: number; lot: string; reason: string; at: string; by: string; expiry?: string; doc?: string; due?: string; settledAt?: string; settledBy?: string }
 export interface SupplyRequest { id: string; target: Depot; items: string; sector: string; patient: string; note: string; status: "Pendente" | "Atendido" | "Recusado"; at: string; by: string; handledBy?: string; handledAt?: string; answer?: string }
 
 export const DEPOT_LABEL: Record<Depot, string> = { farmacia: "Farmácia", almoxarifado: "Almoxarifado" };
@@ -10,7 +10,7 @@ export const DEPOT_LABEL: Record<Depot, string> = { farmacia: "Farmácia", almox
 function checkQty(qty: number) { if (!Number.isInteger(qty) || qty <= 0) throw new Error("Informe uma quantidade inteira maior que zero."); }
 
 /** Soma (ou subtrai) quantidade do item e do lote informado; nunca deixa saldo negativo. */
-export function changeQty(items: StockMedication[], id: string, delta: number, lot: string): StockMedication[] {
+export function changeQty(items: StockMedication[], id: string, delta: number, lot: string, expiry = ""): StockMedication[] {
   const item = items.find((i) => i.id === id);
   if (!item) throw new Error("Item não encontrado.");
   if (item.quantity + delta < 0) throw new Error(`Saldo insuficiente de ${item.name}. Disponível: ${item.quantity}.`);
@@ -20,8 +20,8 @@ export function changeQty(items: StockMedication[], id: string, delta: number, l
   if (idx >= 0) {
     const cur = lots[idx]!;
     if (cur.quantity + delta < 0) throw new Error(`Lote ${l} tem apenas ${cur.quantity}.`);
-    lots[idx] = { ...cur, quantity: cur.quantity + delta };
-  } else if (delta > 0 && l) lots = [...lots, { lot: l, expiry: "", quantity: delta }];
+    lots[idx] = { ...cur, quantity: cur.quantity + delta, expiry: cur.expiry || expiry };
+  } else if (delta > 0 && l) lots = [...lots, { lot: l, expiry, quantity: delta }];
   return items.map((i) => i.id === id ? { ...i, quantity: i.quantity + delta, lots } : i);
 }
 
