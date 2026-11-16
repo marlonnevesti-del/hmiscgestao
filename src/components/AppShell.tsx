@@ -25,6 +25,7 @@ const GROUPS = [
     { to: "/farmacia", label: "Farmácia", icon: Pill },
     { to: "/enfermagem", label: "Posto de Enfermagem", icon: HeartPulse },
     { to: "/almoxarifado", label: "Almoxarifado", icon: Package },
+    { to: "/solicitacao-almoxarifado", label: "Solicitação ao Almoxarifado", icon: ClipboardList },
   ] },
   { label: "Administrativo", items: [{ to: "/faturamento", label: "Faturamento TISS", icon: Receipt }] },
 ] as const;

@@ -35,7 +35,7 @@ export const defaultAreas = (profile: Profile): string[] => ACCESS_AREAS.map((a)
 /** Areas chosen by the admin override the function defaults; null means "use the function". */
 export function canAccessPage(profile: Profile, path: string, areas?: readonly string[] | null) {
   if (profile === "Administrador") return true;
-  if (path === "/" || path === "/painel-tv") return true;
+  if (path === "/" || path === "/painel-tv" || path === "/solicitacao-almoxarifado") return true;
   if (areas) return areas.includes(path.split("/")[1] ?? "");
   if (path === "/recepcao") return can(profile, "recepcao");
   if (path === "/acolhimento") return can(profile, "triagem");

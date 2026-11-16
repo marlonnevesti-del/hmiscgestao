@@ -150,6 +150,13 @@ export function registerBreakage(itemId: string, qty: number, lot: string, reaso
   setState(() => ({ stock: items, movements: logMovement({ kind: 'quebra', from: 'Farmácia', to: 'Perda', item: item.name, code: item.code, qty, lot: lot.trim(), reason: reason.trim() }) }));
 }
 /** Pedido do posto de enfermagem para farmácia ou almoxarifado. */
+/** Pedido de qualquer setor ao almoxarifado (colaborador aprovado). */
+export function createSectorRequest(sector: string, items: string, note: string) {
+  if (!items.trim()) throw new Error('Adicione ao menos um produto.');
+  if (!sector.trim()) throw new Error('Selecione o setor solicitante.');
+  const r: SupplyRequest = { id: crypto.randomUUID(), target: 'almoxarifado', items: items.trim(), sector, patient: '', note: note.trim(), status: 'Pendente', at: new Date().toISOString(), by: professionalName(state.profile) };
+  setState((s) => ({ requests: [r, ...s.requests] }));
+}
 export function createSupplyRequest(input: { target: Depot; items: string; sector: string; patient: string; note: string }) {
   requireAction('checar');
   if (!input.items.trim()) throw new Error('Descreva os produtos e quantidades do pedido.');
