@@ -173,3 +173,22 @@
   .doc-title { font-size: 15pt; font-weight: 700; color: #0F4C81; }
   .print-doc-root .doc-foot { position: absolute; bottom: 0.8cm; left: 1.5cm; right: 1.5cm; border-top: 1px solid #0F4C81; padding-top: 4px; font-size: 8pt; text-align: center; }
 }
+
+@media print {
+  body.print-doc .sheet-root { display: none !important; }
+  body.print-sheet > *:not(.sheet-root) { display: none !important; }
+  body.print-sheet .sheet-root { display: block !important; color: #000; background: #fff; font-size: 10pt; }
+  body[data-sheet="BAA"] .sheet-page[data-kind="FIA"], body[data-sheet="FIA"] .sheet-page[data-kind="BAA"] { display: none; }
+  .sheet-root .sheet-page { padding: 1cm 1.3cm; }
+  .sheet-root h3 { font-weight: 700; margin: 8px 0 3px; border-bottom: 1px solid #999; }
+  .sheet-root .sheet-user { text-align: right; font-size: 8pt; }
+  .sheet-root .sheet-row { display: flex; flex-wrap: wrap; gap: 4px 18px; line-height: 1.45; }
+  .sheet-root .sheet-f { min-width: 3cm; }
+  .sheet-root .sheet-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .sheet-root .sheet-center { text-align: center; border: 0; margin-top: 12px; }
+  .sheet-root .sheet-term p { text-indent: 1.5cm; text-align: justify; margin: 0 0 3px; }
+  .sheet-root .sheet-signs { display: flex; justify-content: space-around; margin-top: 1.4cm; text-align: center; }
+  .sheet-root .sheet-signs .line { width: 7cm; border-top: 1px solid #000; margin-bottom: 3px; }
+  .sheet-root .pre { white-space: pre-wrap; }
+}
+@media screen { .sheet-root { display: none; } }

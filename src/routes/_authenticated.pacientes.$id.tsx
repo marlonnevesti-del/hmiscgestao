@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { NoPermission } from "@/components/AppShell";
 import { PatientIcon } from "@/components/PatientIcon";
 import { SpecialConditionsBanner } from "@/components/SpecialConditions";
+import { PatientSheetPrint, printSheet } from "@/components/PatientSheetPrint";
 import { PatientRegistrationFields } from "@/components/PatientRegistrationFields";
 import { registrationFor } from "@/lib/patient-registration-mapping";
 import { DRUGS, WARDS, allergyConflict, can, interactionsWith, pediatricDose, type EvoCat, type Patient, type PrescCat, type Vital } from "@/lib/hospital-data";
@@ -33,6 +34,8 @@ export const Route = createFileRoute("/_authenticated/pacientes/$id")({
 function PEP() {
   const { id } = Route.useParams();
   const p = useStore((s) => s.patients.find((x) => x.id === id));
+  const sheetEncounter = useStore((s) => s.encounters.slice().reverse().find((x) => x.patientId === id));
+  const employeeName = useStore((s) => s.employeeName);
   const [print, setPrint] = useState(false);
   if (!p) return <div className="p-8 text-center text-muted-foreground">Prontuário não encontrado. <Link to="/pacientes" className="text-clinical">Voltar</Link></div>;
   const obst = p.type === "gestante";
@@ -53,11 +56,14 @@ function PEP() {
           <div className="ml-auto flex items-center gap-3">
             <div className="text-right text-xs"><div className="font-mono font-semibold">{p.bed}</div><div className="text-muted-foreground">{WARDS.find((w) => w.id === p.ward)?.name} · {p.insurance}</div></div>
             <button onClick={() => setPrint(true)} className="flex items-center gap-1.5 rounded-md border px-3 py-2 text-xs font-medium hover:bg-muted"><Printer className="h-4 w-4" />Pulseira/Etiqueta</button>
+            <button onClick={() => printSheet("BAA")} className="flex items-center gap-1.5 rounded-md border px-3 py-2 text-xs font-medium hover:bg-muted"><Printer className="h-4 w-4" />BAA</button>
+            <button onClick={() => printSheet("FIA")} className="flex items-center gap-1.5 rounded-md border px-3 py-2 text-xs font-medium hover:bg-muted"><Printer className="h-4 w-4" />FIA</button>
           </div>
         </div>
         <div className="mt-1 text-xs"><span className="font-medium">Diagnóstico:</span> {p.diagnosis}</div>
         <EncounterTimeline patientId={p.id} />
       </div>
+      <PatientSheetPrint p={p} e={sheetEncounter} user={employeeName} />
       <SpecialConditionsBanner patient={p} />
       <Tabs defaultValue="resumo" className="print:hidden">
         <TabsList className="flex-wrap">
