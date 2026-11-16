@@ -49,10 +49,10 @@ export function ReturnForm({ depot }: { depot: Depot }) {
 export function BreakageForm() {
   const items = useStore((s) => s.stock); const profile = useStore((s) => s.profile);
   const [v, setV] = useState({ id: "", lot: "" }); const [f, setF] = useState({ qty: "", reason: "" });
-  return <form className="space-y-3 rounded-xl border bg-card p-4" onSubmit={(e) => { e.preventDefault(); if (run(() => registerBreakage(v.id, Number(f.qty), v.lot, f.reason), "Quebra registrada")) { setV({ id: "", lot: "" }); setF({ qty: "", reason: "" }); } }}>
-    <h3 className="text-sm font-semibold">Registro de quebra de ampolas</h3>
+  return <form className="space-y-3 rounded-xl border bg-card p-4" onSubmit={(e) => { e.preventDefault(); if (run(() => registerBreakage(v.id, Number(f.qty), v.lot, f.reason), "Quebra/extravio registrado")) { setV({ id: "", lot: "" }); setF({ qty: "", reason: "" }); } }}>
+    <h3 className="text-sm font-semibold">Registro de quebra / extravio</h3>
     <ItemLotPicker items={items} value={v} onChange={setV} />
-    <div className="grid gap-2 md:grid-cols-[120px_1fr_auto]"><Input aria-label="Quantidade quebrada" type="number" min="1" placeholder="Qtde." value={f.qty} onChange={(e) => setF({ ...f, qty: e.target.value })} required /><Input aria-label="Relato da quebra" placeholder="Relato: como, onde e quem" value={f.reason} onChange={(e) => setF({ ...f, reason: e.target.value })} /><Button type="submit" variant="destructive" disabled={!can(profile, "farmacia") || !v.id}>Registrar quebra</Button></div>
+    <div className="grid gap-2 md:grid-cols-[120px_1fr_auto]"><Input aria-label="Quantidade quebrada ou extraviada" type="number" min="1" placeholder="Qtde." value={f.qty} onChange={(e) => setF({ ...f, qty: e.target.value })} required /><Input aria-label="Relato da quebra ou extravio" placeholder="Relato: como, onde e quem" value={f.reason} onChange={(e) => setF({ ...f, reason: e.target.value })} /><Button type="submit" variant="destructive" disabled={!can(profile, "farmacia") || !v.id}>Registrar quebra/extravio</Button></div>
   </form>;
 }
 

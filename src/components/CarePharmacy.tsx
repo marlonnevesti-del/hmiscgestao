@@ -32,7 +32,7 @@ function Pharmacy() {
   const low = stock.filter(isStockLow);
   const pending = useStore((s) => s.requests.filter((r) => r.target === "farmacia" && r.status === "Pendente").length);
   return <Tabs defaultValue="fila" className="space-y-4">
-    <TabsList><TabsTrigger value="fila">Fila de prescrições ({list.length})</TabsTrigger><TabsTrigger value="estoque">Estoque ({stock.length})</TabsTrigger><TabsTrigger value="pedidos">Pedidos da enfermagem ({pending})</TabsTrigger><TabsTrigger value="transferencia">Transferência</TabsTrigger><TabsTrigger value="devolucao">Devolução</TabsTrigger><TabsTrigger value="quebra">Quebra de ampolas</TabsTrigger><TabsTrigger value="dispensados">Kits dispensados</TabsTrigger></TabsList>
+    <TabsList><TabsTrigger value="fila">Fila de prescrições ({list.length})</TabsTrigger><TabsTrigger value="estoque">Estoque ({stock.length})</TabsTrigger><TabsTrigger value="pedidos">Pedidos da enfermagem ({pending})</TabsTrigger><TabsTrigger value="transferencia">Transferência</TabsTrigger><TabsTrigger value="devolucao">Devolução</TabsTrigger><TabsTrigger value="quebra">Quebra/Extravio</TabsTrigger><TabsTrigger value="dispensados">Kits dispensados</TabsTrigger></TabsList>
     {low.length > 0 && <div role="alert" className="flex items-start gap-2 rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm"><AlertTriangle className="mt-0.5 h-4 w-4 text-destructive" /><div><span className="font-medium">Estoque baixo:</span> {low.map((item) => `${item.name} (${item.quantity} ${item.unit})`).join(", ")}</div></div>}
     <TabsContent value="fila"><PrescriptionQueue /></TabsContent>
     <TabsContent value="estoque"><StockManager /></TabsContent>

@@ -140,11 +140,11 @@ export function returnStock(depot: Depot, itemId: string, qty: number, lot: stri
   const item = items.find((i) => i.id === itemId)!;
   setState(() => ({ [depotKey(depot)]: items, movements: logMovement({ kind: 'devolucao', from: origin.trim(), to: DEPOT_NAME[depot], item: item.name, code: item.code, qty, lot: lot.trim(), reason: reason.trim() }) }) as Partial<State>);
 }
-/** Registro de quebra de ampola / perda na farmácia: baixa o saldo. */
+/** Registro de quebra ou extravio na farmácia: baixa o saldo. */
 export function registerBreakage(itemId: string, qty: number, lot: string, reason: string) {
   requireAction('farmacia'); checkQty(qty);
-  if (!lot.trim()) throw new Error('Informe o lote da ampola quebrada.');
-  if (!reason.trim()) throw new Error('Descreva como ocorreu a quebra.');
+  if (!lot.trim()) throw new Error('Informe o lote do produto quebrado ou extraviado.');
+  if (!reason.trim()) throw new Error('Descreva como ocorreu a quebra ou extravio.');
   const items = changeQty(state.stock, itemId, -qty, lot);
   const item = items.find((i) => i.id === itemId)!;
   setState(() => ({ stock: items, movements: logMovement({ kind: 'quebra', from: 'Farmácia', to: 'Perda', item: item.name, code: item.code, qty, lot: lot.trim(), reason: reason.trim() }) }));
