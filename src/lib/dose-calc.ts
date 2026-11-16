@@ -1,8 +1,8 @@
 /** Regime de dose (mg/kg/dia ÷ tomadas, com teto diário) e apresentação para converter mg em mL/gotas. */
 export interface Regimen { label: string; mgKgDay: number; doses: number; maxDay: number }
 export interface Presentation { label: string; mgPerMl: number; dropsPerMl?: number }
-export interface DoseInput { weightKg: number; mgKgDay: number; doses: number; maxDay: number; mgPerMl?: number; dropsPerMl?: number; perDoseOverride?: number }
-export interface DoseResult { day: number; perDose: number; capped: boolean; ml?: number; drops?: number; manual: boolean }
+export interface DoseInput { weightKg: number; mgKgDay: number; doses: number; maxDay: number; mgPerMl?: number | undefined; dropsPerMl?: number | undefined; perDoseOverride?: number | undefined }
+export interface DoseResult { day: number; perDose: number; capped: boolean; ml?: number | undefined; drops?: number | undefined; manual: boolean }
 
 const r2 = (n: number) => Math.round(n * 100) / 100;
 
