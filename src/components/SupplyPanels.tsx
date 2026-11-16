@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { can } from "@/lib/hospital-data";
 import { answerSupplyRequest, createSupplyRequest, registerBreakage, returnStock, transferStock, useStore } from "@/lib/hospital-store";
 import { DEPOT_LABEL, type Depot, type MovementKind } from "@/lib/supply-flow";
-import type { StockMedication } from "@/lib/pharmacy-stock";
+import { fmtExpiry, lotsByExpiry, type StockMedication } from "@/lib/pharmacy-stock";
 import { cn } from "@/lib/utils";
 
 function run(fn: () => void, ok: string) { try { fn(); toast.success(ok); return true; } catch (e) { toast.error(e instanceof Error ? e.message : "Ação não concluída"); return false; } }
@@ -20,8 +20,8 @@ function ItemLotPicker({ items, value, onChange }: { items: StockMedication[]; v
   const item = items.find((i) => i.id === value.id);
   return <div className="grid gap-2 md:grid-cols-[1fr_2fr_1fr]">
     <Input aria-label="Buscar produto" placeholder="Buscar nome ou código" value={q} onChange={(e) => setQ(e.target.value)} />
-    <select aria-label="Produto" className={sel} value={value.id} onChange={(e) => onChange({ id: e.target.value, lot: "" })}><option value="">Selecione o produto</option>{found.map((i) => <option key={i.id} value={i.id}>{i.code ? `${i.code} · ` : ""}{i.name} ({i.quantity} {i.unit})</option>)}</select>
-    <div><Input aria-label="Lote" list={`lots-${value.id}`} placeholder="Lote" value={value.lot} onChange={(e) => onChange({ ...value, lot: e.target.value })} /><datalist id={`lots-${value.id}`}>{item?.lots?.map((l) => <option key={l.lot} value={l.lot}>{`${l.quantity} · val. ${l.expiry || "—"}`}</option>)}</datalist></div>
+    <select aria-label="Produto" className={sel} value={value.id} onChange={(e) => { const it = items.find((i) => i.id === e.target.value); const ls = lotsByExpiry(it); onChange({ id: e.target.value, lot: ls.length === 1 ? ls[0]!.lot : "" }); }}><option value="">Selecione o produto</option>{found.map((i) => <option key={i.id} value={i.id}>{i.code ? `${i.code} · ` : ""}{i.name} ({i.quantity} {i.unit})</option>)}</select>
+    {item?.lots?.length ? <select aria-label="Lote" className={sel} value={value.lot} onChange={(e) => onChange({ ...value, lot: e.target.value })}><option value="">Escolha o lote (vence primeiro no topo)</option>{lotsByExpiry(item).map((l) => <option key={l.lot + l.expiry} value={l.lot}>{`Lote ${l.lot} · val. ${fmtExpiry(l.expiry)} · ${l.quantity} ${item.unit}`}</option>)}</select> : <Input aria-label="Lote" placeholder="Lote" value={value.lot} onChange={(e) => onChange({ ...value, lot: e.target.value })} />}
   </div>;
 }
 

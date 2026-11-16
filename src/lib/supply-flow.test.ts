@@ -12,3 +12,11 @@ describe("movimentação de estoque", () => {
   it("não permite saldo negativo", () => expect(() => changeQty([item("a", 2)], "a", -3, "L1")).toThrow("insuficiente"));
   it("devolução soma ao lote", () => expect(changeQty([item("a", 2)], "a", 3, "L1")[0]?.lots?.[0]?.quantity).toBe(5));
 });
+
+import { lotsByExpiry } from "./pharmacy-stock";
+describe("lotes por validade", () => {
+  it("ordena do vencimento mais próximo e oculta lotes zerados", () => {
+    const r = lotsByExpiry({ lots: [{ lot: "B", expiry: "2028-02-29", quantity: 30 }, { lot: "Z", expiry: "2026-12-01", quantity: 0 }, { lot: "A", expiry: "2027-04-30", quantity: 8 }] });
+    expect(r.map((l) => l.lot)).toEqual(["A", "B"]);
+  });
+});

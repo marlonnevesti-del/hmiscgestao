@@ -21,6 +21,9 @@ export function catalogToStock(rows: CatalogRow[], prefix: string): StockMedicat
 }
 /** Acrescenta itens importados que ainda não existem, sem sobrescrever saldos já movimentados. */
 export function mergeCatalog(stock: StockMedication[], catalog: StockMedication[], removed: readonly string[] = []) {
+  const byId = new Map(catalog.map((c) => [c.id, c]));
+  // Itens já salvos sem lotes recebem os lotes do relatório importado.
+  stock = stock.map((i) => (!i.lots || i.lots.length === 0) && byId.get(i.id)?.lots?.length ? { ...i, lots: byId.get(i.id)!.lots ?? [] } : i);
   const ids = new Set([...stock.map((i) => i.id), ...removed]);
   const missing = catalog.filter((i) => !ids.has(i.id));
   return missing.length ? [...stock, ...missing].sort((a, b) => a.name.localeCompare(b.name, "pt-BR")) : stock;
@@ -72,3 +75,9 @@ export function normalizeStock(value: unknown): StockMedication[] {
     minimum: 0,
   }));
 }
+
+/** Lotes com saldo, do vencimento mais próximo para o mais distante. */
+export function lotsByExpiry(item?: Pick<StockMedication, "lots">) {
+  return (item?.lots ?? []).filter((l) => l.quantity > 0).sort((a, b) => (a.expiry || "9999").localeCompare(b.expiry || "9999"));
+}
+export const fmtExpiry = (d: string) => (/^\d{4}-\d{2}-\d{2}$/.test(d) ? d.split("-").reverse().join("/") : d || "sem validade");
