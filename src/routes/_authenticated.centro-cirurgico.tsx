@@ -1,4 +1,5 @@
 import { EncounterTimeline } from "@/components/EncounterTimeline";
+import { ProcedurePrintButton } from "@/components/ProcedurePrint";
 import { Button } from "@/components/ui/button";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
@@ -86,6 +87,7 @@ function Centro() {
               })}
               <TeamForm key={`t-${sel.id}`} s={sel} disabled={!canEdit} />
               <ReportForm key={`r-${sel.id}`} s={sel} disabled={!canEdit} />
+              <ProcedurePrintButton patientId={sel.patientId} sector="Centro cirúrgico / obstétrico" procedure={sel.type} />
               <Button className="w-full" onClick={printSurgery}><Printer className="mr-1 h-4 w-4" />Imprimir descrição e checklist</Button>
               <div className="rounded-md border p-3">
                 <div className="mb-1 text-xs font-semibold">Gasto de sala</div>

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { ProcedurePrintButton } from "./ProcedurePrint";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Baby, Clock, Siren } from "lucide-react";
 import { toast } from "sonner";
@@ -82,7 +83,7 @@ function QueueCard({ encounter, now, onSelect, position }: { encounter: Encounte
         {flowchart && <details className="mt-2 text-xs"><summary className="cursor-pointer text-primary">PCACR · {flowchart.nome} · {encounter.triage?.descriptors?.length ?? 0} descritor(es)</summary><div className="mt-1 rounded-md border bg-muted/40 p-2"><div className="font-semibold">{PUBLICO_LABEL[flowchart.publico]}</div><ul className="mt-1 space-y-1">{encounter.triage?.descriptors?.map((id) => { const descriptor = descritorPorId(flowchart, id); return descriptor && <li key={id} className="flex items-center gap-1.5"><span className={cn("h-2 w-2 shrink-0 rounded-full", MANCHESTER[descriptor.cor].cls)} />{descriptor.texto}</li>; })}</ul></div></details>}
       </div>
       <div className="flex shrink-0 flex-col gap-1">
-        {encounter.status_fluxo === "AGUARDANDO_TRIAGEM" && <>{can(profile, "triagem") && <CallPanelButton patientId={encounter.patientId} />}<Button size="sm" disabled={!can(profile, "triagem")} onClick={() => onSelect(encounter)}>Classificar</Button></>}
+        <ProcedurePrintButton patientId={encounter.patientId} sector="Acolhimento / Triagem" />{encounter.status_fluxo === "AGUARDANDO_TRIAGEM" && <>{can(profile, "triagem") && <CallPanelButton patientId={encounter.patientId} />}<Button size="sm" disabled={!can(profile, "triagem")} onClick={() => onSelect(encounter)}>Classificar</Button></>}
         {encounter.status_fluxo === "AGUARDANDO_MEDICO" && <><Button size="sm" disabled={!can(profile, "prescrever")} onClick={call}>Chamar</Button><Button size="sm" variant="ghost" disabled={!can(profile, "triagem")} onClick={() => onSelect(encounter)}>Reclassificar</Button></>}
         {encounter.status_fluxo === "EM_ATENDIMENTO_MEDICO" && <Button size="sm" variant="secondary" asChild><Link to="/pacientes/$id" params={{ id: encounter.patientId }}>Abrir</Link></Button>}
         {encounter.status_fluxo === "EM_OBSERVACAO_REAVALIACAO" && <Button size="sm" variant="secondary" disabled={!can(profile, "prescrever")} onClick={call}>Reavaliar</Button>}

@@ -230,3 +230,10 @@
   .surg-root .sheet-signs { display: flex; justify-content: space-around; margin-top: 1.4cm; text-align: center; }
   .surg-root .sheet-signs .line { width: 7cm; border-top: 1px solid #000; margin-bottom: 3px; }
 }
+
+.proc-root { display: none; }
+@media print {
+  body.print-proc > *:not(.proc-root) { display: none !important; }
+  body.print-proc .proc-root { display: block !important; color: #000; background: #fff; font-size: 11pt; }
+  body.print-doc .proc-root, body.print-sheet .proc-root, body.print-surg .proc-root, body.print-req .proc-root, body.print-label .proc-root { display: none !important; }
+}

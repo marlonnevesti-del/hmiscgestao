@@ -1,4 +1,5 @@
 import { EncounterTimeline } from "@/components/EncounterTimeline";
+import { ProcedurePrintButton } from "@/components/ProcedurePrint";
 import { MedicalAssessment, PrescriptionRelease } from "@/components/CareMedical";
 import { Button } from "@/components/ui/button";
 import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
@@ -59,7 +60,7 @@ function PEP() {
             <div className="text-right text-xs"><div className="font-mono font-semibold">{p.bed}</div><div className="text-muted-foreground">{WARDS.find((w) => w.id === p.ward)?.name} · {p.insurance}</div></div>
             <button onClick={() => setPrint(true)} className="flex items-center gap-1.5 rounded-md border px-3 py-2 text-xs font-medium hover:bg-muted"><Printer className="h-4 w-4" />Pulseira/Etiqueta</button>
             <button onClick={() => printSheet("BAA")} className="flex items-center gap-1.5 rounded-md border px-3 py-2 text-xs font-medium hover:bg-muted"><Printer className="h-4 w-4" />BAA</button>
-            <button onClick={() => printSheet("FIA")} className="flex items-center gap-1.5 rounded-md border px-3 py-2 text-xs font-medium hover:bg-muted"><Printer className="h-4 w-4" />FIA</button>
+            <ProcedurePrintButton patientId={p.id} /><button onClick={() => printSheet("FIA")} className="flex items-center gap-1.5 rounded-md border px-3 py-2 text-xs font-medium hover:bg-muted"><Printer className="h-4 w-4" />FIA</button>
           </div>
         </div>
         <div className="mt-1 text-xs"><span className="font-medium">Diagnóstico:</span> {p.diagnosis}</div>
