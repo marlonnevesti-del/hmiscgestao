@@ -8,7 +8,7 @@ import { DEFAULT_CID_AREAS, DEFAULT_CID_GROUPS, addArea, addGroup, type CidArea,
 import { DEFAULT_ROOMS, addRoomName, pushCall, removeRoomName, type PanelCall } from "./panel-calls";
 import { catalogToStock, findStockMedication, medicationKey, type StockMedication } from "./pharmacy-stock";
 import CATALOG from "./stock-catalog.json";
-import { changeQty, checkQty, transferItem, type Depot, type Movement, type SupplyRequest } from "./supply-flow";
+import { changeQty, checkQty, loanReturnedQty, transferItem, type Depot, type Movement, type SupplyRequest } from "./supply-flow";
 export const PHARMACY_CATALOG = catalogToStock(CATALOG.farm, 'farm');
 export const WAREHOUSE_CATALOG = catalogToStock(CATALOG.almox, 'almox');
 import { registrationPatch } from "./patient-registration-mapping";
@@ -180,16 +180,22 @@ export function registerLoan(depot: Depot, direction: 'saida' | 'entrada', partn
   for (const l of lines) { const it = items.find((i) => i.id === l.id)!; movements = [{ id: crypto.randomUUID(), at: new Date().toISOString(), by: professionalName(state.profile), kind: direction === 'saida' ? 'emprestimo_saida' : 'emprestimo_entrada', from: direction === 'saida' ? DEPOT_NAME[depot] : partner.trim(), to: direction === 'saida' ? partner.trim() : DEPOT_NAME[depot], item: it.name, code: it.code, qty: l.qty, lot: l.lot.trim(), expiry: l.expiry, doc, due, reason: '' }, ...movements]; }
   setState(() => ({ [depotKey(depot)]: items, movements }) as Partial<State>);
 }
-/** Baixa do empréstimo: produto emprestado volta ao estoque, ou o que pegamos é devolvido (sai). */
-export function settleLoan(depot: Depot, movementId: string) {
+/** Devolução parcial ou total: ajusta apenas a quantidade informada e mantém histórico por lote. */
+export function settleLoan(depot: Depot, movementId: string, qty: number) {
   requireAction(depotAction(depot));
   const m = state.movements.find((x) => x.id === movementId);
   if (!m || !m.kind.startsWith('emprestimo') || m.settledAt) throw new Error('Empréstimo não encontrado ou já devolvido.');
+  const out = m.kind === 'emprestimo_saida';
+  if ((out ? m.from : m.to) !== DEPOT_NAME[depot]) throw new Error('Empréstimo não pertence a este estoque.');
+  checkQty(qty);
+  const returnedQty = loanReturnedQty(m) + qty;
+  if (returnedQty > m.qty) throw new Error(`Quantidade maior que o saldo pendente (${m.qty - loanReturnedQty(m)}).`);
   const list = state[depotKey(depot)];
   const it = list.find((i) => (m.code && i.code === m.code) || i.name === m.item);
   if (!it) throw new Error('Produto não está mais no estoque.');
-  const items = changeQty(list, it.id, m.kind === 'emprestimo_saida' ? m.qty : -m.qty, m.lot, m.expiry ?? '');
-  setState(() => ({ [depotKey(depot)]: items, movements: state.movements.map((x) => x.id === movementId ? { ...x, settledAt: new Date().toISOString(), settledBy: professionalName(state.profile) } : x) }) as Partial<State>);
+  const items = changeQty(list, it.id, out ? qty : -qty, m.lot, m.expiry ?? '');
+  const at = new Date().toISOString(); const by = professionalName(state.profile);
+  setState(() => ({ [depotKey(depot)]: items, movements: state.movements.map((x) => x.id === movementId ? { ...x, returnedQty, returns: [...(x.returns ?? []), { qty, at, by }], ...(returnedQty === m.qty ? { settledAt: at, settledBy: by } : {}) } : x) }) as Partial<State>);
 }
 /** Pedido do posto de enfermagem para farmácia ou almoxarifado. */
 /** Pedido de qualquer setor ao almoxarifado (colaborador aprovado). */

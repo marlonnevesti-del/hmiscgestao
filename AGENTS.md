@@ -40,3 +40,4 @@ use the editor.
 - Employee registration validation is shared with its server function; admin review and role grants use transactional authenticated database functions to prevent privilege escalation.
 - Registration origins are validated by protocol, not deployment hostnames, so ephemeral HTTPS previews can register employees; the administrator list refreshes every second, including in background tabs, to expose new pending profiles without manual refresh.
 - Patient demographics use the shared registration schema, mapping and field editor; store them additively in the clinical snapshot and update clinical display fields centrally to retain legacy records and keep queues consistent.
+- Loan returns use the centralized stock action with cumulative returned quantities and per-return history in the clinical snapshot; only the returned quantity changes stock and legacy settled loans remain fully returned.

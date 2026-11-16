@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { can } from "@/lib/hospital-data";
 import { answerSupplyRequest, createSupplyRequest, receiveStock, registerLoan, settleLoan, type EntryLine, registerBreakage, returnStock, transferStock, useStore } from "@/lib/hospital-store";
-import { DEPOT_LABEL, type Depot, type MovementKind } from "@/lib/supply-flow";
+import { DEPOT_LABEL, loanReturnedQty, type Depot, type MovementKind } from "@/lib/supply-flow";
 import { fmtExpiry, lotsByExpiry, type StockMedication } from "@/lib/pharmacy-stock";
 import { cn } from "@/lib/utils";
 
@@ -133,6 +133,7 @@ export function LoanPanel({ depot }: { depot: Depot }) {
   const [dir, setDir] = useState<"saida" | "entrada">("saida");
   const due0 = new Date(Date.now() + 30 * 864e5).toISOString().slice(0, 10);
   const [f, setF] = useState({ partner: "", due: due0 }); const [lines, setLines] = useState<EntryLine[]>([]);
+  const [returnQty, setReturnQty] = useState<Record<string, string>>({});
   const name = DEPOT_LABEL[depot]; const allowed = can(profile, depotPerm(depot));
   const loans = movements.filter((m) => m.kind.startsWith("emprestimo") && (m.from === name || m.to === name));
   return <div className="space-y-3"><form className="space-y-3 rounded-xl border bg-card p-4" onSubmit={(e) => { e.preventDefault(); if (run(() => registerLoan(depot, dir, f.partner, f.due, lines), dir === "saida" ? "Saída por empréstimo registrada" : "Entrada por empréstimo registrada")) { setLines([]); setF({ partner: "", due: due0 }); } }}>
@@ -143,6 +144,19 @@ export function LoanPanel({ depot }: { depot: Depot }) {
     <Button type="submit" disabled={!allowed || !lines.length}>{dir === "saida" ? "Registrar saída (baixa no estoque)" : "Registrar entrada (soma no estoque)"}</Button>
   </form>
   <h3 className="text-sm font-semibold">Empréstimos</h3>
-  {loans.length ? <div className="overflow-x-auto rounded-xl border bg-card"><table className="w-full text-sm"><thead className="bg-muted text-left text-xs uppercase text-muted-foreground"><tr><th className="p-2">Nº</th><th className="p-2">Tipo</th><th className="p-2">Produto</th><th className="p-2">Lote</th><th className="p-2">Qtde.</th><th className="p-2">Com</th><th className="p-2">Devolução</th><th className="p-2">Situação</th></tr></thead><tbody>{loans.map((m) => { const out = m.kind === "emprestimo_saida"; const late = !m.settledAt && m.due && m.due < new Date().toISOString().slice(0, 10); return <tr key={m.id} className="border-t"><td className="p-2 text-xs">{m.doc}</td><td className="p-2 text-xs">{out ? "Saída" : "Entrada"}</td><td className="p-2">{m.item}</td><td className="p-2 font-mono text-xs">{m.lot}</td><td className="p-2 font-mono">{m.qty}</td><td className="p-2 text-xs">{out ? m.to : m.from}</td><td className={cn("p-2 text-xs", late && "font-semibold text-destructive")}>{m.due ? fmtExpiry(m.due) : "—"}</td><td className="p-2 text-xs">{m.settledAt ? `Devolvido ${new Date(m.settledAt).toLocaleDateString("pt-BR")}` : <Button size="sm" variant="outline" disabled={!allowed} onClick={() => { if (window.confirm(out ? "Confirmar que o produto voltou? Será somado ao estoque." : "Confirmar devolução ao emprestador? Será baixado do estoque.")) run(() => settleLoan(depot, m.id), "Empréstimo baixado"); }}>{out ? "Recebi de volta" : "Devolvi"}</Button>}</td></tr>; })}</tbody></table></div> : <p className="text-sm text-muted-foreground">Nenhum empréstimo registrado.</p>}
+  {loans.length ? <div className="overflow-x-auto rounded-xl border bg-card"><table className="w-full text-sm"><thead className="bg-muted text-left text-xs uppercase text-muted-foreground"><tr><th className="p-2">Nº</th><th className="p-2">Tipo</th><th className="p-2">Produto</th><th className="p-2">Lote</th><th className="p-2">Qtde.</th><th className="p-2">Devolvida</th><th className="p-2">Pendente</th><th className="p-2">Com</th><th className="p-2">Devolução</th><th className="p-2">Situação</th></tr></thead><tbody>{loans.map((m) => {
+    const out = m.kind === "emprestimo_saida"; const returned = loanReturnedQty(m); const pending = m.qty - returned;
+    const late = pending > 0 && m.due && m.due < new Date().toISOString().slice(0, 10);
+    return <tr key={m.id} className="border-t"><td className="p-2 text-xs">{m.doc}</td><td className="p-2 text-xs">{out ? "Saída" : "Entrada"}</td><td className="p-2">{m.item}</td><td className="p-2 font-mono text-xs">{m.lot}</td><td className="p-2 font-mono">{m.qty}</td><td className="p-2 font-mono">{returned}</td><td className="p-2 font-mono">{pending}</td><td className="p-2 text-xs">{out ? m.to : m.from}</td><td className={cn("p-2 text-xs", late && "font-semibold text-destructive")}>{m.due ? fmtExpiry(m.due) : "—"}</td><td className="p-2 text-xs">
+      {pending === 0 ? `Devolvido ${m.settledAt ? new Date(m.settledAt).toLocaleDateString("pt-BR") : ""}` : <form className="flex min-w-52 flex-wrap items-end gap-2" onSubmit={(e) => {
+        e.preventDefault(); const qty = Number(returnQty[m.id] ?? "");
+        if (!(qty > 0) || !Number.isInteger(qty) || qty > pending) { toast.error(`Informe uma quantidade inteira entre 1 e ${pending}.`); return; }
+        if (window.confirm(out ? `Confirmar recebimento de ${qty}? Será somado ao estoque.` : `Confirmar devolução de ${qty}? Será baixado do estoque.`)) {
+          if (run(() => settleLoan(depot, m.id, qty), "Quantidade devolvida registrada e estoque atualizado")) setReturnQty((c) => ({ ...c, [m.id]: "" }));
+        }
+      }}><label className="space-y-1">Quantidade devolvida<Input aria-label={`Quantidade devolvida de ${m.item}, lote ${m.lot}`} type="number" min="1" max={pending} step="1" required disabled={!allowed} className="w-28" value={returnQty[m.id] ?? ""} onChange={(e) => setReturnQty((c) => ({ ...c, [m.id]: e.target.value }))} /></label><Button type="submit" size="sm" variant="outline" disabled={!allowed}>{out ? "Recebi de volta" : "Devolvi"}</Button></form>}
+      {m.returns?.map((r, i) => <div key={i} className="mt-1 text-muted-foreground">{r.qty} devolvida(s) · {new Date(r.at).toLocaleString("pt-BR")} · {r.by}</div>)}
+    </td></tr>;
+  })}</tbody></table></div> : <p className="text-sm text-muted-foreground">Nenhum empréstimo registrado.</p>}
   </div>;
 }
