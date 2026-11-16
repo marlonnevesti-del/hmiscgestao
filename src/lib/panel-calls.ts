@@ -17,7 +17,7 @@ export const pushCall = (calls: PanelCall[], c: PanelCall, max = 20) => [c, ...c
 
 export const SECTORS = [
   { id: "Ambulatorio", label: "Ambulatório", voice: "feminina" },
-  { id: "ProntoSocorro", label: "Pronto socorro", voice: "desenho" },
+  { id: "ProntoSocorro", label: "Pronto socorro", voice: "feminina" },
   { id: "Maternidade", label: "Maternidade", voice: "feminina" },
 ] as const;
 export type SectorId = (typeof SECTORS)[number]["id"];
