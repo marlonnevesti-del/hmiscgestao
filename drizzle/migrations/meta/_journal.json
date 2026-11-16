@@ -43,6 +43,13 @@
       "when": 1794742483540,
       "tag": "0005_employee_function_management",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1794841456163,
+      "tag": "0006_employee_access_areas",
+      "breakpoints": true
     }
   ]
 }

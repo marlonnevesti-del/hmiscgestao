@@ -50,6 +50,14 @@ export const updateEmployeeFunction = createServerFn({ method: "POST" }).middlew
     return { ok: true };
   });
 
+export const updateEmployeeAreas = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ id: z.string().uuid(), areas: z.array(z.string().max(30)).max(20) }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase.rpc("set_employee_areas", { target_id: data.id, areas: data.areas });
+    if (error) throw new Error("Não foi possível definir as áreas deste colaborador");
+    return { ok: true };
+  });
+
 export const removeEmployee = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {

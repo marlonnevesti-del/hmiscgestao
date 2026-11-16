@@ -40,6 +40,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          access_areas: string[] | null
           address: string
           approved_at: string | null
           approved_by: string | null
@@ -58,6 +59,7 @@ export type Database = {
           username: string
         }
         Insert: {
+          access_areas?: string[] | null
           address?: string
           approved_at?: string | null
           approved_by?: string | null
@@ -76,6 +78,7 @@ export type Database = {
           username?: string
         }
         Update: {
+          access_areas?: string[] | null
           address?: string
           approved_at?: string | null
           approved_by?: string | null
@@ -133,6 +136,10 @@ export type Database = {
       }
       review_employee: {
         Args: { new_status: string; target_id: string }
+        Returns: undefined
+      }
+      set_employee_areas: {
+        Args: { areas: string[]; target_id: string }
         Returns: undefined
       }
       set_employee_function: {

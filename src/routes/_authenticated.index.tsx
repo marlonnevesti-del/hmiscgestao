@@ -28,11 +28,11 @@ const AREAS = [
 ] as const;
 
 function Home() {
-  const profile = useStore((s) => s.profile);
+  const profile = useStore((s) => s.profile); const areas = useStore((s) => s.accessAreas);
   return <div className="space-y-5">
     <div><h1 className="text-xl font-semibold">Bem-vindo(a), {professionalName(profile)}</h1><p className="text-sm text-muted-foreground">Escolha a área de trabalho.</p></div>
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-      {AREAS.filter((a) => canAccessPage(profile, a.to)).map((a) => <Link key={a.to} to={a.to} className="rounded-lg border bg-card p-5 font-medium transition hover:border-primary hover:text-primary">{a.label}</Link>)}
+      {AREAS.filter((a) => canAccessPage(profile, a.to, areas)).map((a) => <Link key={a.to} to={a.to} className="rounded-lg border bg-card p-5 font-medium transition hover:border-primary hover:text-primary">{a.label}</Link>)}
     </div>
   </div>;
 }

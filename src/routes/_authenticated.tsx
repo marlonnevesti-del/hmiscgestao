@@ -8,7 +8,7 @@ export const Route = createFileRoute("/_authenticated")({
     const access = await loadEmployeeAccess();
     if (!access) throw redirect({ to: "/auth" });
     if (access.profile.status !== "approved") throw redirect({ to: "/pendente" });
-    if (!canAccessPage(clinicalProfile(access.profile.job_function, access.roles), location.pathname)) throw redirect({ to: "/" });
+    if (!canAccessPage(clinicalProfile(access.profile.job_function, access.roles), location.pathname, access.profile.access_areas)) throw redirect({ to: "/" });
   },
   component: Outlet,
 });

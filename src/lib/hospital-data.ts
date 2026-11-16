@@ -24,9 +24,18 @@ const PERMS: Record<Profile, Action[]> = {
   Recepção: ["recepcao"],
 };
 export const can = (p: Profile, a: Action) => PERMS[p].includes(a);
-export function canAccessPage(profile: Profile, path: string) {
+export const ACCESS_AREAS = [
+  { id: "recepcao", label: "Recepção & Cadastro" }, { id: "acolhimento", label: "Acolhimento / Triagem" },
+  { id: "atendimento", label: "Consultório Médico" }, { id: "pacientes", label: "Pacientes / PEP" },
+  { id: "enfermagem", label: "Posto de Enfermagem" }, { id: "centro-cirurgico", label: "Centro Cirúrgico" },
+  { id: "farmacia", label: "Farmácia" }, { id: "almoxarifado", label: "Almoxarifado" }, { id: "faturamento", label: "Faturamento TISS" },
+] as const;
+export const defaultAreas = (profile: Profile): string[] => ACCESS_AREAS.map((a) => a.id).filter((id) => canAccessPage(profile, `/${id}`));
+/** Areas chosen by the admin override the function defaults; null means "use the function". */
+export function canAccessPage(profile: Profile, path: string, areas?: readonly string[] | null) {
   if (profile === "Administrador") return true;
   if (path === "/" || path === "/painel-tv") return true;
+  if (areas) return areas.includes(path.split("/")[1] ?? "");
   if (path === "/recepcao") return can(profile, "recepcao");
   if (path === "/acolhimento") return can(profile, "triagem");
   if (path === "/atendimento") return can(profile, "prescrever");

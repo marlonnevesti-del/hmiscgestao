@@ -67,3 +67,13 @@ describe("acesso de colaboradores", () => {
     for (const path of ["/recepcao", "/acolhimento", "/atendimento", "/farmacia", "/enfermagem", "/colaboradores"]) expect(canAccessPage(profile, path)).toBe(true);
   });
 });
+import { canAccessPage as pageAccess, defaultAreas } from "./hospital-data";
+describe("áreas liberadas pelo administrador", () => {
+  it("restringe às áreas escolhidas", () => {
+    expect(pageAccess("Enfermeiro", "/acolhimento", ["acolhimento", "enfermagem"])).toBe(true);
+    expect(pageAccess("Enfermeiro", "/atendimento", ["acolhimento", "enfermagem"])).toBe(false);
+    expect(pageAccess("Médico", "/pacientes/1", ["atendimento", "pacientes"])).toBe(true);
+    expect(pageAccess("Recepção", "/farmacia", ["recepcao"])).toBe(false);
+  });
+  it("sugere recepção para recepcionista", () => { expect(defaultAreas("Recepção")).toEqual(["recepcao"]); });
+});
