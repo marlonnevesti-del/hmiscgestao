@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from "react";
+import { linkCode } from "./barcode";
 import { PATIENTS, QUEUE, SURGERIES, type Admin, type Newborn, type Patient, type Profile, type QueueItem, type Surgery } from "./hospital-data";
 
 import { transition, validateTriage, type Encounter, type Triage, type FlowStatus } from "./care-flow";
@@ -269,4 +270,10 @@ export function updateCidArea(name: string, patch: Partial<Omit<CidArea, 'name'>
 export function deleteStockItem(kind: 'stock' | 'warehouse', id: string) {
   if (state.profile !== 'Administrador') throw new Error('Apenas administradores podem apagar itens.');
   setState((s) => ({ [kind]: s[kind].filter((i) => i.id !== id), removedStock: [...new Set([...s.removedStock, id])] }) as never);
+}
+
+/** Vincula um código de barras já impresso (ou gerado) a um produto/lote da farmácia ou do almoxarifado. */
+export function linkBarcode(kind: 'stock' | 'warehouse', id: string, code: string, lot?: string) {
+  requireAction(kind === 'stock' ? 'farmacia' : 'almoxarifado');
+  setState((s) => ({ [kind]: linkCode(s[kind], id, code, lot) }) as never);
 }

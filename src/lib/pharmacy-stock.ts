@@ -10,8 +10,9 @@ export interface StockMedication {
   unitCost?: number;
   antibiotic?: boolean;
   lots?: StockLot[];
+  barcodes?: string[];
 }
-export interface StockLot { lot: string; expiry: string; quantity: number }
+export interface StockLot { lot: string; expiry: string; quantity: number; barcode?: string }
 export interface CatalogRow { code: string; name: string; unit: string; quantity: number; unitCost: number; antibiotic: boolean; location: string; lots: StockLot[] }
 
 /** Converte as linhas do relatório de saldos em itens de estoque com id estável por código e local. */
