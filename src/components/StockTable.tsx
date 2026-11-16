@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 const money = (n: number) => n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
 /** Tabela de saldos com busca, local, lotes/validade e lançamento de entradas e saídas. */
-export function StockTable({ items, allowed, onAdjust, onDelete, label = "Item" }: { items: StockMedication[]; allowed: boolean; onAdjust: (id: string, delta: number) => void; onDelete?: (id: string) => void; label?: string }) {
+export function StockTable({ items, allowed, onAdjust, onDelete, label = "Item" }: { items: StockMedication[]; allowed: boolean; onAdjust: (id: string, delta: number) => void; onDelete?: ((id: string) => void) | undefined; label?: string }) {
   const [q, setQ] = useState("");
   const [loc, setLoc] = useState("");
   const [adj, setAdj] = useState<Record<string, string>>({});
