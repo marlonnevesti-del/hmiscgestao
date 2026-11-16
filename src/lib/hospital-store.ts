@@ -12,8 +12,8 @@ export const WAREHOUSE_CATALOG = catalogToStock(CATALOG.almox, 'almox');
 import { registrationPatch } from "./patient-registration-mapping";
 import type { PatientRegistration } from "./patient-registration";
 
-interface State { encounters: Encounter[]; beSequence: number; stock: StockMedication[]; warehouse: StockMedication[]; profile: Profile; employeeName: string; patients: Patient[]; queue: QueueItem[]; surgeries: Surgery[]; admins: Record<string, Admin>; rooms: string[]; calls: PanelCall[]; cidGroups: CidGroup[]; cidAreas: CidArea[]; employeeArea: string }
-let state: State = { profile: "Outro", employeeName: "", patients: [], queue: [], surgeries: [], admins: {}, encounters: [], beSequence: 0, stock: PHARMACY_CATALOG, warehouse: WAREHOUSE_CATALOG, rooms: DEFAULT_ROOMS, calls: [], cidGroups: DEFAULT_CID_GROUPS, cidAreas: DEFAULT_CID_AREAS, employeeArea: "" };
+interface State { encounters: Encounter[]; beSequence: number; stock: StockMedication[]; warehouse: StockMedication[]; profile: Profile; employeeName: string; patients: Patient[]; queue: QueueItem[]; surgeries: Surgery[]; admins: Record<string, Admin>; rooms: string[]; calls: PanelCall[]; cidGroups: CidGroup[]; cidAreas: CidArea[]; employeeArea: string; removedStock: string[] }
+let state: State = { profile: "Outro", employeeName: "", patients: [], queue: [], surgeries: [], admins: {}, encounters: [], beSequence: 0, stock: PHARMACY_CATALOG, warehouse: WAREHOUSE_CATALOG, rooms: DEFAULT_ROOMS, calls: [], cidGroups: DEFAULT_CID_GROUPS, cidAreas: DEFAULT_CID_AREAS, employeeArea: "", removedStock: [] };
 const ls = new Set<() => void>();
 export const getState = () => state;
 export function setState(fn: (s: State) => Partial<State>) { state = { ...state, ...fn(state) }; ls.forEach((l) => l()); }
@@ -208,3 +208,8 @@ export function removeCidGroup(id: string) { adminOnly(); setState((s) => ({ cid
 export function addCidArea(name: string) { adminOnly(); setState((s) => ({ cidAreas: addArea(s.cidAreas, name) })); }
 export function removeCidArea(name: string) { adminOnly(); setState((s) => ({ cidAreas: s.cidAreas.filter((a) => a.name !== name) })); }
 export function updateCidArea(name: string, patch: Partial<Omit<CidArea, 'name'>>) { adminOnly(); setState((s) => ({ cidAreas: s.cidAreas.map((a) => a.name === name ? { ...a, ...patch } : a) })); }
+
+export function deleteStockItem(kind: 'stock' | 'warehouse', id: string) {
+  if (state.profile !== 'Administrador') throw new Error('Apenas administradores podem apagar itens.');
+  setState((s) => ({ [kind]: s[kind].filter((i) => i.id !== id), removedStock: [...new Set([...s.removedStock, id])] }) as never);
+}

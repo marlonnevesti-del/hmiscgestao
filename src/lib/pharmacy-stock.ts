@@ -19,8 +19,8 @@ export function catalogToStock(rows: CatalogRow[], prefix: string): StockMedicat
   return rows.map((r) => ({ id: `${prefix}-${r.code}-${r.location.toLocaleLowerCase("pt-BR").replace(/\W+/g, "-")}`, code: r.code, name: r.name, presentation: r.location, location: r.location, unit: r.unit, quantity: r.quantity, minimum: 0, unitCost: r.unitCost, antibiotic: r.antibiotic, lots: r.lots }));
 }
 /** Acrescenta itens importados que ainda não existem, sem sobrescrever saldos já movimentados. */
-export function mergeCatalog(stock: StockMedication[], catalog: StockMedication[]) {
-  const ids = new Set(stock.map((i) => i.id));
+export function mergeCatalog(stock: StockMedication[], catalog: StockMedication[], removed: readonly string[] = []) {
+  const ids = new Set([...stock.map((i) => i.id), ...removed]);
   const missing = catalog.filter((i) => !ids.has(i.id));
   return missing.length ? [...stock, ...missing].sort((a, b) => a.name.localeCompare(b.name, "pt-BR")) : stock;
 }

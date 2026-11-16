@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StockTable } from "./StockTable";
 import { EncounterTimeline } from "./EncounterTimeline";
 import { can } from "@/lib/hospital-data";
-import { adjustStock, createStockMedication, dispenseKit, recordMedication, useStore, validatePrescription } from "@/lib/hospital-store";
+import { adjustStock, deleteStockItem, createStockMedication, dispenseKit, recordMedication, useStore, validatePrescription } from "@/lib/hospital-store";
 import { findStockMedication, isStockLow } from "@/lib/pharmacy-stock";
 import { cn } from "@/lib/utils";
 
@@ -63,7 +63,7 @@ function StockManager() {
   const allowed = can(profile, "farmacia");
   const [form, setForm] = useState(EMPTY_MEDICATION);
   return <div className="space-y-4">
-    <StockTable items={stock} allowed={allowed} onAdjust={adjustStock} label="Medicamento" />
+    <StockTable items={stock} allowed={allowed} onAdjust={adjustStock} onDelete={profile === "Administrador" ? (id) => deleteStockItem("stock", id) : undefined} label="Medicamento" />
     <form className="rounded-xl border bg-card p-4" onSubmit={(event) => { event.preventDefault(); run(() => { createStockMedication({ name: form.name, presentation: form.presentation, unit: form.unit, quantity: Number(form.quantity), minimum: Number(form.minimum) }); setForm(EMPTY_MEDICATION); toast.success("Medicamento cadastrado"); }); }}><h3 className="mb-3 text-sm font-semibold">Cadastrar medicamento</h3><div className="grid gap-2 md:grid-cols-[2fr_1fr_80px_100px_100px_auto]"><Input aria-label="Nome e concentração" placeholder="Nome e concentração" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} required /><Input aria-label="Apresentação" placeholder="Apresentação" value={form.presentation} onChange={(event) => setForm({ ...form, presentation: event.target.value })} /><Input aria-label="Unidade" placeholder="Unid." value={form.unit} onChange={(event) => setForm({ ...form, unit: event.target.value })} required /><Input aria-label="Estoque inicial" type="number" min="0" placeholder="Estoque" value={form.quantity} onChange={(event) => setForm({ ...form, quantity: event.target.value })} required /><Input aria-label="Estoque mínimo" type="number" min="0" placeholder="Mínimo" value={form.minimum} onChange={(event) => setForm({ ...form, minimum: event.target.value })} required /><Button type="submit" disabled={!allowed}>Cadastrar</Button></div></form>
   </div>;
 }
