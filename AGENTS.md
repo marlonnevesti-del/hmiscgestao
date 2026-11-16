@@ -34,7 +34,7 @@ use the editor.
 - Employee removal uses the authenticated transactional `remove_employee_access` database function; revoke access and roles while retaining profile history, and protect the principal administrator and caller's own account.
 - Profile permissions are centralized in `can(profile, action)`; screens never hardcode role checks.
 - Module visibility and direct-URL access use `canAccessPage`: admin-chosen profile access_areas (set only via the set_employee_areas DB function) override the function-derived defaults from `can`; employee function changes use an authenticated transactional database function so clients cannot change their own permissions.
-- App shell (sidebar + topbar) is `src/components/AppShell.tsx`, mounted once in `__root.tsx`.
+- App shell (sidebar + topbar) is `src/components/AppShell.tsx`, mounted once by `EmployeeAccessBoundary`, which `__root.tsx` renders.
 - Employee identities and approval are persisted in Cloud profiles, with roles in a separate protected user_roles table; only server-authorized operations change access to prevent self-approval.
 - The client-only _authenticated layout validates identity and approval before clinical routes; EmployeeAccessBoundary owns the sole auth listener and mounts AppShell only for approved users, preventing public clinical rendering.
 - Employee registration validation is shared with its server function; admin review and role grants use transactional authenticated database functions to prevent privilege escalation.
