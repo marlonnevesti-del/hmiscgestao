@@ -192,7 +192,7 @@ export function announcePatient(patientId: string, room: string) {
   if (!state.rooms.includes(room)) throw new Error('Selecione o consultório.');
   const p = state.patients.find((x) => x.id === patientId); if (!p) throw new Error('Paciente não encontrado.');
   const e = encounterFor(patientId);
-  setState((s) => ({ calls: pushCall(s.calls, { id: crypto.randomUUID(), patientName: p.name, room, risk: e?.triage?.risk, at: new Date().toISOString() }) }));
+  setState((s) => ({ calls: pushCall(s.calls, { id: crypto.randomUUID(), patientName: p.name, room, risk: e?.triage?.risk, sector: (e as { type?: string } | undefined)?.type, at: new Date().toISOString() }) }));
 }
 export function addRoom(name: string) { if (state.profile !== 'Administrador') throw new Error('Apenas administradores gerenciam consultórios.'); setState((s) => ({ rooms: addRoomName(s.rooms, name) })); }
 export function removeRoom(name: string) { if (state.profile !== 'Administrador') throw new Error('Apenas administradores gerenciam consultórios.'); setState((s) => ({ rooms: removeRoomName(s.rooms, name) })); }

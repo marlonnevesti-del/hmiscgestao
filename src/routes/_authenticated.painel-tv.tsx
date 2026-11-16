@@ -7,7 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { MANCHESTER, type Manchester } from "@/lib/hospital-data";
 import { addRoom, removeRoom, useStore } from "@/lib/hospital-store";
-import { announcement, type PanelCall } from "@/lib/panel-calls";
+import { announcement, callsForSector, SECTORS, sectorOf, type PanelCall } from "@/lib/panel-calls";
+import { fallback, zodValidator } from "@tanstack/zod-adapter";
+import { z } from "zod";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/painel-tv")({
@@ -18,6 +20,7 @@ export const Route = createFileRoute("/_authenticated/painel-tv")({
     { property: "og:description", content: "Chamada de pacientes por voz e tela para a sala de espera." },
     { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
   ] }),
+  validateSearch: zodValidator(z.object({ setor: fallback(z.string(), "").default("") })),
   component: PanelPage,
 });
 
@@ -31,16 +34,38 @@ function gong() {
   });
   return new Promise((r) => setTimeout(r, 1700));
 }
-async function speak(c: PanelCall) {
-  await gong();
-  const u = new SpeechSynthesisUtterance(announcement(c)); u.lang = "pt-BR"; u.rate = 0.9;
-  const v = speechSynthesis.getVoices().find((x) => x.lang.toLowerCase().startsWith("pt")); if (v) u.voice = v;
+function cartoonIntro() {
+  // "Boing" + risadinha aguda estilo desenho animado
+  const ctx = new AudioContext(); const t0 = ctx.currentTime;
+  const o = ctx.createOscillator(); const g = ctx.createGain(); o.type = "triangle";
+  o.frequency.setValueAtTime(180, t0); o.frequency.exponentialRampToValueAtTime(900, t0 + 0.35);
+  g.gain.setValueAtTime(0.4, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.45);
+  o.connect(g); g.connect(ctx.destination); o.start(t0); o.stop(t0 + 0.5);
+  [0, 1, 2, 3, 4].forEach((i) => {
+    const s = t0 + 0.6 + i * 0.13; const h = ctx.createOscillator(); const hg = ctx.createGain(); h.type = "square";
+    h.frequency.setValueAtTime(1100 - i * 60, s); h.frequency.exponentialRampToValueAtTime(700 - i * 40, s + 0.1);
+    hg.gain.setValueAtTime(0.12, s); hg.gain.exponentialRampToValueAtTime(0.0001, s + 0.11);
+    h.connect(hg); hg.connect(ctx.destination); h.start(s); h.stop(s + 0.12);
+  });
+  return new Promise((r) => setTimeout(r, 1400));
+}
+const FEMALE = /maria|francisca|thalita|luciana|vit[oó]ria|female|feminina|google portugu/i;
+async function speak(c: PanelCall, voice: string) {
+  const cartoon = voice === "desenho";
+  await (cartoon ? cartoonIntro() : gong());
+  const text = cartoon ? `Atenção, amiguinho! ${announcement(c)}` : announcement(c);
+  const u = new SpeechSynthesisUtterance(text); u.lang = "pt-BR";
+  u.rate = cartoon ? 1.15 : 0.9; u.pitch = cartoon ? 2 : 1.1;
+  const pt = speechSynthesis.getVoices().filter((x) => x.lang.toLowerCase().startsWith("pt"));
+  const v = pt.find((x) => FEMALE.test(x.name)) ?? pt[0]; if (v) u.voice = v;
   speechSynthesis.cancel(); speechSynthesis.speak(u);
 }
 const riskCls = (r?: string) => (r && r in MANCHESTER ? MANCHESTER[r as Manchester].cls : "bg-primary text-primary-foreground");
 
 function PanelPage() {
-  const calls = useStore((s) => s.calls); const profile = useStore((s) => s.profile);
+  const { setor } = Route.useSearch(); const sector = sectorOf(setor);
+  const navigate = Route.useNavigate();
+  const all = useStore((s) => s.calls); const calls = callsForSector(all, setor); const profile = useStore((s) => s.profile);
   const [sound, setSound] = useState(false); const [open, setOpen] = useState(false);
   const seen = useRef<string | null>(null);
   const [now, setNow] = useState("");
@@ -48,13 +73,17 @@ function PanelPage() {
   useEffect(() => {
     const top = calls[0]; if (!top) return;
     if (seen.current === null) { seen.current = top.id; return; } // don't replay old calls on open
-    if (seen.current !== top.id) { seen.current = top.id; if (sound) void speak(top); }
-  }, [calls, sound]);
+    if (seen.current !== top.id) { seen.current = top.id; if (sound) void speak(top, sector?.voice ?? "feminina"); }
+  }, [calls, sound, sector]);
   const [cur, ...rest] = calls;
   return (
     <main className="fixed inset-0 z-40 flex flex-col bg-background p-6">
       <header className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-primary">HMISC · Chamada de pacientes</h1>
+        <h1 className="text-3xl font-bold text-primary">HMISC · {sector ? sector.label : "Chamada de pacientes"}</h1>
+        <select aria-label="Setor do painel" value={sector?.id ?? ""} onChange={(e) => { seen.current = null; void navigate({ search: { setor: e.target.value } }); }} className="h-10 rounded-md border bg-background px-3 text-lg">
+          <option value="">Todos os setores</option>
+          {SECTORS.map((x) => <option key={x.id} value={x.id}>{x.label}</option>)}
+        </select>
         <div className="flex items-center gap-3">
           <span className="text-3xl font-semibold tabular-nums">{now}</span>
           {!sound && <Button size="lg" onClick={() => { setSound(true); void gong(); }}><Volume2 className="mr-2 h-5 w-5" />Ativar som</Button>}
