@@ -7,13 +7,14 @@ import { DEFAULT_CID_AREAS, DEFAULT_CID_GROUPS, addArea, addGroup, type CidArea,
 import { DEFAULT_ROOMS, addRoomName, pushCall, removeRoomName, type PanelCall } from "./panel-calls";
 import { catalogToStock, findStockMedication, medicationKey, type StockMedication } from "./pharmacy-stock";
 import CATALOG from "./stock-catalog.json";
+import { changeQty, checkQty, transferItem, type Depot, type Movement, type SupplyRequest } from "./supply-flow";
 export const PHARMACY_CATALOG = catalogToStock(CATALOG.farm, 'farm');
 export const WAREHOUSE_CATALOG = catalogToStock(CATALOG.almox, 'almox');
 import { registrationPatch } from "./patient-registration-mapping";
 import type { PatientRegistration } from "./patient-registration";
 
-interface State { encounters: Encounter[]; beSequence: number; stock: StockMedication[]; warehouse: StockMedication[]; profile: Profile; employeeName: string; patients: Patient[]; queue: QueueItem[]; surgeries: Surgery[]; admins: Record<string, Admin>; rooms: string[]; calls: PanelCall[]; cidGroups: CidGroup[]; cidAreas: CidArea[]; employeeArea: string; accessAreas: string[] | null; removedStock: string[] }
-let state: State = { profile: "Outro", employeeName: "", patients: [], queue: [], surgeries: [], admins: {}, encounters: [], beSequence: 0, stock: PHARMACY_CATALOG, warehouse: WAREHOUSE_CATALOG, rooms: DEFAULT_ROOMS, calls: [], cidGroups: DEFAULT_CID_GROUPS, cidAreas: DEFAULT_CID_AREAS, employeeArea: "", accessAreas: null, removedStock: [] };
+interface State { encounters: Encounter[]; beSequence: number; stock: StockMedication[]; warehouse: StockMedication[]; profile: Profile; employeeName: string; patients: Patient[]; queue: QueueItem[]; surgeries: Surgery[]; admins: Record<string, Admin>; rooms: string[]; calls: PanelCall[]; cidGroups: CidGroup[]; cidAreas: CidArea[]; employeeArea: string; accessAreas: string[] | null; removedStock: string[]; movements: Movement[]; requests: SupplyRequest[] }
+let state: State = { profile: "Outro", employeeName: "", patients: [], queue: [], surgeries: [], admins: {}, encounters: [], beSequence: 0, stock: PHARMACY_CATALOG, warehouse: WAREHOUSE_CATALOG, rooms: DEFAULT_ROOMS, calls: [], cidGroups: DEFAULT_CID_GROUPS, cidAreas: DEFAULT_CID_AREAS, employeeArea: "", accessAreas: null, removedStock: [], movements: [], requests: [] };
 const ls = new Set<() => void>();
 export const getState = () => state;
 export function setState(fn: (s: State) => Partial<State>) { state = { ...state, ...fn(state) }; ls.forEach((l) => l()); }
@@ -96,10 +97,12 @@ export function adjustPrescription(id: string, rxId: string, item: string, posol
   if (!item.trim()) throw new Error('Informe a dose do item.');
   updatePatient(p.id, (x) => ({ prescriptions: x.prescriptions.map((r) => r.id === rxId ? { ...r, item: item.trim().replace(/ · ajuste farmácia$/, '') + ' · ajuste farmácia', posologia: posologia.trim() || r.posologia } : r) }));
 }
-export function dispenseKit(id: string, intervention: string) {
+export function dispenseKit(id: string, intervention: string, lots: Record<string, string> = {}) {
   requireAction('farmacia'); const { e, p } = getEncounter(id);
   const meds = p.prescriptions.filter((r) => r.pharmacy);
   if (!meds.length || meds.some((r) => r.pharmacy !== 'Validada')) throw new Error('Valide todos os itens do kit antes de dispensar.');
+  const missingLot = meds.find((r) => !(lots[r.id] ?? '').trim());
+  if (missingLot) throw new Error(`Informe o lote de ${missingLot.item}.`);
   const required = new Map<string, number>();
   meds.forEach((r) => {
     const medication = findStockMedication(state.stock, r.item);
@@ -110,8 +113,55 @@ export function dispenseKit(id: string, intervention: string) {
     const medication = state.stock.find((item) => item.id === medicationId);
     if (!medication || medication.quantity < qty) throw new Error(`Estoque insuficiente: ${medication?.name ?? medicationId}. Disponível: ${medication?.quantity ?? 0}; necessário: ${qty}.`);
   }
-  const stock = state.stock.map((item) => ({ ...item, quantity: item.quantity - (required.get(item.id) ?? 0) }));
-  commitEncounter({ ...transition(e, 'AGUARDANDO_MEDICACAO', professionalName(state.profile), 'Kit dispensado'), intervention }, { stock, patients: state.patients.map((x) => x.id === p.id ? { ...x, prescriptions: x.prescriptions.map((r) => r.pharmacy ? { ...r, pharmacy: 'Dispensada' } : r) } : x) });
+  let stock = state.stock;
+  meds.forEach((r) => { const m = findStockMedication(stock, r.item)!; stock = changeQty(stock, m.id, -(r.times?.length ?? 1), (lots[r.id] ?? '').trim()); });
+  const at = new Date().toISOString(); const by = professionalName(state.profile);
+  const requisition = `${String(state.movements.length + state.encounters.indexOf(e) * 7 + 230000).slice(-6)}/${new Date().getFullYear()}`;
+  commitEncounter({ ...transition(e, 'AGUARDANDO_MEDICACAO', by, 'Kit dispensado'), intervention, dispensedAt: at, dispensedBy: by, requisition }, { stock, patients: state.patients.map((x) => x.id === p.id ? { ...x, prescriptions: x.prescriptions.map((r) => r.pharmacy ? { ...r, pharmacy: 'Dispensada', lot: (lots[r.id] ?? '').trim() } : r) } : x) });
+}
+const depotKey = (d: Depot) => (d === 'farmacia' ? 'stock' : 'warehouse') as 'stock' | 'warehouse';
+const depotAction = (d: Depot): 'farmacia' | 'almoxarifado' => (d === 'farmacia' ? 'farmacia' : 'almoxarifado');
+const DEPOT_NAME: Record<Depot, string> = { farmacia: 'Farmácia', almoxarifado: 'Almoxarifado' };
+function logMovement(m: Omit<Movement, 'id' | 'at' | 'by'>) { return [{ ...m, id: crypto.randomUUID(), at: new Date().toISOString(), by: professionalName(state.profile) }, ...state.movements]; }
+/** Transfere produto entre almoxarifado e farmácia, com lote. */
+export function transferStock(from: Depot, itemId: string, qty: number, lot: string) {
+  requireAction(depotAction(from));
+  const to: Depot = from === 'farmacia' ? 'almoxarifado' : 'farmacia';
+  const r = transferItem(state[depotKey(from)], state[depotKey(to)], itemId, qty, lot, to === 'farmacia' ? 'farm' : 'almox');
+  setState(() => ({ [depotKey(from)]: r.src, [depotKey(to)]: r.dst, movements: logMovement({ kind: 'transferencia', from: DEPOT_NAME[from], to: DEPOT_NAME[to], item: r.item.name, code: r.item.code, qty, lot: lot.trim(), reason: '' }) }) as Partial<State>);
+}
+/** Devolução de produto não utilizado: volta ao saldo do lote. */
+export function returnStock(depot: Depot, itemId: string, qty: number, lot: string, origin: string, reason: string) {
+  requireAction(depotAction(depot)); checkQty(qty);
+  if (!lot.trim()) throw new Error('Informe o lote devolvido.');
+  if (!origin.trim() || !reason.trim()) throw new Error('Informe a origem e o motivo da devolução.');
+  const items = changeQty(state[depotKey(depot)], itemId, qty, lot);
+  const item = items.find((i) => i.id === itemId)!;
+  setState(() => ({ [depotKey(depot)]: items, movements: logMovement({ kind: 'devolucao', from: origin.trim(), to: DEPOT_NAME[depot], item: item.name, code: item.code, qty, lot: lot.trim(), reason: reason.trim() }) }) as Partial<State>);
+}
+/** Registro de quebra de ampola / perda na farmácia: baixa o saldo. */
+export function registerBreakage(itemId: string, qty: number, lot: string, reason: string) {
+  requireAction('farmacia'); checkQty(qty);
+  if (!lot.trim()) throw new Error('Informe o lote da ampola quebrada.');
+  if (!reason.trim()) throw new Error('Descreva como ocorreu a quebra.');
+  const items = changeQty(state.stock, itemId, -qty, lot);
+  const item = items.find((i) => i.id === itemId)!;
+  setState(() => ({ stock: items, movements: logMovement({ kind: 'quebra', from: 'Farmácia', to: 'Perda', item: item.name, code: item.code, qty, lot: lot.trim(), reason: reason.trim() }) }));
+}
+/** Pedido do posto de enfermagem para farmácia ou almoxarifado. */
+export function createSupplyRequest(input: { target: Depot; items: string; sector: string; patient: string; note: string }) {
+  requireAction('checar');
+  if (!input.items.trim()) throw new Error('Descreva os produtos e quantidades do pedido.');
+  if (!input.sector.trim()) throw new Error('Informe o setor solicitante.');
+  const r: SupplyRequest = { id: crypto.randomUUID(), target: input.target, items: input.items.trim(), sector: input.sector.trim(), patient: input.patient.trim(), note: input.note.trim(), status: 'Pendente', at: new Date().toISOString(), by: professionalName(state.profile) };
+  setState((s) => ({ requests: [r, ...s.requests] }));
+}
+export function answerSupplyRequest(id: string, status: 'Atendido' | 'Recusado', answer = '') {
+  const r = state.requests.find((x) => x.id === id);
+  if (!r) throw new Error('Pedido não encontrado.');
+  requireAction(depotAction(r.target));
+  if (status === 'Recusado' && !answer.trim()) throw new Error('Informe o motivo da recusa.');
+  setState((s) => ({ requests: s.requests.map((x) => x.id === id ? { ...x, status, answer: answer.trim(), handledBy: professionalName(state.profile), handledAt: new Date().toISOString() } : x) }));
 }
 export function createStockMedication(input: Omit<StockMedication, 'id'>) {
   requireAction('farmacia');

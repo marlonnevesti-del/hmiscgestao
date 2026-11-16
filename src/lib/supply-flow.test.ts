@@ -1,0 +1,14 @@
+import { describe, expect, it } from "vitest";
+import { changeQty, transferItem } from "./supply-flow";
+const item = (id: string, q: number) => ({ id, code: "6495", name: "AGULHA", presentation: "", unit: "UN", quantity: q, minimum: 0, lots: [{ lot: "L1", expiry: "", quantity: q }] });
+describe("movimentação de estoque", () => {
+  it("transferência abate na origem e soma no destino", () => {
+    const r = transferItem([item("a", 10)], [], "a", 4, "L1", "farm");
+    expect(r.src[0]?.quantity).toBe(6);
+    expect(r.dst[0]?.quantity).toBe(4);
+    expect(r.dst[0]?.lots?.[0]).toMatchObject({ lot: "L1", quantity: 4 });
+  });
+  it("transferência exige lote", () => expect(() => transferItem([item("a", 10)], [], "a", 1, "", "f")).toThrow("lote"));
+  it("não permite saldo negativo", () => expect(() => changeQty([item("a", 2)], "a", -3, "L1")).toThrow("insuficiente"));
+  it("devolução soma ao lote", () => expect(changeQty([item("a", 2)], "a", 3, "L1")[0]?.lots?.[0]?.quantity).toBe(5));
+});
