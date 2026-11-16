@@ -3,6 +3,7 @@ import { PATIENTS, QUEUE, SURGERIES, type Admin, type Newborn, type Patient, typ
 
 import { transition, validateTriage, type Encounter, type Triage, type FlowStatus } from "./care-flow";
 import { BASE_BEDS, can } from "./hospital-data";
+import { DEFAULT_CID_AREAS, DEFAULT_CID_GROUPS, addArea, addGroup, type CidArea, type CidGroup } from "./cid-access";
 import { DEFAULT_ROOMS, addRoomName, pushCall, removeRoomName, type PanelCall } from "./panel-calls";
 import { catalogToStock, findStockMedication, medicationKey, type StockMedication } from "./pharmacy-stock";
 import CATALOG from "./stock-catalog.json";
@@ -11,8 +12,8 @@ export const WAREHOUSE_CATALOG = catalogToStock(CATALOG.almox, 'almox');
 import { registrationPatch } from "./patient-registration-mapping";
 import type { PatientRegistration } from "./patient-registration";
 
-interface State { encounters: Encounter[]; beSequence: number; stock: StockMedication[]; warehouse: StockMedication[]; profile: Profile; employeeName: string; patients: Patient[]; queue: QueueItem[]; surgeries: Surgery[]; admins: Record<string, Admin>; rooms: string[]; calls: PanelCall[] }
-let state: State = { profile: "Outro", employeeName: "", patients: [], queue: [], surgeries: [], admins: {}, encounters: [], beSequence: 0, stock: PHARMACY_CATALOG, warehouse: WAREHOUSE_CATALOG, rooms: DEFAULT_ROOMS, calls: [] };
+interface State { encounters: Encounter[]; beSequence: number; stock: StockMedication[]; warehouse: StockMedication[]; profile: Profile; employeeName: string; patients: Patient[]; queue: QueueItem[]; surgeries: Surgery[]; admins: Record<string, Admin>; rooms: string[]; calls: PanelCall[]; cidGroups: CidGroup[]; cidAreas: CidArea[]; employeeArea: string }
+let state: State = { profile: "Outro", employeeName: "", patients: [], queue: [], surgeries: [], admins: {}, encounters: [], beSequence: 0, stock: PHARMACY_CATALOG, warehouse: WAREHOUSE_CATALOG, rooms: DEFAULT_ROOMS, calls: [], cidGroups: DEFAULT_CID_GROUPS, cidAreas: DEFAULT_CID_AREAS, employeeArea: "" };
 const ls = new Set<() => void>();
 export const getState = () => state;
 export function setState(fn: (s: State) => Partial<State>) { state = { ...state, ...fn(state) }; ls.forEach((l) => l()); }
@@ -200,3 +201,10 @@ export function deleteEncounter(id: string) {
   if (state.profile !== 'Administrador') throw new Error('Apenas administradores podem apagar atendimentos.');
   setState((s) => ({ encounters: s.encounters.filter((e) => e.id !== id), queue: s.queue.filter((q) => q.id !== id), calls: s.calls }));
 }
+
+const adminOnly = () => { if (state.profile !== 'Administrador') throw new Error('Apenas administradores configuram o CID.'); };
+export function addCidGroup(label: string, ranges: string[]) { adminOnly(); setState((s) => ({ cidGroups: addGroup(s.cidGroups, label, ranges) })); }
+export function removeCidGroup(id: string) { adminOnly(); setState((s) => ({ cidGroups: s.cidGroups.filter((g) => g.id !== id), cidAreas: s.cidAreas.map((a) => ({ ...a, groups: a.groups.filter((x) => x !== id) })) })); }
+export function addCidArea(name: string) { adminOnly(); setState((s) => ({ cidAreas: addArea(s.cidAreas, name) })); }
+export function removeCidArea(name: string) { adminOnly(); setState((s) => ({ cidAreas: s.cidAreas.filter((a) => a.name !== name) })); }
+export function updateCidArea(name: string, patch: Partial<Omit<CidArea, 'name'>>) { adminOnly(); setState((s) => ({ cidAreas: s.cidAreas.map((a) => a.name === name ? { ...a, ...patch } : a) })); }
