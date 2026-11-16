@@ -106,9 +106,17 @@ export const CHECKLIST = {
 };
 export interface Surgery {
   id: string; room: string; start: number; duration: number; patient: string; patientId?: string | undefined;
-  type: "Cesárea" | "Parto Normal" | "Curetagem" | "Cirurgia Pediátrica"; tuss: string; surgeon: string; status: SurgStatus;
+  type: string; tuss: string; surgeon: string; status: SurgStatus;
   checks: Record<string, boolean>; gastos: { item: string; qty: number; price: number }[];
+  date?: string; urgency?: "Eletiva" | "Urgência"; team?: SurgTeam; report?: SurgReport;
 }
+export const PROCEDURES = ["Cesárea", "Parto Normal", "Parto Instrumentado", "Curetagem", "Laqueadura", "Cirurgia Pediátrica", "Apendicectomia", "Herniorrafia", "Postectomia", "Orquidopexia", "Outro"];
+export const ANESTHESIA = ["Geral", "Raquianestesia", "Peridural", "Combinada", "Sedação", "Local", "Bloqueio"];
+export const DESTINATIONS = ["RPA", "Alojamento Conjunto", "Enfermaria", "UTI Neonatal", "UTI Pediátrica", "Alta"];
+export interface SurgTeam { surgeon: string; surgeonCrm: string; assistant: string; anesthetist: string; anesthetistCrm: string; pediatrician: string; scrub: string; circulating: string }
+export interface SurgReport { roomIn: string; induction: string; incision: string; end: string; roomOut: string; anesthesia: string; preDx: string; postDx: string; technique: string; findings: string; bloodLoss: string; drains: string; specimen: string; complications: string; destination: string; anesthesiaNotes: string; by: string; at: string }
+export const EMPTY_TEAM: SurgTeam = { surgeon: "", surgeonCrm: "", assistant: "", anesthetist: "", anesthetistCrm: "", pediatrician: "", scrub: "", circulating: "" };
+export const EMPTY_REPORT: SurgReport = { roomIn: "", induction: "", incision: "", end: "", roomOut: "", anesthesia: "", preDx: "", postDx: "", technique: "", findings: "", bloodLoss: "", drains: "", specimen: "", complications: "Sem intercorrências", destination: "RPA", anesthesiaNotes: "", by: "", at: "" }
 export const SURGERIES: Surgery[] = [];
 
 // ---------- Medicamentos / regras clínicas ----------

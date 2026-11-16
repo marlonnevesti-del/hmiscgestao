@@ -217,3 +217,16 @@
   .label-root .label-page .small { font-size: 6pt; }
   .label-root .label-page svg { display: block; max-width: 100%; height: 13mm; margin-top: 0.5mm; }
 }
+
+.surg-root { display: none; }
+@media print {
+  body.print-surg > *:not(.surg-root) { display: none !important; }
+  body.print-surg .surg-root { display: block !important; color: #000; background: #fff; font-size: 10pt; }
+  .surg-root .sheet-page { padding: 1cm 1.3cm; }
+  .surg-root h3 { font-weight: 700; margin: 8px 0 3px; border-bottom: 1px solid #999; }
+  .surg-root .sheet-row { display: flex; flex-wrap: wrap; gap: 4px 18px; line-height: 1.45; }
+  .surg-root .sheet-cols { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; font-size: 9pt; }
+  .surg-root .pre { white-space: pre-wrap; margin: 2px 0; }
+  .surg-root .sheet-signs { display: flex; justify-content: space-around; margin-top: 1.4cm; text-align: center; }
+  .surg-root .sheet-signs .line { width: 7cm; border-top: 1px solid #000; margin-bottom: 3px; }
+}
