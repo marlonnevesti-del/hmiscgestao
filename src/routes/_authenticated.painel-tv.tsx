@@ -24,8 +24,21 @@ export const Route = createFileRoute("/_authenticated/painel-tv")({
   component: PanelPage,
 });
 
+/** Shared audio context, opened as soon as the panel loads and resumed on the first tap, so no button is needed. */
+let sharedCtx: AudioContext | null = null;
+function audio(): AudioContext | null {
+  try {
+    if (!sharedCtx) sharedCtx = new AudioContext();
+    if (sharedCtx.state === "suspended") void sharedCtx.resume();
+    return sharedCtx;
+  } catch { return null; }
+}
+/** True when the browser already plays sound without a click (kiosk autoplay flag, or someone tapped the screen). */
+const audioReady = () => audio()?.state === "running";
+
 function gong() {
-  const ctx = new AudioContext();
+  const ctx = audio();
+  if (!ctx) return new Promise((r) => setTimeout(r, 0));
   ([[659, 0], [523, 0.55]] as const).forEach(([f, t]) => {
     const o = ctx.createOscillator(); const g = ctx.createGain();
     o.frequency.value = f; o.connect(g); g.connect(ctx.destination);
@@ -36,7 +49,9 @@ function gong() {
 }
 function cartoonIntro() {
   // "Boing" + risadinha aguda estilo desenho animado
-  const ctx = new AudioContext(); const t0 = ctx.currentTime;
+  const ctx = audio();
+  if (!ctx) return new Promise((r) => setTimeout(r, 0));
+  const t0 = ctx.currentTime;
   const o = ctx.createOscillator(); const g = ctx.createGain(); o.type = "triangle";
   o.frequency.setValueAtTime(180, t0); o.frequency.exponentialRampToValueAtTime(900, t0 + 0.35);
   g.gain.setValueAtTime(0.4, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.45);
@@ -66,15 +81,36 @@ function PanelPage() {
   const { setor } = Route.useSearch(); const sector = sectorOf(setor);
   const navigate = Route.useNavigate();
   const all = useStore((s) => s.calls); const calls = callsForSector(all, setor); const profile = useStore((s) => s.profile);
-  const [sound, setSound] = useState(false); const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [armed, setArmed] = useState(false);
   const seen = useRef<string | null>(null);
   const [now, setNow] = useState("");
   useEffect(() => { const t = () => setNow(new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })); t(); const i = setInterval(t, 10000); return () => clearInterval(i); }, []);
+  // Liga o som sozinho assim que a tela abre: tenta na hora, continua tentando e
+  // libera no primeiro toque/tecla, caso o navegador ainda esteja bloqueando.
+  useEffect(() => {
+    const probe = () => { if (audioReady()) setArmed(true); };
+    probe();
+    const i = setInterval(probe, 1500);
+    const onGesture = () => { audio(); setArmed(true); };
+    window.addEventListener("pointerdown", onGesture);
+    window.addEventListener("keydown", onGesture);
+    window.addEventListener("touchstart", onGesture);
+    const loadVoices = () => void speechSynthesis.getVoices();
+    loadVoices();
+    speechSynthesis.onvoiceschanged = loadVoices;
+    return () => {
+      clearInterval(i);
+      window.removeEventListener("pointerdown", onGesture);
+      window.removeEventListener("keydown", onGesture);
+      window.removeEventListener("touchstart", onGesture);
+    };
+  }, []);
   useEffect(() => {
     const top = calls[0]; if (!top) return;
     if (seen.current === null) { seen.current = top.id; return; } // don't replay old calls on open
-    if (seen.current !== top.id) { seen.current = top.id; if (sound) void speak(top, sector?.voice ?? "feminina"); }
-  }, [calls, sound, sector]);
+    if (seen.current !== top.id) { seen.current = top.id; void speak(top, sector?.voice ?? "feminina"); }
+  }, [calls, sector]);
   const [cur, ...rest] = calls;
   return (
     <main className="fixed inset-0 z-40 flex flex-col bg-background p-6">
@@ -86,7 +122,7 @@ function PanelPage() {
         </select>
         <div className="flex items-center gap-3">
           <span className="text-3xl font-semibold tabular-nums">{now}</span>
-          {!sound && <Button size="lg" onClick={() => { setSound(true); void gong(); }}><Volume2 className="mr-2 h-5 w-5" />Ativar som</Button>}
+          {armed ? <span className="flex items-center gap-2 text-lg text-muted-foreground"><Volume2 className="h-5 w-5" />Som ativo</span> : <Button size="lg" onClick={() => { audio(); setArmed(true); void gong(); }}><Volume2 className="mr-2 h-5 w-5" />Ativar som</Button>}
           {profile === "Administrador" && <Button variant="outline" size="icon" aria-label="Consultórios" onClick={() => setOpen(true)}><Settings className="h-5 w-5" /></Button>}
           <Button variant="ghost" asChild><Link to="/">Sair</Link></Button>
         </div>
@@ -107,6 +143,7 @@ function PanelPage() {
           ))}</ul>
         </aside>
       </div>
+      {!armed && <p className="pointer-events-none fixed bottom-6 left-1/2 -translate-x-1/2 rounded-full bg-primary/10 px-6 py-3 text-xl font-medium text-primary">Toque em qualquer lugar da tela para ligar o som</p>}
       <RoomsDialog open={open} onOpenChange={setOpen} />
     </main>
   );
