@@ -3,7 +3,7 @@ import { AlertTriangle, Search } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { isStockLow, type StockMedication } from "@/lib/pharmacy-stock";
+import { fmtExpiry, isStockLow, type StockMedication } from "@/lib/pharmacy-stock";
 import { cn } from "@/lib/utils";
 import { findByBarcode, internalBarcode } from "@/lib/barcode";
 import { linkBarcode, useStore } from "@/lib/hospital-store";
@@ -13,10 +13,11 @@ import { LabelPrint, printLabels, type Label } from "./LabelPrint";
 const money = (n: number) => n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
 /** Tabela de saldos com busca, local, lotes/validade e lançamento de entradas e saídas. */
-export function StockTable({ items, allowed, onAdjust, onDelete, label = "Item", kind = "stock" }: { kind?: "stock" | "warehouse"; items: StockMedication[]; allowed: boolean; onAdjust: (id: string, delta: number) => void; onDelete?: ((id: string) => void) | undefined; label?: string }) {
+export function StockTable({ items, allowed, onAdjust, onDelete, label = "Item", kind = "stock" }: { kind?: "stock" | "warehouse"; items: StockMedication[]; allowed: boolean; onAdjust: (id: string, delta: number, lot?: string) => void; onDelete?: ((id: string) => void) | undefined; label?: string }) {
   const [q, setQ] = useState("");
   const [loc, setLoc] = useState("");
   const [adj, setAdj] = useState<Record<string, string>>({});
+  const [adjLot, setAdjLot] = useState<Record<string, string>>({});
   const [labelData, setLabel] = useState<Label | null>(null);
   const employee = useStore((st) => st.employeeName);
   const attempt = (fn: () => void) => { try { fn(); } catch (err) { toast.error(err instanceof Error ? err.message : "Ação não concluída"); } };
@@ -43,7 +44,7 @@ export function StockTable({ items, allowed, onAdjust, onDelete, label = "Item",
         <td className={cn("p-3 font-mono font-semibold", isStockLow(i) && "text-destructive")}>{i.quantity.toLocaleString("pt-BR")} {i.unit}{isStockLow(i) && <AlertTriangle className="ml-1 inline h-3.5 w-3.5" />}</td>
         <td className="p-3 font-mono text-xs">{i.unitCost != null ? money(i.unitCost) : "—"}</td>
         <td className="p-3 text-xs">{i.lots?.length ? i.lots.map((l) => <div key={l.lot + l.expiry} className="font-mono">{l.lot} · {l.expiry} · {l.quantity}{l.barcode && <div className="text-muted-foreground">▮ {l.barcode}</div>}</div>) : "—"}{i.barcodes?.map((b) => <div key={b} className="font-mono text-muted-foreground">▮ {b}</div>)}</td>
-        <td className="p-3"><div className="flex gap-2"><Input aria-label={`Ajuste de ${i.name}`} className="w-24" type="number" placeholder="+/- qtd" value={adj[i.id] ?? ""} onChange={(e) => setAdj((c) => ({ ...c, [i.id]: e.target.value }))} /><Button size="sm" variant="secondary" disabled={!allowed || !Number(adj[i.id])} onClick={() => { try { onAdjust(i.id, Number(adj[i.id])); setAdj((c) => ({ ...c, [i.id]: "" })); toast.success("Estoque atualizado"); } catch (err) { toast.error(err instanceof Error ? err.message : "Ação não concluída"); } }}>Lançar</Button><Button size="sm" variant="outline" disabled={!allowed} onClick={() => link(i)}>Código</Button><Button size="sm" variant="outline" disabled={!allowed} onClick={() => makeLabel(i)}>Etiqueta</Button>{onDelete && <Button size="sm" variant="destructive" aria-label={`Apagar ${i.name}`} onClick={() => { if (!confirm(`Apagar ${i.name} do estoque?`)) return; try { onDelete(i.id); toast.success("Item apagado"); } catch (err) { toast.error(err instanceof Error ? err.message : "Ação não concluída"); } }}>Apagar</Button>}</div></td>
+        <td className="p-3"><div className="flex gap-2"><Input aria-label={`Ajuste de ${i.name}`} className="w-24" type="number" placeholder="+/- qtd" value={adj[i.id] ?? ""} onChange={(e) => setAdj((c) => ({ ...c, [i.id]: e.target.value }))} />{(i.lots?.length ?? 0) > 1 && <select aria-label={`Lote do ajuste de ${i.name}`} className="h-9 w-48 rounded-md border bg-background px-2 text-xs" value={adjLot[i.id] ?? ""} onChange={(e) => setAdjLot((c) => ({ ...c, [i.id]: e.target.value }))}><option value="">Selecione o lote *</option>{[...(i.lots ?? [])].sort((a, b) => a.expiry.localeCompare(b.expiry)).map((l) => <option key={l.lot + l.expiry} value={l.lot}>{`${l.lot} · val. ${fmtExpiry(l.expiry)} · ${l.quantity}`}</option>)}</select>}<Button size="sm" variant="secondary" disabled={!allowed || !Number(adj[i.id]) || ((i.lots?.length ?? 0) > 1 && !adjLot[i.id])} onClick={() => { try { onAdjust(i.id, Number(adj[i.id]), (i.lots?.length ?? 0) > 1 ? adjLot[i.id] : i.lots?.[0]?.lot ?? ""); setAdj((c) => ({ ...c, [i.id]: "" })); setAdjLot((c) => ({ ...c, [i.id]: "" })); toast.success("Estoque atualizado"); } catch (err) { toast.error(err instanceof Error ? err.message : "Ação não concluída"); } }}>Lançar</Button><Button size="sm" variant="outline" disabled={!allowed} onClick={() => link(i)}>Código</Button><Button size="sm" variant="outline" disabled={!allowed} onClick={() => makeLabel(i)}>Etiqueta</Button>{onDelete && <Button size="sm" variant="destructive" aria-label={`Apagar ${i.name}`} onClick={() => { if (!confirm(`Apagar ${i.name} do estoque?`)) return; try { onDelete(i.id); toast.success("Item apagado"); } catch (err) { toast.error(err instanceof Error ? err.message : "Ação não concluída"); } }}>Apagar</Button>}</div></td>
       </tr>)}
       {!shown.length && <tr><td colSpan={6} className="p-8 text-center text-sm text-muted-foreground">Nenhum item encontrado.</td></tr>}
     </tbody></table></div>

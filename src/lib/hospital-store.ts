@@ -228,20 +228,22 @@ export function createStockMedication(input: Omit<StockMedication, 'id'>) {
   const medication: StockMedication = { id: crypto.randomUUID(), name, presentation: input.presentation.trim(), unit: input.unit.trim() || 'un', quantity: input.quantity, minimum: input.minimum };
   setState((s) => ({ stock: [...s.stock, medication].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')) }));
 }
-export function adjustStock(id: string, delta: number) {
+export function adjustStock(id: string, delta: number, lot = '') {
   requireAction('farmacia');
   if (!Number.isInteger(delta) || delta === 0) throw new Error('Informe uma entrada ou saída inteira diferente de zero.');
   const medication = state.stock.find((item) => item.id === id);
   if (!medication) throw new Error('Medicamento não encontrado.');
   if (medication.quantity + delta < 0) throw new Error('O ajuste não pode deixar o estoque negativo.');
+  if (lot) { const next = changeQty(state.stock, id, delta, lot); setState(() => ({ stock: next })); return; }
   setState((s) => ({ stock: s.stock.map((item) => item.id === id ? { ...item, quantity: item.quantity + delta } : item) }));
 }
-export function adjustWarehouse(id: string, delta: number) {
+export function adjustWarehouse(id: string, delta: number, lot = '') {
   requireAction('almoxarifado');
   if (!Number.isInteger(delta) || delta === 0) throw new Error('Informe uma entrada ou saída inteira diferente de zero.');
   const item = state.warehouse.find((x) => x.id === id);
   if (!item) throw new Error('Item não encontrado.');
   if (item.quantity + delta < 0) throw new Error('O ajuste não pode deixar o estoque negativo.');
+  if (lot) { const next = changeQty(state.warehouse, id, delta, lot); setState(() => ({ warehouse: next })); return; }
   setState((s) => ({ warehouse: s.warehouse.map((x) => x.id === id ? { ...x, quantity: x.quantity + delta } : x) }));
 }
 /** Atalho usado pela integração da prescrição para acrescentar unidades a um item. */
