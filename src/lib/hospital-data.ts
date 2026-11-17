@@ -28,7 +28,7 @@ export const can = (p: Profile, a: Action) => PERMS[p].includes(a);
 export const ACCESS_AREAS = [
   { id: "recepcao", label: "Recepção & Cadastro" }, { id: "acolhimento", label: "Acolhimento / Triagem" },
   { id: "atendimento", label: "Consultório Médico" }, { id: "pacientes", label: "Pacientes / PEP" },
-  { id: "enfermagem", label: "Posto de Enfermagem" }, { id: "centro-cirurgico", label: "Centro Cirúrgico" },
+  { id: "enfermagem", label: "Posto de Enfermagem" }, { id: "centro-cirurgico", label: "Centro Cirúrgico" }, { id: "cme", label: "CME – Esterilização" },
   { id: "farmacia", label: "Farmácia" }, { id: "almoxarifado", label: "Almoxarifado" }, { id: "faturamento", label: "Faturamento (TISS e SUS)" }, { id: "nir", label: "NIR – Regulação de Leitos" },
 ] as const;
 export type UnitArea = "ambulatorio" | "pronto-socorro" | "maternidade";
@@ -67,7 +67,7 @@ export function canAccessPage(profile: Profile, path: string, areas?: readonly s
   if (path === "/acolhimento") return can(profile, "triagem");
   if (path === "/atendimento") return can(profile, "prescrever");
   if (path.startsWith("/pacientes")) return can(profile, "evoluir") || can(profile, "prescrever") || can(profile, "checar");
-  if (path === "/centro-cirurgico") return can(profile, "cirurgia");
+  if (path === "/centro-cirurgico" || path === "/cme") return can(profile, "cirurgia");
   if (path === "/farmacia") return can(profile, "farmacia");
   if (path === "/almoxarifado") return can(profile, "almoxarifado");
   if (path === "/nir") return can(profile, "nir");
@@ -135,6 +135,7 @@ export interface Surgery {
   id: string; room: string; start: number; duration: number; patient: string; patientId?: string | undefined;
   type: string; tuss: string; surgeon: string; status: SurgStatus;
   checks: Record<string, boolean>; gastos: { item: string; qty: number; price: number }[];
+  kits?: { kitId: string; name: string; cycle: string; autoclave: string; at: string; by: string }[];
   date?: string; urgency?: "Eletiva" | "Urgência"; team?: SurgTeam; report?: SurgReport;
 }
 export const PROCEDURES = ["Cesárea", "Parto Normal", "Parto Instrumentado", "Curetagem", "Laqueadura", "Cirurgia Pediátrica", "Apendicectomia", "Herniorrafia", "Postectomia", "Orquidopexia", "Outro"];

@@ -10,7 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { SurgeryPrint, printSurgery } from "@/components/SurgeryPrint";
 import { Printer } from "lucide-react";
-import { setState, useStore } from "@/lib/hospital-store";
+import { registerCmeKitUse, setState, useStore } from "@/lib/hospital-store";
+import { BarcodeScan } from "@/components/BarcodeScan";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/centro-cirurgico")({
@@ -73,6 +74,9 @@ function Centro() {
             <div className="space-y-4 px-4 pb-6 text-sm">
               <div className="text-xs text-muted-foreground">{sel.room} · {sel.start}h–{sel.start + sel.duration}h · {sel.surgeon} · TUSS {sel.tuss}</div>
               {sel.patientId && <EncounterTimeline patientId={sel.patientId} />}
+              <div><div className="mb-1 text-xs font-semibold uppercase text-primary">Caixas / instrumentais (CME)</div>
+                <BarcodeScan placeholder="Bipar etiqueta da caixa" onScan={(code) => { try { const k = registerCmeKitUse(code, sel.id); toast.success(`${k.name} conferida e vinculada`); } catch (e) { toast.error(e instanceof Error ? e.message : "Erro"); } }} />
+                {(sel.kits ?? []).map((k, i) => <div key={i} className="mt-1 text-xs">{k.name} · ciclo {k.cycle} · {k.autoclave} · {new Date(k.at).toLocaleTimeString("pt-BR")}</div>)}</div>
               {sel.patientId && <Link to="/pacientes/$id" params={{ id: sel.patientId }} className="text-xs font-medium text-clinical">Abrir prontuário →</Link>}
               <div><div className="mb-1 text-xs font-semibold uppercase text-primary">Status</div>
                 <div className="flex flex-wrap gap-1">{SURG_STATUS.map((s) => <button key={s} disabled={!can(profile, "cirurgia")} onClick={() => { updateSurg(sel.id, () => ({ status: s })); toast.success(`Status: ${s}`); }} className={cn("rounded px-2 py-1 text-xs font-semibold disabled:opacity-40", sel.status === s ? STATUS_CLS[s] : "border")}>{s}</button>)}</div></div>

@@ -1,3 +1,4 @@
+import { DEFAULT_KITS, checkKitUse, findKit, setBio, startCycle, type BioResult, type CmeCycle, type CmeKit, type KitStatus } from './cme';
 import { useSyncExternalStore } from "react";
 import { linkCode } from "./barcode";
 import { PATIENTS, QUEUE, SURGERIES, type Admin, type Newborn, type Patient, type Profile, type QueueItem, type Surgery } from "./hospital-data";
@@ -15,8 +16,8 @@ import { registrationPatch } from "./patient-registration-mapping";
 import type { PatientRegistration } from "./patient-registration";
 import { addSpecialty, ambulatoryNeedsTriage, DEFAULT_SPECIALTIES, type AmbSpecialty, type Appointment, type SadtReport, type SpecialtyGroup } from "./ambulatorio";
 
-interface State { encounters: Encounter[]; beSequence: number; fiaSequence: number; stock: StockMedication[]; warehouse: StockMedication[]; profile: Profile; employeeName: string; patients: Patient[]; queue: QueueItem[]; surgeries: Surgery[]; admins: Record<string, Admin>; rooms: string[]; calls: PanelCall[]; cidGroups: CidGroup[]; cidAreas: CidArea[]; employeeArea: string; accessAreas: string[] | null; removedStock: string[]; movements: Movement[]; requests: SupplyRequest[]; ambSpecialties: AmbSpecialty[]; appointments: Appointment[] }
-let state: State = { profile: "Outro", employeeName: "", patients: [], queue: [], surgeries: [], admins: {}, encounters: [], beSequence: 0, fiaSequence: 0, stock: PHARMACY_CATALOG, warehouse: WAREHOUSE_CATALOG, rooms: DEFAULT_ROOMS, calls: [], cidGroups: DEFAULT_CID_GROUPS, cidAreas: DEFAULT_CID_AREAS, employeeArea: "", accessAreas: null, removedStock: [], movements: [], requests: [], ambSpecialties: DEFAULT_SPECIALTIES, appointments: [] };
+interface State { encounters: Encounter[]; beSequence: number; fiaSequence: number; stock: StockMedication[]; warehouse: StockMedication[]; profile: Profile; employeeName: string; patients: Patient[]; queue: QueueItem[]; surgeries: Surgery[]; admins: Record<string, Admin>; rooms: string[]; calls: PanelCall[]; cidGroups: CidGroup[]; cidAreas: CidArea[]; employeeArea: string; accessAreas: string[] | null; removedStock: string[]; movements: Movement[]; requests: SupplyRequest[]; ambSpecialties: AmbSpecialty[]; appointments: Appointment[]; cmeKits: CmeKit[]; cmeCycles: CmeCycle[] }
+let state: State = { profile: "Outro", employeeName: "", patients: [], queue: [], surgeries: [], admins: {}, encounters: [], beSequence: 0, fiaSequence: 0, stock: PHARMACY_CATALOG, warehouse: WAREHOUSE_CATALOG, rooms: DEFAULT_ROOMS, calls: [], cidGroups: DEFAULT_CID_GROUPS, cidAreas: DEFAULT_CID_AREAS, employeeArea: "", accessAreas: null, removedStock: [], movements: [], requests: [], ambSpecialties: DEFAULT_SPECIALTIES, appointments: [], cmeKits: DEFAULT_KITS, cmeCycles: [] };
 const ls = new Set<() => void>();
 export const getState = () => state;
 export function setState(fn: (s: State) => Partial<State>) { state = { ...state, ...fn(state) }; ls.forEach((l) => l()); }
@@ -427,4 +428,34 @@ export function saveSadtReport(id: string, r: Omit<SadtReport, 'at'>) {
   let next = e.status_fluxo === 'AGUARDANDO_MEDICO' ? transition(e, 'EM_ATENDIMENTO_MEDICO', by, 'Exame SADT iniciado', at) : e;
   next = transition(next, 'ALTA_HOSPITALAR', by, `Laudo SADT emitido: ${r.exam}`, at);
   commitEncounter({ ...next, sadtReport: { ...r, at } });
+}
+
+// ---- CME ----
+function requireCme() { if (!can(state.profile, 'cirurgia') && !(state.accessAreas ?? []).includes('cme')) throw new Error('Sem permissão para o CME.'); }
+const cmeBy = () => professionalName(state.profile);
+export function createCmeKit(code: string, name: string, items: string, validityDays: number) {
+  requireCme(); const c = code.trim().toUpperCase(); if (!c || !name.trim()) throw new Error('Informe código e nome.');
+  if (state.cmeKits.some((k) => k.code === c)) throw new Error('Código já cadastrado.');
+  setState((s) => ({ cmeKits: [...s.cmeKits, { id: c, code: c, name: name.trim(), items, validityDays: validityDays || 30, status: 'Sujo', location: 'Expurgo CME', history: [] }] }));
+}
+export function moveCmeKit(id: string, status: KitStatus, location: string) {
+  requireCme(); const at = new Date().toISOString();
+  setState((s) => ({ cmeKits: s.cmeKits.map((k) => k.id === id ? { ...k, status, location, ...(status === 'Sujo' ? { cycleId: undefined, sterilizedAt: undefined, expiresAt: undefined, patientId: undefined } : {}), history: [...k.history, { at, by: cmeBy(), note: `${status} · ${location}` }] } : k) }));
+}
+export function runCmeCycle(input: Parameters<typeof startCycle>[2]) {
+  requireCme(); const r = startCycle(state.cmeKits, state.cmeCycles, input, cmeBy(), new Date().toISOString());
+  setState((s) => ({ cmeKits: r.kits, cmeCycles: [...s.cmeCycles, r.cycle] })); return r.cycle;
+}
+export function setCmeBio(cycleId: string, bio: BioResult) {
+  requireCme(); const c = state.cmeCycles.find((x) => x.id === cycleId); if (!c) throw new Error('Ciclo não encontrado.');
+  setState((s) => ({ cmeCycles: s.cmeCycles.map((x) => x.id === cycleId ? { ...x, bio } : x), cmeKits: setBio(s.cmeKits, c, bio, cmeBy(), new Date().toISOString()) }));
+}
+/** Bipa a caixa no procedimento: valida validade/ciclo e grava no paciente. */
+export function registerCmeKitUse(code: string, surgeryId: string) {
+  const kit = findKit(state.cmeKits, state.cmeCycles, code); const cycle = state.cmeCycles.find((c) => c.id === kit?.cycleId);
+  const err = checkKitUse(kit, cycle, new Date().toISOString()); if (err) throw new Error(err);
+  const surg = state.surgeries.find((s) => s.id === surgeryId); if (!surg) throw new Error('Procedimento não encontrado.');
+  const at = new Date().toISOString(); const use = { kitId: kit!.id, name: kit!.name, cycle: cycle!.number, autoclave: cycle!.autoclave, at, by: cmeBy() };
+  setState((s) => ({ surgeries: s.surgeries.map((x) => x.id === surgeryId ? { ...x, kits: [...(x.kits ?? []), use] } : x), cmeKits: s.cmeKits.map((k) => k.id === kit!.id ? { ...k, status: 'Em uso', location: surg.room, patientId: surg.patientId, history: [...k.history, { at, by: cmeBy(), note: `Uso: ${surg.patient} · ${surg.type}` }] } : k) }));
+  return kit!;
 }

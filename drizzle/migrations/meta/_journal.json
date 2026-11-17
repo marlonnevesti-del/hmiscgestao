@@ -50,6 +50,13 @@
       "when": 1794841456163,
       "tag": "0006_employee_access_areas",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1794933257661,
+      "tag": "0007_migration",
+      "breakpoints": true
     }
   ]
 }
