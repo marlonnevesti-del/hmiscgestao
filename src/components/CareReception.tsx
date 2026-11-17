@@ -10,7 +10,7 @@ import { EncounterTimeline } from "./EncounterTimeline";
 import { SpecialConditionBadges } from "./SpecialConditions";
 import { PatientRegistrationFields } from "./PatientRegistrationFields";
 import { registrationFor, registrationPatch } from "@/lib/patient-registration-mapping";
-import { registrationSchema } from "@/lib/patient-registration";
+import { registrationIssues, registrationSchema, unknownPatientName, type RegistrationMode } from "@/lib/patient-registration";
 import { ATTENDANCE_TYPES, type Encounter } from "@/lib/care-flow";
 import { can, type Patient } from "@/lib/hospital-data";
 import { deleteEncounter, openEncounter, professionalName, savePatientRegistration, useStore } from "@/lib/hospital-store";
@@ -34,6 +34,7 @@ export function CareReception({ unit }: { unit?: CareUnit } = {}) {
   const [created, setCreated] = useState<Encounter | null>(null);
   const [f, setF] = useState(() => unit ? { ...INITIAL_FORM, type: unit, specialty: unit === "Ambulatório" ? "" : unit === "Maternidade" ? "Obstetrícia" : "Pediatria", patientType: (unit === "Pronto socorro" ? "pediatria" : "gestante") as Patient["type"] } : INITIAL_FORM);
   const [registration, setRegistration] = useState(() => registrationFor());
+  const [mode, setMode] = useState<RegistrationMode>("completo");
   const set = (key: keyof Omit<typeof f, "conditions">, value: string) => setF((current) => ({ ...current, [key]: value }));
 
   const choose = (patient: Patient) => {
@@ -55,11 +56,14 @@ export function CareReception({ unit }: { unit?: CareUnit } = {}) {
 
   const submit = () => {
     try {
-      const parsed = registrationSchema.safeParse(registration);
+      const reg = registration.unknownIdentity && !registration.civilName.trim() ? { ...registration, civilName: unknownPatientName(registration.unknownNumber) } : registration;
+      const missing = registrationIssues(reg, mode);
+      if (missing.length) throw new Error(missing[0]);
+      const parsed = registrationSchema.safeParse(reg);
       if (!parsed.success) throw new Error(parsed.error.issues[0]?.message || "Confira os dados do cadastro.");
       if (!f.specialty.trim()) throw new Error("Preencha a especialidade em Abertura de atendimento.");
       if (!f.complaint.trim()) throw new Error("Preencha a queixa principal em Abertura de atendimento.");
-      if (["pediatria", "neonato"].includes(f.patientType) && !registration.guardian.trim() && !registration.parent1.trim()) {
+      if (mode === "completo" && ["pediatria", "neonato"].includes(f.patientType) && !registration.guardian.trim() && !registration.parent1.trim()) {
         throw new Error("Para criança ou recém-nascido, preencha o nome do responsável ou da mãe (filiação 1).");
       }
       if (f.conditions.includes("Outra") && !f.otherCondition.trim()) throw new Error("Descreva a outra condição especial.");
@@ -70,8 +74,8 @@ export function CareReception({ unit }: { unit?: CareUnit } = {}) {
           id, prontuario: `PR-${new Date().getFullYear()}-${String(patients.length + 1).padStart(6, "0")}`,
           weight: 0, allergies: [], risks: [], diagnosis: "Em avaliação", days: 1, evolutions: [], vitals: [], prescriptions: [],
         }),
-        name: f.name.trim(), cpf: f.cpf || "—", age: f.birth || "—", motherName: f.mother, guardian: f.guardian || registration.parent1,
-        ...registrationPatch(registration, professionalName(profile), old),
+        name: f.name.trim() || reg.civilName, cpf: f.cpf || "—", age: f.birth || "—", motherName: f.mother, guardian: f.guardian || registration.parent1,
+        ...registrationPatch(reg, professionalName(profile), old),
         type: f.patientType, insurance: registration.insurance, authorized: registration.insurance === "SUS" || registration.insurance === "Particular",
         ward: f.patientType === "gestante" || f.patientType === "puerpera" ? "PSO" : "PSP", bed: "",
         admission: new Date().toLocaleString("pt-BR"), prescriptions: [], vitals: old?.vitals ?? [],
@@ -99,7 +103,12 @@ export function CareReception({ unit }: { unit?: CareUnit } = {}) {
         {existing && <div className="text-xs text-clinical">Paciente cadastrado selecionado <Button variant="link" onClick={clearIdentity}>Novo paciente</Button></div>}
       </div>
       <form className="grid gap-3 border-y py-4 md:grid-cols-3" onSubmit={(event) => { event.preventDefault(); submit(); }}>
-        <div className="min-w-0 md:col-span-3"><PatientRegistrationFields value={registration} onChange={setRegistration} recordNumber={patients.find(p => p.id === existing)?.prontuario} /></div>
+        <div className="flex flex-wrap gap-2 md:col-span-3" role="group" aria-label="Tipo de cadastro">
+          <Button type="button" variant={mode === "completo" ? "default" : "outline"} onClick={() => setMode("completo")}>Cadastro completo</Button>
+          <Button type="button" variant={mode === "simplificado" ? "destructive" : "outline"} onClick={() => setMode("simplificado")}>Cadastro simplificado (emergência / sem documento)</Button>
+          <span className="self-center text-xs text-muted-foreground">Campos em azul com * são obrigatórios.</span>
+        </div>
+        <div className="min-w-0 md:col-span-3"><PatientRegistrationFields mode={mode} value={registration} onChange={setRegistration} recordNumber={patients.find(p => p.id === existing)?.prontuario} /></div>
         {existing && <div className="md:col-span-3"><Button type="button" variant="outline" onClick={() => { try { savePatientRegistration(existing, registration); toast.success("Cadastro atualizado sem abrir novo atendimento"); } catch (error) { toast.error(error instanceof Error ? error.message : "Não foi possível salvar"); } }}>Salvar alterações do cadastro</Button></div>}
         <h2 className="mt-3 border-t pt-4 font-semibold md:col-span-3">Abertura de atendimento</h2>
         {unit === "Ambulatório" && <label className="grid gap-1 text-xs">Especialidade<select aria-label="Especialidade" value={f.specialty} onChange={(event) => set("specialty", event.target.value)} className="h-9 rounded-md border bg-background px-2"><option value="">Selecione…</option>{(["medica", "nao_medica", "sadt"] as const).map((g) => <optgroup key={g} label={GROUP_LABELS[g]}>{ambSpecialties.filter((x) => x.group === g && x.active).map((x) => <option key={x.id} value={x.name}>{x.name}</option>)}</optgroup>)}</select></label>}

@@ -20,3 +20,11 @@ describe("cadastro conforme os anexos", () => {
     expect(r.phones).toHaveLength(2); expect(r.legacyRecord).toBe("12345"); expect(r.esusCode).toBe("678");
   });
 });
+import { registrationIssues } from "./patient-registration";
+describe("obrigatórios do cadastro", () => {
+  const full = { ...emptyRegistration(), civilName: "Ana", sex: "Feminino", birthDate: "2000-01-01", parent1: "Maria", skinColor: "Parda", birthplaceState: "SC", birthplace: "Criciúma" };
+  it("completo aceita os campos em azul preenchidos, sem CPF", () => expect(registrationIssues(full, "completo")).toEqual([]));
+  it("completo exige filiação 1, cor e naturalidade", () => expect(registrationIssues({ ...full, parent1: "", skinColor: "", birthplace: "" }, "completo")).toHaveLength(3));
+  it("simplificado aceita desconhecido só com sexo", () => expect(registrationIssues({ ...emptyRegistration(), civilName: "", unknownIdentity: true, sex: "Masculino" }, "simplificado")).toEqual([]));
+  it("simplificado exige sexo", () => expect(registrationIssues({ ...emptyRegistration(), unknownIdentity: true }, "simplificado")).toContain("Informe o sexo."));
+});

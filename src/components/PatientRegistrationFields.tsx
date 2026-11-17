@@ -3,14 +3,14 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { emptyAddress, patientAge, presentationName, type PatientRegistration } from "@/lib/patient-registration";
+import { emptyAddress, patientAge, presentationName, type PatientRegistration, type RegistrationMode } from "@/lib/patient-registration";
 
 type Field = [keyof PatientRegistration, string, string[]?];
 const states = "AC AL AP AM BA CE DF ES GO MA MT MS MG PA PB PR PE PI RJ RN RS RO RR SC SP SE TO".split(" ");
 const education = ["Não informado", "Sem escolaridade", "Fundamental incompleto", "Fundamental completo", "Médio incompleto", "Médio completo", "Superior incompleto", "Superior completo", "Pós-graduação"];
 const general: Field[] = [
   ["civilName", "Nome civil"], ["birthDate", "Data de nascimento"], ["bloodType", "Tipo sanguíneo", ["A", "B", "AB", "O"]], ["rhFactor", "Fator RH", ["Positivo", "Negativo", "Não informado"]],
-  ["weight", "Peso (kg)"], ["height", "Altura (cm)"], ["sex", "Sexo", ["Masculino", "Feminino", "Não informado"]], ["unknownNumber", "Número de identificação desconhecido"],
+  ["sex", "Sexo", ["Masculino", "Feminino", "Não informado"]],
   ["insurance", "Convênio / SUS", ["SUS", "Particular", "Unimed", "Bradesco Saúde", "Amil", "SulAmérica"]], ["insuranceCategory", "Categoria do convênio"], ["insuranceCard", "Carteira do convênio"],
   ["cns", "Cartão de saúde (CNS)"], ["nationality", "Nacionalidade"], ["countryEntryDate", "Data de entrada no país"], ["maritalStatus", "Estado civil", ["Solteiro(a)", "Casado(a)", "União estável", "Divorciado(a)", "Viúvo(a)", "Separado(a)", "Não informado"]],
   ["education", "Grau de instrução", education], ["spouse", "Nome do cônjuge"], ["parent1", "Nome filiação 1 (mãe, quando elegível)"], ["parent2", "Nome filiação 2"],
@@ -23,14 +23,52 @@ const other: Field[] = [
   ["guardianAreaCode", "DDD do responsável"], ["guardianPhone", "Telefone do responsável"], ["communicationBarrier", "Barreira de comunicação", ["Nenhuma", "Auditiva", "Visual", "Fala", "Idioma", "Cognitiva", "Outra"]],
 ];
 
-export function PatientRegistrationFields({ value: r, onChange, recordNumber, readOnly = false }: { value: PatientRegistration; onChange: (value: PatientRegistration) => void; recordNumber?: string | undefined; readOnly?: boolean }) {
+const REQUIRED: Record<RegistrationMode, string[]> = {
+  completo: ["civilName", "birthDate", "sex", "parent1", "skinColor", "birthplaceState", "birthplace"],
+  simplificado: ["civilName", "sex"],
+};
+const RECOMMENDED_SIMPLE = ["birthDate", "parent1", "skinColor", "birthplaceState", "birthplace"];
+const simple: Field[] = [
+  ["civilName", "Nome civil"], ["sex", "Sexo", ["Masculino", "Feminino", "Não informado"]], ["birthDate", "Data de nascimento"],
+  ["bloodType", "Tipo sanguíneo", ["A", "B", "AB", "O"]], ["rhFactor", "Fator RH", ["Positivo", "Negativo", "Não informado"]],
+  ["parent2", "Nome do pai"], ["parent1", "Nome da mãe"], ["nationality", "Nacionalidade"], ["countryEntryDate", "Data de entrada no país"],
+  ["birthplaceState", "Naturalidade · UF", states], ["birthplace", "Naturalidade · cidade"], ["cpf", "CPF"], ["cns", "CNS"],
+  ["skinColor", "Cor (pele)", ["Branca", "Preta", "Parda", "Amarela", "Indígena", "Não informada"]], ["ethnicity", "Etnia"], ["esusCode", "Código e-SUS"],
+];
+
+export function PatientRegistrationFields({ value: r, onChange, recordNumber, readOnly = false, mode = "completo" }: { value: PatientRegistration; onChange: (value: PatientRegistration) => void; recordNumber?: string | undefined; readOnly?: boolean; mode?: RegistrationMode }) {
+  const req = REQUIRED[mode];
+  const mark = (key: string, label: string) => req.includes(key) ? <span className="font-semibold text-primary">{label} *</span> : mode === "simplificado" && RECOMMENDED_SIMPLE.includes(key) ? <span className="text-primary">{label}</span> : label;
   const set = (key: keyof PatientRegistration, value: string | boolean) => onChange({ ...r, [key]: value });
   const fields = (list: Field[]) => list.map(([key, label, options]) => <label key={key} className="grid min-w-0 gap-1 text-xs">
-    {label}{options ? <select aria-label={label} value={String(r[key])} onChange={e => set(key, e.target.value)} className="h-9 w-full min-w-0 rounded-md border bg-background px-2 text-sm"><option value="">Não informado</option>{options.map(option => <option key={option}>{option}</option>)}{r[key] && !options.includes(String(r[key])) && <option>{String(r[key])}</option>}</select>
+    {mark(key, label)}{options ? <select aria-label={label} value={String(r[key])} onChange={e => set(key, e.target.value)} className="h-9 w-full min-w-0 rounded-md border bg-background px-2 text-sm"><option value="">Não informado</option>{options.map(option => <option key={option}>{option}</option>)}{r[key] && !options.includes(String(r[key])) && <option>{String(r[key])}</option>}</select>
       : key.startsWith("observation") ? <textarea aria-label={label} value={String(r[key])} maxLength={2000} onChange={e => set(key, e.target.value)} className="min-h-20 w-full rounded-md border bg-background p-2 text-sm" />
       : <Input aria-label={label} type={key.endsWith("Date") ? "date" : key === "weight" || key === "height" ? "number" : "text"} min={key === "weight" || key === "height" ? 0 : undefined} step={key === "weight" || key === "height" ? "any" : undefined} maxLength={200} value={String(r[key])} onChange={e => set(key, e.target.value)} />}
   </label>);
   const check = (key: keyof PatientRegistration, label: string) => <label className="flex items-center gap-2 text-sm"><Checkbox checked={Boolean(r[key])} onCheckedChange={v => set(key, v === true)} />{label}</label>;
+  const unknownToggle = <label className="flex items-center gap-2 text-sm"><Checkbox checked={r.unknownIdentity} onCheckedChange={v => onChange({ ...r, unknownIdentity: v === true })} />Paciente desconhecido (sem documentação)</label>;
+  if (mode === "simplificado") {
+    const a = r.addresses[0] ?? emptyAddress();
+    const p = r.phones[0] ?? { primary: true, type: "Celular", areaCode: "", number: "", complement: "" };
+    const setA = (key: keyof typeof a, v: string) => onChange({ ...r, addresses: [{ ...a, [key]: v }, ...r.addresses.slice(1)] });
+    const setP = (key: keyof typeof p, v: string) => onChange({ ...r, phones: [{ ...p, [key]: v }, ...r.phones.slice(1)] });
+    return <fieldset disabled={readOnly} className="min-w-0 space-y-4">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <label className="grid gap-1 text-xs">Número de cadastro<Input readOnly value={recordNumber || "Automático"} /></label>
+        <label className="grid gap-1 text-xs lg:col-span-2">Nome de apresentação<Input readOnly value={presentationName(r)} /></label>
+      </div>
+      <div className="flex flex-wrap items-end gap-4 rounded-md border border-primary/40 bg-primary/5 p-3">{unknownToggle}
+        {r.unknownIdentity && <label className="grid gap-1 text-xs">Nº Desc.<Input aria-label="Número do desconhecido" value={r.unknownNumber} onChange={e => set("unknownNumber", e.target.value)} /></label>}
+        <div className="space-y-2">{check("useSocialName", "Utilizar nome social")}<Input aria-label="Nome social" disabled={!r.useSocialName} value={r.socialName} onChange={e => set("socialName", e.target.value)} /></div>
+        <div className="space-y-2 text-sm">{check("estimatedAge", "Idade estimada")}<div className="text-muted-foreground">{patientAge(r)}</div></div>
+        {r.estimatedAge && <div className="grid grid-cols-3 gap-2">{fields([["ageYears", "Anos"], ["ageMonths", "Meses"], ["ageDays", "Dias"]])}</div>}
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{fields(simple.filter(([k]) => !(r.unknownIdentity && k === "civilName")))}</div>
+      {check("homeless", "Em situação de rua")}
+      <div className="grid gap-3 border-t pt-3 sm:grid-cols-2 lg:grid-cols-3">{([["postalCode", "CEP"], ["streetType", "Tipo logradouro"], ["street", "Logradouro"], ["number", "Número"], ["neighborhood", "Bairro"], ["complement", "Complemento"], ["state", "UF"], ["city", "Cidade"]] as const).map(([k, l]) => <label key={k} className="grid gap-1 text-xs"><span className={k === "complement" || k === "state" || k === "city" ? "" : "text-primary"}>{l}</span><Input aria-label={l} maxLength={200} value={a[k]} onChange={e => setA(k, e.target.value)} /></label>)}</div>
+      <div className="grid gap-3 border-t pt-3 sm:grid-cols-4"><h3 className="font-semibold sm:col-span-4">Telefone</h3>{([["type", "Tipo telefone"], ["areaCode", "DDD"], ["number", "Fone"], ["complement", "Complemento"]] as const).map(([k, l]) => <label key={k} className="grid gap-1 text-xs">{l}<Input aria-label={l} maxLength={200} value={p[k]} onChange={e => setP(k, e.target.value)} /></label>)}</div>
+    </fieldset>;
+  }
   return <Tabs defaultValue="general" className="min-w-0">
     <TabsList className="mb-3 flex h-auto w-fit max-w-full flex-wrap"><TabsTrigger value="general">Dados gerais</TabsTrigger><TabsTrigger value="contacts">Endereços / Telefones</TabsTrigger><TabsTrigger value="other">Outras informações</TabsTrigger></TabsList>
     <TabsContent value="general"><fieldset disabled={readOnly} className="min-w-0 space-y-4">
@@ -39,14 +77,14 @@ export function PatientRegistrationFields({ value: r, onChange, recordNumber, re
         {fields([["inpatientArchive", "Arquivo internação"], ["outpatientArchive", "Arquivo ambulatório / PS"], ["enrollment", "Matrícula"]])}
         <label className="grid gap-1 text-xs sm:col-span-2 lg:col-span-4">Nome de apresentação<Input readOnly value={presentationName(r)} /></label>
       </div>
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{fields(general.slice(0, 1))}
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{fields(general.slice(0, 1).map(f => f))}
         <div className="space-y-2">{check("useSocialName", "Utilizar nome social")}<Input aria-label="Nome social" disabled={!r.useSocialName} maxLength={200} value={r.socialName} onChange={e => set("socialName", e.target.value)} /></div>
         <div className="space-y-2">{check("useAffectiveName", "Utilizar nome afetivo")}<Input aria-label="Nome afetivo" disabled={!r.useAffectiveName} maxLength={200} value={r.affectiveName} onChange={e => set("affectiveName", e.target.value)} /></div>
         {fields(general.slice(1, 2))}<div className="space-y-2 text-sm">{check("estimatedAge", "Idade estimada")}<div className="text-muted-foreground">{patientAge(r)}</div></div>
         {r.estimatedAge && <div className="grid grid-cols-3 gap-2">{fields([["ageYears", "Anos"], ["ageMonths", "Meses"], ["ageDays", "Dias"]])}</div>}
         {fields(general.slice(2))}
       </div>
-      <div className="flex flex-wrap gap-6">{check("transgender", "Transgênero")}{check("unknownIdentity", "Identidade desconhecida")}{check("homeless", "Em situação de rua")}</div>
+      <div className="flex flex-wrap gap-6">{check("transgender", "Transgênero")}{check("unknownIdentity", "Desconhecido")}{r.unknownIdentity && <Input aria-label="Número do desconhecido" placeholder="Nº Desc." className="w-32" value={r.unknownNumber} onChange={e => set("unknownNumber", e.target.value)} />}{check("homeless", "Em situação de rua")}</div>
       <div className="grid gap-2 border-t pt-3 text-xs text-muted-foreground sm:grid-cols-2"><div>Inclusão: {r.createdBy || "—"} · {r.createdAt ? new Date(r.createdAt).toLocaleString("pt-BR") : "—"}</div><div>Alteração: {r.updatedBy || "—"} · {r.updatedAt ? new Date(r.updatedAt).toLocaleString("pt-BR") : "—"}</div></div>
     </fieldset></TabsContent>
     <TabsContent value="contacts"><fieldset disabled={readOnly} className="min-w-0 space-y-6">

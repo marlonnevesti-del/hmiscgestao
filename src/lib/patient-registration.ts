@@ -57,3 +57,19 @@ export function patientAge(data: PatientRegistration, today = new Date()) {
   }
   return [data.ageYears && `${data.ageYears} anos`, data.ageMonths && `${data.ageMonths} meses`, data.ageDays && `${data.ageDays} dias`].filter(Boolean).join(" ") || "—";
 }
+export type RegistrationMode = "completo" | "simplificado";
+/** Required (blue) fields of each registration form. */
+export function registrationIssues(r: PatientRegistration, mode: RegistrationMode): string[] {
+  const issues: string[] = [];
+  const blank = (v: string) => !v.trim();
+  if (blank(r.sex)) issues.push("Informe o sexo.");
+  if (blank(r.civilName) && !r.unknownIdentity) issues.push("Informe o nome civil ou marque paciente desconhecido.");
+  if (mode === "simplificado") return issues;
+  if (blank(r.birthDate) && !(r.estimatedAge && (r.ageYears || r.ageMonths || r.ageDays))) issues.push("Informe a data de nascimento ou a idade estimada.");
+  if (blank(r.parent1)) issues.push("Informe o nome da filiação 1 (mãe, quando elegível).");
+  if (blank(r.skinColor)) issues.push("Informe a cor (pele).");
+  if (blank(r.birthplaceState) || blank(r.birthplace)) issues.push("Informe a naturalidade (UF e cidade).");
+  return issues;
+}
+/** Name used for unidentified emergency patients. */
+export const unknownPatientName = (n: string) => `DESCONHECIDO Nº ${n || "S/N"}`;
