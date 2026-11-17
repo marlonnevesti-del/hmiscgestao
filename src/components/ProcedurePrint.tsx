@@ -58,7 +58,7 @@ function ProcedureSheet({ f, p, be }: { f: Proc; p?: Patient | undefined; be?: s
       <table className="doc-id"><tbody>
         <tr><td><b>Paciente:</b> {p?.name ?? "—"}</td><td><b>Prontuário:</b> {p?.prontuario ?? "—"}</td></tr>
         <tr><td><b>Idade:</b> {p?.age ?? "—"}{p?.weight ? ` · ${p.weight} kg` : ""}</td><td><b>Convênio:</b> {p?.insurance ?? "—"}</td></tr>
-        <tr><td><b>Atendimento (BE):</b> {be ?? "—"}</td><td><b>Alergias:</b> {p?.allergies?.length ? p.allergies.join(", ") : "Nega"}</td></tr>
+        <tr><td><b>Atendimento (BAA):</b> {be ?? "—"}</td><td><b>Alergias:</b> {p?.allergies?.length ? p.allergies.join(", ") : "Nega"}</td></tr>
         <tr><td><b>Setor:</b> {f.sector || "—"}</td><td><b>Leito:</b> {p?.bed ?? "—"}</td></tr>
       </tbody></table>
       {row("Procedimento", f.name)}{row("Código SIGTAP/TUSS", f.code)}

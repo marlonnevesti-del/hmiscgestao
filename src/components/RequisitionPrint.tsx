@@ -24,7 +24,7 @@ export function RequisitionPrint({ p, e, stock }: { p?: Patient | undefined; e?:
     <div className="req-h1">HOSPITAL MATERNO INFANTIL SANTA CATARINA</div>
     <div className="req-h2">SURE090_R - Requisição de Medicamentos por Horário de Dispensação</div>
     <div className="req-row"><span><b>Requisição:</b> {e.requisition ?? ""} - 0</span><span><b>Requisitada em:</b> {fmt(e.signedAt)}</span><span><b>Atendida em:</b> {fmt(e.dispensedAt)}</span></div>
-    <div className="req-row"><span><b>{e.type === "Maternidade" ? "FIA" : "BE"}:</b> {e.number}</span><span>{ward}{room && ` - Quarto: ${room}`}{bed && ` - Leito: ${bed}`}</span></div>
+    <div className="req-row"><span><b>{e.type === "Maternidade" ? "FIA" : "BAA"}:</b> {e.number}</span><span>{ward}{room && ` - Quarto: ${room}`}{bed && ` - Leito: ${bed}`}</span></div>
     <div className="req-row"><span><b>Paciente:</b> {p.prontuario} - {p.name.toUpperCase()}</span><span><b>Sexo:</b> {r.sex}</span><span><b>Idade:</b> {patientAge(r) || p.age}</span></div>
     <div className="req-row"><span><b>Médico:</b> {e.signedBy}</span></div>
     <table className="req-table"><thead><tr><th>Horário</th><th>Código</th><th>Medicamento</th><th>Lote</th><th>Via</th><th>Qtde.</th><th>Unid.</th></tr></thead><tbody>

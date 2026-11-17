@@ -115,7 +115,7 @@ export function CareReception() {
           </div>
           {f.conditions.includes("Outra") && <label className="mt-3 grid max-w-xl gap-1 text-xs">Descreva a outra condição<Input aria-label="Descreva a outra condição" value={f.otherCondition} onChange={(event) => set("otherCondition", event.target.value)} required /></label>}
         </fieldset>
-        <div className="flex items-end md:col-span-3"><Button type="submit">Gerar Atendimento (BE)</Button></div>
+        <div className="flex items-end md:col-span-3"><Button type="submit">Gerar Atendimento (BAA)</Button></div>
       </form>
     </>}
 

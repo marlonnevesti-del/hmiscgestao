@@ -44,10 +44,10 @@ function commitEncounter(e: Encounter, patch: Partial<State> = {}) {
 }
 export function openEncounter(patient: Patient, type: string, specialty: string, complaint: string) {
   requireAction('recepcao');
-  if (state.encounters.some((e) => e.patientId === patient.id && e.status_fluxo !== 'ALTA_HOSPITALAR')) throw new Error('Paciente já possui um BE ativo.');
+  if (state.encounters.some((e) => e.patientId === patient.id && e.status_fluxo !== 'ALTA_HOSPITALAR')) throw new Error('Paciente já possui um BAA ativo.');
   const at = new Date().toISOString();
-  const number = `BE-${new Date().getFullYear()}-${String(state.beSequence + 1).padStart(6, '0')}`;
-  const e: Encounter = { id: crypto.randomUUID(), patientId: patient.id, number, type, specialty, complaint, status_fluxo: 'AGUARDANDO_TRIAGEM', openedAt: at, history: [{ status: 'AGUARDANDO_TRIAGEM', at, by: professionalName(state.profile), note: 'Recepção: abertura de BE' }] };
+  const number = `BAA-${new Date().getFullYear()}-${String(state.beSequence + 1).padStart(6, '0')}`;
+  const e: Encounter = { id: crypto.randomUUID(), patientId: patient.id, number, type, specialty, complaint, status_fluxo: 'AGUARDANDO_TRIAGEM', openedAt: at, history: [{ status: 'AGUARDANDO_TRIAGEM', at, by: professionalName(state.profile), note: 'Recepção: abertura de BAA' }] };
   setState((s) => ({ beSequence: s.beSequence + 1, patients: [...s.patients.filter((p) => p.id !== patient.id), patient], encounters: [...s.encounters, e], queue: [...s.queue, { id: e.id, name: patient.name, group: patient.type === 'gestante' || patient.type === 'puerpera' ? 'obstetrica' : 'pediatria', complaint, arrivedMinAgo: 0, detail: patient.age }] }));
   return e;
 }
@@ -279,7 +279,7 @@ export function finishEncounter(id: string, outcome: 'internacao' | 'co' | 'exam
     commitEncounter(transition(e, 'ENCAMINHADO_INTERNACAO', by, `Leito ${bed.id}`, at), { patients: state.patients.map((x) => x.id === p.id ? { ...x, ward: bed.ward, bed: bed.id } : x) }); return;
   }
   if (!details.summary.trim()) throw new Error('Informe o resumo de alta.');
-  commitEncounter({ ...transition(e, 'ALTA_HOSPITALAR', by, 'BE encerrado', at), discharge: { summary: details.summary, recipe: details.recipe, by, at } }, { patients: state.patients.map((x) => x.id === p.id ? { ...x, bed: '', dischargeForecast: '' } : x), surgeries: state.surgeries.map((s) => s.patientId === p.id ? { ...s, status: 'Finalizado' } : s) });
+  commitEncounter({ ...transition(e, 'ALTA_HOSPITALAR', by, 'BAA encerrado', at), discharge: { summary: details.summary, recipe: details.recipe, by, at } }, { patients: state.patients.map((x) => x.id === p.id ? { ...x, bed: '', dischargeForecast: '' } : x), surgeries: state.surgeries.map((s) => s.patientId === p.id ? { ...s, status: 'Finalizado' } : s) });
 }
 
 /** Registra o parto: cria prontuário "RN de <mãe>" vinculado e converte a mãe em puérpera. */
