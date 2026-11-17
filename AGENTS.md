@@ -44,3 +44,5 @@ use the editor.
 - SUS billing (BPA/AIH/APAC) rows, DATASUS pending-issue rules and positional export files live in src/lib/sus-billing.ts; /faturamento-sus shares the faturamento access area so admin area grants stay consistent.
 - NIR admission flow: doctors call requestAdmission (no bed); only the nir action authorizes a bed via authorizeAdmission/rejectAdmission in hospital-store, so bed allocation stays centralized.
 - Hotelaria bed reads use an approved-user server function and server-only origin/token, with a validated read-only snapshot polled in NIR; NIR authorization reserves the bed atomically in Hotelaria first (reserveHotelariaBed) and only then records it locally, preventing double allocation.
+
+- Admission authorization (NIR or direct) closes the BAA and opens a separately sequenced FIA record on the encounter via openFia in hospital-store, so the FIA is the single official inpatient document and billing never double-counts.

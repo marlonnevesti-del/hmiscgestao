@@ -14,8 +14,8 @@ export const WAREHOUSE_CATALOG = catalogToStock(CATALOG.almox, 'almox');
 import { registrationPatch } from "./patient-registration-mapping";
 import type { PatientRegistration } from "./patient-registration";
 
-interface State { encounters: Encounter[]; beSequence: number; stock: StockMedication[]; warehouse: StockMedication[]; profile: Profile; employeeName: string; patients: Patient[]; queue: QueueItem[]; surgeries: Surgery[]; admins: Record<string, Admin>; rooms: string[]; calls: PanelCall[]; cidGroups: CidGroup[]; cidAreas: CidArea[]; employeeArea: string; accessAreas: string[] | null; removedStock: string[]; movements: Movement[]; requests: SupplyRequest[] }
-let state: State = { profile: "Outro", employeeName: "", patients: [], queue: [], surgeries: [], admins: {}, encounters: [], beSequence: 0, stock: PHARMACY_CATALOG, warehouse: WAREHOUSE_CATALOG, rooms: DEFAULT_ROOMS, calls: [], cidGroups: DEFAULT_CID_GROUPS, cidAreas: DEFAULT_CID_AREAS, employeeArea: "", accessAreas: null, removedStock: [], movements: [], requests: [] };
+interface State { encounters: Encounter[]; beSequence: number; fiaSequence: number; stock: StockMedication[]; warehouse: StockMedication[]; profile: Profile; employeeName: string; patients: Patient[]; queue: QueueItem[]; surgeries: Surgery[]; admins: Record<string, Admin>; rooms: string[]; calls: PanelCall[]; cidGroups: CidGroup[]; cidAreas: CidArea[]; employeeArea: string; accessAreas: string[] | null; removedStock: string[]; movements: Movement[]; requests: SupplyRequest[] }
+let state: State = { profile: "Outro", employeeName: "", patients: [], queue: [], surgeries: [], admins: {}, encounters: [], beSequence: 0, fiaSequence: 0, stock: PHARMACY_CATALOG, warehouse: WAREHOUSE_CATALOG, rooms: DEFAULT_ROOMS, calls: [], cidGroups: DEFAULT_CID_GROUPS, cidAreas: DEFAULT_CID_AREAS, employeeArea: "", accessAreas: null, removedStock: [], movements: [], requests: [] };
 const ls = new Set<() => void>();
 export const getState = () => state;
 export function setState(fn: (s: State) => Partial<State>) { state = { ...state, ...fn(state) }; ls.forEach((l) => l()); }
@@ -288,6 +288,15 @@ export function requestAdmission(id: string, req: { ward: string; character: 'Ur
   const at = new Date().toISOString(); const by = professionalName(state.profile);
   commitEncounter({ ...e, admission: { ...req, cid: req.cid || e.medical?.cid || '', status: 'pendente', requestedAt: at, requestedBy: by }, history: [...e.history, { status: e.status_fluxo, at, by, note: 'Internação solicitada ao NIR' }] });
 }
+// Admission closes the BAA and opens the FIA as the official inpatient document.
+function openFia(e: Encounter, ward: string, bed: string, at: string, by: string): { e: Encounter; seq: number } {
+  if (e.fia) return { e: { ...e, fia: { ...e.fia, ward, bed } }, seq: state.fiaSequence ?? 0 };
+  const seq = (state.fiaSequence ?? 0) + 1;
+  const number = `FIA-${new Date(at).getFullYear()}-${String(seq).padStart(6, '0')}`;
+  const doctor = e.admission?.requestedBy ?? e.signedBy ?? by;
+  const fia = { number, openedAt: at, ward, bed, doctor, authorizedBy: by, cid: e.admission?.cid || e.medical?.cid || '', justification: e.admission?.justification ?? '', character: e.admission?.character ?? 'Urgência' };
+  return { e: { ...e, fia, baaClosedAt: at, history: [...e.history, { status: e.status_fluxo, at, by, note: `${e.number} encerrada / transferida para internação · ${number} aberta` }] }, seq };
+}
 export function authorizeAdmission(id: string, bedId: string) {
   requireAction('nir'); const { e, p } = getEncounter(id);
   if (e.admission?.status !== 'pendente') throw new Error('Solicitação não está pendente.');
@@ -295,7 +304,8 @@ export function authorizeAdmission(id: string, bedId: string) {
   if (!bed || bed.status !== 'livre' || state.patients.some((x) => x.bed === bed.id)) throw new Error('Selecione um leito livre.');
   const at = new Date().toISOString(); const by = professionalName(state.profile);
   const moved = transition(e, 'ENCAMINHADO_INTERNACAO', by, `NIR: leito ${bed.id}`, at);
-  commitEncounter({ ...moved, admission: { ...e.admission, status: 'autorizada', bed: bed.id, decidedAt: at, decidedBy: by } }, { patients: state.patients.map((x) => x.id === p.id ? { ...x, ward: bed.ward, bed: bed.id } : x) });
+  const f = openFia({ ...moved, admission: { ...e.admission, status: 'autorizada', bed: bed.id, decidedAt: at, decidedBy: by } }, bed.ward, bed.id, at, by);
+  commitEncounter(f.e, { fiaSequence: f.seq, patients: state.patients.map((x) => x.id === p.id ? { ...x, ward: bed.ward, bed: bed.id } : x) });
 }
 // Bed already reserved atomically in Hotelaria; record it here without the local bed list.
 export function authorizeAdmissionExternal(id: string, bedCode: string, sector: string) {
@@ -304,7 +314,8 @@ export function authorizeAdmissionExternal(id: string, bedCode: string, sector: 
   if (!bedCode.trim()) throw new Error('Selecione um leito.');
   const at = new Date().toISOString(); const by = professionalName(state.profile);
   const moved = transition(e, 'ENCAMINHADO_INTERNACAO', by, `NIR: leito ${bedCode} (${sector}) reservado na Hotelaria`, at);
-  commitEncounter({ ...moved, admission: { ...e.admission, status: 'autorizada', bed: bedCode, decidedAt: at, decidedBy: by } }, { patients: state.patients.map((x) => x.id === p.id ? { ...x, ward: e.admission!.ward as Patient["ward"], bed: bedCode } : x) });
+  const f = openFia({ ...moved, admission: { ...e.admission, status: 'autorizada', bed: bedCode, decidedAt: at, decidedBy: by } }, sector || e.admission.ward, bedCode, at, by);
+  commitEncounter(f.e, { fiaSequence: f.seq, patients: state.patients.map((x) => x.id === p.id ? { ...x, ward: e.admission!.ward as Patient["ward"], bed: bedCode } : x) });
 }
 export function rejectAdmission(id: string, note: string) {
   requireAction('nir'); const { e } = getEncounter(id);
@@ -325,10 +336,11 @@ export function finishEncounter(id: string, outcome: 'internacao' | 'co' | 'exam
   if (outcome === 'internacao') {
     const bed = BASE_BEDS.find((b) => b.id === details.bed && ['AC', 'UTIN', 'ENFP'].includes(b.ward));
     if (!bed || bed.status !== 'livre' || state.patients.some((x) => x.bed === bed.id)) throw new Error('Selecione um leito livre.');
-    commitEncounter(transition(e, 'ENCAMINHADO_INTERNACAO', by, `Leito ${bed.id}`, at), { patients: state.patients.map((x) => x.id === p.id ? { ...x, ward: bed.ward, bed: bed.id } : x) }); return;
+    const f = openFia(transition(e, 'ENCAMINHADO_INTERNACAO', by, `Leito ${bed.id}`, at), bed.ward, bed.id, at, by);
+    commitEncounter(f.e, { fiaSequence: f.seq, patients: state.patients.map((x) => x.id === p.id ? { ...x, ward: bed.ward, bed: bed.id } : x) }); return;
   }
   if (!details.summary.trim()) throw new Error('Informe o resumo de alta.');
-  commitEncounter({ ...transition(e, 'ALTA_HOSPITALAR', by, 'BAA encerrado', at), discharge: { summary: details.summary, recipe: details.recipe, by, at } }, { patients: state.patients.map((x) => x.id === p.id ? { ...x, bed: '', dischargeForecast: '' } : x), surgeries: state.surgeries.map((s) => s.patientId === p.id ? { ...s, status: 'Finalizado' } : s) });
+  commitEncounter({ ...transition(e, 'ALTA_HOSPITALAR', by, e.fia ? `${e.fia.number} encerrada (alta)` : 'BAA encerrada', at), discharge: { summary: details.summary, recipe: details.recipe, by, at } }, { patients: state.patients.map((x) => x.id === p.id ? { ...x, bed: '', dischargeForecast: '' } : x), surgeries: state.surgeries.map((s) => s.patientId === p.id ? { ...s, status: 'Finalizado' } : s) });
 }
 
 /** Registra o parto: cria prontuário "RN de <mãe>" vinculado e converte a mãe em puérpera. */

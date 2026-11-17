@@ -27,17 +27,18 @@ function Sheet({ kind, p, e, user }: { kind: SheetKind; p: Patient; e?: Encounte
   const tel = r.phones.find((x) => x !== cel);
   const phone = (x?: { areaCode: string; number: string }) => x?.number ? `(${x.areaCode})${x.number}` : '( )';
   const year = new Date(e?.openedAt ?? Date.now()).getFullYear();
-  const num = e?.number ?? '';
-  const ward = WARDS.find((w) => w.id === p.ward)?.name ?? '';
+  const num = kind === 'FIA' ? (e?.fia?.number ?? '') : (e?.number ?? '');
+  const ward = WARDS.find((w) => w.id === p.ward)?.name ?? e?.fia?.ward ?? '';
   const [room, bed] = (p.bed || '').split('-');
-  const doctor = e?.signedBy ?? e?.history.find((h) => h.status === 'EM_ATENDIMENTO_MEDICO')?.by ?? '';
+  const doctor = (kind === 'FIA' ? e?.fia?.doctor : undefined) ?? e?.signedBy ?? e?.history.find((h) => h.status === 'EM_ATENDIMENTO_MEDICO')?.by ?? '';
   const guardian = r.guardian || p.guardian || (p.type === 'gestante' || p.type === 'puerpera' ? '' : r.parent1);
   return <section className="doc-page sheet-page" data-kind={kind}>
     <div className="sheet-user">Usuário: {user} {new Date().toLocaleString('pt-BR')}</div>
     <Letterhead title={kind === 'FIA' ? 'Ficha do Paciente - Internação' : 'Ficha do Paciente'} />
     <h3>Dados do Atendimento</h3>
     <div className="sheet-row"><F l={`Atendimento ${kind}`} v={num && `${num} / ${year}`} /><F l="Unidade" v={kind === 'FIA' ? ward : ''} /><F l="Quarto" v={kind === 'FIA' ? room : ''} /><F l="Leito" v={kind === 'FIA' ? bed : ''} /></div>
-    <div className="sheet-row"><F l="Convênio" v={r.insurance || p.insurance} /><F l="Data da Chegada" v={fmt(e?.openedAt)} /></div>
+    <div className="sheet-row"><F l="Convênio" v={r.insurance || p.insurance} /><F l={kind === 'FIA' ? 'Data da Internação' : 'Data da Chegada'} v={fmt(kind === 'FIA' ? e?.fia?.openedAt : e?.openedAt)} /></div>
+    {kind === 'FIA' && e?.fia && <><div className="sheet-row"><F l="BAA de origem" v={`${e.number} (encerrada ${fmt(e.baaClosedAt)})`} /><F l="Caráter" v={e.fia.character} /></div><div className="sheet-row"><F l="CID-10" v={e.fia.cid} /><F l="Autorizado por (NIR)" v={e.fia.authorizedBy} /></div><div className="sheet-row"><F l="Justificativa" v={e.fia.justification} /></div></>}
     <div className="sheet-row"><F l="Setor" v={e ? `Recepção ${e.type}` : ''} /><F l="Tipo" v={e?.specialty} /></div>
     <h3>Dados do Paciente</h3>
     <div className="sheet-row"><F l="Nome" v={`${p.prontuario} - ${p.name}`} /></div>

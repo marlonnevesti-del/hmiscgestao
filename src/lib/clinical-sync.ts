@@ -6,7 +6,7 @@ import { DEFAULT_ROOMS } from "./panel-calls";
 import { mergeCatalog, normalizeStock } from "./pharmacy-stock";
 
 // Shared clinical data persisted as one snapshot row; keys below are the durable part of the store.
-const KEYS = ["encounters", "beSequence", "stock", "patients", "queue", "surgeries", "admins", "rooms", "calls", "warehouse", "cidGroups", "cidAreas", "removedStock", "movements", "requests"] as const;
+const KEYS = ["encounters", "beSequence", "fiaSequence", "stock", "patients", "queue", "surgeries", "admins", "rooms", "calls", "warehouse", "cidGroups", "cidAreas", "removedStock", "movements", "requests"] as const;
 type Snapshot = Record<(typeof KEYS)[number], unknown>;
 const pick = () => Object.fromEntries(KEYS.map((k) => [k, getState()[k]])) as Snapshot;
 
