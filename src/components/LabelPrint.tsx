@@ -21,10 +21,14 @@ function Bars({ value }: { value: string }) {
   return <svg ref={ref} />;
 }
 
+export function LabelBody({ label }: { label: Label }) {
+  return label.kind === "unit"
+    ? <><b>{label.name.toUpperCase()}</b><div>LP: {label.lot}&nbsp;&nbsp; VAL. {label.expiry}</div><div className="small">Resp.Téc.: {label.pharmacist}</div><Bars value={label.barcode} /></>
+    : <><b>{label.patient.toUpperCase()}</b><div>LEITO: {label.bed}&nbsp;&nbsp; SETOR: {label.sector.toUpperCase()}</div><div>{label.drug.toUpperCase()}</div><div>QUANTIDADE: {label.quantity}&nbsp;&nbsp; VIA: {label.route}</div><div>HORÁRIO: {label.time}</div><div>VALIDADE: {label.validity}&nbsp;&nbsp; {label.diluent ? `(X) DILUENTE ${label.diluent}` : "( ) DILUENTE"}</div></>;
+}
+
 export function LabelPrint({ label }: { label: Label | null }) {
   if (typeof document === "undefined" || !label) return null;
   const pages = Array.from({ length: Math.max(1, Math.min(200, label.copies)) });
-  return createPortal(<div className="label-root">{pages.map((_, i) => label.kind === "unit"
-    ? <section key={i} className="label-page"><b>{label.name.toUpperCase()}</b><div>LP: {label.lot}&nbsp;&nbsp; VAL. {label.expiry}</div><div className="small">Resp.Téc.: {label.pharmacist}</div><Bars value={label.barcode} /></section>
-    : <section key={i} className="label-page"><b>{label.patient.toUpperCase()}</b><div>LEITO: {label.bed}&nbsp;&nbsp; SETOR: {label.sector.toUpperCase()}</div><div>{label.drug.toUpperCase()}</div><div>QUANTIDADE: {label.quantity}&nbsp;&nbsp; VIA: {label.route}</div><div>HORÁRIO: {label.time}</div><div>VALIDADE: {label.validity}&nbsp;&nbsp; {label.diluent ? `(X) DILUENTE ${label.diluent}` : "( ) DILUENTE"}</div></section>)}</div>, document.body);
+  return createPortal(<div className="label-root">{pages.map((_, i) => <section key={i} className="label-page"><LabelBody label={label} /></section>)}</div>, document.body);
 }
