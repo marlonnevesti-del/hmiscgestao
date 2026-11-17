@@ -1,4 +1,6 @@
 # Roadmap
+- [x] Preparar leitura segura dos leitos da Hotelaria no NIR e documentar ativação e servidor interno.
+- [ ] Ativar sincronização real e reservas bidirecionais — depende de endpoint e reserva transacional publicados no aplicativo Hotelaria e credenciais de integração.
 - [x] Definir função dos colaboradores, restringir áreas por função e limitar a recepção a três opções.
 - [x] Interligar BE, recepção, triagem, médico, prescrição, farmácia, enfermagem e desfechos sem pacientes fictícios (estado reativo na sessão; não persiste ao recarregar e não compartilha entre dispositivos).
 - [x] Adicionar remoção administrativa de acessos, protegendo administrador principal e histórico.

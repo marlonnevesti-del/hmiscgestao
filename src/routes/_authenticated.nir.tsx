@@ -1,5 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { HotelariaBedMap } from "@/components/HotelariaBedMap";
+import { hotelariaBedsQuery } from "@/lib/hotelaria-beds-query";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { NoPermission } from "@/components/AppShell";
@@ -8,6 +11,7 @@ import { authorizeAdmission, rejectAdmission, useStore } from "@/lib/hospital-st
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/nir")({
+  loader: ({ context }) => context.queryClient.ensureQueryData(hotelariaBedsQuery),
   head: () => ({ meta: [
     { title: "NIR – Regulação de Leitos – HMI Gestão" },
     { name: "description", content: "Fila de solicitações de internação e mapa de leitos do Núcleo Interno de Regulação." },
@@ -23,6 +27,7 @@ const ADM_WARDS = ["AC", "UTIN", "ENFP"];
 const RISK_ORDER = ["vermelho", "laranja", "amarelo", "verde", "azul"];
 
 function NirPage() {
+  const { data: hotelaria } = useSuspenseQuery(hotelariaBedsQuery);
   const profile = useStore((s) => s.profile);
   const encounters = useStore((s) => s.encounters);
   const patients = useStore((s) => s.patients);
@@ -30,7 +35,8 @@ function NirPage() {
   const [notes, setNotes] = useState<Record<string, string>>({});
   if (!can(profile, "nir")) return <NoPermission action="acessar o NIR" />;
   const occupied = (id: string) => patients.find((p) => p.bed === id);
-  const free = BASE_BEDS.filter((b) => ADM_WARDS.includes(b.ward) && b.status === "livre" && !occupied(b.id));
+  const external = hotelaria.status !== "not_configured";
+  const free = external ? [] : BASE_BEDS.filter((b) => ADM_WARDS.includes(b.ward) && b.status === "livre" && !occupied(b.id));
   const total = BASE_BEDS.filter((b) => ADM_WARDS.includes(b.ward)).length;
   const pending = encounters.filter((e) => e.admission?.status === "pendente")
     .sort((a, b) => RISK_ORDER.indexOf(a.triage?.risk ?? "azul") - RISK_ORDER.indexOf(b.triage?.risk ?? "azul") || Date.parse(a.admission!.requestedAt) - Date.parse(b.admission!.requestedAt));
@@ -41,7 +47,7 @@ function NirPage() {
   return <div className="space-y-6">
     <header className="flex flex-wrap items-end justify-between gap-3">
       <div><h1 className="text-xl font-semibold">NIR – Núcleo Interno de Regulação</h1><p className="text-sm text-muted-foreground">Solicitações de internação dos médicos e liberação de leitos.</p></div>
-      <div className="flex gap-4 text-sm"><span><b>{pending.length}</b> aguardando</span><span><b>{free.length}</b> leitos livres</span><span>Ocupação <b>{Math.round(((total - free.length) / total) * 100)}%</b></span></div>
+      <div className="flex flex-wrap gap-4 text-sm"><span><b>{pending.length}</b> aguardando</span>{!external && <><span><b>{free.length}</b> leitos locais livres</span><span>Ocupação <b>{Math.round(((total - free.length) / total) * 100)}%</b></span></>}</div>
     </header>
 
     <section className="space-y-3">
@@ -64,11 +70,12 @@ function NirPage() {
           </div>
           <p className="text-sm"><b>CID-10:</b> {a.cid || "—"} · <b>Justificativa:</b> {a.justification}</p>
           <div className="flex flex-wrap items-center gap-2">
-            <select aria-label="Leito" className="h-9 rounded-md border bg-background px-2 text-sm" value={beds[e.id] ?? ""} onChange={(ev) => setBeds((x) => ({ ...x, [e.id]: ev.target.value }))}>
+            <select disabled={external} aria-label="Leito" className="h-9 rounded-md border bg-background px-2 text-sm" value={beds[e.id] ?? ""} onChange={(ev) => setBeds((x) => ({ ...x, [e.id]: ev.target.value }))}>
               <option value="">Selecionar leito livre</option>
               {options.map((b) => <option key={b.id} value={b.id}>{b.id} · {WARDS.find((w) => w.id === b.ward)?.name}</option>)}
             </select>
-            <Button disabled={!beds[e.id]} onClick={() => run(() => authorizeAdmission(e.id, beds[e.id] ?? ""), "Internação autorizada e leito reservado")}>Autorizar internação</Button>
+            <Button disabled={external || !beds[e.id]} onClick={() => run(() => authorizeAdmission(e.id, beds[e.id] ?? ""), "Internação autorizada e leito reservado")}>Autorizar internação</Button>
+            {external && <span className="text-sm text-destructive">Reserva integrada aguardando ativação na Hotelaria.</span>}
             <input aria-label="Motivo da devolução" placeholder="Motivo da devolução ao médico" className="h-9 min-w-52 flex-1 rounded-md border bg-background px-2 text-sm" value={notes[e.id] ?? ""} onChange={(ev) => setNotes((x) => ({ ...x, [e.id]: ev.target.value }))} />
             <Button variant="outline" onClick={() => run(() => rejectAdmission(e.id, notes[e.id] ?? ""), "Solicitação devolvida ao médico")}>Devolver</Button>
           </div>
@@ -76,7 +83,8 @@ function NirPage() {
       })}
     </section>
 
-    <section className="space-y-3">
+    <HotelariaBedMap data={hotelaria} />
+    {!external && <section className="space-y-3">
       <h2 className="font-semibold">Mapa de leitos</h2>
       {WARDS.filter((w) => ADM_WARDS.includes(w.id)).map((w) => <div key={w.id}>
         <h3 className="mb-2 text-sm font-medium">{w.name}</h3>
@@ -85,7 +93,7 @@ function NirPage() {
             return <div key={b.id} className={cn("rounded-md border p-2 text-xs", busy ? "bg-muted" : "border-primary")}><div className="font-semibold">{b.id}</div><div className="truncate text-muted-foreground">{p ? p.name : b.status === "livre" ? "Livre" : b.status}</div></div>; })}
         </div>
       </div>)}
-    </section>
+    </section>}
 
     {!!recent.length && <section className="space-y-2"><h2 className="font-semibold">Últimas decisões</h2><ul className="space-y-1 text-sm">{recent.map((e) => <li key={e.id}>{patients.find((x) => x.id === e.patientId)?.name} · {e.admission!.status === "autorizada" ? `autorizada – leito ${e.admission!.bed}` : `devolvida – ${e.admission!.note}`} · {e.admission!.decidedBy}</li>)}</ul></section>}
   </div>;
