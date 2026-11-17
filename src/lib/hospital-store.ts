@@ -279,6 +279,31 @@ export function recordMedication(id: string, rxId: string, time: string, status:
   const allDone = p.prescriptions.filter((r) => r.times?.length).every((r) => r.times?.every((t) => admins[`${p.id}|${r.id}|${t}`]?.status === 'checado'));
   commitEncounter(allDone && e.status_fluxo === 'AGUARDANDO_MEDICACAO' ? transition(e, 'EM_OBSERVACAO_REAVALIACAO', professionalName(state.profile), 'Medicação concluída - pronto para reavaliação', at) : e, { admins });
 }
+export function requestAdmission(id: string, req: { ward: string; character: 'Urgência' | 'Eletiva'; cid: string; justification: string; isolation: boolean; oxygen: boolean }) {
+  requireAction('prescrever'); const { e } = getEncounter(id);
+  if (!['EM_ATENDIMENTO_MEDICO', 'EM_OBSERVACAO_REAVALIACAO'].includes(e.status_fluxo)) throw new Error('Solicitação disponível durante a avaliação médica.');
+  if (e.admission?.status === 'pendente') throw new Error('Já existe uma solicitação aguardando o NIR.');
+  if (!req.ward) throw new Error('Informe o perfil de leito.');
+  if (!req.justification.trim()) throw new Error('Informe a justificativa clínica.');
+  const at = new Date().toISOString(); const by = professionalName(state.profile);
+  commitEncounter({ ...e, admission: { ...req, cid: req.cid || e.medical?.cid || '', status: 'pendente', requestedAt: at, requestedBy: by }, history: [...e.history, { status: e.status_fluxo, at, by, note: 'Internação solicitada ao NIR' }] });
+}
+export function authorizeAdmission(id: string, bedId: string) {
+  requireAction('nir'); const { e, p } = getEncounter(id);
+  if (e.admission?.status !== 'pendente') throw new Error('Solicitação não está pendente.');
+  const bed = BASE_BEDS.find((b) => b.id === bedId && ['AC', 'UTIN', 'ENFP'].includes(b.ward));
+  if (!bed || bed.status !== 'livre' || state.patients.some((x) => x.bed === bed.id)) throw new Error('Selecione um leito livre.');
+  const at = new Date().toISOString(); const by = professionalName(state.profile);
+  const moved = transition(e, 'ENCAMINHADO_INTERNACAO', by, `NIR: leito ${bed.id}`, at);
+  commitEncounter({ ...moved, admission: { ...e.admission, status: 'autorizada', bed: bed.id, decidedAt: at, decidedBy: by } }, { patients: state.patients.map((x) => x.id === p.id ? { ...x, ward: bed.ward, bed: bed.id } : x) });
+}
+export function rejectAdmission(id: string, note: string) {
+  requireAction('nir'); const { e } = getEncounter(id);
+  if (e.admission?.status !== 'pendente') throw new Error('Solicitação não está pendente.');
+  if (!note.trim()) throw new Error('Informe o motivo da devolução.');
+  const at = new Date().toISOString(); const by = professionalName(state.profile);
+  commitEncounter({ ...e, admission: { ...e.admission, status: 'recusada', note, decidedAt: at, decidedBy: by }, history: [...e.history, { status: e.status_fluxo, at, by, note: `NIR devolveu: ${note}` }] });
+}
 export function finishEncounter(id: string, outcome: 'internacao' | 'co' | 'exames' | 'alta', details: { bed?: string; summary: string; recipe: string; exam: string }) {
   requireAction('prescrever'); const { e, p } = getEncounter(id);
   if (!['EM_ATENDIMENTO_MEDICO', 'EM_OBSERVACAO_REAVALIACAO', 'ENCAMINHADO_INTERNACAO', 'ENCAMINHADO_CO'].includes(e.status_fluxo)) throw new Error('Desfecho disponível após avaliação médica.');

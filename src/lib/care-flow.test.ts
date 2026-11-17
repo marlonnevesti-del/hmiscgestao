@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { BASE_BEDS, type Patient } from './hospital-data';
 import { transition, sortMedicalQueue, type Encounter, type Triage } from './care-flow';
-import { addStock, adjustStock, callPatient, completeTriage, createStockMedication, dispenseKit, finishEncounter, getState, openEncounter, recordMedication, saveMedical, setState, signPrescription, updatePatient, validatePrescription } from './hospital-store';
+import { addStock, adjustStock, callPatient, completeTriage, createStockMedication, dispenseKit, finishEncounter, requestAdmission, authorizeAdmission, rejectAdmission, getState, openEncounter, recordMedication, saveMedical, setState, signPrescription, updatePatient, validatePrescription } from './hospital-store';
 const patient=():Patient=>({id:'care-p',prontuario:'PR-1',name:'Teste clínico',cpf:'',type:'pediatria',age:'2 anos',weight:0,allergies:[],risks:[],ward:'PSP',bed:'',insurance:'SUS',authorized:true,diagnosis:'',admission:'',days:1,evolutions:[],vitals:[],prescriptions:[]});
 const triage=():Triage=>({risk:'amarelo',weight:12,vital:{time:'14:08',pas:90,pad:60,fc:100,fr:20,tax:37,sat:98,dor:2,ingesta:0,diurese:0,vomitos:0},complaint:'Febre',allergies:['Dipirona'],ig:'',dum:'',bcf:'',contractions:'',fluid:'',bleeding:'',height:'85',head:'',guardian:'Responsável'});
 let id='';
@@ -30,4 +30,23 @@ describe('esteira do BE',()=>{
   it('recepção não classifica risco',()=>{setState(()=>({profile:'Recepção'}));const e=openEncounter(patient(),'PSP','Pediatria','Febre');expect(()=>completeTriage(e.id,triage())).toThrow('perfil');});
   it('reclassifica quem já aguarda médico sem duplicar o BE',()=>{const e=openEncounter(patient(),'PSP','Pediatria','Febre');completeTriage(e.id,triage());completeTriage(e.id,{...triage(),risk:'vermelho',maxWait:0});expect(getState().encounters).toHaveLength(1);expect(getState().encounters[0]?.triage?.risk).toBe('vermelho');expect(getState().encounters[0]?.history.at(-1)?.note).toContain('Reclassificação');});
   it('cadastra medicamento com apresentação e estoque mínimo',()=>{createStockMedication({name:'Ondansetrona 8 mg/4 mL',presentation:'Ampola',unit:'amp',quantity:15,minimum:20});const item=getState().stock[0];expect(item).toMatchObject({name:'Ondansetrona 8 mg/4 mL',presentation:'Ampola',unit:'amp',quantity:15,minimum:20});adjustStock(item!.id,5);expect(getState().stock[0]?.quantity).toBe(20);expect(()=>adjustStock(item!.id,-21)).toThrow('negativo');});
+});describe('NIR', () => {
+  it('solicitação médica vai ao NIR sem ocupar leito e NIR autoriza', () => {
+    medical();
+    requestAdmission(id, { ward: 'ENFP', character: 'Urgência', cid: '', justification: 'Desidratação', isolation: true, oxygen: false });
+    expect(getState().encounters[0]?.admission?.status).toBe('pendente');
+    expect(getState().patients[0]?.bed).toBe('');
+    expect(() => requestAdmission(id, { ward: 'ENFP', character: 'Urgência', cid: '', justification: 'x', isolation: false, oxygen: false })).toThrow();
+    authorizeAdmission(id, 'ENFP-01');
+    expect(getState().patients[0]?.bed).toBe('ENFP-01');
+    expect(getState().encounters[0]?.status_fluxo).toBe('ENCAMINHADO_INTERNACAO');
+    expect(getState().encounters[0]?.admission?.status).toBe('autorizada');
+  });
+  it('NIR devolve com motivo obrigatório', () => {
+    medical();
+    requestAdmission(id, { ward: 'AC', character: 'Eletiva', cid: '', justification: 'Obs', isolation: false, oxygen: false });
+    expect(() => rejectAdmission(id, '')).toThrow();
+    rejectAdmission(id, 'Sem critério');
+    expect(getState().encounters[0]?.admission?.status).toBe('recusada');
+  });
 });

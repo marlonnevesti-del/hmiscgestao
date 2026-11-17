@@ -21,6 +21,7 @@ const GROUPS = [
     { to: "/painel-tv", label: "Painel de Chamadas (TV)", icon: Tv },
   ] },
   { label: "Apoio", items: [
+    { to: "/nir", label: "NIR – Regulação de Leitos", icon: BedDouble },
     { to: "/centro-cirurgico", label: "Centro Cirúrgico", icon: Scissors },
     { to: "/farmacia", label: "Farmácia", icon: Pill },
     { to: "/enfermagem", label: "Posto de Enfermagem", icon: HeartPulse },

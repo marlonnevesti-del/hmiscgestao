@@ -10,11 +10,15 @@ export interface Triage {
   risk: Manchester; weight: number; vital: Vital; complaint: string; allergies: string[]; ig: string; dum: string; bcf: string; contractions: string; fluid: string; bleeding: string; height: string; head: string; guardian: string;
   flowchart?: string; descriptors?: string[]; maxWait?: number;
 }
+export interface AdmissionRequest {
+  status: 'pendente' | 'autorizada' | 'recusada'; ward: string; character: 'Urgência' | 'Eletiva'; cid: string; justification: string;
+  isolation: boolean; oxygen: boolean; requestedAt: string; requestedBy: string; decidedAt?: string; decidedBy?: string; bed?: string; note?: string;
+}
 export interface Encounter {
   id: string; number: string; patientId: string; status_fluxo: FlowStatus; openedAt: string; type: string; specialty: string; complaint: string;
   history: { status: FlowStatus; at: string; by: string; note: string }[];
   triage?: Triage; medical?: { anamnesis: string; exam: string; cid: string; diagnosis: string };
-  signedAt?: string; signedBy?: string; intervention?: string; dispensedAt?: string; dispensedBy?: string; requisition?: string; examPending?: string; discharge?: { summary: string; recipe: string; at: string; by: string };
+  signedAt?: string; signedBy?: string; intervention?: string; dispensedAt?: string; dispensedBy?: string; requisition?: string; examPending?: string; discharge?: { summary: string; recipe: string; at: string; by: string }; admission?: AdmissionRequest;
 }
 const NEXT: Record<FlowStatus, FlowStatus[]> = {
   AGUARDANDO_TRIAGEM: ['AGUARDANDO_MEDICO'],

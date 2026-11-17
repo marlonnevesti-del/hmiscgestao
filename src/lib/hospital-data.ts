@@ -12,12 +12,12 @@ export const WARDS: { id: Ward; name: string }[] = [
 
 export type Profile = "Médico" | "Enfermeiro" | "Técnico de enfermagem" | "Fisioterapeuta" | "Administrativo" | "Farmacêutico" | "Recepção" | "Administrador" | "Outro";
 export const PROFILES: Profile[] = ["Médico", "Enfermeiro", "Farmacêutico", "Recepção"];
-export type Action = "recepcao" | "prescrever" | "evoluir" | "parto" | "checar" | "triagem" | "farmacia" | "faturar" | "cirurgia" | "almoxarifado";
+export type Action = "recepcao" | "prescrever" | "evoluir" | "parto" | "checar" | "triagem" | "farmacia" | "faturar" | "cirurgia" | "almoxarifado" | "nir";
 const PERMS: Record<Profile, Action[]> = {
-  Administrador: ["recepcao", "prescrever", "evoluir", "parto", "checar", "triagem", "farmacia", "faturar", "cirurgia", "almoxarifado"],
+  Administrador: ["recepcao", "prescrever", "evoluir", "parto", "checar", "triagem", "farmacia", "faturar", "cirurgia", "almoxarifado", "nir"],
   Outro: [],
-  Médico: ["prescrever", "evoluir", "parto", "triagem", "cirurgia"],
-  Enfermeiro: ["evoluir", "checar", "triagem", "cirurgia"],
+  Médico: ["prescrever", "evoluir", "parto", "triagem", "cirurgia", "nir"],
+  Enfermeiro: ["evoluir", "checar", "triagem", "cirurgia", "nir"],
   "Técnico de enfermagem": ["checar"],
   Fisioterapeuta: ["evoluir"],
   Administrativo: ["faturar", "almoxarifado"],
@@ -29,7 +29,7 @@ export const ACCESS_AREAS = [
   { id: "recepcao", label: "Recepção & Cadastro" }, { id: "acolhimento", label: "Acolhimento / Triagem" },
   { id: "atendimento", label: "Consultório Médico" }, { id: "pacientes", label: "Pacientes / PEP" },
   { id: "enfermagem", label: "Posto de Enfermagem" }, { id: "centro-cirurgico", label: "Centro Cirúrgico" },
-  { id: "farmacia", label: "Farmácia" }, { id: "almoxarifado", label: "Almoxarifado" }, { id: "faturamento", label: "Faturamento TISS" },
+  { id: "farmacia", label: "Farmácia" }, { id: "almoxarifado", label: "Almoxarifado" }, { id: "faturamento", label: "Faturamento TISS" }, { id: "nir", label: "NIR – Regulação de Leitos" },
 ] as const;
 export const defaultAreas = (profile: Profile): string[] => ACCESS_AREAS.map((a) => a.id).filter((id) => canAccessPage(profile, `/${id}`));
 /** Areas chosen by the admin override the function defaults; null means "use the function". */
@@ -44,6 +44,7 @@ export function canAccessPage(profile: Profile, path: string, areas?: readonly s
   if (path === "/centro-cirurgico") return can(profile, "cirurgia");
   if (path === "/farmacia") return can(profile, "farmacia");
   if (path === "/almoxarifado") return can(profile, "almoxarifado");
+  if (path === "/nir") return can(profile, "nir");
   if (path === "/enfermagem") return can(profile, "checar");
   if (path === "/faturamento" || path === "/faturamento-sus") return can(profile, "faturar");
   return false;

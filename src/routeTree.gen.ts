@@ -24,6 +24,7 @@ import { Route as AuthenticatedEnfermagemRouteImport } from './routes/_authentic
 import { Route as AuthenticatedFarmaciaRouteImport } from './routes/_authenticated.farmacia'
 import { Route as AuthenticatedFaturamentoRouteImport } from './routes/_authenticated.faturamento'
 import { Route as AuthenticatedFaturamentoSusRouteImport } from './routes/_authenticated.faturamento-sus'
+import { Route as AuthenticatedNirRouteImport } from './routes/_authenticated.nir'
 import { Route as AuthenticatedPainelTvRouteImport } from './routes/_authenticated.painel-tv'
 import { Route as AuthenticatedRecepcaoRouteImport } from './routes/_authenticated.recepcao'
 import { Route as AuthenticatedSolicitacaoAlmoxarifadoRouteImport } from './routes/_authenticated.solicitacao-almoxarifado'
@@ -111,6 +112,11 @@ const AuthenticatedFaturamentoSusRoute =
     path: '/faturamento-sus',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedNirRoute = AuthenticatedNirRouteImport.update({
+  id: '/nir',
+  path: '/nir',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedPainelTvRoute = AuthenticatedPainelTvRouteImport.update({
   id: '/painel-tv',
   path: '/painel-tv',
@@ -155,6 +161,7 @@ export interface FileRoutesByFullPath {
   '/farmacia': typeof AuthenticatedFarmaciaRoute
   '/faturamento': typeof AuthenticatedFaturamentoRoute
   '/faturamento-sus': typeof AuthenticatedFaturamentoSusRoute
+  '/nir': typeof AuthenticatedNirRoute
   '/painel-tv': typeof AuthenticatedPainelTvRoute
   '/recepcao': typeof AuthenticatedRecepcaoRoute
   '/solicitacao-almoxarifado': typeof AuthenticatedSolicitacaoAlmoxarifadoRoute
@@ -175,6 +182,7 @@ export interface FileRoutesByTo {
   '/farmacia': typeof AuthenticatedFarmaciaRoute
   '/faturamento': typeof AuthenticatedFaturamentoRoute
   '/faturamento-sus': typeof AuthenticatedFaturamentoSusRoute
+  '/nir': typeof AuthenticatedNirRoute
   '/painel-tv': typeof AuthenticatedPainelTvRoute
   '/recepcao': typeof AuthenticatedRecepcaoRoute
   '/solicitacao-almoxarifado': typeof AuthenticatedSolicitacaoAlmoxarifadoRoute
@@ -198,6 +206,7 @@ export interface FileRoutesById {
   '/_authenticated/farmacia': typeof AuthenticatedFarmaciaRoute
   '/_authenticated/faturamento': typeof AuthenticatedFaturamentoRoute
   '/_authenticated/faturamento-sus': typeof AuthenticatedFaturamentoSusRoute
+  '/_authenticated/nir': typeof AuthenticatedNirRoute
   '/_authenticated/painel-tv': typeof AuthenticatedPainelTvRoute
   '/_authenticated/recepcao': typeof AuthenticatedRecepcaoRoute
   '/_authenticated/solicitacao-almoxarifado': typeof AuthenticatedSolicitacaoAlmoxarifadoRoute
@@ -222,6 +231,7 @@ export interface FileRouteTypes {
     | '/farmacia'
     | '/faturamento'
     | '/faturamento-sus'
+    | '/nir'
     | '/painel-tv'
     | '/recepcao'
     | '/solicitacao-almoxarifado'
@@ -242,6 +252,7 @@ export interface FileRouteTypes {
     | '/farmacia'
     | '/faturamento'
     | '/faturamento-sus'
+    | '/nir'
     | '/painel-tv'
     | '/recepcao'
     | '/solicitacao-almoxarifado'
@@ -264,6 +275,7 @@ export interface FileRouteTypes {
     | '/_authenticated/farmacia'
     | '/_authenticated/faturamento'
     | '/_authenticated/faturamento-sus'
+    | '/_authenticated/nir'
     | '/_authenticated/painel-tv'
     | '/_authenticated/recepcao'
     | '/_authenticated/solicitacao-almoxarifado'
@@ -387,6 +399,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedFaturamentoSusRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/nir': {
+      id: '/_authenticated/nir'
+      path: '/nir'
+      fullPath: '/nir'
+      preLoaderRoute: typeof AuthenticatedNirRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/painel-tv': {
       id: '/_authenticated/painel-tv'
       path: '/painel-tv'
@@ -435,6 +454,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedFarmaciaRoute: typeof AuthenticatedFarmaciaRoute
   AuthenticatedFaturamentoRoute: typeof AuthenticatedFaturamentoRoute
   AuthenticatedFaturamentoSusRoute: typeof AuthenticatedFaturamentoSusRoute
+  AuthenticatedNirRoute: typeof AuthenticatedNirRoute
   AuthenticatedPainelTvRoute: typeof AuthenticatedPainelTvRoute
   AuthenticatedRecepcaoRoute: typeof AuthenticatedRecepcaoRoute
   AuthenticatedSolicitacaoAlmoxarifadoRoute: typeof AuthenticatedSolicitacaoAlmoxarifadoRoute
@@ -453,6 +473,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedFarmaciaRoute: AuthenticatedFarmaciaRoute,
   AuthenticatedFaturamentoRoute: AuthenticatedFaturamentoRoute,
   AuthenticatedFaturamentoSusRoute: AuthenticatedFaturamentoSusRoute,
+  AuthenticatedNirRoute: AuthenticatedNirRoute,
   AuthenticatedPainelTvRoute: AuthenticatedPainelTvRoute,
   AuthenticatedRecepcaoRoute: AuthenticatedRecepcaoRoute,
   AuthenticatedSolicitacaoAlmoxarifadoRoute:
