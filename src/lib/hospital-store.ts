@@ -4,7 +4,7 @@ import { linkCode } from "./barcode";
 import { PATIENTS, QUEUE, SURGERIES, type Admin, type Newborn, type Patient, type Profile, type QueueItem, type Surgery } from "./hospital-data";
 
 import { transition, validateTriage, type Encounter, type Triage, type FlowStatus } from "./care-flow";
-import { BASE_BEDS, can } from "./hospital-data";
+import { BASE_BEDS, can, canAct } from "./hospital-data";
 import { DEFAULT_CID_AREAS, DEFAULT_CID_GROUPS, addArea, addGroup, type CidArea, type CidGroup } from "./cid-access";
 import { DEFAULT_ROOMS, addRoomName, pushCall, removeRoomName, type PanelCall } from "./panel-calls";
 import { catalogToStock, findStockMedication, medicationKey, type StockMedication } from "./pharmacy-stock";
@@ -33,7 +33,7 @@ export const professionalName = (_p: Profile) => state.employeeName || "Colabora
 export const nowHM = () => new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
 
 function requireAction(action: Parameters<typeof can>[1]) {
-  if (!can(state.profile, action)) throw new Error('Seu perfil não permite esta ação.');
+  if (!canAct(state.profile, action, state.accessAreas)) throw new Error('Seu perfil não permite esta ação.');
 }
 export const encounterFor = (patientId: string) => state.encounters.slice().reverse().find((e) => e.patientId === patientId);
 function getEncounter(id: string) {

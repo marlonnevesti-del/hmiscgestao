@@ -12,7 +12,7 @@ import { PatientRegistrationFields } from "./PatientRegistrationFields";
 import { registrationFor, registrationPatch } from "@/lib/patient-registration-mapping";
 import { newbornBirthIssue, registrationIssues, registrationSchema, unknownPatientName, type RegistrationMode } from "@/lib/patient-registration";
 import { ATTENDANCE_TYPES, type Encounter } from "@/lib/care-flow";
-import { can, type Patient } from "@/lib/hospital-data";
+import { can, canAct, type Patient } from "@/lib/hospital-data";
 import { deleteEncounter, openEncounter, professionalName, savePatientRegistration, useStore } from "@/lib/hospital-store";
 import { SPECIAL_CONDITIONS } from "@/lib/special-conditions";
 import { GROUP_LABELS, type CareUnit } from "@/lib/ambulatorio";
@@ -28,7 +28,7 @@ export function CareReception({ unit }: { unit?: CareUnit } = {}) {
   const ambSpecialties = useStore((s) => s.ambSpecialties);
   const patients = useStore((s) => s.patients);
   const encounters = useStore((s) => s.encounters);
-  const profile = useStore((s) => s.profile);
+  const profile = useStore((s) => s.profile); const accessAreas = useStore((s) => s.accessAreas);
   const [search, setSearch] = useState("");
   const [existing, setExisting] = useState("");
   const [created, setCreated] = useState<Encounter | null>(null);
@@ -99,7 +99,7 @@ export function CareReception({ unit }: { unit?: CareUnit } = {}) {
 
   return <div className="space-y-4">
     {!unit && <h1 className="text-xl font-semibold">Recepção · Boletim de Atendimento</h1>}
-    {!can(profile, "recepcao") ? <NoPermission action="abrir atendimento" /> : <>
+    {!canAct(profile, "recepcao", accessAreas) ? <NoPermission action="abrir atendimento" /> : <>
       <div className="max-w-xl space-y-2">
         <Input aria-label="Buscar paciente cadastrado" placeholder="Buscar paciente por nome, CPF ou prontuário" value={search} onChange={(event) => setSearch(event.target.value)} />
         {search.length > 1 && patients.filter((patient) => [patient.name, patient.registration?.civilName ?? "", patient.registration?.socialName ?? "", patient.cpf, patient.prontuario, patient.registration?.cns ?? ""].some((value) => value.toLowerCase().includes(search.toLowerCase()))).slice(0, 6).map((patient) => <Button variant="outline" className="h-auto max-w-full whitespace-normal" key={patient.id} onClick={() => choose(patient)}>{patient.name} · {patient.prontuario}</Button>)}

@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Letterhead } from "./DischargePrint";
 import { printProcedure } from "./ProcedurePrint";
 import { NoPermission } from "./AppShell";
-import { can } from "@/lib/hospital-data";
+import { can, canAct } from "@/lib/hospital-data";
 import { GROUP_LABELS, type SadtReport, type SpecialtyGroup } from "@/lib/ambulatorio";
 import type { Encounter } from "@/lib/care-flow";
 import { checkInAppointment, createAmbSpecialty, professionalName, saveSadtReport, scheduleAppointment, setAppointmentStatus, toggleAmbSpecialty, useStore } from "@/lib/hospital-store";
@@ -19,9 +19,9 @@ const sel = "h-9 rounded-md border bg-background px-2 text-sm";
 const STATUS: Record<string, string> = { agendado: "Agendado", chegou: "Chegou", faltou: "Faltou", cancelado: "Cancelado" };
 
 export function SpecialtyManager() {
-  const list = useStore((s) => s.ambSpecialties); const profile = useStore((s) => s.profile);
+  const list = useStore((s) => s.ambSpecialties); const profile = useStore((s) => s.profile); const accessAreas = useStore((s) => s.accessAreas);
   const [name, setName] = useState(""); const [group, setGroup] = useState<SpecialtyGroup>("medica");
-  const editable = can(profile, "recepcao");
+  const editable = canAct(profile, "recepcao", accessAreas);
   return <div className="space-y-4">
     {editable && <form className="flex flex-wrap items-end gap-2" onSubmit={(e) => { e.preventDefault(); act(() => { createAmbSpecialty(name, group); setName(""); }, "Especialidade cadastrada"); }}>
       <label className="grid gap-1 text-xs">Nova especialidade<Input value={name} onChange={(e) => setName(e.target.value)} className="w-72" /></label>
@@ -41,12 +41,12 @@ export function SpecialtyManager() {
 }
 
 export function AmbulatoryAgenda() {
-  const list = useStore((s) => s.appointments); const specs = useStore((s) => s.ambSpecialties); const patients = useStore((s) => s.patients); const profile = useStore((s) => s.profile);
+  const list = useStore((s) => s.appointments); const specs = useStore((s) => s.ambSpecialties); const patients = useStore((s) => s.patients); const profile = useStore((s) => s.profile); const accessAreas = useStore((s) => s.accessAreas);
   const [date, setDate] = useState(today()); const [filter, setFilter] = useState("");
   const [f, setF] = useState({ time: "", specialtyId: "", professional: "", patientId: "", note: "" }); const [q, setQ] = useState("");
   const found = q.length > 1 ? patients.filter((p) => [p.name, p.cpf, p.prontuario, p.registration?.cns ?? ""].some((v) => v.toLowerCase().includes(q.toLowerCase()))).slice(0, 6) : [];
   const day = useMemo(() => list.filter((a) => a.date === date && (!filter || a.specialtyId === filter)).sort((a, b) => a.time.localeCompare(b.time)), [list, date, filter]);
-  const editable = can(profile, "recepcao");
+  const editable = canAct(profile, "recepcao", accessAreas);
   const chosen = patients.find((p) => p.id === f.patientId);
   return <div className="space-y-4">
     <div className="flex flex-wrap items-end gap-2">
@@ -75,7 +75,7 @@ export function AmbulatoryAgenda() {
 }
 
 export function SadtPanel() {
-  const encounters = useStore((s) => s.encounters); const patients = useStore((s) => s.patients); const specs = useStore((s) => s.ambSpecialties); const profile = useStore((s) => s.profile);
+  const encounters = useStore((s) => s.encounters); const patients = useStore((s) => s.patients); const specs = useStore((s) => s.ambSpecialties); const profile = useStore((s) => s.profile); const accessAreas = useStore((s) => s.accessAreas);
   const sadt = new Set(specs.filter((s) => s.group === "sadt").map((s) => s.name));
   const list = encounters.filter((e) => e.type === "Ambulatório" && sadt.has(e.specialty));
   const pending = list.filter((e) => e.status_fluxo !== "ALTA_HOSPITALAR"); const done = list.filter((e) => e.sadtReport).slice(-20).reverse();

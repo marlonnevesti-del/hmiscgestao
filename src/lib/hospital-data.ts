@@ -25,6 +25,13 @@ const PERMS: Record<Profile, Action[]> = {
   Recepção: ["recepcao"],
 };
 export const can = (p: Profile, a: Action) => PERMS[p].includes(a);
+/** Areas granted by the admin that also unlock the matching action, regardless of job function. */
+const ACTION_AREAS: Partial<Record<Action, string>> = { recepcao: "recepcao", triagem: "acolhimento", prescrever: "atendimento", farmacia: "farmacia", almoxarifado: "almoxarifado", checar: "enfermagem", faturar: "faturamento", cirurgia: "centro-cirurgico", nir: "nir" };
+export function canAct(p: Profile, a: Action, areas?: readonly string[] | null) {
+  if (can(p, a)) return true;
+  const id = ACTION_AREAS[a]; if (!id || !areas) return false;
+  return areas.some((x) => x === id || x.endsWith(`:${id}`));
+}
 export const ACCESS_AREAS = [
   { id: "recepcao", label: "Recepção & Cadastro" }, { id: "acolhimento", label: "Acolhimento / Triagem" },
   { id: "atendimento", label: "Consultório Médico" }, { id: "pacientes", label: "Pacientes / PEP" },
