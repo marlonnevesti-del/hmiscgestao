@@ -228,6 +228,21 @@ export function createStockMedication(input: Omit<StockMedication, 'id'>) {
   const medication: StockMedication = { id: crypto.randomUUID(), name, presentation: input.presentation.trim(), unit: input.unit.trim() || 'un', quantity: input.quantity, minimum: input.minimum };
   setState((s) => ({ stock: [...s.stock, medication].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')) }));
 }
+/** Cadastra um novo produto (sem saldo) no depósito indicado, usado na entrada de NF. */
+export function createDepotProduct(depot: Depot, input: { name: string; code?: string; unit?: string; presentation?: string; minimum?: number }): string {
+  requireAction(depotAction(depot));
+  const name = input.name.trim().toLocaleUpperCase('pt-BR');
+  if (!name) throw new Error('Informe o nome do produto.');
+  const list = state[depotKey(depot)];
+  if (list.some((i) => i.name.toLocaleLowerCase('pt-BR') === name.toLocaleLowerCase('pt-BR'))) throw new Error('Este produto já está cadastrado.');
+  const code = input.code?.trim();
+  if (code && list.some((i) => i.code === code)) throw new Error('Já existe produto com este código.');
+  const minimum = input.minimum ?? 0;
+  if (!Number.isInteger(minimum) || minimum < 0) throw new Error('Estoque mínimo inválido.');
+  const item: StockMedication = { id: crypto.randomUUID(), name, presentation: input.presentation?.trim() ?? '', unit: input.unit?.trim() || 'UN', quantity: 0, minimum, ...(code ? { code } : {}), lots: [] };
+  setState(() => ({ [depotKey(depot)]: [...list, item].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')) }) as Partial<State>);
+  return item.id;
+}
 export function adjustStock(id: string, delta: number, lot = '') {
   requireAction('farmacia');
   if (!Number.isInteger(delta) || delta === 0) throw new Error('Informe uma entrada ou saída inteira diferente de zero.');

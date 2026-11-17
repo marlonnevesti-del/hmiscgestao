@@ -1,9 +1,10 @@
+import type React from "react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { can } from "@/lib/hospital-data";
-import { answerSupplyRequest, createSupplyRequest, receiveStock, registerLoan, settleLoan, type EntryLine, registerBreakage, returnStock, transferStock, useStore } from "@/lib/hospital-store";
+import { answerSupplyRequest, createDepotProduct, createSupplyRequest, receiveStock, registerLoan, settleLoan, type EntryLine, registerBreakage, returnStock, transferStock, useStore } from "@/lib/hospital-store";
 import { DEPOT_LABEL, loanReturnedQty, type Depot, type MovementKind } from "@/lib/supply-flow";
 import { fmtExpiry, lotsByExpiry, type StockMedication } from "@/lib/pharmacy-stock";
 import { cn } from "@/lib/utils";
@@ -91,21 +92,38 @@ export function NursingRequestForm() {
 
 const NEW = "__novo__";
 /** Linha de entrada: escolhe lote existente (por validade) ou cadastra lote novo com validade. */
-function EntryLinePicker({ items, onAdd, allowNew, label }: { items: StockMedication[]; onAdd: (l: EntryLine) => void; allowNew: boolean; label: string }) {
+const F = ({ label, children, className }: { label: string; children: React.ReactNode; className?: string }) => <label className={cn("grid gap-1 text-xs font-medium text-muted-foreground", className)}>{label}{children}</label>;
+function EntryLinePicker({ items, onAdd, allowNew, label, depot }: { items: StockMedication[]; onAdd: (l: EntryLine) => void; allowNew: boolean; label: string; depot?: Depot }) {
   const [q, setQ] = useState(""); const [id, setId] = useState(""); const [lot, setLot] = useState(""); const [nl, setNl] = useState({ lot: "", expiry: "" }); const [qty, setQty] = useState("");
+  const [np, setNp] = useState<null | { name: string; code: string; unit: string; minimum: string }>(null);
   const t = q.trim().toLocaleLowerCase("pt-BR");
   const found = (t ? items.filter((i) => i.name.toLocaleLowerCase("pt-BR").includes(t) || i.code?.includes(t)) : items).slice(0, 80);
   const item = items.find((i) => i.id === id);
   const lots = (item?.lots ?? []).filter((l) => allowNew || l.quantity > 0).slice().sort((a, b) => (a.expiry || "9").localeCompare(b.expiry || "9"));
-  const isNew = lot === NEW || (allowNew && !lots.length);
+  const isNew = lot === NEW || (allowNew && !!item && !lots.length);
   const add = () => { const n = Number(qty); const ln = isNew ? nl.lot.trim() : lot; const ex = isNew ? nl.expiry : lots.find((l) => l.lot === lot)?.expiry ?? ""; if (!id || !ln || !(n > 0)) { toast.error("Escolha produto, lote e quantidade."); return; } if (isNew && !nl.expiry) { toast.error("Informe a validade do novo lote."); return; } onAdd({ id, lot: ln, expiry: ex, qty: n }); setLot(""); setNl({ lot: "", expiry: "" }); setQty(""); };
-  return <div className="grid gap-2 md:grid-cols-[1fr_2fr_2fr_100px_auto]">
-    <Input aria-label="Buscar produto" placeholder="Buscar nome ou código" value={q} onChange={(e) => setQ(e.target.value)} />
-    <select aria-label="Produto" className={sel} value={id} onChange={(e) => { setId(e.target.value); setLot(""); }}><option value="">Selecione o produto</option>{found.map((i) => <option key={i.id} value={i.id}>{i.code ? `${i.code} · ` : ""}{i.name} ({i.quantity} {i.unit})</option>)}</select>
-    <div className="flex gap-1">{(!allowNew || lots.length > 0) && <select aria-label="Lote" className={cn(sel, "min-w-0 flex-1")} value={lot} onChange={(e) => setLot(e.target.value)}><option value="">Lote (vence primeiro no topo)</option>{lots.map((l) => <option key={l.lot + l.expiry} value={l.lot}>{`Lote ${l.lot} · val. ${l.expiry ? fmtExpiry(l.expiry) : "?"} · ${l.quantity}`}</option>)}{allowNew && <option value={NEW}>+ Novo lote</option>}</select>}
-      {isNew && <><Input aria-label="Número do novo lote" placeholder="Novo lote" className="min-w-0 flex-1" value={nl.lot} onChange={(e) => setNl({ ...nl, lot: e.target.value })} /><Input aria-label="Validade do novo lote" type="date" className="w-36" value={nl.expiry} onChange={(e) => setNl({ ...nl, expiry: e.target.value })} /></>}</div>
-    <Input aria-label="Quantidade" type="number" min="1" placeholder="Qtde." value={qty} onChange={(e) => setQty(e.target.value)} />
-    <Button type="button" variant="outline" onClick={add}>{label}</Button>
+  const saveProduct = () => { if (!np || !depot) return; let nid = ""; if (run(() => { nid = createDepotProduct(depot, { name: np.name, code: np.code, unit: np.unit, minimum: Number(np.minimum || 0) }); }, "Produto cadastrado")) { setId(nid); setLot(NEW); setQ(""); setNp(null); } };
+  return <div className="space-y-3 rounded-lg border bg-muted/30 p-3">
+    <div className="flex items-center justify-between"><p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Itens da nota</p>
+      {allowNew && depot && !np && <Button type="button" size="sm" variant="outline" onClick={() => setNp({ name: q, code: "", unit: "UN", minimum: "0" })}>+ Cadastrar novo produto</Button>}</div>
+    {np && <div className="grid gap-2 rounded-md border bg-background p-3 md:grid-cols-[2fr_1fr_100px_100px_auto_auto] md:items-end">
+      <F label="Nome / concentração do novo produto"><Input value={np.name} onChange={(e) => setNp({ ...np, name: e.target.value })} placeholder="Ex.: DIPIRONA 500MG/ML AMP 2ML" /></F>
+      <F label="Código (opcional)"><Input value={np.code} onChange={(e) => setNp({ ...np, code: e.target.value })} /></F>
+      <F label="Unidade"><Input value={np.unit} onChange={(e) => setNp({ ...np, unit: e.target.value })} /></F>
+      <F label="Estoque mín."><Input type="number" min="0" value={np.minimum} onChange={(e) => setNp({ ...np, minimum: e.target.value })} /></F>
+      <Button type="button" onClick={saveProduct}>Salvar produto</Button><Button type="button" variant="ghost" onClick={() => setNp(null)}>Cancelar</Button></div>}
+    <div className="grid gap-2 md:grid-cols-[1fr_2fr] md:items-end">
+      <F label="1. Buscar produto"><Input aria-label="Buscar produto" placeholder="Nome ou código" value={q} onChange={(e) => setQ(e.target.value)} /></F>
+      <F label={`2. Produto (${found.length} encontrados)`}><select aria-label="Produto" className={sel} value={id} onChange={(e) => { setId(e.target.value); setLot(""); }}><option value="">Selecione o produto</option>{found.map((i) => <option key={i.id} value={i.id}>{i.code ? `${i.code} · ` : ""}{i.name} ({i.quantity} {i.unit})</option>)}</select></F>
+    </div>
+    {allowNew && t && !found.length && depot && !np && <p className="text-xs text-muted-foreground">Produto não encontrado. <button type="button" className="font-medium text-primary underline" onClick={() => setNp({ name: q, code: "", unit: "UN", minimum: "0" })}>Cadastrar "{q}" como novo produto</button></p>}
+    <div className="grid gap-2 md:grid-cols-[2fr_1.2fr_1fr_110px_auto] md:items-end">
+      <F label="3. Lote">{(!allowNew || lots.length > 0) ? <select aria-label="Lote" className={sel} value={lot} disabled={!item} onChange={(e) => setLot(e.target.value)}><option value="">{item ? "Selecione o lote (vence primeiro no topo)" : "Escolha o produto antes"}</option>{lots.map((l) => <option key={l.lot + l.expiry} value={l.lot}>{`Lote ${l.lot} · val. ${l.expiry ? fmtExpiry(l.expiry) : "?"} · ${l.quantity}`}</option>)}{allowNew && <option value={NEW}>+ Novo lote</option>}</select> : <div className="flex h-9 items-center rounded-md border border-dashed px-2 text-xs text-muted-foreground">{item ? "Sem lotes — informe um novo lote" : "Escolha o produto antes"}</div>}</F>
+      <F label="Nº do novo lote"><Input aria-label="Número do novo lote" placeholder={isNew ? "Ex.: B26E0650" : "—"} disabled={!isNew} value={nl.lot} onChange={(e) => setNl({ ...nl, lot: e.target.value })} /></F>
+      <F label="Validade"><Input aria-label="Validade do novo lote" type="date" disabled={!isNew} value={nl.expiry} onChange={(e) => setNl({ ...nl, expiry: e.target.value })} /></F>
+      <F label={`4. Quantidade${item ? ` (${item.unit})` : ""}`}><Input aria-label="Quantidade" type="number" min="1" placeholder="0" value={qty} onChange={(e) => setQty(e.target.value)} /></F>
+      <Button type="button" onClick={add}>{label}</Button>
+    </div>
   </div>;
 }
 function Lines({ items, lines, onRemove }: { items: StockMedication[]; lines: EntryLine[]; onRemove: (i: number) => void }) {
@@ -119,8 +137,8 @@ export function EntryForm({ depot }: { depot: Depot }) {
   const [nf, setNf] = useState({ number: "", supplier: "" }); const [lines, setLines] = useState<EntryLine[]>([]);
   return <form className="space-y-3 rounded-xl border bg-card p-4" onSubmit={(e) => { e.preventDefault(); if (run(() => receiveStock(depot, nf, lines), "Entrada registrada e estoque atualizado")) { setLines([]); setNf({ number: "", supplier: "" }); } }}>
     <h3 className="text-sm font-semibold">Entrada de nota fiscal · {DEPOT_LABEL[depot]}</h3>
-    <div className="grid gap-2 md:grid-cols-[200px_1fr]"><Input aria-label="Número da NF" placeholder="Nº / Série NF" value={nf.number} onChange={(e) => setNf({ ...nf, number: e.target.value })} /><Input aria-label="Fornecedor" placeholder="Fornecedor" value={nf.supplier} onChange={(e) => setNf({ ...nf, supplier: e.target.value })} /></div>
-    <EntryLinePicker items={items} allowNew label="Adicionar" onAdd={(l) => setLines((c) => [...c, l])} />
+    <div className="grid gap-2 md:grid-cols-[220px_1fr]"><F label="Nº / Série da nota fiscal"><Input aria-label="Número da NF" placeholder="Ex.: 001234 / 1" value={nf.number} onChange={(e) => setNf({ ...nf, number: e.target.value })} /></F><F label="Fornecedor"><Input aria-label="Fornecedor" placeholder="Razão social do fornecedor" value={nf.supplier} onChange={(e) => setNf({ ...nf, supplier: e.target.value })} /></F></div>
+    <EntryLinePicker depot={depot} items={items} allowNew label="Adicionar item" onAdd={(l) => setLines((c) => [...c, l])} />
     <Lines items={items} lines={lines} onRemove={(i) => setLines((c) => c.filter((_, j) => j !== i))} />
     <Button type="submit" disabled={!can(profile, depotPerm(depot)) || !lines.length}>Dar entrada no estoque</Button>
   </form>;
@@ -139,7 +157,7 @@ export function LoanPanel({ depot }: { depot: Depot }) {
   return <div className="space-y-3"><form className="space-y-3 rounded-xl border bg-card p-4" onSubmit={(e) => { e.preventDefault(); if (run(() => registerLoan(depot, dir, f.partner, f.due, lines), dir === "saida" ? "Saída por empréstimo registrada" : "Entrada por empréstimo registrada")) { setLines([]); setF({ partner: "", due: due0 }); } }}>
     <div className="flex gap-2"><Button type="button" size="sm" variant={dir === "saida" ? "default" : "outline"} onClick={() => { setDir("saida"); setLines([]); }}>Saída via empréstimo</Button><Button type="button" size="sm" variant={dir === "entrada" ? "default" : "outline"} onClick={() => { setDir("entrada"); setLines([]); }}>Entrada via empréstimo</Button></div>
     <div className="grid gap-2 md:grid-cols-[1fr_200px]"><Input aria-label={dir === "saida" ? "Emprestado para" : "Emprestado por"} placeholder={dir === "saida" ? "Emprestado para (instituição / setor)" : "Emprestado por (instituição / setor)"} value={f.partner} onChange={(e) => setF({ ...f, partner: e.target.value })} /><Input aria-label="Data de devolução" type="date" value={f.due} onChange={(e) => setF({ ...f, due: e.target.value })} /></div>
-    <EntryLinePicker key={dir} items={items} allowNew={dir === "entrada"} label="Adicionar" onAdd={(l) => setLines((c) => [...c, l])} />
+    <EntryLinePicker key={dir} items={items} allowNew={dir === "entrada"} label="Adicionar item" onAdd={(l) => setLines((c) => [...c, l])} />
     <Lines items={items} lines={lines} onRemove={(i) => setLines((c) => c.filter((_, j) => j !== i))} />
     <Button type="submit" disabled={!allowed || !lines.length}>{dir === "saida" ? "Registrar saída (baixa no estoque)" : "Registrar entrada (soma no estoque)"}</Button>
   </form>
