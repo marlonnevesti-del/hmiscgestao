@@ -1,0 +1,966 @@
+[
+{
+"code": "7952",
+"name": "AMITRIPTILINA 25MG CP",
+"unit": "COM",
+"quantity": 0.0,
+"unitCost": 0.07,
+"antibiotic": false,
+"location": "Armário de Controlados",
+"lots": []
+},
+{
+"code": "13702",
+"name": "BIPERIDENO 2MG CP (AKINETON)",
+"unit": "COM",
+"quantity": 5.0,
+"unitCost": 1.0,
+"antibiotic": false,
+"location": "Armário de Controlados",
+"lots": [
+{
+"lot": "50031315",
+"expiry": "2028-08-31",
+"quantity": 5
+}
+]
+},
+{
+"code": "7953",
+"name": "BIPERIDENO 5MG/ML SOL. INJET 1ML AMP. EV/IM",
+"unit": "AMP",
+"quantity": 5.0,
+"unitCost": 2.5207,
+"antibiotic": false,
+"location": "Armário de Controlados",
+"lots": [
+{
+"lot": "50039263",
+"expiry": "2028-02-29",
+"quantity": 5
+}
+]
+},
+{
+"code": "7955",
+"name": "CARBAMAZEPINA 20MG/ML XAROPE 100ML FR",
+"unit": "FR",
+"quantity": 0.0,
+"unitCost": 10.91,
+"antibiotic": false,
+"location": "Armário de Controlados",
+"lots": []
+},
+{
+"code": "14179",
+"name": "CARBONATO DE LITIO 300MG CP",
+"unit": "COM",
+"quantity": 54.0,
+"unitCost": 1.0,
+"antibiotic": false,
+"location": "Armário de Controlados",
+"lots": [
+{
+"lot": "0428/25M",
+"expiry": "2027-03-31",
+"quantity": 6
+},
+{
+"lot": "083825M",
+"expiry": "2027-07-31",
+"quantity": 48
+}
+]
+},
+{
+"code": "13365",
+"name": "CETAMINA 50MG/ML SOL. INJ. 10ML AMP EV/IM",
+"unit": "AMP",
+"quantity": 100.0,
+"unitCost": 33.9608,
+"antibiotic": false,
+"location": "Armário de Controlados",
+"lots": [
+{
+"lot": "BN00826M",
+"expiry": "2028-05-31",
+"quantity": 50
+},
+{
+"lot": "BN00926M",
+"expiry": "2028-05-31",
+"quantity": 50
+}
+]
+},
+{
+"code": "7961",
+"name": "CETAMINA 50MG/ML SOL. INJ.L 2ML AMP EV/IM",
+"unit": "AMP",
+"quantity": 150.0,
+"unitCost": 6.5079,
+"antibiotic": false,
+"location": "Armário de Controlados",
+"lots": [
+{
+"lot": "BN00225M",
+"expiry": "2027-07-31",
+"quantity": 150
+}
+]
+},
+{
+"code": "7956",
+"name": "CLOBAZAN 10MG CP",
+"unit": "COM",
+"quantity": 340.0,
+"unitCost": 1.0004,
+"antibiotic": false,
+"location": "Armário de Controlados",
+"lots": [
+{
+"lot": "FRA02909",
+"expiry": "2027-05-30",
+"quantity": 340
+}
+]
+},
+{
+"code": "7957",
+"name": "CLONAZEPAM 2,5MG/ML SOL. ORAL 20ML FR",
+"unit": "FR",
+"quantity": 4.0,
+"unitCost": 4.85,
+"antibiotic": false,
+"location": "Armário de Controlados",
+"lots": [
+{
+"lot": "3591482",
+"expiry": "2028-02-28",
+"quantity": 4
+}
+]
+},
+{
+"code": "14178",
+"name": "CLORPROMAZINA 100MG CP",
+"unit": "COM",
+"quantity": 26.0,
+"unitCost": 1.0,
+"antibiotic": false,
+"location": "Armário de Controlados",
+"lots": [
+{
+"lot": "2517977",
+"expiry": "2027-05-30",
+"quantity": 26
+}
+]
+},
+{
+"code": "7949",
+"name": "CLORPROMAZINA 40MG/ML SOL. ORAL GT 20ML FR",
+"unit": "FR",
+"quantity": 6.0,
+"unitCost": 11.3517,
+"antibiotic": false,
+"location": "Armário de Controlados",
+"lots": [
+{
+"lot": "ERA03684",
+"expiry": "2027-05-31",
+"quantity": 1
+},
+{
+"lot": "GRA02109",
+"expiry": "2029-03-30",
+"quantity": 5
+}
+]
+},
+{
+"code": "7959",
+"name": "CLORPROMAZINA 5MG/ML SOL.INJ. 5ML AMP. IM",
+"unit": "AMP",
+"quantity": 10.0,
+"unitCost": 2.9223,
+"antibiotic": false,
+"location": "Armário de Controlados",
+"lots": [
+{
+"lot": "50035228",
+"expiry": "2028-11-30",
+"quantity": 10
+}
+]
+},
+{
+"code": "13868",
+"name": "CLOZAPINA 25MG CP",
+"unit": "COM",
+"quantity": 0.0,
+"unitCost": 10.0,
+"antibiotic": false,
+"location": "Armário de Controlados",
+"lots": []
+},
+{
+"code": "7960",
+"name": "DEXMEDETOMIDINA 100MCG/ML SOL. INJ. 2ML FR/AMP",
+"unit": "FA",
+"quantity": 215.0,
+"unitCost": 6.6109,
+"antibiotic": false,
+"location": "Armário de Controlados",
+"lots": [
+{
+"lot": "50045878",
+"expiry": "2028-08-31",
+"quantity": 115
+},
+{
+"lot": "A0670050",
+"expiry": "2028-05-31",
+"quantity": 100
+}
+]
+},
+{
+"code": "7962",
+"name": "DIAZEPAM 5MG/ML SOL. INJ. 2ML AMP",
+"unit": "AMP",
+"quantity": 80.0,
+"unitCost": 0.7085,
+"antibiotic": false,
+"location": "Armário de Controlados",
+"lots": [
+{
+"lot": "20105726",
+"expiry": "2028-09-30",
+"quantity": 80
+}
+]
+},
+{
+"code": "7965",
+"name": "ETOMIDATO 2MG/ML SOL.INJ. 10ML AMP. EV",
+"unit": "AMP",
+"quantity": 0.0,
+"unitCost": 7.2368,
+"antibiotic": false,
+"location": "Armário de Controlados",
+"lots": []
+},
+{
+"code": "14192",
+"name": "FENITOINA 100MG CP VO",
+"unit": "COM",
+"quantity": 12.0,
+"unitCost": 1.0,
+"antibiotic": false,
+"location": "Armário de Controlados",
+"lots": [
+{
+"lot": "14581357",
+"expiry": "2027-08-30",
+"quantity": 12
+}
+]
+},
+{
+"code": "7967",
+"name": "FENITOINA 50MG/ML SOL.INJ. 5ML AMP EV/IM",
+"unit": "AMP",
+"quantity": 48.0,
+"unitCost": 1.9781,
+"antibiotic": false,
+"location": "Armário de Controlados",
+"lots": [
+{
+"lot": "1419267",
+"expiry": "2028-03-31",
+"quantity": 48
+}
+]
+},
+{
+"code": "7969",
+"name": "FENOBARBITAL 100MG/ML SOL. INJ. 2ML AMP EV/IM",
+"unit": "AMP",
+"quantity": 190.0,
+"unitCost": 3.1898,
+"antibiotic": false,
+"location": "Armário de Controlados",
+"lots": [
+{
+"lot": "50030869",
+"expiry": "2027-07-31",
+"quantity": 40
+},
+{
+"lot": "50043777",
+"expiry": "2028-06-30",
+"quantity": 150
+}
+]
+},
+{
+"code": "7968",
+"name": "FENOBARBITAL 40MG/ML SOL. ORAL GT 20ML FR",
+"unit": "FR",
+"quantity": 6.0,
+"unitCost": 4.0819,
+"antibiotic": false,
+"location": "Armário de Controlados",
+"lots": [
+{
+"lot": "2543644",
+"expiry": "2027-10-31",
+"quantity": 6
+}
+]
+},
+{
+"code": "7970",
+"name": "FENTANILA 0,05MG/ML 10ML AMP. ESTERIL EV/IM/PER",
+"unit": "AMP",
+"quantity": 160.0,
+"unitCost": 2.7124,
+"antibiotic": false,
+"location": "Armário de Controlados",
+"lots": [
+{
+"lot": "50039306",
+"expiry": "2029-02-28",
+"quantity": 50
+},
+{
+"lot": "50044518",
+"expiry": "2029-06-30",
+"quantity": 110
+}
+]
+},
+{
+"code": "7972",
+"name": "FENTANILA 0,05MG/ML 2ML EST.ESTERIL.S/CONS.EV/IM/V.INT",
+"unit": "AMP",
+"quantity": 500.0,
+"unitCost": 1.5637,
+"antibiotic": false,
+"location": "Armário de Controlados",
+"lots": [
+{
+"lot": "2636715",
+"expiry": "2028-07-31",
+"quantity": 250
+},
+{
+"lot": "78UI4075",
+"expiry": "2027-09-30",
+"quantity": 50
+},
+{
+"lot": "AS06725",
+"expiry": "2027-06-30",
+"quantity": 200
+}
+]
+},
+{
+"code": "7973",
+"name": "FLUMAZENIL 0,1MG/ML SOL. INJ. 5ML AMP. EV",
+"unit": "AMP",
+"quantity": 55.0,
+"unitCost": 4.7469,
+"antibiotic": false,
+"location": "Armário de Controlados",
+"lots": [
+{
+"lot": "2606016",
+"expiry": "2028-02-29",
+"quantity": 15
+},
+{
+"lot": "BF00226",
+"expiry": "2027-07-31",
+"quantity": 40
+}
+]
+},
+{
+"code": "7974",
+"name": "FLUOXETINA CLORIDRATO 20MG CP",
+"unit": "COM",
+"quantity": 0.0,
+"unitCost": 0.0979,
+"antibiotic": false,
+"location": "Armário de Controlados",
+"lots": []
+},
+{
+"code": "13700",
+"name": "GABAPENTINA 300MG CAPSULA",
+"unit": "CAP",
+"quantity": 4.0,
+"unitCost": 1.3193,
+"antibiotic": false,
+"location": "Armário de Controlados",
+"lots": [
+{
+"lot": "50201133",
+"expiry": "2027-05-31",
+"quantity": 4
+}
+]
+},
+{
+"code": "13869",
+"name": "HALOPERIDOL 1MG CP",
+"unit": "COM",
+"quantity": 0.0,
+"unitCost": 10.0,
+"antibiotic": false,
+"location": "Armário de Controlados",
+"lots": []
+},
+{
+"code": "7975",
+"name": "HALOPERIDOL 5MG/ML SOL. INJET 1ML AMP",
+"unit": "AMP",
+"quantity": 40.0,
+"unitCost": 1.09,
+"antibiotic": false,
+"location": "Armário de Controlados",
+"lots": [
+{
+"lot": "2632557",
+"expiry": "2028-07-31",
+"quantity": 40
+}
+]
+},
+{
+"code": "13706",
+"name": "LACOSAMIDA 50MG CP",
+"unit": "COM",
+"quantity": 0.0,
+"unitCost": 1.0,
+"antibiotic": false,
+"location": "Armário de Controlados",
+"lots": []
+},
+{
+"code": "13867",
+"name": "LAMOTRIGINA 100MG CP",
+"unit": "COM",
+"quantity": 0.0,
+"unitCost": 10.0,
+"antibiotic": false,
+"location": "Armário de Controlados",
+"lots": []
+},
+{
+"code": "7976",
+"name": "LEVETIRACETAM 100MG/ML SOL ORAL 150ML FR",
+"unit": "FR",
+"quantity": 2.0,
+"unitCost": 69.1033,
+"antibiotic": false,
+"location": "Armário de Controlados",
+"lots": [
+{
+"lot": "196008",
+"expiry": "2028-03-31",
+"quantity": 2
+}
+]
+},
+{
+"code": "13703",
+"name": "LEVETIRACETAM 500MG CP",
+"unit": "COM",
+"quantity": 0.0,
+"unitCost": 1.0,
+"antibiotic": false,
+"location": "Armário de Controlados",
+"lots": []
+},
+{
+"code": "7977",
+"name": "LEVOMEPROMAZINA 40MG/ML SOL ORAL GT 20ML FR",
+"unit": "FR",
+"quantity": 8.0,
+"unitCost": 19.8107,
+"antibiotic": false,
+"location": "Armário de Controlados",
+"lots": [
+{
+"lot": "FRA04370",
+"expiry": "2027-08-30",
+"quantity": 8
+}
+]
+},
+{
+"code": "9737",
+"name": "LORAZEPAM 2MG CP",
+"unit": "COM",
+"quantity": 70.0,
+"unitCost": 0.1575,
+"antibiotic": false,
+"location": "Armário de Controlados",
+"lots": [
+{
+"lot": "2556624",
+"expiry": "2028-02-28",
+"quantity": 70
+}
+]
+},
+{
+"code": "8612",
+"name": "METADONA 5MG CP",
+"unit": "COM",
+"quantity": 70.0,
+"unitCost": 1.333,
+"antibiotic": false,
+"location": "Armário de Controlados",
+"lots": [
+{
+"lot": "50039584",
+"expiry": "2028-03-31",
+"quantity": 70
+}
+]
+},
+{
+"code": "7979",
+"name": "MIDAZOLAM 15MG (5MG/ML)SOL. INJ.3ML AMP. EV/IM/RETAL",
+"unit": "AMP",
+"quantity": 148.0,
+"unitCost": 1.5542,
+"antibiotic": false,
+"location": "Armário de Controlados",
+"lots": [
+{
+"lot": "41300057",
+"expiry": "2027-04-30",
+"quantity": 20
+},
+{
+"lot": "41300066",
+"expiry": "2028-04-30",
+"quantity": 10
+},
+{
+"lot": "AP02326",
+"expiry": "2028-03-31",
+"quantity": 78
+},
+{
+"lot": "AP09825",
+"expiry": "2027-09-30",
+"quantity": 40
+}
+]
+},
+{
+"code": "11196",
+"name": "MIDAZOLAM 2MG/ML SOL. ORAL FR 10ML",
+"unit": "FR",
+"quantity": 11.0,
+"unitCost": 23.6,
+"antibiotic": false,
+"location": "Armário de Controlados",
+"lots": [
+{
+"lot": "50034034",
+"expiry": "2027-10-31",
+"quantity": 11
+}
+]
+},
+{
+"code": "7980",
+"name": "MIDAZOLAM 5 MG (1MG/ ML) SOL.INJ 5ML AMP. EV/IM/RETAL",
+"unit": "AMP",
+"quantity": 0.0,
+"unitCost": 1.6857,
+"antibiotic": false,
+"location": "Armário de Controlados",
+"lots": []
+},
+{
+"code": "7978",
+"name": "MIDAZOLAM 50MG (5MG/ML) SOL. INJ. 10ML AMP. EV/IM",
+"unit": "AMP",
+"quantity": 90.0,
+"unitCost": 5.0438,
+"antibiotic": false,
+"location": "Armário de Controlados",
+"lots": [
+{
+"lot": "5S3287",
+"expiry": "2029-08-11",
+"quantity": 50
+},
+{
+"lot": "68470611",
+"expiry": "2029-07-31",
+"quantity": 40
+}
+]
+},
+{
+"code": "7920",
+"name": "MISOPROSTOL 200MCG CP VAGINAL",
+"unit": "COM",
+"quantity": 370.0,
+"unitCost": 39.2937,
+"antibiotic": false,
+"location": "Armário de Controlados",
+"lots": [
+{
+"lot": "2509001",
+"expiry": "2027-09-30",
+"quantity": 70
+},
+{
+"lot": "2512003",
+"expiry": "2027-12-31",
+"quantity": 100
+},
+{
+"lot": "2603027",
+"expiry": "2028-03-31",
+"quantity": 200
+}
+]
+},
+{
+"code": "7921",
+"name": "MISOPROSTOL 25MCG CP VAGINAL",
+"unit": "COM",
+"quantity": 1170.0,
+"unitCost": 9.0067,
+"antibiotic": false,
+"location": "Armário de Controlados",
+"lots": [
+{
+"lot": "2603032",
+"expiry": "2028-03-31",
+"quantity": 1170
+}
+]
+},
+{
+"code": "7981",
+"name": "MORFINA 0,2 MG 1ML AMP. EV/ IT/ PER",
+"unit": "AMP",
+"quantity": 200.0,
+"unitCost": 2.4709,
+"antibiotic": false,
+"location": "Armário de Controlados",
+"lots": [
+{
+"lot": "2634888",
+"expiry": "2028-07-31",
+"quantity": 50
+},
+{
+"lot": "2640808",
+"expiry": "2028-08-31",
+"quantity": 150
+}
+]
+},
+{
+"code": "7982",
+"name": "MORFINA 10MG SOL. INJ.1ML AMP EV/ IM/ IT/ PER",
+"unit": "AMP",
+"quantity": 150.0,
+"unitCost": 1.3874,
+"antibiotic": false,
+"location": "Armário de Controlados",
+"lots": [
+{
+"lot": "48170012",
+"expiry": "2027-12-09",
+"quantity": 50
+},
+{
+"lot": "50042109",
+"expiry": "2028-04-30",
+"quantity": 100
+}
+]
+},
+{
+"code": "7525",
+"name": "NALOXONA 0,4MG/ML SOL. INJET 1ML AMP",
+"unit": "AMP",
+"quantity": 50.0,
+"unitCost": 5.3151,
+"antibiotic": false,
+"location": "Armário de Controlados",
+"lots": [
+{
+"lot": "BA00525",
+"expiry": "2027-10-31",
+"quantity": 50
+}
+]
+},
+{
+"code": "7984",
+"name": "OXCARBAZEPINA 60MG/ML SUSP ORAL 100ML FR",
+"unit": "FR",
+"quantity": 26.0,
+"unitCost": 31.25,
+"antibiotic": false,
+"location": "Armário de Controlados",
+"lots": [
+{
+"lot": "2516612",
+"expiry": "2027-04-30",
+"quantity": 26
+}
+]
+},
+{
+"code": "13713",
+"name": "PERICIAZINA 40MG/ML 4% GTS (NEULEPTIL)",
+"unit": "FR",
+"quantity": 0.0,
+"unitCost": 20.98,
+"antibiotic": false,
+"location": "Armário de Controlados",
+"lots": []
+},
+{
+"code": "7986",
+"name": "PETIDINA 50MG/ML SOL. INJET 2ML AMP EV/IM/SUBCUT",
+"unit": "AMP",
+"quantity": 0.0,
+"unitCost": 3.6726,
+"antibiotic": false,
+"location": "Armário de Controlados",
+"lots": []
+},
+{
+"code": "7987",
+"name": "PROPOFOL 10MG/ML SOL. INJET 20ML AMP EV",
+"unit": "AMP",
+"quantity": 330.0,
+"unitCost": 6.644,
+"antibiotic": false,
+"location": "Armário de Controlados",
+"lots": [
+{
+"lot": "A0I0627A",
+"expiry": "2027-10-31",
+"quantity": 330
+}
+]
+},
+{
+"code": "13680",
+"name": "QUETIAPINA 25MG CP",
+"unit": "COM",
+"quantity": 20.0,
+"unitCost": 0.933,
+"antibiotic": false,
+"location": "Armário de Controlados",
+"lots": [
+{
+"lot": "4Z0969",
+"expiry": "2027-07-31",
+"quantity": 20
+}
+]
+},
+{
+"code": "7950",
+"name": "REMIFENTANILA , CLORIDRATO 2MG SOL. INJET FR-AM",
+"unit": "FA",
+"quantity": 20.0,
+"unitCost": 11.4698,
+"antibiotic": false,
+"location": "Armário de Controlados",
+"lots": [
+{
+"lot": "50042360",
+"expiry": "2028-05-31",
+"quantity": 20
+}
+]
+},
+{
+"code": "7988",
+"name": "RISPERIDONA 1 MG CP",
+"unit": "COM",
+"quantity": 20.0,
+"unitCost": 0.1222,
+"antibiotic": false,
+"location": "Armário de Controlados",
+"lots": [
+{
+"lot": "50021971",
+"expiry": "2026-11-30",
+"quantity": 20
+}
+]
+},
+{
+"code": "13866",
+"name": "RISPERIDONA 1MG/ML SOLUCAO ORAL",
+"unit": "FR",
+"quantity": 5.0,
+"unitCost": 10.0,
+"antibiotic": false,
+"location": "Armário de Controlados",
+"lots": [
+{
+"lot": "50031553",
+"expiry": "2027-08-31",
+"quantity": 5
+}
+]
+},
+{
+"code": "8876",
+"name": "SERTRALINA 50MG CP",
+"unit": "COM",
+"quantity": 0.0,
+"unitCost": 1.0,
+"antibiotic": false,
+"location": "Armário de Controlados",
+"lots": []
+},
+{
+"code": "7420",
+"name": "SEVOFLURANO SOL. INALATORIA 250ML FR",
+"unit": "FR",
+"quantity": 59.0,
+"unitCost": 291.9064,
+"antibiotic": false,
+"location": "Armário de Controlados",
+"lots": [
+{
+"lot": "011012",
+"expiry": "2028-01-31",
+"quantity": 9
+},
+{
+"lot": "2633586",
+"expiry": "2028-07-31",
+"quantity": 50
+}
+]
+},
+{
+"code": "7545",
+"name": "SUGAMADEX SODICO 100MG/ML 2ML AMP EV",
+"unit": "AMP",
+"quantity": 20.0,
+"unitCost": 37.3648,
+"antibiotic": false,
+"location": "Armário de Controlados",
+"lots": [
+{
+"lot": "2641963",
+"expiry": "2028-08-31",
+"quantity": 20
+}
+]
+},
+{
+"code": "7989",
+"name": "TETRACAINA+FENILEFRINA 1% + 0,1% SOL OFTALMICA FR",
+"unit": "FR",
+"quantity": 0.0,
+"unitCost": 8.74,
+"antibiotic": false,
+"location": "Armário de Controlados",
+"lots": []
+},
+{
+"code": "7992",
+"name": "TOPIRAMATO 25MG CP",
+"unit": "COM",
+"quantity": 70.0,
+"unitCost": 0.2062,
+"antibiotic": false,
+"location": "Armário de Controlados",
+"lots": [
+{
+"lot": "5A6420",
+"expiry": "2027-09-30",
+"quantity": 50
+},
+{
+"lot": "5D5030",
+"expiry": "2027-10-30",
+"quantity": 20
+}
+]
+},
+{
+"code": "7991",
+"name": "TOPIRAMATO 50MG CP",
+"unit": "COM",
+"quantity": 0.0,
+"unitCost": 3.05,
+"antibiotic": false,
+"location": "Armário de Controlados",
+"lots": []
+},
+{
+"code": "7994",
+"name": "TRAMADOL 50 MG/ML SOL. INJET 2ML AMP EV/IM/SUBCUT",
+"unit": "AMP",
+"quantity": 200.0,
+"unitCost": 1.8942,
+"antibiotic": false,
+"location": "Armário de Controlados",
+"lots": [
+{
+"lot": "2615752",
+"expiry": "2028-04-30",
+"quantity": 150
+},
+{
+"lot": "9069646",
+"expiry": "2028-01-22",
+"quantity": 50
+}
+]
+},
+{
+"code": "9072",
+"name": "VALPROATO DE SODIO 50MG/ML FR 100ML",
+"unit": "FR",
+"quantity": 49.0,
+"unitCost": 7.3412,
+"antibiotic": false,
+"location": "Armário de Controlados",
+"lots": [
+{
+"lot": "2145265",
+"expiry": "2028-04-30",
+"quantity": 49
+}
+]
+},
+{
+"code": "9073",
+"name": "VIGABATRINA 500MG CP",
+"unit": "COM",
+"quantity": 0.0,
+"unitCost": 1.45,
+"antibiotic": false,
+"location": "Armário de Controlados",
+"lots": []
+}
+]

@@ -9,8 +9,10 @@ import { DEFAULT_CID_AREAS, DEFAULT_CID_GROUPS, addArea, addGroup, type CidArea,
 import { DEFAULT_ROOMS, addRoomName, pushCall, removeRoomName, type PanelCall } from "./panel-calls";
 import { catalogToStock, findStockMedication, medicationKey, type StockMedication } from "./pharmacy-stock";
 import CATALOG from "./stock-catalog.json";
+import CONTROLLED from "./controlled-catalog.json";
+import { expiryStatus } from "./controlled";
 import { changeQty, checkQty, loanReturnedQty, transferItem, type Depot, type Movement, type SupplyRequest } from "./supply-flow";
-export const PHARMACY_CATALOG = catalogToStock(CATALOG.farm, 'farm');
+export const PHARMACY_CATALOG = catalogToStock([...CATALOG.farm, ...CONTROLLED], 'farm');
 export const WAREHOUSE_CATALOG = catalogToStock(CATALOG.almox, 'almox');
 import { registrationPatch } from "./patient-registration-mapping";
 import type { PatientRegistration } from "./patient-registration";
@@ -121,8 +123,9 @@ export function dispenseKit(id: string, intervention: string, lots: Record<strin
   let stock = state.stock;
   meds.forEach((r) => { const m = findStockMedication(stock, r.item)!; stock = changeQty(stock, m.id, -(r.times?.length ?? 1), (lots[r.id] ?? '').trim()); });
   const at = new Date().toISOString(); const by = professionalName(state.profile);
+  const consumo = meds.map((r) => { const m = findStockMedication(state.stock, r.item)!; return { ...{ id: crypto.randomUUID(), at: new Date().toISOString(), by: professionalName(state.profile) }, kind: 'consumo' as const, from: m.location ?? 'Farmácia', to: p.name, item: m.name, code: m.code, qty: r.times?.length ?? 1, lot: (lots[r.id] ?? '').trim(), reason: 'Dispensação' }; });
   const requisition = `${String(state.movements.length + state.encounters.indexOf(e) * 7 + 230000).slice(-6)}/${new Date().getFullYear()}`;
-  commitEncounter({ ...transition(e, 'AGUARDANDO_MEDICACAO', by, 'Kit dispensado'), intervention, dispensedAt: at, dispensedBy: by, requisition }, { stock, patients: state.patients.map((x) => x.id === p.id ? { ...x, prescriptions: x.prescriptions.map((r) => r.pharmacy ? { ...r, pharmacy: 'Dispensada', lot: (lots[r.id] ?? '').trim() } : r) } : x) });
+  commitEncounter({ ...transition(e, 'AGUARDANDO_MEDICACAO', by, 'Kit dispensado'), intervention, dispensedAt: at, dispensedBy: by, requisition }, { stock, movements: [...consumo, ...state.movements], patients: state.patients.map((x) => x.id === p.id ? { ...x, prescriptions: x.prescriptions.map((r) => r.pharmacy ? { ...r, pharmacy: 'Dispensada', lot: (lots[r.id] ?? '').trim() } : r) } : x) });
 }
 const depotKey = (d: Depot) => (d === 'farmacia' ? 'stock' : 'warehouse') as 'stock' | 'warehouse';
 const depotAction = (d: Depot): 'farmacia' | 'almoxarifado' => (d === 'farmacia' ? 'farmacia' : 'almoxarifado');
@@ -469,4 +472,17 @@ export function registerCmeKitUse(code: string, surgeryId: string) {
   const at = new Date().toISOString(); const use = { kitId: kit!.id, name: kit!.name, cycle: cycle!.number, autoclave: cycle!.autoclave, at, by: cmeBy() };
   setState((s) => ({ surgeries: s.surgeries.map((x) => x.id === surgeryId ? { ...x, kits: [...(x.kits ?? []), use] } : x), cmeKits: s.cmeKits.map((k) => k.id === kit!.id ? { ...k, status: 'Em uso', location: surg.room, patientId: surg.patientId, history: [...k.history, { at, by: cmeBy(), note: `Uso: ${surg.patient} · ${surg.type}` }] } : k) }));
   return kit!;
+}
+
+/** Estorno/baixa por validade: retira do saldo o lote vencido e registra o termo de inutilização. */
+export function writeOffExpired(itemId: string, lot: string, qty: number, reason: string) {
+  requireAction('farmacia'); checkQty(qty);
+  const item = state.stock.find((i) => i.id === itemId);
+  if (!item) throw new Error('Medicamento não encontrado.');
+  const l = item.lots?.find((x) => x.lot === lot.trim());
+  if (!l) throw new Error('Selecione o lote.');
+  if (reason === 'Vencimento do prazo de validade' && expiryStatus(l.expiry, new Date()) !== 'vencido') throw new Error(`O lote ${l.lot} ainda está dentro da validade.`);
+  if (!reason.trim()) throw new Error('Informe o motivo do estorno.');
+  const items = changeQty(state.stock, itemId, -qty, lot);
+  setState(() => ({ stock: items, movements: logMovement({ kind: 'vencimento', from: item.location ?? 'Farmácia', to: 'Inutilização', item: item.name, code: item.code, qty, lot: l.lot, expiry: l.expiry, reason: reason.trim() }) }));
 }
