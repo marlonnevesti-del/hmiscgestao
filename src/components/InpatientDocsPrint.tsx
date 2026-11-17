@@ -32,7 +32,7 @@ function address(p: Patient) {
   return [[a.streetType, a.street].filter(Boolean).join(' '), a.number, a.complement, a.neighborhood, [a.city, a.state].filter(Boolean).join(' - '), a.postalCode && `CEP ${a.postalCode}`].filter(Boolean).join(', ') || '—';
 }
 
-function Body({ doc, p, e, companion }: { doc: Doc; p: Patient; e?: Encounter; companion: string }) {
+function Body({ doc, p, e, companion }: { doc: Doc; p: Patient; e?: Encounter | undefined; companion: string }) {
   const r = p.registration;
   const birth = r?.birthDate ? new Date(`${r.birthDate}T12:00:00`).toLocaleDateString('pt-BR') : '—';
   const bed = e?.fia?.bed || p.bed;
