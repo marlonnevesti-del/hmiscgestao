@@ -10,5 +10,6 @@ export const Route = createFileRoute("/_authenticated/farmacia")({
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary_large_image" },
   ] }),
+  validateSearch: (s: Record<string, unknown>) => ({ aba: typeof s["aba"] === "string" ? s["aba"] : undefined }),
   component: CarePharmacy,
 });

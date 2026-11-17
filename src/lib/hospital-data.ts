@@ -39,6 +39,16 @@ export const UNIT_AREAS: { id: UnitArea; label: string; tabs: { id: UnitTab; lab
   { id: "pronto-socorro", label: "Pronto Socorro", tabs: [{ id: "recepcao", label: "Recepção / Cadastro" }, { id: "acolhimento", label: "Acolhimento / Triagem" }, { id: "atendimento", label: "Atendimento Médico" }] },
   { id: "maternidade", label: "Maternidade", tabs: [{ id: "recepcao", label: "Recepção / Cadastro" }, { id: "acolhimento", label: "Acolhimento Obstétrico" }, { id: "atendimento", label: "Atendimento Médico" }] },
 ];
+/** Pharmacy sections shown as sidebar sub-items (/farmacia?aba=id). */
+export const PHARMACY_TABS = [
+  { id: "fila", label: "Fila de prescrições" }, { id: "controlados", label: "Armário de controlados" },
+  { id: "validades", label: "Validades / Estorno" }, { id: "consumo", label: "Consumo mensal" },
+  { id: "estoque", label: "Estoque geral" }, { id: "pedidos", label: "Pedidos da enfermagem" },
+  { id: "entrada", label: "Entrada NF" }, { id: "emprestimo", label: "Empréstimos" },
+  { id: "transferencia", label: "Transferência" }, { id: "devolucao", label: "Devolução" },
+  { id: "quebra", label: "Quebra / Extravio" }, { id: "dispensados", label: "Kits dispensados" },
+  { id: "etiquetas", label: "Etiquetas" },
+] as const;
 const UNIT_IDS: string[] = UNIT_AREAS.map((u) => u.id);
 /** Default (function-derived) permission for one tab of a care unit. */
 function tabByFunction(profile: Profile, tab: UnitTab) {
