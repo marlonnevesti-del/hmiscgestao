@@ -24,7 +24,7 @@ const AREAS = [
   { to: "/farmacia", label: "Farmácia" },
   { to: "/enfermagem", label: "Posto de Enfermagem" },
   { to: "/almoxarifado", label: "Almoxarifado" },
-  { to: "/faturamento", label: "Faturamento TISS" },
+  { to: "/faturamento", label: "Faturamento TISS" }, { to: "/faturamento-sus", label: "Faturamento SUS" },
 ] as const;
 
 function Home() {

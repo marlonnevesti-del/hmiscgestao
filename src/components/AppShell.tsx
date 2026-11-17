@@ -27,7 +27,7 @@ const GROUPS = [
     { to: "/almoxarifado", label: "Almoxarifado", icon: Package },
     { to: "/solicitacao-almoxarifado", label: "Solicitação ao Almoxarifado", icon: ClipboardList },
   ] },
-  { label: "Administrativo", items: [{ to: "/faturamento", label: "Faturamento TISS", icon: Receipt }] },
+  { label: "Administrativo", items: [{ to: "/faturamento", label: "Faturamento TISS", icon: Receipt }, { to: "/faturamento-sus", label: "Faturamento SUS", icon: Receipt }] },
 ] as const;
 
 export function AppShell({ children }: { children: ReactNode }) {

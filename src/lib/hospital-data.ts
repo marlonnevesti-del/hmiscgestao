@@ -36,7 +36,7 @@ export const defaultAreas = (profile: Profile): string[] => ACCESS_AREAS.map((a)
 export function canAccessPage(profile: Profile, path: string, areas?: readonly string[] | null) {
   if (profile === "Administrador") return true;
   if (path === "/" || path === "/painel-tv" || path === "/solicitacao-almoxarifado") return true;
-  if (areas) return areas.includes(path.split("/")[1] ?? "");
+  if (areas) { const seg = path.split("/")[1] ?? ""; return areas.includes(seg === "faturamento-sus" ? "faturamento" : seg); }
   if (path === "/recepcao") return can(profile, "recepcao");
   if (path === "/acolhimento") return can(profile, "triagem");
   if (path === "/atendimento") return can(profile, "prescrever");
@@ -45,7 +45,7 @@ export function canAccessPage(profile: Profile, path: string, areas?: readonly s
   if (path === "/farmacia") return can(profile, "farmacia");
   if (path === "/almoxarifado") return can(profile, "almoxarifado");
   if (path === "/enfermagem") return can(profile, "checar");
-  if (path === "/faturamento") return can(profile, "faturar");
+  if (path === "/faturamento" || path === "/faturamento-sus") return can(profile, "faturar");
   return false;
 }
 

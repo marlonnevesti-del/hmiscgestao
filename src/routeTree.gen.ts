@@ -23,6 +23,7 @@ import { Route as AuthenticatedColaboradoresRouteImport } from './routes/_authen
 import { Route as AuthenticatedEnfermagemRouteImport } from './routes/_authenticated.enfermagem'
 import { Route as AuthenticatedFarmaciaRouteImport } from './routes/_authenticated.farmacia'
 import { Route as AuthenticatedFaturamentoRouteImport } from './routes/_authenticated.faturamento'
+import { Route as AuthenticatedFaturamentoSusRouteImport } from './routes/_authenticated.faturamento-sus'
 import { Route as AuthenticatedPainelTvRouteImport } from './routes/_authenticated.painel-tv'
 import { Route as AuthenticatedRecepcaoRouteImport } from './routes/_authenticated.recepcao'
 import { Route as AuthenticatedSolicitacaoAlmoxarifadoRouteImport } from './routes/_authenticated.solicitacao-almoxarifado'
@@ -104,6 +105,12 @@ const AuthenticatedFaturamentoRoute =
     path: '/faturamento',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedFaturamentoSusRoute =
+  AuthenticatedFaturamentoSusRouteImport.update({
+    id: '/faturamento-sus',
+    path: '/faturamento-sus',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedPainelTvRoute = AuthenticatedPainelTvRouteImport.update({
   id: '/painel-tv',
   path: '/painel-tv',
@@ -147,6 +154,7 @@ export interface FileRoutesByFullPath {
   '/enfermagem': typeof AuthenticatedEnfermagemRoute
   '/farmacia': typeof AuthenticatedFarmaciaRoute
   '/faturamento': typeof AuthenticatedFaturamentoRoute
+  '/faturamento-sus': typeof AuthenticatedFaturamentoSusRoute
   '/painel-tv': typeof AuthenticatedPainelTvRoute
   '/recepcao': typeof AuthenticatedRecepcaoRoute
   '/solicitacao-almoxarifado': typeof AuthenticatedSolicitacaoAlmoxarifadoRoute
@@ -166,6 +174,7 @@ export interface FileRoutesByTo {
   '/enfermagem': typeof AuthenticatedEnfermagemRoute
   '/farmacia': typeof AuthenticatedFarmaciaRoute
   '/faturamento': typeof AuthenticatedFaturamentoRoute
+  '/faturamento-sus': typeof AuthenticatedFaturamentoSusRoute
   '/painel-tv': typeof AuthenticatedPainelTvRoute
   '/recepcao': typeof AuthenticatedRecepcaoRoute
   '/solicitacao-almoxarifado': typeof AuthenticatedSolicitacaoAlmoxarifadoRoute
@@ -188,6 +197,7 @@ export interface FileRoutesById {
   '/_authenticated/enfermagem': typeof AuthenticatedEnfermagemRoute
   '/_authenticated/farmacia': typeof AuthenticatedFarmaciaRoute
   '/_authenticated/faturamento': typeof AuthenticatedFaturamentoRoute
+  '/_authenticated/faturamento-sus': typeof AuthenticatedFaturamentoSusRoute
   '/_authenticated/painel-tv': typeof AuthenticatedPainelTvRoute
   '/_authenticated/recepcao': typeof AuthenticatedRecepcaoRoute
   '/_authenticated/solicitacao-almoxarifado': typeof AuthenticatedSolicitacaoAlmoxarifadoRoute
@@ -211,6 +221,7 @@ export interface FileRouteTypes {
     | '/enfermagem'
     | '/farmacia'
     | '/faturamento'
+    | '/faturamento-sus'
     | '/painel-tv'
     | '/recepcao'
     | '/solicitacao-almoxarifado'
@@ -230,6 +241,7 @@ export interface FileRouteTypes {
     | '/enfermagem'
     | '/farmacia'
     | '/faturamento'
+    | '/faturamento-sus'
     | '/painel-tv'
     | '/recepcao'
     | '/solicitacao-almoxarifado'
@@ -251,6 +263,7 @@ export interface FileRouteTypes {
     | '/_authenticated/enfermagem'
     | '/_authenticated/farmacia'
     | '/_authenticated/faturamento'
+    | '/_authenticated/faturamento-sus'
     | '/_authenticated/painel-tv'
     | '/_authenticated/recepcao'
     | '/_authenticated/solicitacao-almoxarifado'
@@ -367,6 +380,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedFaturamentoRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/faturamento-sus': {
+      id: '/_authenticated/faturamento-sus'
+      path: '/faturamento-sus'
+      fullPath: '/faturamento-sus'
+      preLoaderRoute: typeof AuthenticatedFaturamentoSusRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/painel-tv': {
       id: '/_authenticated/painel-tv'
       path: '/painel-tv'
@@ -414,6 +434,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedEnfermagemRoute: typeof AuthenticatedEnfermagemRoute
   AuthenticatedFarmaciaRoute: typeof AuthenticatedFarmaciaRoute
   AuthenticatedFaturamentoRoute: typeof AuthenticatedFaturamentoRoute
+  AuthenticatedFaturamentoSusRoute: typeof AuthenticatedFaturamentoSusRoute
   AuthenticatedPainelTvRoute: typeof AuthenticatedPainelTvRoute
   AuthenticatedRecepcaoRoute: typeof AuthenticatedRecepcaoRoute
   AuthenticatedSolicitacaoAlmoxarifadoRoute: typeof AuthenticatedSolicitacaoAlmoxarifadoRoute
@@ -431,6 +452,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedEnfermagemRoute: AuthenticatedEnfermagemRoute,
   AuthenticatedFarmaciaRoute: AuthenticatedFarmaciaRoute,
   AuthenticatedFaturamentoRoute: AuthenticatedFaturamentoRoute,
+  AuthenticatedFaturamentoSusRoute: AuthenticatedFaturamentoSusRoute,
   AuthenticatedPainelTvRoute: AuthenticatedPainelTvRoute,
   AuthenticatedRecepcaoRoute: AuthenticatedRecepcaoRoute,
   AuthenticatedSolicitacaoAlmoxarifadoRoute:
