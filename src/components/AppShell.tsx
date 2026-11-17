@@ -7,7 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { loadEmployeeAccess } from "@/lib/employee-access";
 import { canApproveEmployees } from "@/lib/employee-rules";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { canAccessPage, can } from "@/lib/hospital-data";
+import { canAccessPage, canAccessUnitTab, can, UNIT_AREAS } from "@/lib/hospital-data";
 import { professionalName, useStore } from "@/lib/hospital-store";
 import { cn } from "@/lib/utils";
 import { PharmacyCallAlert } from "./PharmacyCallAlert";
@@ -41,6 +41,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const queue = useStore((s) => s.queue);
   const path = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
+  const aba = useRouterState({ select: (s) => (s.location.search as { aba?: string }).aba });
   const results = useMemo(() => {
     const t = q.trim().toLowerCase();
     if (t.length < 2) return [];
@@ -68,9 +69,10 @@ export function AppShell({ children }: { children: ReactNode }) {
               {g.items.filter((n) => canAccessPage(profile, n.to, accessAreas)).map((n) => {
                 const active = path.startsWith(n.to);
                 return (
-                  <Link key={n.to} to={n.to} title={n.label} className={cn("flex items-center gap-3 rounded-md px-3 py-2 text-sm", active ? "bg-sidebar-primary text-sidebar-primary-foreground" : "hover:bg-sidebar-accent")}>
+                  <div key={n.to}><Link to={n.to} title={n.label} className={cn("flex items-center gap-3 rounded-md px-3 py-2 text-sm", active ? "bg-sidebar-primary text-sidebar-primary-foreground" : "hover:bg-sidebar-accent")}>
                     <n.icon className="h-4 w-4 shrink-0" />{!collapsed && n.label}
                   </Link>
+                  {active && !collapsed && (() => { const u = UNIT_AREAS.find((x) => `/${x.id}` === n.to); if (!u) return null; const tabs = u.tabs.filter((t) => canAccessUnitTab(profile, u.id, t.id, accessAreas)); const cur = tabs.find((t) => t.id === aba)?.id ?? tabs[0]?.id; return <div className="ml-5 mt-1 space-y-0.5 border-l border-sidebar-border pl-2">{tabs.map((t, i) => <Link key={t.id} to={n.to} search={{ aba: t.id }} className={cn("block rounded px-2 py-1 text-xs", cur === t.id ? "bg-sidebar-accent font-semibold" : "opacity-80 hover:bg-sidebar-accent")}>{i + 1}. {t.label}</Link>)}</div>; })()}</div>
                 );
               })}
             </div>
