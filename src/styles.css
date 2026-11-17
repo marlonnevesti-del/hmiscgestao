@@ -241,3 +241,7 @@
   body.print-proc .proc-root { display: block !important; color: #000; background: #fff; font-size: 11pt; }
   body.print-doc .proc-root, body.print-sheet .proc-root, body.print-surg .proc-root, body.print-req .proc-root, body.print-label .proc-root { display: none !important; }
 }
+
+@media print {
+  body.print-term .print-doc-root:not(.term-root) { display: none !important; }
+}

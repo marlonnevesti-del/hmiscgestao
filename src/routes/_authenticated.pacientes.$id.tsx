@@ -13,6 +13,7 @@ import { NoPermission } from "@/components/AppShell";
 import { PatientIcon } from "@/components/PatientIcon";
 import { SpecialConditionsBanner } from "@/components/SpecialConditions";
 import { PatientSheetPrint, printSheet } from "@/components/PatientSheetPrint";
+import { InpatientDocsButtons } from "@/components/InpatientDocsPrint";
 import { PatientRegistrationFields } from "@/components/PatientRegistrationFields";
 import { registrationFor } from "@/lib/patient-registration-mapping";
 import { DoseCalculator, calcResult, initCalc } from "@/components/DoseCalculator";
@@ -61,6 +62,7 @@ function PEP() {
             <button onClick={() => setPrint(true)} className="flex items-center gap-1.5 rounded-md border px-3 py-2 text-xs font-medium hover:bg-muted"><Printer className="h-4 w-4" />Pulseira/Etiqueta</button>
             <button onClick={() => printSheet("BAA")} className="flex items-center gap-1.5 rounded-md border px-3 py-2 text-xs font-medium hover:bg-muted"><Printer className="h-4 w-4" />BAA</button>
             <ProcedurePrintButton patientId={p.id} /><button onClick={() => printSheet("FIA")} className="flex items-center gap-1.5 rounded-md border px-3 py-2 text-xs font-medium hover:bg-muted"><Printer className="h-4 w-4" />FIA</button>
+            <InpatientDocsButtons p={p} e={sheetEncounter} />
           </div>
         </div>
         <div className="mt-1 text-xs"><span className="font-medium">Diagnóstico:</span> {p.diagnosis}</div>
