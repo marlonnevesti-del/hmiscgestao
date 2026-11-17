@@ -21,16 +21,16 @@ type Group = "obstetrica" | "pediatria";
 const isObstetric = (patient?: Patient) => patient?.type === "gestante" || patient?.type === "puerpera";
 const audienceFor = (patient?: Patient): Publico => isObstetric(patient) ? "obstetricia" : "pediatria";
 
-export function CareTriage() {
+export function CareTriage({ unit }: { unit?: string } = {}) {
   const encounters = useStore((state) => state.encounters);
   const patients = useStore((state) => state.patients);
   const [selected, setSelected] = useState<Encounter | null>(null);
   const [now, setNow] = useState(Date.now());
   useEffect(() => { const timer = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(timer); }, []);
-  const active = encounters.filter((encounter) => encounter.status_fluxo !== "ALTA_HOSPITALAR");
+  const active = encounters.filter((encounter) => encounter.status_fluxo !== "ALTA_HOSPITALAR" && (!unit || encounter.type === unit));
 
   return <div className="space-y-5">
-    <div><h1 className="text-xl font-semibold">Painel de filas · Acolhimento e risco</h1><p className="text-sm text-muted-foreground">Protocolo de Classificação de Acolhimento e Risco (PCACR) · Santa Catarina · {active.length} atendimentos ativos</p></div>
+    <div><h1 className="text-xl font-semibold">Painel de filas · Acolhimento e risco</h1><p className="text-sm text-muted-foreground">{unit === "Maternidade" ? "Classificação de risco obstétrica · " : ""}Protocolo de Classificação de Acolhimento e Risco (PCACR) · Santa Catarina · {active.length} atendimentos ativos</p></div>
     <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-5">
       {RISKS.map((risk) => {
         const count = active.filter((encounter) => encounter.triage?.risk === risk && encounter.status_fluxo === "AGUARDANDO_MEDICO").length;
@@ -108,7 +108,7 @@ function TriageForm({ encounter, onDone }: { encounter: Encounter; onDone: () =>
   const [flowchartId, setFlowchartId] = useState(previous?.flowchart ?? "");
   const [descriptors, setDescriptors] = useState<string[]>(previous?.descriptors ?? []);
   const obstetric = isObstetric(patient);
-  const audience: Publico = obstetric ? "obstetricia" : "pediatria";
+  const audience: Publico = obstetric || encounter.type === "Maternidade" ? "obstetricia" : "pediatria";
   const flowcharts = FLUXOGRAMAS.filter((flowchart) => flowchart.publico === audience);
   const currentFlowchart = fluxogramaPorId(flowchartId);
   const suggestion = sugerirCorPCACR(flowchartId, descriptors);

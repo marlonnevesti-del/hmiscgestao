@@ -26,6 +26,7 @@ const PERMS: Record<Profile, Action[]> = {
 };
 export const can = (p: Profile, a: Action) => PERMS[p].includes(a);
 export const ACCESS_AREAS = [
+  { id: "ambulatorio", label: "Ambulatório" }, { id: "pronto-socorro", label: "Pronto Socorro" }, { id: "maternidade", label: "Maternidade" },
   { id: "recepcao", label: "Recepção & Cadastro" }, { id: "acolhimento", label: "Acolhimento / Triagem" },
   { id: "atendimento", label: "Consultório Médico" }, { id: "pacientes", label: "Pacientes / PEP" },
   { id: "enfermagem", label: "Posto de Enfermagem" }, { id: "centro-cirurgico", label: "Centro Cirúrgico" },
@@ -36,8 +37,9 @@ export const defaultAreas = (profile: Profile): string[] => ACCESS_AREAS.map((a)
 export function canAccessPage(profile: Profile, path: string, areas?: readonly string[] | null) {
   if (profile === "Administrador") return true;
   if (path === "/" || path === "/painel-tv" || path === "/solicitacao-almoxarifado") return true;
-  if (areas) { const seg = path.split("/")[1] ?? ""; return areas.includes(seg === "faturamento-sus" ? "faturamento" : seg); }
+  if (areas) { const seg = path.split("/")[1] ?? ""; if (["ambulatorio", "pronto-socorro", "maternidade"].includes(seg) && ["recepcao", "acolhimento", "atendimento"].some((a) => areas.includes(a))) return true; return areas.includes(seg === "faturamento-sus" ? "faturamento" : seg); }
   if (path === "/recepcao") return can(profile, "recepcao");
+  if (path === "/ambulatorio" || path === "/pronto-socorro" || path === "/maternidade") return can(profile, "recepcao") || can(profile, "triagem") || can(profile, "prescrever");
   if (path === "/acolhimento") return can(profile, "triagem");
   if (path === "/atendimento") return can(profile, "prescrever");
   if (path.startsWith("/pacientes")) return can(profile, "evoluir") || can(profile, "prescrever") || can(profile, "checar");

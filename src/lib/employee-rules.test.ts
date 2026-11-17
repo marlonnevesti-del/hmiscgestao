@@ -75,5 +75,5 @@ describe("áreas liberadas pelo administrador", () => {
     expect(pageAccess("Médico", "/pacientes/1", ["atendimento", "pacientes"])).toBe(true);
     expect(pageAccess("Recepção", "/farmacia", ["recepcao"])).toBe(false);
   });
-  it("sugere recepção para recepcionista", () => { expect(defaultAreas("Recepção")).toEqual(["recepcao"]); });
+  it("sugere recepção para recepcionista", () => { expect(defaultAreas("Recepção")).toEqual(["ambulatorio", "pronto-socorro", "maternidade", "recepcao"]); });
 });

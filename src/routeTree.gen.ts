@@ -17,6 +17,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated.index'
 import { Route as AuthenticatedAcolhimentoRouteImport } from './routes/_authenticated.acolhimento'
 import { Route as AuthenticatedAlmoxarifadoRouteImport } from './routes/_authenticated.almoxarifado'
+import { Route as AuthenticatedAmbulatorioRouteImport } from './routes/_authenticated.ambulatorio'
 import { Route as AuthenticatedAtendimentoRouteImport } from './routes/_authenticated.atendimento'
 import { Route as AuthenticatedCentroCirurgicoRouteImport } from './routes/_authenticated.centro-cirurgico'
 import { Route as AuthenticatedColaboradoresRouteImport } from './routes/_authenticated.colaboradores'
@@ -24,8 +25,10 @@ import { Route as AuthenticatedEnfermagemRouteImport } from './routes/_authentic
 import { Route as AuthenticatedFarmaciaRouteImport } from './routes/_authenticated.farmacia'
 import { Route as AuthenticatedFaturamentoRouteImport } from './routes/_authenticated.faturamento'
 import { Route as AuthenticatedFaturamentoSusRouteImport } from './routes/_authenticated.faturamento-sus'
+import { Route as AuthenticatedMaternidadeRouteImport } from './routes/_authenticated.maternidade'
 import { Route as AuthenticatedNirRouteImport } from './routes/_authenticated.nir'
 import { Route as AuthenticatedPainelTvRouteImport } from './routes/_authenticated.painel-tv'
+import { Route as AuthenticatedProntoSocorroRouteImport } from './routes/_authenticated.pronto-socorro'
 import { Route as AuthenticatedRecepcaoRouteImport } from './routes/_authenticated.recepcao'
 import { Route as AuthenticatedSolicitacaoAlmoxarifadoRouteImport } from './routes/_authenticated.solicitacao-almoxarifado'
 import { Route as AuthenticatedPacientesIndexRouteImport } from './routes/_authenticated.pacientes.index'
@@ -72,6 +75,12 @@ const AuthenticatedAlmoxarifadoRoute =
     path: '/almoxarifado',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedAmbulatorioRoute =
+  AuthenticatedAmbulatorioRouteImport.update({
+    id: '/ambulatorio',
+    path: '/ambulatorio',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedAtendimentoRoute =
   AuthenticatedAtendimentoRouteImport.update({
     id: '/atendimento',
@@ -112,6 +121,12 @@ const AuthenticatedFaturamentoSusRoute =
     path: '/faturamento-sus',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedMaternidadeRoute =
+  AuthenticatedMaternidadeRouteImport.update({
+    id: '/maternidade',
+    path: '/maternidade',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedNirRoute = AuthenticatedNirRouteImport.update({
   id: '/nir',
   path: '/nir',
@@ -122,6 +137,12 @@ const AuthenticatedPainelTvRoute = AuthenticatedPainelTvRouteImport.update({
   path: '/painel-tv',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedProntoSocorroRoute =
+  AuthenticatedProntoSocorroRouteImport.update({
+    id: '/pronto-socorro',
+    path: '/pronto-socorro',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedRecepcaoRoute = AuthenticatedRecepcaoRouteImport.update({
   id: '/recepcao',
   path: '/recepcao',
@@ -154,6 +175,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/acolhimento': typeof AuthenticatedAcolhimentoRoute
   '/almoxarifado': typeof AuthenticatedAlmoxarifadoRoute
+  '/ambulatorio': typeof AuthenticatedAmbulatorioRoute
   '/atendimento': typeof AuthenticatedAtendimentoRoute
   '/centro-cirurgico': typeof AuthenticatedCentroCirurgicoRoute
   '/colaboradores': typeof AuthenticatedColaboradoresRoute
@@ -161,8 +183,10 @@ export interface FileRoutesByFullPath {
   '/farmacia': typeof AuthenticatedFarmaciaRoute
   '/faturamento': typeof AuthenticatedFaturamentoRoute
   '/faturamento-sus': typeof AuthenticatedFaturamentoSusRoute
+  '/maternidade': typeof AuthenticatedMaternidadeRoute
   '/nir': typeof AuthenticatedNirRoute
   '/painel-tv': typeof AuthenticatedPainelTvRoute
+  '/pronto-socorro': typeof AuthenticatedProntoSocorroRoute
   '/recepcao': typeof AuthenticatedRecepcaoRoute
   '/solicitacao-almoxarifado': typeof AuthenticatedSolicitacaoAlmoxarifadoRoute
   '/pacientes/$id': typeof AuthenticatedPacientesIdRoute
@@ -175,6 +199,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/acolhimento': typeof AuthenticatedAcolhimentoRoute
   '/almoxarifado': typeof AuthenticatedAlmoxarifadoRoute
+  '/ambulatorio': typeof AuthenticatedAmbulatorioRoute
   '/atendimento': typeof AuthenticatedAtendimentoRoute
   '/centro-cirurgico': typeof AuthenticatedCentroCirurgicoRoute
   '/colaboradores': typeof AuthenticatedColaboradoresRoute
@@ -182,8 +207,10 @@ export interface FileRoutesByTo {
   '/farmacia': typeof AuthenticatedFarmaciaRoute
   '/faturamento': typeof AuthenticatedFaturamentoRoute
   '/faturamento-sus': typeof AuthenticatedFaturamentoSusRoute
+  '/maternidade': typeof AuthenticatedMaternidadeRoute
   '/nir': typeof AuthenticatedNirRoute
   '/painel-tv': typeof AuthenticatedPainelTvRoute
+  '/pronto-socorro': typeof AuthenticatedProntoSocorroRoute
   '/recepcao': typeof AuthenticatedRecepcaoRoute
   '/solicitacao-almoxarifado': typeof AuthenticatedSolicitacaoAlmoxarifadoRoute
   '/': typeof AuthenticatedIndexRoute
@@ -199,6 +226,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/acolhimento': typeof AuthenticatedAcolhimentoRoute
   '/_authenticated/almoxarifado': typeof AuthenticatedAlmoxarifadoRoute
+  '/_authenticated/ambulatorio': typeof AuthenticatedAmbulatorioRoute
   '/_authenticated/atendimento': typeof AuthenticatedAtendimentoRoute
   '/_authenticated/centro-cirurgico': typeof AuthenticatedCentroCirurgicoRoute
   '/_authenticated/colaboradores': typeof AuthenticatedColaboradoresRoute
@@ -206,8 +234,10 @@ export interface FileRoutesById {
   '/_authenticated/farmacia': typeof AuthenticatedFarmaciaRoute
   '/_authenticated/faturamento': typeof AuthenticatedFaturamentoRoute
   '/_authenticated/faturamento-sus': typeof AuthenticatedFaturamentoSusRoute
+  '/_authenticated/maternidade': typeof AuthenticatedMaternidadeRoute
   '/_authenticated/nir': typeof AuthenticatedNirRoute
   '/_authenticated/painel-tv': typeof AuthenticatedPainelTvRoute
+  '/_authenticated/pronto-socorro': typeof AuthenticatedProntoSocorroRoute
   '/_authenticated/recepcao': typeof AuthenticatedRecepcaoRoute
   '/_authenticated/solicitacao-almoxarifado': typeof AuthenticatedSolicitacaoAlmoxarifadoRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
@@ -224,6 +254,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/acolhimento'
     | '/almoxarifado'
+    | '/ambulatorio'
     | '/atendimento'
     | '/centro-cirurgico'
     | '/colaboradores'
@@ -231,8 +262,10 @@ export interface FileRouteTypes {
     | '/farmacia'
     | '/faturamento'
     | '/faturamento-sus'
+    | '/maternidade'
     | '/nir'
     | '/painel-tv'
+    | '/pronto-socorro'
     | '/recepcao'
     | '/solicitacao-almoxarifado'
     | '/pacientes/$id'
@@ -245,6 +278,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/acolhimento'
     | '/almoxarifado'
+    | '/ambulatorio'
     | '/atendimento'
     | '/centro-cirurgico'
     | '/colaboradores'
@@ -252,8 +286,10 @@ export interface FileRouteTypes {
     | '/farmacia'
     | '/faturamento'
     | '/faturamento-sus'
+    | '/maternidade'
     | '/nir'
     | '/painel-tv'
+    | '/pronto-socorro'
     | '/recepcao'
     | '/solicitacao-almoxarifado'
     | '/'
@@ -268,6 +304,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/_authenticated/acolhimento'
     | '/_authenticated/almoxarifado'
+    | '/_authenticated/ambulatorio'
     | '/_authenticated/atendimento'
     | '/_authenticated/centro-cirurgico'
     | '/_authenticated/colaboradores'
@@ -275,8 +312,10 @@ export interface FileRouteTypes {
     | '/_authenticated/farmacia'
     | '/_authenticated/faturamento'
     | '/_authenticated/faturamento-sus'
+    | '/_authenticated/maternidade'
     | '/_authenticated/nir'
     | '/_authenticated/painel-tv'
+    | '/_authenticated/pronto-socorro'
     | '/_authenticated/recepcao'
     | '/_authenticated/solicitacao-almoxarifado'
     | '/_authenticated/'
@@ -350,6 +389,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAlmoxarifadoRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/ambulatorio': {
+      id: '/_authenticated/ambulatorio'
+      path: '/ambulatorio'
+      fullPath: '/ambulatorio'
+      preLoaderRoute: typeof AuthenticatedAmbulatorioRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/atendimento': {
       id: '/_authenticated/atendimento'
       path: '/atendimento'
@@ -399,6 +445,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedFaturamentoSusRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/maternidade': {
+      id: '/_authenticated/maternidade'
+      path: '/maternidade'
+      fullPath: '/maternidade'
+      preLoaderRoute: typeof AuthenticatedMaternidadeRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/nir': {
       id: '/_authenticated/nir'
       path: '/nir'
@@ -411,6 +464,13 @@ declare module '@tanstack/react-router' {
       path: '/painel-tv'
       fullPath: '/painel-tv'
       preLoaderRoute: typeof AuthenticatedPainelTvRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/pronto-socorro': {
+      id: '/_authenticated/pronto-socorro'
+      path: '/pronto-socorro'
+      fullPath: '/pronto-socorro'
+      preLoaderRoute: typeof AuthenticatedProntoSocorroRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/recepcao': {
@@ -447,6 +507,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteChildren {
   AuthenticatedAcolhimentoRoute: typeof AuthenticatedAcolhimentoRoute
   AuthenticatedAlmoxarifadoRoute: typeof AuthenticatedAlmoxarifadoRoute
+  AuthenticatedAmbulatorioRoute: typeof AuthenticatedAmbulatorioRoute
   AuthenticatedAtendimentoRoute: typeof AuthenticatedAtendimentoRoute
   AuthenticatedCentroCirurgicoRoute: typeof AuthenticatedCentroCirurgicoRoute
   AuthenticatedColaboradoresRoute: typeof AuthenticatedColaboradoresRoute
@@ -454,8 +515,10 @@ interface AuthenticatedRouteChildren {
   AuthenticatedFarmaciaRoute: typeof AuthenticatedFarmaciaRoute
   AuthenticatedFaturamentoRoute: typeof AuthenticatedFaturamentoRoute
   AuthenticatedFaturamentoSusRoute: typeof AuthenticatedFaturamentoSusRoute
+  AuthenticatedMaternidadeRoute: typeof AuthenticatedMaternidadeRoute
   AuthenticatedNirRoute: typeof AuthenticatedNirRoute
   AuthenticatedPainelTvRoute: typeof AuthenticatedPainelTvRoute
+  AuthenticatedProntoSocorroRoute: typeof AuthenticatedProntoSocorroRoute
   AuthenticatedRecepcaoRoute: typeof AuthenticatedRecepcaoRoute
   AuthenticatedSolicitacaoAlmoxarifadoRoute: typeof AuthenticatedSolicitacaoAlmoxarifadoRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
@@ -466,6 +529,7 @@ interface AuthenticatedRouteChildren {
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAcolhimentoRoute: AuthenticatedAcolhimentoRoute,
   AuthenticatedAlmoxarifadoRoute: AuthenticatedAlmoxarifadoRoute,
+  AuthenticatedAmbulatorioRoute: AuthenticatedAmbulatorioRoute,
   AuthenticatedAtendimentoRoute: AuthenticatedAtendimentoRoute,
   AuthenticatedCentroCirurgicoRoute: AuthenticatedCentroCirurgicoRoute,
   AuthenticatedColaboradoresRoute: AuthenticatedColaboradoresRoute,
@@ -473,8 +537,10 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedFarmaciaRoute: AuthenticatedFarmaciaRoute,
   AuthenticatedFaturamentoRoute: AuthenticatedFaturamentoRoute,
   AuthenticatedFaturamentoSusRoute: AuthenticatedFaturamentoSusRoute,
+  AuthenticatedMaternidadeRoute: AuthenticatedMaternidadeRoute,
   AuthenticatedNirRoute: AuthenticatedNirRoute,
   AuthenticatedPainelTvRoute: AuthenticatedPainelTvRoute,
+  AuthenticatedProntoSocorroRoute: AuthenticatedProntoSocorroRoute,
   AuthenticatedRecepcaoRoute: AuthenticatedRecepcaoRoute,
   AuthenticatedSolicitacaoAlmoxarifadoRoute:
     AuthenticatedSolicitacaoAlmoxarifadoRoute,

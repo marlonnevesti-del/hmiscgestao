@@ -13,9 +13,10 @@ export const PHARMACY_CATALOG = catalogToStock(CATALOG.farm, 'farm');
 export const WAREHOUSE_CATALOG = catalogToStock(CATALOG.almox, 'almox');
 import { registrationPatch } from "./patient-registration-mapping";
 import type { PatientRegistration } from "./patient-registration";
+import { addSpecialty, ambulatoryNeedsTriage, DEFAULT_SPECIALTIES, type AmbSpecialty, type Appointment, type SadtReport, type SpecialtyGroup } from "./ambulatorio";
 
-interface State { encounters: Encounter[]; beSequence: number; fiaSequence: number; stock: StockMedication[]; warehouse: StockMedication[]; profile: Profile; employeeName: string; patients: Patient[]; queue: QueueItem[]; surgeries: Surgery[]; admins: Record<string, Admin>; rooms: string[]; calls: PanelCall[]; cidGroups: CidGroup[]; cidAreas: CidArea[]; employeeArea: string; accessAreas: string[] | null; removedStock: string[]; movements: Movement[]; requests: SupplyRequest[] }
-let state: State = { profile: "Outro", employeeName: "", patients: [], queue: [], surgeries: [], admins: {}, encounters: [], beSequence: 0, fiaSequence: 0, stock: PHARMACY_CATALOG, warehouse: WAREHOUSE_CATALOG, rooms: DEFAULT_ROOMS, calls: [], cidGroups: DEFAULT_CID_GROUPS, cidAreas: DEFAULT_CID_AREAS, employeeArea: "", accessAreas: null, removedStock: [], movements: [], requests: [] };
+interface State { encounters: Encounter[]; beSequence: number; fiaSequence: number; stock: StockMedication[]; warehouse: StockMedication[]; profile: Profile; employeeName: string; patients: Patient[]; queue: QueueItem[]; surgeries: Surgery[]; admins: Record<string, Admin>; rooms: string[]; calls: PanelCall[]; cidGroups: CidGroup[]; cidAreas: CidArea[]; employeeArea: string; accessAreas: string[] | null; removedStock: string[]; movements: Movement[]; requests: SupplyRequest[]; ambSpecialties: AmbSpecialty[]; appointments: Appointment[] }
+let state: State = { profile: "Outro", employeeName: "", patients: [], queue: [], surgeries: [], admins: {}, encounters: [], beSequence: 0, fiaSequence: 0, stock: PHARMACY_CATALOG, warehouse: WAREHOUSE_CATALOG, rooms: DEFAULT_ROOMS, calls: [], cidGroups: DEFAULT_CID_GROUPS, cidAreas: DEFAULT_CID_AREAS, employeeArea: "", accessAreas: null, removedStock: [], movements: [], requests: [], ambSpecialties: DEFAULT_SPECIALTIES, appointments: [] };
 const ls = new Set<() => void>();
 export const getState = () => state;
 export function setState(fn: (s: State) => Partial<State>) { state = { ...state, ...fn(state) }; ls.forEach((l) => l()); }
@@ -48,8 +49,10 @@ export function openEncounter(patient: Patient, type: string, specialty: string,
   const at = new Date().toISOString();
   const number = `BAA-${new Date().getFullYear()}-${String(state.beSequence + 1).padStart(6, '0')}`;
   const e: Encounter = { id: crypto.randomUUID(), patientId: patient.id, number, type, specialty, complaint, status_fluxo: 'AGUARDANDO_TRIAGEM', openedAt: at, history: [{ status: 'AGUARDANDO_TRIAGEM', at, by: professionalName(state.profile), note: 'Recepção: abertura de BAA' }] };
-  setState((s) => ({ beSequence: s.beSequence + 1, patients: [...s.patients.filter((p) => p.id !== patient.id), patient], encounters: [...s.encounters, e], queue: [...s.queue, { id: e.id, name: patient.name, group: patient.type === 'gestante' || patient.type === 'puerpera' ? 'obstetrica' : 'pediatria', complaint, arrivedMinAgo: 0, detail: patient.age }] }));
-  return e;
+  const direct = type === 'Ambulatório' && !ambulatoryNeedsTriage(specialty);
+  const opened = direct ? transition(e, 'AGUARDANDO_MEDICO', professionalName(state.profile), 'Ambulatório: sem acolhimento, direto para atendimento', at) : e;
+  setState((s) => ({ beSequence: s.beSequence + 1, patients: [...s.patients.filter((p) => p.id !== patient.id), patient], encounters: [...s.encounters, opened], queue: direct ? s.queue : [...s.queue, { id: e.id, name: patient.name, group: patient.type === 'gestante' || patient.type === 'puerpera' ? 'obstetrica' : 'pediatria', complaint, arrivedMinAgo: 0, detail: patient.age }] }));
+  return opened;
 }
 export function savePatientRegistration(id: string, input: PatientRegistration) {
   requireAction('recepcao');
@@ -393,4 +396,35 @@ export function deleteStockItem(kind: 'stock' | 'warehouse', id: string) {
 export function linkBarcode(kind: 'stock' | 'warehouse', id: string, code: string, lot?: string) {
   requireAction(kind === 'stock' ? 'farmacia' : 'almoxarifado');
   setState((s) => ({ [kind]: linkCode(s[kind], id, code, lot) }) as never);
+}
+
+// ---------- Ambulatório ----------
+export function createAmbSpecialty(name: string, group: SpecialtyGroup) { requireAction('recepcao'); setState((s) => ({ ambSpecialties: addSpecialty(s.ambSpecialties, name, group) })); }
+export function toggleAmbSpecialty(id: string) { requireAction('recepcao'); setState((s) => ({ ambSpecialties: s.ambSpecialties.map((x) => x.id === id ? { ...x, active: !x.active } : x) })); }
+export function scheduleAppointment(input: Omit<Appointment, 'id' | 'status' | 'createdBy'>) {
+  requireAction('recepcao');
+  if (!input.patientId) throw new Error('Selecione o paciente (cadastre na recepção se for novo).');
+  if (!input.date || !input.time) throw new Error('Informe data e horário.');
+  if (!state.ambSpecialties.some((x) => x.id === input.specialtyId)) throw new Error('Selecione a especialidade.');
+  if (state.appointments.some((a) => a.status === 'agendado' && a.date === input.date && a.time === input.time && a.specialtyId === input.specialtyId && a.professional.trim().toLowerCase() === input.professional.trim().toLowerCase())) throw new Error('Horário já ocupado para este profissional.');
+  setState((s) => ({ appointments: [...s.appointments, { ...input, id: crypto.randomUUID(), status: 'agendado', createdBy: professionalName(s.profile) }] }));
+}
+export function setAppointmentStatus(id: string, status: 'faltou' | 'cancelado') { requireAction('recepcao'); setState((s) => ({ appointments: s.appointments.map((a) => a.id === id && a.status === 'agendado' ? { ...a, status } : a) })); }
+export function checkInAppointment(id: string) {
+  requireAction('recepcao');
+  const a = state.appointments.find((x) => x.id === id); if (!a || a.status !== 'agendado') throw new Error('Agendamento não disponível.');
+  const p = state.patients.find((x) => x.id === a.patientId); if (!p) throw new Error('Paciente não encontrado.');
+  const sp = state.ambSpecialties.find((x) => x.id === a.specialtyId);
+  const e = openEncounter(p, 'Ambulatório', sp?.name ?? '', `Consulta agendada · ${sp?.name ?? ''}${a.note ? ` · ${a.note}` : ''}`);
+  setState((s) => ({ appointments: s.appointments.map((x) => x.id === id ? { ...x, status: 'chegou', encounterId: e.id } : x) }));
+  return e;
+}
+export function saveSadtReport(id: string, r: Omit<SadtReport, 'at'>) {
+  requireAction('prescrever');
+  const { e } = getEncounter(id);
+  if (!r.findings.trim() || !r.conclusion.trim()) throw new Error('Preencha achados e conclusão do laudo.');
+  const by = professionalName(state.profile); const at = new Date().toISOString();
+  let next = e.status_fluxo === 'AGUARDANDO_MEDICO' ? transition(e, 'EM_ATENDIMENTO_MEDICO', by, 'Exame SADT iniciado', at) : e;
+  next = transition(next, 'ALTA_HOSPITALAR', by, `Laudo SADT emitido: ${r.exam}`, at);
+  commitEncounter({ ...next, sadtReport: { ...r, at } });
 }

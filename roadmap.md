@@ -23,3 +23,4 @@
 - [x] Copiar do Gestão HMISC o painel de filas pelo Protocolo de Risco de Santa Catarina, com fluxogramas, descritores, tempos de espera e reclassificação.
 - [x] Substituir o estoque atual da farmácia pelo controle com apresentação, unidade, estoque mínimo, entradas/ajustes e alertas, preservando os saldos antigos.
 - [x] Acrescentar condições especiais à ficha de cadastro e aos avisos das filas e do prontuário: Autismo/TEA, TDAH, deficiência intelectual, deficiência física e outra.
+- [x] Separar Ambulatório (agenda, especialidades, SADT com laudo), Pronto Socorro e Maternidade com recepção, acolhimento e atendimento próprios.

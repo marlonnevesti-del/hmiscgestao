@@ -15,6 +15,7 @@ import { ATTENDANCE_TYPES, type Encounter } from "@/lib/care-flow";
 import { can, type Patient } from "@/lib/hospital-data";
 import { deleteEncounter, openEncounter, professionalName, savePatientRegistration, useStore } from "@/lib/hospital-store";
 import { SPECIAL_CONDITIONS } from "@/lib/special-conditions";
+import { GROUP_LABELS, type CareUnit } from "@/lib/ambulatorio";
 
 const INITIAL_FORM = {
   name: "", cpf: "", birth: "", mother: "", guardian: "", insurance: "SUS",
@@ -23,14 +24,15 @@ const INITIAL_FORM = {
   conditions: [] as string[], otherCondition: "",
 };
 
-export function CareReception() {
+export function CareReception({ unit }: { unit?: CareUnit } = {}) {
+  const ambSpecialties = useStore((s) => s.ambSpecialties);
   const patients = useStore((s) => s.patients);
   const encounters = useStore((s) => s.encounters);
   const profile = useStore((s) => s.profile);
   const [search, setSearch] = useState("");
   const [existing, setExisting] = useState("");
   const [created, setCreated] = useState<Encounter | null>(null);
-  const [f, setF] = useState(INITIAL_FORM);
+  const [f, setF] = useState(() => unit ? { ...INITIAL_FORM, type: unit, specialty: unit === "Ambulatório" ? "" : unit === "Maternidade" ? "Obstetrícia" : "Pediatria", patientType: (unit === "Pronto socorro" ? "pediatria" : "gestante") as Patient["type"] } : INITIAL_FORM);
   const [registration, setRegistration] = useState(() => registrationFor());
   const set = (key: keyof Omit<typeof f, "conditions">, value: string) => setF((current) => ({ ...current, [key]: value }));
 
@@ -77,7 +79,7 @@ export function CareReception() {
       };
       const encounter = openEncounter(patient, f.type, f.specialty, f.complaint);
       setCreated(encounter);
-      toast.success(`${encounter.number} gerado e enviado para triagem`);
+      toast.success(`${encounter.number} gerado e enviado para ${encounter.status_fluxo === "AGUARDANDO_TRIAGEM" ? "acolhimento" : "atendimento"}`);
       clearIdentity();
       setF((current) => ({ ...current, complaint: "" }));
     } catch (error) {
@@ -85,12 +87,11 @@ export function CareReception() {
     }
   };
 
-  const textFields = [
-    ["specialty", "Especialidade"], ["complaint", "Queixa principal"],
-  ] as const;
+  const textFields = (unit === "Ambulatório" ? [["complaint", "Motivo da consulta"]] : [["specialty", "Especialidade"], ["complaint", "Queixa principal"]]) as readonly (readonly ["specialty" | "complaint", string])[];
+  const shown = unit ? encounters.filter((encounter) => encounter.type === unit) : encounters;
 
   return <div className="space-y-4">
-    <h1 className="text-xl font-semibold">Recepção · Boletim de Atendimento</h1>
+    {!unit && <h1 className="text-xl font-semibold">Recepção · Boletim de Atendimento</h1>}
     {!can(profile, "recepcao") ? <NoPermission action="abrir atendimento" /> : <>
       <div className="max-w-xl space-y-2">
         <Input aria-label="Buscar paciente cadastrado" placeholder="Buscar paciente por nome, CPF ou prontuário" value={search} onChange={(event) => setSearch(event.target.value)} />
@@ -101,9 +102,10 @@ export function CareReception() {
         <div className="min-w-0 md:col-span-3"><PatientRegistrationFields value={registration} onChange={setRegistration} recordNumber={patients.find(p => p.id === existing)?.prontuario} /></div>
         {existing && <div className="md:col-span-3"><Button type="button" variant="outline" onClick={() => { try { savePatientRegistration(existing, registration); toast.success("Cadastro atualizado sem abrir novo atendimento"); } catch (error) { toast.error(error instanceof Error ? error.message : "Não foi possível salvar"); } }}>Salvar alterações do cadastro</Button></div>}
         <h2 className="mt-3 border-t pt-4 font-semibold md:col-span-3">Abertura de atendimento</h2>
+        {unit === "Ambulatório" && <label className="grid gap-1 text-xs">Especialidade<select aria-label="Especialidade" value={f.specialty} onChange={(event) => set("specialty", event.target.value)} className="h-9 rounded-md border bg-background px-2"><option value="">Selecione…</option>{(["medica", "nao_medica", "sadt"] as const).map((g) => <optgroup key={g} label={GROUP_LABELS[g]}>{ambSpecialties.filter((x) => x.group === g && x.active).map((x) => <option key={x.id} value={x.name}>{x.name}</option>)}</optgroup>)}</select></label>}
         {textFields.map(([key, label]) => <label key={key} className="grid gap-1 text-xs">{label}<Input value={f[key]} onChange={(event) => set(key, event.target.value)} required={["name", "specialty", "complaint"].includes(key)} /></label>)}
         <label className="grid gap-1 text-xs">Tipo de paciente<select aria-label="Tipo de paciente" value={f.patientType} onChange={(event) => set("patientType", event.target.value)} className="h-9 rounded-md border bg-background px-2">{[["gestante", "Gestante"], ["puerpera", "Puérpera"], ["pediatria", "Criança"], ["neonato", "Recém-nascido"]].map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label>
-        <label className="grid gap-1 text-xs">Tipo de atendimento<select value={f.type} onChange={(event) => set("type", event.target.value)} className="h-9 rounded-md border bg-background px-2">{ATTENDANCE_TYPES.map((type) => <option key={type}>{type}</option>)}</select></label>
+        {!unit && <label className="grid gap-1 text-xs">Tipo de atendimento<select value={f.type} onChange={(event) => set("type", event.target.value)} className="h-9 rounded-md border bg-background px-2">{ATTENDANCE_TYPES.map((type) => <option key={type}>{type}</option>)}</select></label>}
 
         <fieldset className="rounded-lg border bg-card p-4 md:col-span-3">
           <legend className="px-1 text-sm font-semibold">Condições especiais</legend>
@@ -119,12 +121,12 @@ export function CareReception() {
       </form>
     </>}
 
-    <h2 className="font-semibold">Atendimentos abertos ({encounters.filter((encounter) => encounter.status_fluxo !== "ALTA_HOSPITALAR").length})</h2>
-    {encounters.slice().reverse().map((encounter) => {
+    <h2 className="font-semibold">Atendimentos abertos ({shown.filter((encounter) => encounter.status_fluxo !== "ALTA_HOSPITALAR").length})</h2>
+    {shown.slice().reverse().map((encounter) => {
       const patient = patients.find((item) => item.id === encounter.patientId);
       return <div key={encounter.id} className="border-b py-2"><div className="flex flex-wrap items-center gap-2"><Button variant="link" asChild><Link to="/pacientes/$id" params={{ id: encounter.patientId }}>{patient?.name}</Link></Button><SpecialConditionBadges patient={patient} /><span className="text-xs text-muted-foreground">{encounter.number}</span>{profile === "Administrador" && <Button size="sm" variant="ghost" className="text-destructive" onClick={() => { if (!window.confirm(`Apagar o atendimento ${encounter.number} de ${patient?.name ?? "paciente"}? Esta ação não pode ser desfeita.`)) return; try { deleteEncounter(encounter.id); toast.success("Atendimento apagado"); } catch (error) { toast.error(error instanceof Error ? error.message : "Não foi possível apagar"); } }}>Apagar</Button>}</div><EncounterTimeline patientId={encounter.patientId} /></div>;
     })}
-    {!encounters.length && <p className="py-6 text-sm text-muted-foreground">Nenhum atendimento aberto.</p>}
+    {!shown.length && <p className="py-6 text-sm text-muted-foreground">Nenhum atendimento aberto.</p>}
 
     <Dialog open={!!created} onOpenChange={(open) => !open && setCreated(null)}>
       <DialogContent><DialogHeader><DialogTitle>Etiqueta / Pulseira · {created?.number}</DialogTitle></DialogHeader>

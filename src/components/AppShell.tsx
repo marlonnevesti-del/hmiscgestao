@@ -1,6 +1,6 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useMemo, useState, type ReactNode } from "react";
-import { Package, BedDouble, Bell, ChevronLeft, ClipboardList, HeartPulse, Pill, Receipt, Scissors, Search, Tv, UserCog, UserPlus, Users, LogOut } from "lucide-react";
+import { Ambulance, Baby, Stethoscope, Package, BedDouble, Bell, ChevronLeft, ClipboardList, HeartPulse, Pill, Receipt, Scissors, Search, Tv, UserCog, UserPlus, Users, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
@@ -14,9 +14,9 @@ import { PharmacyCallAlert } from "./PharmacyCallAlert";
 
 const GROUPS = [
   { label: "Assistência", items: [
-    { to: "/recepcao", label: "Recepção & Cadastro", icon: UserPlus },
-    { to: "/acolhimento", label: "Acolhimento", icon: ClipboardList },
-    { to: "/atendimento", label: "Consultório Médico", icon: HeartPulse },
+    { to: "/ambulatorio", label: "Ambulatório", icon: Stethoscope },
+    { to: "/pronto-socorro", label: "Pronto Socorro", icon: Ambulance },
+    { to: "/maternidade", label: "Maternidade", icon: Baby },
     { to: "/pacientes", label: "Pacientes / PEP", icon: Users },
     { to: "/painel-tv", label: "Painel de Chamadas (TV)", icon: Tv },
   ] },

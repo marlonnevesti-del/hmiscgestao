@@ -46,3 +46,4 @@ use the editor.
 - Hotelaria bed reads use an approved-user server function and server-only origin/token, with a validated read-only snapshot polled in NIR; NIR authorization reserves the bed atomically in Hotelaria first (reserveHotelariaBed) and only then records it locally, preventing double allocation.
 
 - Admission authorization (NIR or direct) closes the BAA and opens a separately sequenced FIA record on the encounter via openFia in hospital-store, so the FIA is the single official inpatient document and billing never double-counts.
+- Care units (Ambulatório, Pronto socorro, Maternidade) share one patient registry and encounter flow; CareUnitPage filters reception, acolhimento and medical queues by encounter.type, and ambulatory specialties/agenda/SADT rules live in src/lib/ambulatorio.ts so pharmacy and billing stay unit-agnostic.
