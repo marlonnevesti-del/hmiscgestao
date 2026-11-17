@@ -67,7 +67,7 @@ describe("acesso de colaboradores", () => {
     for (const path of ["/recepcao", "/acolhimento", "/atendimento", "/farmacia", "/enfermagem", "/colaboradores"]) expect(canAccessPage(profile, path)).toBe(true);
   });
 });
-import { canAccessPage as pageAccess, defaultAreas } from "./hospital-data";
+import { canAccessPage as pageAccess, canAccessUnitTab as unitTab, defaultAreas } from "./hospital-data";
 describe("áreas liberadas pelo administrador", () => {
   it("restringe às áreas escolhidas", () => {
     expect(pageAccess("Enfermeiro", "/acolhimento", ["acolhimento", "enfermagem"])).toBe(true);
@@ -75,5 +75,6 @@ describe("áreas liberadas pelo administrador", () => {
     expect(pageAccess("Médico", "/pacientes/1", ["atendimento", "pacientes"])).toBe(true);
     expect(pageAccess("Recepção", "/farmacia", ["recepcao"])).toBe(false);
   });
-  it("sugere recepção para recepcionista", () => { expect(defaultAreas("Recepção")).toEqual(["ambulatorio", "pronto-socorro", "maternidade", "recepcao"]); });
+  it("sugere recepção para recepcionista", () => { expect(defaultAreas("Recepção")).toEqual(["recepcao", "ambulatorio:agenda", "ambulatorio:recepcao", "ambulatorio:especialidades", "pronto-socorro:recepcao", "maternidade:recepcao"]); });
+  it("médico liberado só no atendimento do PS vê só essa aba", () => { const a = ["pronto-socorro:atendimento"]; expect(unitTab("Médico", "pronto-socorro", "atendimento", a)).toBe(true); expect(unitTab("Médico", "pronto-socorro", "recepcao", a)).toBe(false); expect(pageAccess("Médico", "/pronto-socorro", a)).toBe(true); expect(pageAccess("Médico", "/ambulatorio", a)).toBe(false); });
 });

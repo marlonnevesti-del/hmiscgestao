@@ -145,7 +145,7 @@ function Prescricao({ p }: { p: Patient }) {
   const ped = p.type === "pediatria" || p.type === "neonato";
   const [cat, setCat] = useState<PrescCat>("Medicamento");
   const [drugName, setDrugName] = useState(DRUGS[0]?.name ?? "");
-  const [free, setFree] = useState(""); const [pos, setPos] = useState("");
+  const [free, setFree] = useState(""); const [pos, setPos] = useState(""); const [typed, setTyped] = useState(false); const [typedDrug, setTypedDrug] = useState("");
   const drug = DRUGS.find((d) => d.name === drugName);
   const [calc, setCalc] = useState(() => initCalc(DRUGS[0]!));
   if (!drug) return null;
@@ -157,6 +157,14 @@ function Prescricao({ p }: { p: Patient }) {
   const cats: PrescCat[] = ["Dieta", "Hidratação", "Medicamento", "Cuidados", "Exames"];
   const add = () => {
     const isMed = cat === "Medicamento";
+    if (isMed && typed) {
+      if (!editable) { toast.error("Inicie ou retome o atendimento médico para editar a prescrição."); return; }
+      if (!typedDrug.trim() || !pos.trim()) { toast.error("Digite o medicamento e a posologia."); return; }
+      const hit = p.allergies.find((a) => typedDrug.toLowerCase().includes(a.toLowerCase()));
+      if (hit) { toast.error(`Conflito de alergia: ${hit}`); return; }
+      updatePatient(p.id, (x) => ({ prescriptions: [...x.prescriptions, { id: `rx-${Date.now()}`, cat, item: `${typedDrug.trim()} ${free.trim()}`.trim(), posologia: pos.trim(), pharmacy: "Pendente" as const }] }));
+      setTypedDrug(""); setFree(""); setPos(""); toast.success("Item digitado adicionado – segue para a farmácia ao assinar"); return;
+    }
     if (!editable) { toast.error("Inicie ou retome o atendimento médico para editar a prescrição."); return; }
     if (isMed && (ped && !(p.weight > 0))) { toast.error("Peso obrigatório para dose pediátrica"); return; }
     if (isMed && allergy) { toast.error(`Conflito de alergia: ${allergy}`); return; }
@@ -183,7 +191,11 @@ function Prescricao({ p }: { p: Patient }) {
       <Card title="Adicionar item">
         {!editable ? <NoPermission action="editar a prescrição nesta etapa" /> : <div className="space-y-2 text-sm">
           <select value={cat} onChange={(e) => setCat(e.target.value as PrescCat)} className="h-8 w-full rounded-md border bg-background px-2 text-xs">{cats.map((c) => <option key={c}>{c}</option>)}</select>
-          {cat === "Medicamento" ? <>
+          {cat === "Medicamento" && <div className="flex gap-1 text-xs"><button type="button" onClick={() => setTyped(false)} className={cn("flex-1 rounded-md border py-1", !typed && "bg-primary text-primary-foreground")}>Padronizados</button><button type="button" onClick={() => setTyped(true)} className={cn("flex-1 rounded-md border py-1", typed && "bg-primary text-primary-foreground")}>Digitar prescrição</button></div>}
+          {cat === "Medicamento" && typed ? <>
+            <input aria-label="Medicamento digitado" value={typedDrug} onChange={(e) => setTypedDrug(e.target.value)} placeholder="Medicamento (ex.: Ceftriaxona 1 g)" className="h-8 w-full rounded-md border bg-background px-2 text-xs" />
+            <input value={free} onChange={(e) => setFree(e.target.value)} placeholder="Dose / diluição (opcional)" className="h-8 w-full rounded-md border bg-background px-2 text-xs" />
+          </> : cat === "Medicamento" ? <>
             <select value={drugName} onChange={(e) => { setDrugName(e.target.value); const d = DRUGS.find((x) => x.name === e.target.value); if (d) setCalc(initCalc(d)); }} className="h-8 w-full rounded-md border bg-background px-2 text-xs">{DRUGS.map((d) => <option key={d.name}>{d.name}</option>)}</select>
             {ped || p.weight > 0 ? (
               <DoseCalculator drug={drug} weight={p.weight} value={calc} onChange={setCalc} />

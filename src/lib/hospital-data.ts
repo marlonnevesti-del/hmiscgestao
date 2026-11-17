@@ -26,20 +26,44 @@ const PERMS: Record<Profile, Action[]> = {
 };
 export const can = (p: Profile, a: Action) => PERMS[p].includes(a);
 export const ACCESS_AREAS = [
-  { id: "ambulatorio", label: "Ambulatório" }, { id: "pronto-socorro", label: "Pronto Socorro" }, { id: "maternidade", label: "Maternidade" },
   { id: "recepcao", label: "Recepção & Cadastro" }, { id: "acolhimento", label: "Acolhimento / Triagem" },
   { id: "atendimento", label: "Consultório Médico" }, { id: "pacientes", label: "Pacientes / PEP" },
   { id: "enfermagem", label: "Posto de Enfermagem" }, { id: "centro-cirurgico", label: "Centro Cirúrgico" },
-  { id: "farmacia", label: "Farmácia" }, { id: "almoxarifado", label: "Almoxarifado" }, { id: "faturamento", label: "Faturamento TISS" }, { id: "nir", label: "NIR – Regulação de Leitos" },
+  { id: "farmacia", label: "Farmácia" }, { id: "almoxarifado", label: "Almoxarifado" }, { id: "faturamento", label: "Faturamento (TISS e SUS)" }, { id: "nir", label: "NIR – Regulação de Leitos" },
 ] as const;
-export const defaultAreas = (profile: Profile): string[] => ACCESS_AREAS.map((a) => a.id).filter((id) => canAccessPage(profile, `/${id}`));
+export type UnitArea = "ambulatorio" | "pronto-socorro" | "maternidade";
+export type UnitTab = "agenda" | "recepcao" | "acolhimento" | "atendimento" | "sadt" | "especialidades";
+/** Care-unit entries with their selectable sub-levels (stored as "unit:tab"). */
+export const UNIT_AREAS: { id: UnitArea; label: string; tabs: { id: UnitTab; label: string }[] }[] = [
+  { id: "ambulatorio", label: "Ambulatório", tabs: [{ id: "agenda", label: "Agenda" }, { id: "recepcao", label: "Recepção / Chegada" }, { id: "acolhimento", label: "Acolhimento (Alto Risco)" }, { id: "atendimento", label: "Atendimento Médico" }, { id: "sadt", label: "SADT · Laudos" }, { id: "especialidades", label: "Especialidades" }] },
+  { id: "pronto-socorro", label: "Pronto Socorro", tabs: [{ id: "recepcao", label: "Recepção / Cadastro" }, { id: "acolhimento", label: "Acolhimento / Triagem" }, { id: "atendimento", label: "Atendimento Médico" }] },
+  { id: "maternidade", label: "Maternidade", tabs: [{ id: "recepcao", label: "Recepção / Cadastro" }, { id: "acolhimento", label: "Acolhimento Obstétrico" }, { id: "atendimento", label: "Atendimento Médico" }] },
+];
+const UNIT_IDS: string[] = UNIT_AREAS.map((u) => u.id);
+/** Default (function-derived) permission for one tab of a care unit. */
+function tabByFunction(profile: Profile, tab: UnitTab) {
+  if (tab === "atendimento") return can(profile, "prescrever");
+  if (tab === "acolhimento") return can(profile, "triagem");
+  if (tab === "sadt") return can(profile, "prescrever");
+  return can(profile, "recepcao");
+}
+export function canAccessUnitTab(profile: Profile, unit: UnitArea, tab: UnitTab, areas?: readonly string[] | null) {
+  if (profile === "Administrador") return true;
+  if (!areas) return tabByFunction(profile, tab);
+  return areas.includes(unit) || areas.includes(`${unit}:${tab}`);
+}
+export const defaultAreas = (profile: Profile): string[] => [
+  ...ACCESS_AREAS.map((a) => a.id as string).filter((id) => canAccessPage(profile, `/${id}`)),
+  ...UNIT_AREAS.flatMap((u) => u.tabs.filter((t) => tabByFunction(profile, t.id)).map((t) => `${u.id}:${t.id}`)),
+];
 /** Areas chosen by the admin override the function defaults; null means "use the function". */
 export function canAccessPage(profile: Profile, path: string, areas?: readonly string[] | null) {
   if (profile === "Administrador") return true;
   if (path === "/" || path === "/painel-tv" || path === "/solicitacao-almoxarifado") return true;
-  if (areas) { const seg = path.split("/")[1] ?? ""; if (["ambulatorio", "pronto-socorro", "maternidade"].includes(seg) && ["recepcao", "acolhimento", "atendimento"].some((a) => areas.includes(a))) return true; return areas.includes(seg === "faturamento-sus" ? "faturamento" : seg); }
+  const seg = path.split("/")[1] ?? "";
+  if (UNIT_IDS.includes(seg)) { const u = UNIT_AREAS.find((x) => x.id === seg)!; return u.tabs.some((t) => canAccessUnitTab(profile, u.id, t.id, areas)); }
+  if (areas) return areas.includes(seg === "faturamento-sus" ? "faturamento" : seg);
   if (path === "/recepcao") return can(profile, "recepcao");
-  if (path === "/ambulatorio" || path === "/pronto-socorro" || path === "/maternidade") return can(profile, "recepcao") || can(profile, "triagem") || can(profile, "prescrever");
   if (path === "/acolhimento") return can(profile, "triagem");
   if (path === "/atendimento") return can(profile, "prescrever");
   if (path.startsWith("/pacientes")) return can(profile, "evoluir") || can(profile, "prescrever") || can(profile, "checar");
