@@ -18,3 +18,11 @@ describe("Hotelaria bed integration", () => {
     expect(hotelariaSnapshotSchema.safeParse({ ...data, setores: [{ ...data.setores[0], leitos: [{ ...b, status: "ocupado" }, { ...b, status: "disponivel" }] }] }).success).toBe(false);
   });
 });
+import { normalizeHotelaria as norm2, hotelariaSnapshotSchema as schema2 } from "./hotelaria-beds";
+import { describe as d2, it as i2, expect as e2 } from "vitest";
+d2("hotelaria camelCase payload", () => {
+  i2("accepts atualizadoEm and sigla from Hotelaria", () => {
+    const s = schema2.parse(norm2({ generatedAt: "2026-11-17T12:04:51.979Z", setores: [{ id: "m", nome: "Maternidade", sigla: "MAT", ordem: 1, leitos: [{ id: "b", codigo: "300.1", status: "disponivel", ordem: 1, atualizadoEm: "2026-11-16T18:27:50.632+00:00" }] }] }));
+    e2(s.setores[0]!.leitos[0]!.atualizado_em).toBe("2026-11-16T18:27:50.632+00:00");
+  });
+});

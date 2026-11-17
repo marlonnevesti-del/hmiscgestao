@@ -39,3 +39,10 @@ export function hotelariaBedAvailable(status: HotelariaStatus) { return status =
 export function sortHotelaria(snapshot: HotelariaSnapshot): HotelariaSnapshot {
   return { ...snapshot, setores: [...snapshot.setores].sort((a, b) => a.ordem - b.ordem).map((s) => ({ ...s, leitos: [...s.leitos].sort((a, b) => a.ordem - b.ordem) })) };
 }
+// Hotelaria sends camelCase "atualizadoEm"; accept both shapes.
+export function normalizeHotelaria(raw: unknown): unknown {
+  if (!raw || typeof raw !== "object") return raw;
+  const r = raw as { setores?: unknown };
+  if (!Array.isArray(r.setores)) return raw;
+  return { ...r, setores: r.setores.map((s: Record<string, unknown>) => ({ ...s, leitos: Array.isArray(s["leitos"]) ? (s["leitos"] as Record<string, unknown>[]).map((l) => ({ ...l, atualizado_em: l["atualizado_em"] ?? l["atualizadoEm"] })) : s["leitos"] })) };
+}

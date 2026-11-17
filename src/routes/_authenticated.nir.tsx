@@ -3,11 +3,15 @@ import { useState } from "react";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { HotelariaBedMap } from "@/components/HotelariaBedMap";
 import { hotelariaBedsQuery } from "@/lib/hotelaria-beds-query";
+import { reserveHotelariaBed } from "@/lib/hotelaria-beds.functions";
+import { hotelariaBedAvailable, isHotelariaFresh } from "@/lib/hotelaria-beds";
+import { useServerFn } from "@tanstack/react-start";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { NoPermission } from "@/components/AppShell";
 import { BASE_BEDS, can, MANCHESTER, WARDS } from "@/lib/hospital-data";
-import { authorizeAdmission, rejectAdmission, useStore } from "@/lib/hospital-store";
+import { authorizeAdmission, authorizeAdmissionExternal, rejectAdmission, useStore } from "@/lib/hospital-store";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/nir")({
@@ -32,16 +36,33 @@ function NirPage() {
   const encounters = useStore((s) => s.encounters);
   const patients = useStore((s) => s.patients);
   const [beds, setBeds] = useState<Record<string, string>>({});
+  const reserve = useServerFn(reserveHotelariaBed);
+  const qc = useQueryClient();
+  const [busy, setBusy] = useState<string | null>(null);
   const [notes, setNotes] = useState<Record<string, string>>({});
   if (!can(profile, "nir")) return <NoPermission action="acessar o NIR" />;
   const occupied = (id: string) => patients.find((p) => p.bed === id);
   const external = hotelaria.status !== "not_configured";
+  const connected = hotelaria.status === "connected" && !!hotelaria.snapshot && isHotelariaFresh(hotelaria.snapshot.generatedAt);
+  const extFree = connected ? hotelaria.snapshot!.setores.flatMap((st) => st.leitos.filter((l) => hotelariaBedAvailable(l.status)).map((l) => ({ id: l.id, codigo: l.codigo, setor: st.nome }))) : [];
   const free = external ? [] : BASE_BEDS.filter((b) => ADM_WARDS.includes(b.ward) && b.status === "livre" && !occupied(b.id));
   const total = BASE_BEDS.filter((b) => ADM_WARDS.includes(b.ward)).length;
   const pending = encounters.filter((e) => e.admission?.status === "pendente")
     .sort((a, b) => RISK_ORDER.indexOf(a.triage?.risk ?? "azul") - RISK_ORDER.indexOf(b.triage?.risk ?? "azul") || Date.parse(a.admission!.requestedAt) - Date.parse(b.admission!.requestedAt));
   const recent = encounters.filter((e) => e.admission && e.admission.status !== "pendente").slice(-10).reverse();
   const run = (fn: () => void, msg: string) => { try { fn(); toast.success(msg); } catch (err) { toast.error(err instanceof Error ? err.message : "Ação não concluída"); } };
+  const authorizeExt = async (encId: string) => {
+    const bed = extFree.find((b) => b.id === beds[encId]); if (!bed) return;
+    setBusy(encId);
+    try {
+      const r = await reserve({ data: { leitoId: bed.id } });
+      if (!r.ok) { toast.error(r.message); return; }
+      authorizeAdmissionExternal(encId, r.codigo ?? bed.codigo, bed.setor);
+      toast.success(`Internação autorizada · leito ${r.codigo ?? bed.codigo} ocupado na Hotelaria`);
+      setBeds((x) => ({ ...x, [encId]: "" }));
+    } catch (err) { toast.error(err instanceof Error ? err.message : "Ação não concluída"); }
+    finally { setBusy(null); void qc.invalidateQueries({ queryKey: hotelariaBedsQuery.queryKey }); }
+  };
   const wait = (iso: string) => { const m = Math.round((Date.now() - Date.parse(iso)) / 60000); return m < 60 ? `${m} min` : `${Math.floor(m / 60)}h${String(m % 60).padStart(2, "0")}`; };
 
   return <div className="space-y-6">
@@ -70,12 +91,20 @@ function NirPage() {
           </div>
           <p className="text-sm"><b>CID-10:</b> {a.cid || "—"} · <b>Justificativa:</b> {a.justification}</p>
           <div className="flex flex-wrap items-center gap-2">
-            <select disabled={external} aria-label="Leito" className="h-9 rounded-md border bg-background px-2 text-sm" value={beds[e.id] ?? ""} onChange={(ev) => setBeds((x) => ({ ...x, [e.id]: ev.target.value }))}>
-              <option value="">Selecionar leito livre</option>
-              {options.map((b) => <option key={b.id} value={b.id}>{b.id} · {WARDS.find((w) => w.id === b.ward)?.name}</option>)}
-            </select>
-            <Button disabled={external || !beds[e.id]} onClick={() => run(() => authorizeAdmission(e.id, beds[e.id] ?? ""), "Internação autorizada e leito reservado")}>Autorizar internação</Button>
-            {external && <span className="text-sm text-destructive">Reserva integrada aguardando ativação na Hotelaria.</span>}
+            {external ? <>
+              <select disabled={!connected} aria-label="Leito" className="h-9 rounded-md border bg-background px-2 text-sm" value={beds[e.id] ?? ""} onChange={(ev) => setBeds((x) => ({ ...x, [e.id]: ev.target.value }))}>
+                <option value="">Selecionar leito disponível (Hotelaria)</option>
+                {extFree.map((b) => <option key={b.id} value={b.id}>{b.codigo} · {b.setor}</option>)}
+              </select>
+              <Button disabled={!connected || !beds[e.id] || busy === e.id} onClick={() => void authorizeExt(e.id)}>{busy === e.id ? "Reservando…" : "Autorizar internação"}</Button>
+              {!connected && <span className="text-sm text-destructive">Sem atualização da Hotelaria — reserva bloqueada.</span>}
+            </> : <>
+              <select aria-label="Leito" className="h-9 rounded-md border bg-background px-2 text-sm" value={beds[e.id] ?? ""} onChange={(ev) => setBeds((x) => ({ ...x, [e.id]: ev.target.value }))}>
+                <option value="">Selecionar leito livre</option>
+                {options.map((b) => <option key={b.id} value={b.id}>{b.id} · {WARDS.find((w) => w.id === b.ward)?.name}</option>)}
+              </select>
+              <Button disabled={!beds[e.id]} onClick={() => run(() => authorizeAdmission(e.id, beds[e.id] ?? ""), "Internação autorizada e leito reservado")}>Autorizar internação</Button>
+            </>}
             <input aria-label="Motivo da devolução" placeholder="Motivo da devolução ao médico" className="h-9 min-w-52 flex-1 rounded-md border bg-background px-2 text-sm" value={notes[e.id] ?? ""} onChange={(ev) => setNotes((x) => ({ ...x, [e.id]: ev.target.value }))} />
             <Button variant="outline" onClick={() => run(() => rejectAdmission(e.id, notes[e.id] ?? ""), "Solicitação devolvida ao médico")}>Devolver</Button>
           </div>

@@ -297,6 +297,15 @@ export function authorizeAdmission(id: string, bedId: string) {
   const moved = transition(e, 'ENCAMINHADO_INTERNACAO', by, `NIR: leito ${bed.id}`, at);
   commitEncounter({ ...moved, admission: { ...e.admission, status: 'autorizada', bed: bed.id, decidedAt: at, decidedBy: by } }, { patients: state.patients.map((x) => x.id === p.id ? { ...x, ward: bed.ward, bed: bed.id } : x) });
 }
+// Bed already reserved atomically in Hotelaria; record it here without the local bed list.
+export function authorizeAdmissionExternal(id: string, bedCode: string, sector: string) {
+  requireAction('nir'); const { e, p } = getEncounter(id);
+  if (e.admission?.status !== 'pendente') throw new Error('Solicitação não está pendente.');
+  if (!bedCode.trim()) throw new Error('Selecione um leito.');
+  const at = new Date().toISOString(); const by = professionalName(state.profile);
+  const moved = transition(e, 'ENCAMINHADO_INTERNACAO', by, `NIR: leito ${bedCode} (${sector}) reservado na Hotelaria`, at);
+  commitEncounter({ ...moved, admission: { ...e.admission, status: 'autorizada', bed: bedCode, decidedAt: at, decidedBy: by } }, { patients: state.patients.map((x) => x.id === p.id ? { ...x, ward: e.admission!.ward as Patient["ward"], bed: bedCode } : x) });
+}
 export function rejectAdmission(id: string, note: string) {
   requireAction('nir'); const { e } = getEncounter(id);
   if (e.admission?.status !== 'pendente') throw new Error('Solicitação não está pendente.');
