@@ -1,15 +1,20 @@
 import { createPortal } from 'react-dom';
 import type { Encounter } from '@/lib/care-flow';
 import type { Patient } from '@/lib/hospital-data';
-import logo from '@/assets/logo-santa-casa-hmisc.png.asset.json';
+import logos from '@/assets/hmisc-logos.png.asset.json';
+import watermark from '@/assets/hmisc-watermark.jpg.asset.json';
 
-/** Cabeçalho timbrado usado em todos os documentos impressos. */
+/** Cabeçalho timbrado (modelo institucional HMISC) usado em todos os documentos impressos; inclui marca d'água e rodapé repetidos em cada página. */
 export function Letterhead({ title }: { title: string }) {
-  return <div className="doc-head"><img src={logo.url} alt="Santa Casa · Hospital Materno-Infantil Santa Catarina" className="doc-logo" /><div className="doc-title">{title}</div></div>;
+  return <>
+    <img src={watermark.url} alt="" aria-hidden className="doc-watermark" />
+    <div className="doc-head"><img src={logos.url} alt="SUS · Santa Casa · Hospital Materno-Infantil Santa Catarina · Governo de Santa Catarina" className="doc-logo" /></div>
+    <div className="doc-title">{title}</div>
+    <div className="doc-foot"><b>Hospital Materno Infantil Santa Catarina - HMISC</b><br />Rua: Wenceslau Braz, 1015 - Operária Nova, Criciúma - SC, 88809-020</div>
+  </>;
 }
-export function LetterFooter() {
-  return <div className="doc-foot">Hospital Materno-Infantil Santa Catarina · Santa Casa de São Bernardo do Campo</div>;
-}
+/** Mantido por compatibilidade: o rodapé agora faz parte do Letterhead. */
+export function LetterFooter() { return null; }
 
 /** Imprime somente o documento de alta/receita (oculta o resto da tela). */
 export function printDischarge() {

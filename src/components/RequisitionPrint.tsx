@@ -1,3 +1,4 @@
+import { Letterhead } from "./DischargePrint";
 import { createPortal } from "react-dom";
 import type { Encounter } from "@/lib/care-flow";
 import { WARDS, type Patient } from "@/lib/hospital-data";
@@ -21,7 +22,7 @@ export function RequisitionPrint({ p, e, stock }: { p?: Patient | undefined; e?:
   const [room, bed] = (p.bed || "").split("-");
   const items = p.prescriptions.filter((x) => x.pharmacy);
   return createPortal(<div className="req-root"><section className="req-page">
-    <div className="req-h1">HOSPITAL MATERNO INFANTIL SANTA CATARINA</div>
+    <Letterhead title="REQUISIÇÃO" />
     <div className="req-h2">SURE090_R - Requisição de Medicamentos por Horário de Dispensação</div>
     <div className="req-row"><span><b>Requisição:</b> {e.requisition ?? ""} - 0</span><span><b>Requisitada em:</b> {fmt(e.signedAt)}</span><span><b>Atendida em:</b> {fmt(e.dispensedAt)}</span></div>
     <div className="req-row"><span><b>{e.type === "Maternidade" ? "FIA" : "BAA"}:</b> {e.number}</span><span>{ward}{room && ` - Quarto: ${room}`}{bed && ` - Leito: ${bed}`}</span></div>
