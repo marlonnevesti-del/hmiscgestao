@@ -346,6 +346,17 @@ export function finishEncounter(id: string, outcome: 'internacao' | 'co' | 'exam
   commitEncounter({ ...transition(e, 'ALTA_HOSPITALAR', by, e.fia ? `${e.fia.number} encerrada (alta)` : 'BAA encerrada', at), discharge: { summary: details.summary, recipe: details.recipe, by, at } }, { patients: state.patients.map((x) => x.id === p.id ? { ...x, bed: '', dischargeForecast: '' } : x), surgeries: state.surgeries.map((s) => s.patientId === p.id ? { ...s, status: 'Finalizado' } : s) });
 }
 
+/** Administrador desfaz uma alta lançada por engano, reabrindo o mesmo BAA/FIA. */
+export function reopenEncounter(id: string, reason: string) {
+  if (state.profile !== 'Administrador') throw new Error('Apenas administradores podem desfazer altas.');
+  if (!reason.trim()) throw new Error('Informe a justificativa.');
+  const { e } = getEncounter(id);
+  if (e.status_fluxo !== 'ALTA_HOSPITALAR') throw new Error('Atendimento não está em alta.');
+  const prev = [...e.history].reverse().find((h) => h.status !== 'ALTA_HOSPITALAR')?.status ?? 'EM_OBSERVACAO_REAVALIACAO';
+  const at = new Date().toISOString();
+  const { discharge: _d, ...rest } = e;
+  commitEncounter({ ...rest, status_fluxo: prev, history: [...e.history, { status: prev, at, by: professionalName(state.profile), note: `Alta desfeita pelo administrador: ${reason.trim()}${prev === 'ENCAMINHADO_INTERNACAO' ? ' (redefinir leito)' : ''}` }] });
+}
 /** Registra o parto: cria prontuário "RN de <mãe>" vinculado e converte a mãe em puérpera. */
 export function registerBirth(motherId: string, nb: Omit<Newborn, "motherId">, mode: "Parto Normal" | "Cesárea", sex: "F" | "M"): string {
   const m = state.patients.find((p) => p.id === motherId);

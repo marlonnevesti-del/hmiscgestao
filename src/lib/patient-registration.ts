@@ -71,5 +71,15 @@ export function registrationIssues(r: PatientRegistration, mode: RegistrationMod
   if (blank(r.birthplaceState) || blank(r.birthplace)) issues.push("Informe a naturalidade (UF e cidade).");
   return issues;
 }
+/** RN (neonato) só até 28 dias de vida; nunca data futura. */
+export function newbornBirthIssue(birthDate: string, today = new Date()): string | null {
+  if (!birthDate) return null;
+  const birth = new Date(`${birthDate}T12:00:00`); const ref = new Date(today); ref.setHours(12, 0, 0, 0);
+  if (Number.isNaN(birth.getTime())) return "Data de nascimento inválida.";
+  const days = Math.round((ref.getTime() - birth.getTime()) / 86400000);
+  if (days < 0) return "Data de nascimento no futuro.";
+  if (days > 28) return "Data incompatível com Recém-Nascido (limite de 28 dias). Corrija a data ou altere para Pediátrico.";
+  return null;
+}
 /** Name used for unidentified emergency patients. */
 export const unknownPatientName = (n: string) => `DESCONHECIDO Nº ${n || "S/N"}`;

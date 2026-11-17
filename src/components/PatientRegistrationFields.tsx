@@ -36,14 +36,15 @@ const simple: Field[] = [
   ["skinColor", "Cor (pele)", ["Branca", "Preta", "Parda", "Amarela", "Indígena", "Não informada"]], ["ethnicity", "Etnia"], ["esusCode", "Código e-SUS"],
 ];
 
-export function PatientRegistrationFields({ value: r, onChange, recordNumber, readOnly = false, mode = "completo" }: { value: PatientRegistration; onChange: (value: PatientRegistration) => void; recordNumber?: string | undefined; readOnly?: boolean; mode?: RegistrationMode }) {
+export function PatientRegistrationFields({ value: r, onChange, recordNumber, readOnly = false, mode = "completo", birthError }: { birthError?: string | null; value: PatientRegistration; onChange: (value: PatientRegistration) => void; recordNumber?: string | undefined; readOnly?: boolean; mode?: RegistrationMode }) {
   const req = REQUIRED[mode];
   const mark = (key: string, label: string) => req.includes(key) ? <span className="font-semibold text-primary">{label} *</span> : mode === "simplificado" && RECOMMENDED_SIMPLE.includes(key) ? <span className="text-primary">{label}</span> : label;
   const set = (key: keyof PatientRegistration, value: string | boolean) => onChange({ ...r, [key]: value });
   const fields = (list: Field[]) => list.map(([key, label, options]) => <label key={key} className="grid min-w-0 gap-1 text-xs">
     {mark(key, label)}{options ? <select aria-label={label} value={String(r[key])} onChange={e => set(key, e.target.value)} className="h-9 w-full min-w-0 rounded-md border bg-background px-2 text-sm"><option value="">Não informado</option>{options.map(option => <option key={option}>{option}</option>)}{r[key] && !options.includes(String(r[key])) && <option>{String(r[key])}</option>}</select>
       : key.startsWith("observation") ? <textarea aria-label={label} value={String(r[key])} maxLength={2000} onChange={e => set(key, e.target.value)} className="min-h-20 w-full rounded-md border bg-background p-2 text-sm" />
-      : <Input aria-label={label} type={key.endsWith("Date") ? "date" : key === "weight" || key === "height" ? "number" : "text"} min={key === "weight" || key === "height" ? 0 : undefined} step={key === "weight" || key === "height" ? "any" : undefined} maxLength={200} value={String(r[key])} onChange={e => set(key, e.target.value)} />}
+      : <Input aria-label={label} type={key.endsWith("Date") ? "date" : key === "weight" || key === "height" ? "number" : "text"} min={key === "weight" || key === "height" ? 0 : undefined} step={key === "weight" || key === "height" ? "any" : undefined} maxLength={200} value={String(r[key])} onChange={e => set(key, e.target.value)} className={key === "birthDate" && birthError ? "border-2 border-destructive" : undefined} aria-invalid={key === "birthDate" && !!birthError} />}
+    {key === "birthDate" && birthError && <span className="font-semibold text-destructive">{birthError}</span>}
   </label>);
   const check = (key: keyof PatientRegistration, label: string) => <label className="flex items-center gap-2 text-sm"><Checkbox checked={Boolean(r[key])} onCheckedChange={v => set(key, v === true)} />{label}</label>;
   const unknownToggle = <label className="flex items-center gap-2 text-sm"><Checkbox checked={r.unknownIdentity} onCheckedChange={v => onChange({ ...r, unknownIdentity: v === true })} />Paciente desconhecido (sem documentação)</label>;

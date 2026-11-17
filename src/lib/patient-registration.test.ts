@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { emptyRegistration, patientAge, presentationName, registrationSchema } from "./patient-registration";
+import { emptyRegistration, newbornBirthIssue, patientAge, presentationName, registrationSchema } from "./patient-registration";
 
 describe("cadastro conforme os anexos", () => {
   it("usa o nome social selecionado sem perder o civil", () => {
@@ -27,4 +27,10 @@ describe("obrigatórios do cadastro", () => {
   it("completo exige filiação 1, cor e naturalidade", () => expect(registrationIssues({ ...full, parent1: "", skinColor: "", birthplace: "" }, "completo")).toHaveLength(3));
   it("simplificado aceita desconhecido só com sexo", () => expect(registrationIssues({ ...emptyRegistration(), civilName: "", unknownIdentity: true, sex: "Masculino" }, "simplificado")).toEqual([]));
   it("simplificado exige sexo", () => expect(registrationIssues({ ...emptyRegistration(), unknownIdentity: true }, "simplificado")).toContain("Informe o sexo."));
+});
+describe("RN até 28 dias", () => {
+  const today = new Date("2026-11-17T12:00:00");
+  it("aceita 28 dias", () => expect(newbornBirthIssue("2026-10-20", today)).toBeNull());
+  it("bloqueia 29 dias", () => expect(newbornBirthIssue("2026-10-19", today)).toMatch(/28 dias/));
+  it("bloqueia data futura", () => expect(newbornBirthIssue("2026-11-18", today)).toMatch(/futuro/));
 });

@@ -10,7 +10,7 @@ import { EncounterTimeline } from "./EncounterTimeline";
 import { SpecialConditionBadges } from "./SpecialConditions";
 import { PatientRegistrationFields } from "./PatientRegistrationFields";
 import { registrationFor, registrationPatch } from "@/lib/patient-registration-mapping";
-import { registrationIssues, registrationSchema, unknownPatientName, type RegistrationMode } from "@/lib/patient-registration";
+import { newbornBirthIssue, registrationIssues, registrationSchema, unknownPatientName, type RegistrationMode } from "@/lib/patient-registration";
 import { ATTENDANCE_TYPES, type Encounter } from "@/lib/care-flow";
 import { can, type Patient } from "@/lib/hospital-data";
 import { deleteEncounter, openEncounter, professionalName, savePatientRegistration, useStore } from "@/lib/hospital-store";
@@ -54,8 +54,10 @@ export function CareReception({ unit }: { unit?: CareUnit } = {}) {
     setF((current) => ({ ...current, name: "", cpf: "", birth: "", mother: "", guardian: "", conditions: [], otherCondition: "" }));
   };
 
+  const birthError = f.patientType === "neonato" && !registration.estimatedAge ? newbornBirthIssue(registration.birthDate) : null;
   const submit = () => {
     try {
+      if (birthError) throw new Error(birthError);
       const reg = registration.unknownIdentity && !registration.civilName.trim() ? { ...registration, civilName: unknownPatientName(registration.unknownNumber) } : registration;
       const missing = registrationIssues(reg, mode);
       if (missing.length) throw new Error(missing[0]);
@@ -81,6 +83,7 @@ export function CareReception({ unit }: { unit?: CareUnit } = {}) {
         admission: new Date().toLocaleString("pt-BR"), prescriptions: [], vitals: old?.vitals ?? [],
         specialConditions: f.conditions, otherSpecialCondition: f.otherCondition.trim(),
       };
+      if (!window.confirm(`Confirmar o cadastro e a abertura do atendimento de ${patient.name}?\nNascimento: ${reg.birthDate || "não informado"} · Sexo: ${reg.sex || "—"} · CNS/CPF: ${reg.cns || reg.cpf || "—"}`)) return;
       const encounter = openEncounter(patient, f.type, f.specialty, f.complaint);
       setCreated(encounter);
       toast.success(`${encounter.number} gerado e enviado para ${encounter.status_fluxo === "AGUARDANDO_TRIAGEM" ? "acolhimento" : "atendimento"}`);
@@ -108,7 +111,7 @@ export function CareReception({ unit }: { unit?: CareUnit } = {}) {
           <Button type="button" variant={mode === "simplificado" ? "destructive" : "outline"} onClick={() => setMode("simplificado")}>Cadastro simplificado (emergência / sem documento)</Button>
           <span className="self-center text-xs text-muted-foreground">Campos em azul com * são obrigatórios.</span>
         </div>
-        <div className="min-w-0 md:col-span-3"><PatientRegistrationFields mode={mode} value={registration} onChange={setRegistration} recordNumber={patients.find(p => p.id === existing)?.prontuario} /></div>
+        <div className="min-w-0 md:col-span-3"><PatientRegistrationFields birthError={birthError} mode={mode} value={registration} onChange={setRegistration} recordNumber={patients.find(p => p.id === existing)?.prontuario} /></div>
         {existing && <div className="md:col-span-3"><Button type="button" variant="outline" onClick={() => { try { savePatientRegistration(existing, registration); toast.success("Cadastro atualizado sem abrir novo atendimento"); } catch (error) { toast.error(error instanceof Error ? error.message : "Não foi possível salvar"); } }}>Salvar alterações do cadastro</Button></div>}
         <h2 className="mt-3 border-t pt-4 font-semibold md:col-span-3">Abertura de atendimento</h2>
         {unit === "Ambulatório" && <label className="grid gap-1 text-xs">Especialidade<select aria-label="Especialidade" value={f.specialty} onChange={(event) => set("specialty", event.target.value)} className="h-9 rounded-md border bg-background px-2"><option value="">Selecione…</option>{(["medica", "nao_medica", "sadt"] as const).map((g) => <optgroup key={g} label={GROUP_LABELS[g]}>{ambSpecialties.filter((x) => x.group === g && x.active).map((x) => <option key={x.id} value={x.name}>{x.name}</option>)}</optgroup>)}</select></label>}
@@ -126,7 +129,7 @@ export function CareReception({ unit }: { unit?: CareUnit } = {}) {
           </div>
           {f.conditions.includes("Outra") && <label className="mt-3 grid max-w-xl gap-1 text-xs">Descreva a outra condição<Input aria-label="Descreva a outra condição" value={f.otherCondition} onChange={(event) => set("otherCondition", event.target.value)} required /></label>}
         </fieldset>
-        <div className="flex items-end md:col-span-3"><Button type="submit">Gerar Atendimento (BAA)</Button></div>
+        <div className="flex items-end md:col-span-3"><Button type="submit" disabled={!!birthError}>Gerar Atendimento (BAA)</Button>{birthError && <Button type="button" variant="outline" className="ml-2" onClick={() => setF((x) => ({ ...x, patientType: "pediatria" }))}>Mudar para Pediátrico</Button>}</div>
       </form>
     </>}
 
