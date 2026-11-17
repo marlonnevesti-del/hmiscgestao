@@ -382,7 +382,7 @@ export function registerBirth(motherId: string, nb: Omit<Newborn, "motherId">, m
 }
 
 export function announcePatient(patientId: string, room: string) {
-  if (!state.rooms.includes(room)) throw new Error('Selecione o consultório.');
+  if (room !== 'Triagem' && !state.rooms.includes(room)) throw new Error('Selecione o consultório.');
   const p = state.patients.find((x) => x.id === patientId); if (!p) throw new Error('Paciente não encontrado.');
   const e = encounterFor(patientId);
   setState((s) => ({ calls: pushCall(s.calls, { id: crypto.randomUUID(), patientName: p.name, room, risk: e?.triage?.risk, sector: (e as { type?: string } | undefined)?.type, at: new Date().toISOString() }) }));
