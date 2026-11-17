@@ -283,7 +283,6 @@ export function requestAdmission(id: string, req: { ward: string; character: 'Ur
   requireAction('prescrever'); const { e } = getEncounter(id);
   if (!['EM_ATENDIMENTO_MEDICO', 'EM_OBSERVACAO_REAVALIACAO'].includes(e.status_fluxo)) throw new Error('Solicitação disponível durante a avaliação médica.');
   if (e.admission?.status === 'pendente') throw new Error('Já existe uma solicitação aguardando o NIR.');
-  if (!req.ward) throw new Error('Informe o perfil de leito.');
   if (!req.justification.trim()) throw new Error('Informe a justificativa clínica.');
   const at = new Date().toISOString(); const by = professionalName(state.profile);
   commitEncounter({ ...e, admission: { ...req, cid: req.cid || e.medical?.cid || '', status: 'pendente', requestedAt: at, requestedBy: by }, history: [...e.history, { status: e.status_fluxo, at, by, note: 'Internação solicitada ao NIR' }] });
@@ -315,7 +314,7 @@ export function authorizeAdmissionExternal(id: string, bedCode: string, sector: 
   const at = new Date().toISOString(); const by = professionalName(state.profile);
   const moved = transition(e, 'ENCAMINHADO_INTERNACAO', by, `NIR: leito ${bedCode} (${sector}) reservado na Hotelaria`, at);
   const f = openFia({ ...moved, admission: { ...e.admission, status: 'autorizada', bed: bedCode, decidedAt: at, decidedBy: by } }, sector || e.admission.ward, bedCode, at, by);
-  commitEncounter(f.e, { fiaSequence: f.seq, patients: state.patients.map((x) => x.id === p.id ? { ...x, ward: e.admission!.ward as Patient["ward"], bed: bedCode } : x) });
+  commitEncounter(f.e, { fiaSequence: f.seq, patients: state.patients.map((x) => x.id === p.id ? { ...x, ward: (e.admission!.ward || p.ward) as Patient["ward"], bed: bedCode } : x) });
 }
 export function rejectAdmission(id: string, note: string) {
   requireAction('nir'); const { e } = getEncounter(id);

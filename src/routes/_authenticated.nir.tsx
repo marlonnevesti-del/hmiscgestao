@@ -84,7 +84,7 @@ function NirPage() {
             <div className="flex flex-wrap gap-2 text-xs">
               {risk && <span className="rounded border px-2 py-0.5">{risk.label}</span>}
               <span className={cn("rounded border px-2 py-0.5", a.character === "Urgência" && "border-destructive text-destructive")}>{a.character}</span>
-              <span className="rounded border px-2 py-0.5">{WARDS.find((w) => w.id === a.ward)?.name}</span>
+              {a.ward && <span className="rounded border px-2 py-0.5">{WARDS.find((w) => w.id === a.ward)?.name}</span>}
               {a.isolation && <span className="rounded border border-destructive px-2 py-0.5 text-destructive">Isolamento</span>}
               {a.oxygen && <span className="rounded border px-2 py-0.5">Oxigênio</span>}
             </div>
