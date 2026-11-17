@@ -39,12 +39,12 @@ export const ACCESS_AREAS = [
   { id: "farmacia", label: "Farmácia" }, { id: "almoxarifado", label: "Almoxarifado" }, { id: "faturamento", label: "Faturamento (TISS e SUS)" }, { id: "nir", label: "NIR – Regulação de Leitos" },
 ] as const;
 export type UnitArea = "ambulatorio" | "pronto-socorro" | "maternidade";
-export type UnitTab = "agenda" | "recepcao" | "acolhimento" | "atendimento" | "sadt" | "especialidades";
+export type UnitTab = "agenda" | "recepcao" | "acolhimento" | "atendimento" | "sadt" | "especialidades" | "internados";
 /** Care-unit entries with their selectable sub-levels (stored as "unit:tab"). */
 export const UNIT_AREAS: { id: UnitArea; label: string; tabs: { id: UnitTab; label: string }[] }[] = [
   { id: "ambulatorio", label: "Ambulatório", tabs: [{ id: "agenda", label: "Agenda" }, { id: "recepcao", label: "Recepção / Chegada" }, { id: "acolhimento", label: "Acolhimento (Alto Risco)" }, { id: "atendimento", label: "Atendimento Médico" }, { id: "sadt", label: "SADT · Laudos" }, { id: "especialidades", label: "Especialidades" }] },
-  { id: "pronto-socorro", label: "Pronto Socorro", tabs: [{ id: "recepcao", label: "Recepção / Cadastro" }, { id: "acolhimento", label: "Acolhimento / Triagem" }, { id: "atendimento", label: "Atendimento Médico" }] },
-  { id: "maternidade", label: "Maternidade", tabs: [{ id: "recepcao", label: "Recepção / Cadastro" }, { id: "acolhimento", label: "Acolhimento Obstétrico" }, { id: "atendimento", label: "Atendimento Médico" }] },
+  { id: "pronto-socorro", label: "Pronto Socorro", tabs: [{ id: "recepcao", label: "Recepção / Cadastro" }, { id: "acolhimento", label: "Acolhimento / Triagem" }, { id: "atendimento", label: "Atendimento Médico" }, { id: "internados", label: "Pacientes internados" }] },
+  { id: "maternidade", label: "Maternidade", tabs: [{ id: "recepcao", label: "Recepção / Cadastro" }, { id: "acolhimento", label: "Acolhimento Obstétrico" }, { id: "atendimento", label: "Atendimento Médico" }, { id: "internados", label: "Pacientes internados" }] },
 ];
 /** Pharmacy sections shown as sidebar sub-items (/farmacia?aba=id). */
 export const PHARMACY_TABS = [
@@ -62,6 +62,7 @@ function tabByFunction(profile: Profile, tab: UnitTab) {
   if (tab === "atendimento") return can(profile, "prescrever");
   if (tab === "acolhimento") return can(profile, "triagem");
   if (tab === "sadt") return can(profile, "prescrever");
+  if (tab === "internados") return can(profile, "prescrever") || can(profile, "evoluir") || can(profile, "checar") || can(profile, "recepcao");
   return can(profile, "recepcao");
 }
 export function canAccessUnitTab(profile: Profile, unit: UnitArea, tab: UnitTab, areas?: readonly string[] | null) {

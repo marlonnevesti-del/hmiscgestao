@@ -2,6 +2,7 @@ import type React from "react";
 import { CareReception } from "./CareReception";
 import { CareTriage } from "./CareTriage";
 import { MedicalQueue } from "./CareMedical";
+import { InpatientList } from "./InpatientList";
 import { AmbulatoryAgenda, SadtPanel, SpecialtyManager } from "./AmbulatoryPanels";
 import type { CareUnit } from "@/lib/ambulatorio";
 import { useRouterState } from "@tanstack/react-router";
@@ -15,7 +16,7 @@ export function CareUnitPage({ unit }: { unit: CareUnit }) {
   const areas = useStore((s) => s.accessAreas);
   const area: UnitArea = amb ? "ambulatorio" : unit === "Maternidade" ? "maternidade" : "pronto-socorro";
   const tabs = UNIT_AREAS.find((u) => u.id === area)!.tabs.filter((t) => canAccessUnitTab(profile, area, t.id, areas));
-  const body: Record<string, React.ReactNode> = { agenda: <AmbulatoryAgenda />, recepcao: <CareReception unit={unit} />, acolhimento: <CareTriage unit={unit} />, atendimento: <MedicalQueue unit={unit} />, sadt: <SadtPanel />, especialidades: <SpecialtyManager /> };
+  const body: Record<string, React.ReactNode> = { agenda: <AmbulatoryAgenda />, recepcao: <CareReception unit={unit} />, acolhimento: <CareTriage unit={unit} />, atendimento: <MedicalQueue unit={unit} />, sadt: <SadtPanel />, especialidades: <SpecialtyManager />, internados: <InpatientList unit={unit} /> };
   const aba = useRouterState({ select: (s) => (s.location.search as { aba?: string }).aba });
   if (!tabs.length) return <p className="text-muted-foreground">Você não tem acesso a nenhuma área desta unidade.</p>;
   return <div className="space-y-4">
