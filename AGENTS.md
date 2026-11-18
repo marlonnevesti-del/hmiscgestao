@@ -49,3 +49,5 @@ use the editor.
 - Care units (Ambulatório, Pronto socorro, Maternidade) share one patient registry and encounter flow; CareUnitPage filters reception, acolhimento and medical queues by encounter.type, and ambulatory specialties/agenda/SADT rules live in src/lib/ambulatorio.ts so pharmacy and billing stay unit-agnostic.
 - CME rules (kit status, autoclave cycles, validity, biological block, barcode) live in src/lib/cme.ts; kit use is registered on the surgery via registerCmeKitUse in hospital-store so traceability stays centralized.
 - Controlled-cabinet items come from src/lib/controlled-catalog.json merged into the pharmacy stock (location "Armário de Controlados"); expiry status, lot map and monthly consumption/purchase suggestion rules live in src/lib/controlled.ts; dispensations log 'consumo' and expiry write-offs log 'vencimento' movements so the report reads one history.
+
+- Warehouse request categories per user come from `allowedRequestCategories` in src/lib/warehouse-categories.ts: admin-granted "pedido:<categoria>" areas replace job-function defaults, so exceptions need no code changes.
