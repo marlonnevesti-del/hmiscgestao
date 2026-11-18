@@ -87,7 +87,7 @@ export function CareReception({ unit }: { unit?: CareUnit } = {}) {
       if (!window.confirm(`Confirmar o cadastro e a abertura do atendimento de ${patient.name}?\nNascimento: ${reg.birthDate || "não informado"} · Sexo: ${reg.sex || "—"} · CNS/CPF: ${reg.cns || reg.cpf || "—"}`)) return;
       const encounter = openEncounter(patient, f.type, f.specialty, f.complaint);
       setCreated(encounter);
-      toast.success(`${encounter.number} gerado e enviado para ${encounter.status_fluxo === "AGUARDANDO_TRIAGEM" ? "acolhimento" : "atendimento"}`);
+      toast.success(`${encounter.number} gerado e enviado para ${encounter.status_fluxo === "AGUARDANDO_TRIAGEM" ? "triagem" : "atendimento"}`);
       clearIdentity();
       setF((current) => ({ ...current, complaint: "" }));
     } catch (error) {

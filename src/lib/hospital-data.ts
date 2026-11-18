@@ -33,7 +33,7 @@ export function canAct(p: Profile, a: Action, areas?: readonly string[] | null) 
   return areas.some((x) => x === id || x.endsWith(`:${id}`));
 }
 export const ACCESS_AREAS = [
-  { id: "recepcao", label: "Recepção & Cadastro" }, { id: "acolhimento", label: "Acolhimento / Triagem" },
+  { id: "recepcao", label: "Recepção & Cadastro" }, { id: "acolhimento", label: "Triagem / Enfermagem" },
   { id: "atendimento", label: "Consultório Médico" }, { id: "pacientes", label: "Pacientes / PEP" },
   { id: "enfermagem", label: "Posto de Enfermagem" }, { id: "centro-cirurgico", label: "Centro Cirúrgico" }, { id: "cme", label: "CME – Esterilização" },
   { id: "farmacia", label: "Farmácia" }, { id: "almoxarifado", label: "Almoxarifado" }, { id: "faturamento", label: "Faturamento (TISS e SUS)" }, { id: "nir", label: "NIR – Regulação de Leitos" },
@@ -42,9 +42,9 @@ export type UnitArea = "ambulatorio" | "pronto-socorro" | "maternidade";
 export type UnitTab = "agenda" | "recepcao" | "acolhimento" | "atendimento" | "sadt" | "especialidades" | "internados";
 /** Care-unit entries with their selectable sub-levels (stored as "unit:tab"). */
 export const UNIT_AREAS: { id: UnitArea; label: string; tabs: { id: UnitTab; label: string }[] }[] = [
-  { id: "ambulatorio", label: "Ambulatório", tabs: [{ id: "agenda", label: "Agenda" }, { id: "recepcao", label: "Recepção / Chegada" }, { id: "acolhimento", label: "Acolhimento (Alto Risco)" }, { id: "atendimento", label: "Atendimento Médico" }, { id: "sadt", label: "SADT · Laudos" }, { id: "especialidades", label: "Especialidades" }] },
-  { id: "pronto-socorro", label: "Pronto Socorro", tabs: [{ id: "recepcao", label: "Recepção / Cadastro" }, { id: "acolhimento", label: "Acolhimento / Triagem" }, { id: "atendimento", label: "Atendimento Médico" }, { id: "internados", label: "Pacientes internados" }] },
-  { id: "maternidade", label: "Maternidade", tabs: [{ id: "recepcao", label: "Recepção / Cadastro" }, { id: "acolhimento", label: "Acolhimento Obstétrico" }, { id: "atendimento", label: "Atendimento Médico" }, { id: "internados", label: "Pacientes internados" }] },
+  { id: "ambulatorio", label: "Ambulatório", tabs: [{ id: "agenda", label: "Agenda" }, { id: "recepcao", label: "Recepção / Chegada" }, { id: "acolhimento", label: "Pré-consulta de enfermagem" }, { id: "atendimento", label: "Atendimento Médico" }, { id: "sadt", label: "SADT · Laudos" }, { id: "especialidades", label: "Especialidades" }] },
+  { id: "pronto-socorro", label: "Pronto Socorro", tabs: [{ id: "recepcao", label: "Recepção / Cadastro" }, { id: "acolhimento", label: "Triagem" }, { id: "atendimento", label: "Atendimento Médico" }, { id: "internados", label: "Pacientes internados" }] },
+  { id: "maternidade", label: "Maternidade", tabs: [{ id: "recepcao", label: "Recepção / Cadastro" }, { id: "acolhimento", label: "Triagem" }, { id: "atendimento", label: "Atendimento Médico" }, { id: "internados", label: "Pacientes internados" }] },
 ];
 /** Pharmacy sections shown as sidebar sub-items (/farmacia?aba=id). */
 export const PHARMACY_TABS = [

@@ -30,7 +30,7 @@ export function CareTriage({ unit }: { unit?: string } = {}) {
   const active = encounters.filter((encounter) => encounter.status_fluxo !== "ALTA_HOSPITALAR" && (!unit || encounter.type === unit));
 
   return <div className="space-y-5">
-    <div><h1 className="text-xl font-semibold">Painel de filas · Acolhimento e risco</h1><p className="text-sm text-muted-foreground">{unit === "Maternidade" ? "Classificação de risco obstétrica · " : ""}Protocolo de Classificação de Acolhimento e Risco (PCACR) · Santa Catarina · {active.length} atendimentos ativos</p></div>
+    <div><h1 className="text-xl font-semibold">Triagem · Classificação de risco</h1><p className="text-sm text-muted-foreground">{unit === "Maternidade" ? "Classificação de risco obstétrica · " : ""}Protocolo de Classificação de Acolhimento e Risco (PCACR) · Santa Catarina · {active.length} atendimentos ativos</p></div>
     <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-5">
       {RISKS.map((risk) => {
         const count = active.filter((encounter) => encounter.triage?.risk === risk && encounter.status_fluxo === "AGUARDANDO_MEDICO").length;
@@ -83,7 +83,7 @@ function QueueCard({ encounter, now, onSelect, position }: { encounter: Encounte
         {flowchart && <details className="mt-2 text-xs"><summary className="cursor-pointer text-primary">PCACR · {flowchart.nome} · {encounter.triage?.descriptors?.length ?? 0} descritor(es)</summary><div className="mt-1 rounded-md border bg-muted/40 p-2"><div className="font-semibold">{PUBLICO_LABEL[flowchart.publico]}</div><ul className="mt-1 space-y-1">{encounter.triage?.descriptors?.map((id) => { const descriptor = descritorPorId(flowchart, id); return descriptor && <li key={id} className="flex items-center gap-1.5"><span className={cn("h-2 w-2 shrink-0 rounded-full", MANCHESTER[descriptor.cor].cls)} />{descriptor.texto}</li>; })}</ul></div></details>}
       </div>
       <div className="flex shrink-0 flex-col gap-1">
-        <ProcedurePrintButton patientId={encounter.patientId} sector="Acolhimento / Triagem" />{encounter.status_fluxo === "AGUARDANDO_TRIAGEM" && <>{can(profile, "triagem") && <CallPanelButton patientId={encounter.patientId} fixedRoom="Triagem" />}<Button size="sm" disabled={!can(profile, "triagem")} onClick={() => onSelect(encounter)}>Classificar</Button></>}
+        <ProcedurePrintButton patientId={encounter.patientId} sector="Triagem" />{encounter.status_fluxo === "AGUARDANDO_TRIAGEM" && <>{can(profile, "triagem") && <CallPanelButton patientId={encounter.patientId} fixedRoom="Triagem" />}<Button size="sm" disabled={!can(profile, "triagem")} onClick={() => onSelect(encounter)}>Classificar</Button></>}
         {encounter.status_fluxo === "AGUARDANDO_MEDICO" && <><Button size="sm" disabled={!can(profile, "prescrever")} onClick={call}>Chamar</Button><Button size="sm" variant="ghost" disabled={!can(profile, "triagem")} onClick={() => onSelect(encounter)}>Reclassificar</Button></>}
         {encounter.status_fluxo === "EM_ATENDIMENTO_MEDICO" && <Button size="sm" variant="secondary" asChild><Link to="/pacientes/$id" params={{ id: encounter.patientId }}>Abrir</Link></Button>}
         {encounter.status_fluxo === "EM_OBSERVACAO_REAVALIACAO" && <Button size="sm" variant="secondary" disabled={!can(profile, "prescrever")} onClick={call}>Reavaliar</Button>}
