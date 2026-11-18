@@ -3,7 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { emptyAddress, patientAge, presentationName, type PatientRegistration, type RegistrationMode } from "@/lib/patient-registration";
+import { lookupCep, lookupCityCode } from "@/lib/ibge";
+import { emptyAddress, type PatientAddress, patientAge, presentationName, type PatientRegistration, type RegistrationMode } from "@/lib/patient-registration";
 
 type Field = [keyof PatientRegistration, string, string[]?];
 const states = "AC AL AP AM BA CE DF ES GO MA MT MS MG PA PB PR PE PI RJ RN RS RO RR SC SP SE TO".split(" ");
@@ -40,6 +41,15 @@ export function PatientRegistrationFields({ value: r, onChange, recordNumber, re
   const req = REQUIRED[mode];
   const mark = (key: string, label: string) => req.includes(key) ? <span className="font-semibold text-primary">{label} *</span> : mode === "simplificado" && RECOMMENDED_SIMPLE.includes(key) ? <span className="text-primary">{label}</span> : label;
   const set = (key: keyof PatientRegistration, value: string | boolean) => onChange({ ...r, [key]: value });
+  /** Atualiza um endereço e, ao completar CEP ou cidade, busca logradouro e código IBGE automaticamente. */
+  const editAddress = (index: number, key: keyof PatientAddress, value: string) => {
+    const base = r.addresses.length ? r.addresses : [emptyAddress()];
+    const next = { ...base[index], [key]: value } as PatientAddress;
+    const apply = (patch: Partial<PatientAddress>) => onChange({ ...r, addresses: base.map((a, i) => i === index ? { ...next, ...patch } : a) });
+    apply({});
+    if (key === "postalCode" && value.replace(/\D/g, "").length === 8) void lookupCep(value).then((c) => { if (c) apply({ street: next.street || c.street, streetType: next.streetType || c.streetType, neighborhood: next.neighborhood || c.neighborhood, city: c.city, state: c.state, cityCode: c.cityCode }); });
+    if ((key === "city" || key === "state") && next.city && next.state.length === 2) void lookupCityCode(next.state, next.city).then((code) => { if (code) apply({ cityCode: code }); });
+  };
   const fields = (list: Field[]) => list.map(([key, label, options]) => <label key={key} className="grid min-w-0 gap-1 text-xs">
     {mark(key, label)}{options ? <select aria-label={label} value={String(r[key])} onChange={e => set(key, e.target.value)} className="h-9 w-full min-w-0 rounded-md border bg-background px-2 text-sm"><option value="">Não informado</option>{options.map(option => <option key={option}>{option}</option>)}{r[key] && !options.includes(String(r[key])) && <option>{String(r[key])}</option>}</select>
       : key.startsWith("observation") ? <textarea aria-label={label} value={String(r[key])} maxLength={2000} onChange={e => set(key, e.target.value)} className="min-h-20 w-full rounded-md border bg-background p-2 text-sm" />
@@ -51,7 +61,6 @@ export function PatientRegistrationFields({ value: r, onChange, recordNumber, re
   if (mode === "simplificado") {
     const a = r.addresses[0] ?? emptyAddress();
     const p = r.phones[0] ?? { primary: true, type: "Celular", areaCode: "", number: "", complement: "" };
-    const setA = (key: keyof typeof a, v: string) => onChange({ ...r, addresses: [{ ...a, [key]: v }, ...r.addresses.slice(1)] });
     const setP = (key: keyof typeof p, v: string) => onChange({ ...r, phones: [{ ...p, [key]: v }, ...r.phones.slice(1)] });
     return <fieldset disabled={readOnly} className="min-w-0 space-y-4">
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -66,7 +75,7 @@ export function PatientRegistrationFields({ value: r, onChange, recordNumber, re
       </div>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{fields(simple.filter(([k]) => !(r.unknownIdentity && k === "civilName")))}</div>
       {check("homeless", "Em situação de rua")}
-      <div className="grid gap-3 border-t pt-3 sm:grid-cols-2 lg:grid-cols-3">{([["postalCode", "CEP"], ["streetType", "Tipo logradouro"], ["street", "Logradouro"], ["number", "Número"], ["neighborhood", "Bairro"], ["complement", "Complemento"], ["state", "UF"], ["city", "Cidade"]] as const).map(([k, l]) => <label key={k} className="grid gap-1 text-xs"><span className={k === "complement" || k === "state" || k === "city" ? "" : "text-primary"}>{l}</span><Input aria-label={l} maxLength={200} value={a[k]} onChange={e => setA(k, e.target.value)} /></label>)}</div>
+      <div className="grid gap-3 border-t pt-3 sm:grid-cols-2 lg:grid-cols-3">{([["postalCode", "CEP"], ["streetType", "Tipo logradouro"], ["street", "Logradouro"], ["number", "Número"], ["neighborhood", "Bairro"], ["complement", "Complemento"], ["state", "UF"], ["city", "Cidade"], ["cityCode", "Cód. IBGE município"]] as const).map(([k, l]) => <label key={k} className="grid gap-1 text-xs"><span className={k === "complement" || k === "state" || k === "city" || k === "cityCode" ? "" : "text-primary"}>{l}</span><Input aria-label={l} maxLength={200} value={a[k]} onChange={e => editAddress(0, k, e.target.value)} /></label>)}</div>
       <div className="grid gap-3 border-t pt-3 sm:grid-cols-4"><h3 className="font-semibold sm:col-span-4">Telefone</h3>{([["type", "Tipo telefone"], ["areaCode", "DDD"], ["number", "Fone"], ["complement", "Complemento"]] as const).map(([k, l]) => <label key={k} className="grid gap-1 text-xs">{l}<Input aria-label={l} maxLength={200} value={p[k]} onChange={e => setP(k, e.target.value)} /></label>)}</div>
     </fieldset>;
   }
@@ -92,7 +101,7 @@ export function PatientRegistrationFields({ value: r, onChange, recordNumber, re
       <section className="space-y-3"><h3 className="font-semibold">Endereços</h3>
         {r.addresses.map((address, index) => <div key={index} className="space-y-3 border-b pb-4">
           <div className="flex items-center justify-between"><label className="flex items-center gap-2 text-sm"><Checkbox checked={address.primary} onCheckedChange={v => onChange({ ...r, addresses: r.addresses.map((a, i) => ({ ...a, primary: i === index ? v === true : false })) })} />Principal</label><Button type="button" variant="ghost" size="icon" aria-label={`Remover endereço ${index + 1}`} onClick={() => onChange({ ...r, addresses: r.addresses.filter((_, i) => i !== index) })}><Trash2 className="size-4" /></Button></div>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{([['type','Tipo'],['postalCode','CEP'],['streetType','Tipo de logradouro'],['street','Logradouro'],['number','Número'],['complement','Complemento'],['neighborhood','Bairro'],['state','UF'],['cityCode','Código da cidade'],['city','Cidade'],['country','País'],['company','Nome da empresa'],['situation','Situação'],['shift','Turno']] as const).map(([key,label]) => <label key={key} className="grid gap-1 text-xs">{label}<Input aria-label={`${label} do endereço ${index + 1}`} maxLength={200} value={address[key]} onChange={e => onChange({ ...r, addresses: r.addresses.map((a, i) => i === index ? { ...a, [key]: e.target.value } : a) })} /></label>)}</div>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{([['type','Tipo'],['postalCode','CEP'],['streetType','Tipo de logradouro'],['street','Logradouro'],['number','Número'],['complement','Complemento'],['neighborhood','Bairro'],['state','UF'],['cityCode','Cód. IBGE município'],['city','Cidade'],['country','País'],['company','Nome da empresa'],['situation','Situação'],['shift','Turno']] as const).map(([key,label]) => <label key={key} className="grid gap-1 text-xs">{label}<Input aria-label={`${label} do endereço ${index + 1}`} maxLength={200} value={address[key]} onChange={e => editAddress(index, key, e.target.value)} /></label>)}</div>
         </div>)}
         <Button type="button" variant="outline" disabled={r.addresses.length >= 20} onClick={() => onChange({ ...r, addresses: [...r.addresses, { ...emptyAddress(), primary: !r.addresses.length }] })}><Plus className="size-4" />Adicionar endereço</Button>
       </section>
