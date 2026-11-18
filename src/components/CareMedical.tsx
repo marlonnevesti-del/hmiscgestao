@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ProcedurePrintButton } from './ProcedurePrint';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { toast } from 'sonner';
@@ -27,8 +27,10 @@ export function MedicalAssessment({ p }: { p:Patient }) {
 }
 export function PrescriptionRelease({ patientId }: { patientId:string }) {
   const e=useStore((s)=>s.encounters.slice().reverse().find((x)=>x.patientId===patientId)); const profile=useStore((s)=>s.profile);
+  const count=useStore((s)=>s.patients.find((x)=>x.id===patientId)?.prescriptions.length??0);
+  useEffect(()=>{ if(e&&count>0&&can(profile,'prescrever')&&e.status_fluxo==='EM_ATENDIMENTO_MEDICO'&&e.medical?.diagnosis.trim()){ try{signPrescription(e.id);toast.success('Prescrição liberada para farmácia e enfermagem');}catch{/* aguarda dados */} } },[e?.id,e?.status_fluxo,e?.medical?.diagnosis,count,profile]);
   if(!e)return null;
-  return <div className="flex flex-wrap items-center gap-3 border-b pb-3">{e.signedAt&&<span className="text-xs text-clinical">Assinada por {e.signedBy} · {new Date(e.signedAt).toLocaleString('pt-BR')}</span>}<Button disabled={!can(profile,'prescrever')||e.status_fluxo!=='EM_ATENDIMENTO_MEDICO'} onClick={()=>action(()=>{signPrescription(e.id);toast.success('Prescrição assinada e liberada para farmácia e enfermagem');})}>Assinar e Liberar Prescrição</Button></div>;
+  return <div className="flex flex-wrap items-center gap-3 border-b pb-3">{e.signedAt&&<span className="text-xs text-clinical">Assinada por {e.signedBy} · {new Date(e.signedAt).toLocaleString('pt-BR')}</span>}{!e.signedAt&&<span className="text-xs text-muted-foreground">A prescrição é liberada automaticamente para farmácia e enfermagem ao incluir os itens.</span>}</div>;
 }
 function Outcome({e,p}:{e:Encounter;p:Patient}) {
   const profile=useStore((s)=>s.profile);const [open,setOpen]=useState(false);const [mode,setMode]=useState<'internacao'|'co'|'exames'|'alta'>('internacao'); const [details,setDetails]=useState({bed:'',summary:'',recipe:'',exam:''});const [adm,setAdm]=useState({ward:'',character:'Urgência' as 'Urgência'|'Eletiva',cid:'',justification:'',isolation:false,oxygen:false});

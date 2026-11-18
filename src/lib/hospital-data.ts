@@ -215,7 +215,7 @@ export function interactionsWith(drug: Drug, current: Prescription[]) {
 // ---------- Faturamento ----------
 export const DAILY_RATE: Record<Ward, number> = { PSO: 380, PSP: 350, CO: 690, AC: 420, UTIN: 2100, ENFP: 460 };
 export const MED_PRICE = 18.5;
-export interface Admin { status: "checado" | "nao" | "adiado"; by: string; at: string; reason?: string | undefined }
+export interface Admin { status: "checado" | "nao" | "adiado" | "cancelado"; by: string; at: string; reason?: string | undefined }
 export function buildBill(p: Patient, surgeries: Surgery[], admins: Record<string, Admin>) {
   const lines: { group: string; tuss: string; desc: string; qty: number; unit: number }[] = [];
   lines.push({ group: "Diárias", tuss: "60000775", desc: `Diária ${WARDS.find((w) => w.id === p.ward)?.name}`, qty: p.days, unit: DAILY_RATE[p.ward] });

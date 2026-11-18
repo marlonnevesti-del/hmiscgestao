@@ -277,15 +277,15 @@ export function addStock(item: string, qty: number) {
   createStockMedication({ name: medicationKey(item), presentation: '', unit: 'un', quantity: qty, minimum: 0 });
 }
 export function recordMedication(id: string, rxId: string, time: string, status: Admin['status'], reason = '') {
-  requireAction('checar'); const { e, p } = getEncounter(id);
+  requireAction(status === 'cancelado' ? 'prescrever' : 'checar'); const { e, p } = getEncounter(id);
   const rx = p.prescriptions.find((r) => r.id === rxId);
   if (!rx || !rx.times?.includes(time) || (rx.pharmacy && rx.pharmacy !== 'Dispensada') || !['AGUARDANDO_MEDICACAO', 'EM_OBSERVACAO_REAVALIACAO'].includes(e.status_fluxo)) throw new Error('Medicação ainda não liberada para administração.');
   const key = `${p.id}|${rxId}|${time}`;
-  if (state.admins[key]?.status === 'checado') throw new Error('Dose já checada.');
+  if (state.admins[key]?.status === 'checado' || state.admins[key]?.status === 'cancelado') throw new Error('Dose já checada ou cancelada.');
   if (status !== 'checado' && !reason.trim()) throw new Error('Informe a justificativa.');
   const at = new Date().toISOString();
   const admins = { ...state.admins, [key]: { status, by: professionalName(state.profile), at, reason } };
-  const allDone = p.prescriptions.filter((r) => r.times?.length).every((r) => r.times?.every((t) => admins[`${p.id}|${r.id}|${t}`]?.status === 'checado'));
+  const allDone = p.prescriptions.filter((r) => r.times?.length).every((r) => r.times?.every((t) => ['checado', 'cancelado'].includes(admins[`${p.id}|${r.id}|${t}`]?.status ?? '')));
   commitEncounter(allDone && e.status_fluxo === 'AGUARDANDO_MEDICACAO' ? transition(e, 'EM_OBSERVACAO_REAVALIACAO', professionalName(state.profile), 'Medicação concluída - pronto para reavaliação', at) : e, { admins });
 }
 export function requestAdmission(id: string, req: { ward: string; character: 'Urgência' | 'Eletiva'; cid: string; justification: string; isolation: boolean; oxygen: boolean }) {

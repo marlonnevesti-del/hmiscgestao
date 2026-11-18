@@ -193,7 +193,7 @@ function Prescricao({ p }: { p: Patient }) {
       <Card title="Adicionar item">
         {!editable ? <NoPermission action="editar a prescrição nesta etapa" /> : <div className="space-y-2 text-sm">
           <select value={cat} onChange={(e) => setCat(e.target.value as PrescCat)} className="h-8 w-full rounded-md border bg-background px-2 text-xs">{cats.map((c) => <option key={c}>{c}</option>)}</select>
-          {cat === "Medicamento" && <div className="flex gap-1 text-xs"><button type="button" onClick={() => setTyped(false)} className={cn("flex-1 rounded-md border py-1", !typed && "bg-primary text-primary-foreground")}>Padronizados</button><button type="button" onClick={() => setTyped(true)} className={cn("flex-1 rounded-md border py-1", typed && "bg-primary text-primary-foreground")}>Digitar prescrição</button></div>}
+          
           {cat === "Medicamento" && typed ? <>
             <input aria-label="Medicamento digitado" value={typedDrug} onChange={(e) => setTypedDrug(e.target.value)} placeholder="Medicamento (ex.: Ceftriaxona 1 g)" className="h-8 w-full rounded-md border bg-background px-2 text-xs" />
             <input value={free} onChange={(e) => setFree(e.target.value)} placeholder="Dose / diluição (opcional)" className="h-8 w-full rounded-md border bg-background px-2 text-xs" />
