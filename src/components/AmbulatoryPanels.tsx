@@ -1,3 +1,4 @@
+import { DoctorNameInput } from "./DoctorNameInput";
 import { useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { toast } from "sonner";
@@ -11,7 +12,7 @@ import { NoPermission } from "./AppShell";
 import { can, canAct } from "@/lib/hospital-data";
 import { GROUP_LABELS, type SadtReport, type SpecialtyGroup } from "@/lib/ambulatorio";
 import type { Encounter } from "@/lib/care-flow";
-import { checkInAppointment, createAmbSpecialty, professionalName, saveSadtReport, scheduleAppointment, setAppointmentStatus, toggleAmbSpecialty, useStore } from "@/lib/hospital-store";
+import { checkInAppointment, createAmbSpecialty, professionalName, saveSadtReport, rememberDoctor, scheduleAppointment, setAppointmentStatus, toggleAmbSpecialty, useStore } from "@/lib/hospital-store";
 
 const act = (fn: () => void, ok?: string) => { try { fn(); if (ok) toast.success(ok); } catch (e) { toast.error(e instanceof Error ? e.message : "Ação não concluída"); } };
 const today = () => new Date().toLocaleDateString("sv-SE");
@@ -96,9 +97,9 @@ function ReportForm({ e, onDone }: { e: Encounter; onDone: (e: Encounter) => voi
   const name = useStore((s) => professionalName(s.profile));
   const [r, setR] = useState<Omit<SadtReport, "at">>({ exam: e.specialty, technique: "", findings: "", conclusion: "", professional: name, council: "" });
   const field = (k: keyof typeof r, label: string, area = false) => <label className="grid gap-1 text-xs">{label}{area ? <Textarea rows={4} value={r[k]} onChange={(x) => setR({ ...r, [k]: x.target.value })} /> : <Input value={r[k]} onChange={(x) => setR({ ...r, [k]: x.target.value })} />}</label>;
-  return <form className="grid gap-3" onSubmit={(x) => { x.preventDefault(); act(() => { saveSadtReport(e.id, r); onDone({ ...e, sadtReport: { ...r, at: new Date().toISOString() } }); }, "Laudo emitido"); }}>
+  return <form className="grid gap-3" onSubmit={(x) => { x.preventDefault(); act(() => { rememberDoctor(r.professional, r.council); saveSadtReport(e.id, r); onDone({ ...e, sadtReport: { ...r, at: new Date().toISOString() } }); }, "Laudo emitido"); }}>
     {field("exam", "Exame")}{field("technique", "Técnica / preparo", true)}{field("findings", "Achados / descrição", true)}{field("conclusion", "Conclusão / impressão diagnóstica", true)}
-    <div className="grid gap-3 sm:grid-cols-2">{field("professional", "Profissional responsável")}{field("council", "CRM / conselho")}</div>
+    <div className="grid gap-3 sm:grid-cols-2"><label className="grid gap-1 text-xs">Profissional responsável<DoctorNameInput value={r.professional} onChange={(v) => setR((x) => ({ ...x, professional: v }))} onCrm={(c) => setR((x) => ({ ...x, council: c }))} /></label>{field("council", "CRM / conselho")}</div>
     <Button type="submit">Salvar e imprimir laudo</Button>
   </form>;
 }

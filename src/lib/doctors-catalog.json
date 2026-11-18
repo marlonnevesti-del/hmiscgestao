@@ -1,0 +1,2453 @@
+[
+{
+"code": "MED001",
+"name": "RAFAELA BAESSO REDDIG",
+"specialty": "Dermatologia",
+"crm": "CRM/SC 24686",
+"rqe": "22302"
+},
+{
+"code": "MED002",
+"name": "LARISSA CHAIANE ORTH",
+"specialty": "Clínica Médica",
+"crm": "CRM/RS 48145",
+"rqe": "41148"
+},
+{
+"code": "MED003",
+"name": "MARIANA MANTOVANI MEIRA SANTOS",
+"specialty": "Cirurgia Geral",
+"crm": "CRM/PR 44147",
+"rqe": "36971"
+},
+{
+"code": "MED004",
+"name": "THAIS DE OLIVEIRA SOUSA",
+"specialty": "Pediatria; Gastroenterologia Pediátrica",
+"crm": "CRM/SC 22381",
+"rqe": "18942; 17116"
+},
+{
+"code": "MED005",
+"name": "RICARDO GRIGOLETTO DE BRITO",
+"specialty": "Ginecologia e Obstetrícia",
+"crm": "CRM/PR 52472",
+"rqe": "32557"
+},
+{
+"code": "MED007",
+"name": "FABIANE ROSA E SILVA",
+"specialty": "Pediatria",
+"crm": "CRM/SC 28454",
+"rqe": "23497"
+},
+{
+"code": "MED009",
+"name": "MONIQUE CONSENSO SAVIATO",
+"specialty": "Pediatria",
+"crm": "CRM/SC 19953",
+"rqe": "15593"
+},
+{
+"code": "MED014",
+"name": "ELOISA DE LUCA CASAGRANDE",
+"specialty": "Pediatria",
+"crm": "CRM/SC 20685",
+"rqe": "14950"
+},
+{
+"code": "MED026",
+"name": "GUSTAVO DE OLIVEIRA BERNARDO",
+"specialty": "Pediatria; Pneumologia Pediátrica",
+"crm": "CRM/SC 20686",
+"rqe": "16783; 17295"
+},
+{
+"code": "MED031",
+"name": "ANA PAULA TROMBIN SOARES",
+"specialty": "Pediatria",
+"crm": "CRM/SC 19707",
+"rqe": "14610"
+},
+{
+"code": "MED073",
+"name": "NATHALIA DE OLIVEIRA SOUZA LOCH",
+"specialty": "Pediatria",
+"crm": "CRM/SC 18435",
+"rqe": "15938"
+},
+{
+"code": "MED105",
+"name": "MARINA MARTINS BIFF",
+"specialty": "Pediatria",
+"crm": "CRM/SC 26094",
+"rqe": "23381"
+},
+{
+"code": "MED116",
+"name": "JULIA KELLERS DE SOUZA",
+"specialty": "Pediatria",
+"crm": "CRM/SC 26067",
+"rqe": "21891"
+},
+{
+"code": "MED006",
+"name": "ANA CAROLINA DE OLIVEIRA PRESADO"
+},
+{
+"code": "MED008",
+"name": "GISLEINE BITTENCOURT SCOTTI"
+},
+{
+"code": "MED010",
+"name": "MONICA BIZ"
+},
+{
+"code": "MED011",
+"name": "FREDERICO GUILHERME W. C. DE AZEREDO"
+},
+{
+"code": "MED012",
+"name": "TIAGO BORGERT BRESCIANI"
+},
+{
+"code": "MED013",
+"name": "LUCAS HENRIQUE ROSSATO"
+},
+{
+"code": "MED015",
+"name": "BRUNO MASSIH DE OLIVEIRA"
+},
+{
+"code": "MED016",
+"name": "ISADORA BOEING"
+},
+{
+"code": "MED017",
+"name": "FRANCIEL WAWRZYNIAK"
+},
+{
+"code": "MED018",
+"name": "SHAYRLENE QUAREZEMIN DE MATOS"
+},
+{
+"code": "MED019",
+"name": "TANISE MACEDO BOTELHO"
+},
+{
+"code": "MED020",
+"name": "DANIELE PAOLA DA SILVA WIZBICKI"
+},
+{
+"code": "MED021",
+"name": "MARIA CAROLINE SERAPHIM MELLO"
+},
+{
+"code": "MED022",
+"name": "NATHALIA BECKER GERALDI"
+},
+{
+"code": "MED023",
+"name": "OSVALDO GARCEZ DUTRA JUNIOR"
+},
+{
+"code": "MED024",
+"name": "LETICIA SOARES BOING"
+},
+{
+"code": "MED025",
+"name": "HELCIO FELIPPE"
+},
+{
+"code": "MED027",
+"name": "LEANDRO ARIELDEI RICARDI"
+},
+{
+"code": "MED028",
+"name": "BRUNA ROMAGNA PETERLE"
+},
+{
+"code": "MED029",
+"name": "SERGIO COSTA COELHO LEAL"
+},
+{
+"code": "MED030",
+"name": "RODRIGO PACHECO SANTOS DA SILVA"
+},
+{
+"code": "MED032",
+"name": "FERNANDA DORS TIGRE DA SILVA"
+},
+{
+"code": "MED033",
+"name": "STEFANI ZILLI MAFALDA"
+},
+{
+"code": "MED034",
+"name": "VINICIUS CAIRES DELGADO"
+},
+{
+"code": "MED035",
+"name": "LAURA CARMINATI CIMOLIN"
+},
+{
+"code": "MED036",
+"name": "MARIA FERNANDA SOUZA DE LUCA"
+},
+{
+"code": "MED037",
+"name": "IGOR PAULO DA SILVA ABREU"
+},
+{
+"code": "MED038",
+"name": "TASSIANA DE BOIT MILANEZ"
+},
+{
+"code": "MED039",
+"name": "RONALD BENEDET BARROSO"
+},
+{
+"code": "MED040",
+"name": "TAYSI ALIXANDRINO BEZA"
+},
+{
+"code": "MED041",
+"name": "ANA LUIZA PEREIRA CORDOVA"
+},
+{
+"code": "MED042",
+"name": "ANDRESSA DE MARCO MACHADO"
+},
+{
+"code": "MED043",
+"name": "EDUARDO BORGES DE MEDEIROS"
+},
+{
+"code": "MED044",
+"name": "MARICELE ALMEIDA DA SILVA"
+},
+{
+"code": "MED045",
+"name": "PABLO ROCHA"
+},
+{
+"code": "MED046",
+"name": "HELIANA MARCIA CABRAL TAVARES DE LIMA"
+},
+{
+"code": "MED047",
+"name": "MAURICIO CESAR KAMINSKI"
+},
+{
+"code": "MED048",
+"name": "THIAGO SERAFIM CESA"
+},
+{
+"code": "MED049",
+"name": "CAMILA COAN DA SOLLER"
+},
+{
+"code": "MED050",
+"name": "LUIZ CARLOS CUSTODIO"
+},
+{
+"code": "MED051",
+"name": "FERNANDA SAVI DAMIANI"
+},
+{
+"code": "MED052",
+"name": "KATRINE CITTADIN BARDINI"
+},
+{
+"code": "MED053",
+"name": "BRUNA UGIONI GODOY"
+},
+{
+"code": "MED054",
+"name": "LEONARDO RIOS SANTANA"
+},
+{
+"code": "MED055",
+"name": "ERIKA LOPES RUY"
+},
+{
+"code": "MED056",
+"name": "LANNES LEAL CUNHA"
+},
+{
+"code": "MED057",
+"name": "GLAUBER CASSELLI BEZERRA SILVA"
+},
+{
+"code": "MED058",
+"name": "TAMIRES DE SOUZA GARCIA"
+},
+{
+"code": "MED059",
+"name": "LAURA FOLCHINI FELIPPE"
+},
+{
+"code": "MED060",
+"name": "PAMELA GOMES"
+},
+{
+"code": "MED061",
+"name": "MICHELLE KRAS ALVES MILETO"
+},
+{
+"code": "MED062",
+"name": "MATHEUS CURCIO LOCATELLI"
+},
+{
+"code": "MED063",
+"name": "PATRICIA ANCELMO MARTINS"
+},
+{
+"code": "MED0631",
+"name": "JULIA RONCHI"
+},
+{
+"code": "MED0634",
+"name": "ANDREIA RODRIGUES LUZ DOS SANTOS"
+},
+{
+"code": "MED0635",
+"name": "LUIGI AURELIO SARTOR"
+},
+{
+"code": "MED064",
+"name": "CLEO GAMA PINHEIRO"
+},
+{
+"code": "MED0641",
+"name": "LOURDES MARIA ROZENDO NUNES MENDES"
+},
+{
+"code": "MED065",
+"name": "CINTHIA REUS COELHO"
+},
+{
+"code": "MED066",
+"name": "GUSTAVO ZOMER JUNG"
+},
+{
+"code": "MED0667",
+"name": "ISABELA CORRÊA DE OLIVEIRA"
+},
+{
+"code": "MED0668",
+"name": "LAUREN MARFIL MARINS"
+},
+{
+"code": "MED067",
+"name": "ELBERT RICHARS JONES OLIVEIRA"
+},
+{
+"code": "MED068",
+"name": "EDUARDO ALI DOMINGUEZ"
+},
+{
+"code": "MED069",
+"name": "KAYANE FOLCHINI CESCA"
+},
+{
+"code": "MED070",
+"name": "GUSTAVO DALMORO"
+},
+{
+"code": "MED071",
+"name": "ANDRE CAZARRE TAVARES"
+},
+{
+"code": "MED072",
+"name": "MANUELA JUSTI DE FARIAS"
+},
+{
+"code": "MED074",
+"name": "ERIKA HILBERT SANDRINI PADAO"
+},
+{
+"code": "MED075",
+"name": "VINICIUS RENE GIOMBELLI"
+},
+{
+"code": "MED076",
+"name": "MARCELO CARDOSO"
+},
+{
+"code": "MED077",
+"name": "CAUE GEORGE AGARDI"
+},
+{
+"code": "MED078",
+"name": "FERNANDA MARQUES FERNANDES LIMA"
+},
+{
+"code": "MED079",
+"name": "UBIRATAN PINTO GONCALVES"
+},
+{
+"code": "MED080",
+"name": "EMERSON APARECIDO CRUZ"
+},
+{
+"code": "MED081",
+"name": "RENATO LUIZ MAFIOLETI"
+},
+{
+"code": "MED082",
+"name": "MATHEUS FELIPE REBELLO"
+},
+{
+"code": "MED083",
+"name": "GUSTAVO THOMAZ DE AQUINO"
+},
+{
+"code": "MED084",
+"name": "PEDRO MORENO DA SILVA"
+},
+{
+"code": "MED085",
+"name": "BRUNA ZAGO"
+},
+{
+"code": "MED086",
+"name": "FRANCISCA MARIA ARAUJO DA SILVA"
+},
+{
+"code": "MED087",
+"name": "JADER MICKAEL SOUZA"
+},
+{
+"code": "MED088",
+"name": "CARLOS EDUARDO MENEGHEL DE SOUZA"
+},
+{
+"code": "MED089",
+"name": "DANIEL DE PAULA SANTANA"
+},
+{
+"code": "MED090",
+"name": "SULLIVAN ARTHUR CITADIN"
+},
+{
+"code": "MED091",
+"name": "CRISTIANO RESINA INACIO DA SILVA"
+},
+{
+"code": "MED092",
+"name": "RICARDO PULEO SOUZA"
+},
+{
+"code": "MED093",
+"name": "CLIVER ARAUJO ALMEIDA SOUSA"
+},
+{
+"code": "MED094",
+"name": "LUIZ MARIO ENDERLE SIGNOR"
+},
+{
+"code": "MED095",
+"name": "ROSELAINE STURIAO"
+},
+{
+"code": "MED096",
+"name": "ADEMAR MILTON DE SOUZA FILHO"
+},
+{
+"code": "MED097",
+"name": "ARLENA FERNANDES PAIM"
+},
+{
+"code": "MED098",
+"name": "THIAGO MEDEIROS DOS SANTOS"
+},
+{
+"code": "MED099",
+"name": "CAROLINE SERAFIM DAGOSTIN"
+},
+{
+"code": "MED100",
+"name": "MARIA LUIZA DAL TOE POZZOBON"
+},
+{
+"code": "MED101",
+"name": "ANNETA MARCON MARTINS"
+},
+{
+"code": "MED102",
+"name": "JULIANE ZORZI DE ANDRADE"
+},
+{
+"code": "MED103",
+"name": "PAULA RIGHETO BEZ"
+},
+{
+"code": "MED104",
+"name": "MOISES ALVES FRANCO"
+},
+{
+"code": "MED106",
+"name": "RICARDO DE STEFANI DALPONTE"
+},
+{
+"code": "MED107",
+"name": "ANNIIKA PAULA CECAGNO"
+},
+{
+"code": "MED108",
+"name": "ESTEFANI MOLINAR"
+},
+{
+"code": "MED109",
+"name": "LAURA ALVES FREIRE"
+},
+{
+"code": "MED110",
+"name": "HERCILIO BRIGHENTE VOLPATO"
+},
+{
+"code": "MED111",
+"name": "BARBARA CALISTRO BORCHARDT"
+},
+{
+"code": "MED112",
+"name": "RODRIGO SOARES ALVES DA COSTA"
+},
+{
+"code": "MED113",
+"name": "ISABELLE MARTINS PESCADOR"
+},
+{
+"code": "MED114",
+"name": "PATRICIA BELUCO MORETI"
+},
+{
+"code": "MED115",
+"name": "MATEUS SCARABELOT MEDEIROS"
+},
+{
+"code": "MED117",
+"name": "GABRIEL WESTPHAL FERNANDES"
+},
+{
+"code": "MED118",
+"name": "ALEXIA JUVENCIO DE CARVALHO"
+},
+{
+"code": "MED119",
+"name": "BRUNA LUIZA CLAUDIANO VOSS"
+},
+{
+"code": "MED120",
+"name": "BRUNA BERVIAN CANDIDO"
+},
+{
+"code": "MED121",
+"name": "ANE TRENTO BURIGO PAVEI"
+},
+{
+"code": "MED122",
+"name": "DEMIAN KNABEN"
+},
+{
+"code": "MED123",
+"name": "GISLAINE BENEDET"
+},
+{
+"code": "MED124",
+"name": "LUANNA CORREA DE OLIVEIRA FREITAS BERETRE"
+},
+{
+"code": "MED125",
+"name": "LAIS CONSTANTE MACHADO"
+},
+{
+"code": "MED126",
+"name": "CICERA DOS SANTOS MOURA"
+},
+{
+"code": "MED127",
+"name": "ARTHUR DAJORI RONCHI"
+},
+{
+"code": "MED128",
+"name": "JULIA MICHELON TOMAZZONI"
+},
+{
+"code": "MED129",
+"name": "BRUNO AUGUSTO SOUZA DOS SANTOS"
+},
+{
+"code": "MED130",
+"name": "TUANI DA ROCHA UGGIONI"
+},
+{
+"code": "MED131",
+"name": "VINICIUS OLIVEIRA NITZ"
+},
+{
+"code": "MED132",
+"name": "JOAO LUIZ TAVARES MENDES"
+},
+{
+"code": "MED133",
+"name": "BRUNA WATERKEMPER MONDARDO"
+},
+{
+"code": "MED134",
+"name": "MAURICIO FAERMANN BARCELOS"
+},
+{
+"code": "MED135",
+"name": "ROBERTA CONSTANTINO DAGOSTIN"
+},
+{
+"code": "MED136",
+"name": "AMANDA DO LIVRAMENTO"
+},
+{
+"code": "MED137",
+"name": "PALOMA OLIVEIRA SCHUELTER"
+},
+{
+"code": "MED138",
+"name": "GIORDANA SPALDING PILLA"
+},
+{
+"code": "MED139",
+"name": "SUZANA KNIPHOFF DE OLIVEIRA"
+},
+{
+"code": "MED140",
+"name": "VILSON LUIZ MACIEL"
+},
+{
+"code": "MED141",
+"name": "MARIANNE ONGARATTO LUMI"
+},
+{
+"code": "MED142",
+"name": "LUCAS RIBEIRO KRASILCHIK"
+},
+{
+"code": "MED143",
+"name": "ANA PAULA BISPO STRASSI"
+},
+{
+"code": "MED144",
+"name": "HELENA HERTEL CORREA"
+},
+{
+"code": "MED145",
+"name": "MARINA FIGUEIREDO DE SA"
+},
+{
+"code": "MED146",
+"name": "DEBORA FORNASA BONETTI"
+},
+{
+"code": "MED147",
+"name": "ALINE JOCHEN DE OLIVEIRA"
+},
+{
+"code": "MED148",
+"name": "GEORGIA STOPASSOLI DE CARVALHO"
+},
+{
+"code": "MED149",
+"name": "JESSICA DA SILVA GOULART"
+},
+{
+"code": "MED150",
+"name": "DEBORA CAMPOS PULIDO"
+},
+{
+"code": "MED151",
+"name": "JULIA DAL BO CASSETTARI"
+},
+{
+"code": "MED152",
+"name": "NARAYANA IRMANI DA SILVA"
+},
+{
+"code": "MED153",
+"name": "CAMILA LEHMKUHL DE ARRUDA"
+},
+{
+"code": "MED154",
+"name": "VICTOR AFONSO PAVEI DAGOSTIM"
+},
+{
+"code": "MED155",
+"name": "JAQUELINE BERNARDI"
+},
+{
+"code": "MED156",
+"name": "SAMANDA TORQUATO"
+},
+{
+"code": "MED157",
+"name": "LAYNE HELLMANN AVILA SOUZA"
+},
+{
+"code": "MED158",
+"name": "CAROLINA MARQUES DE AVELLAR DAL BO"
+},
+{
+"code": "MED159",
+"name": "THUANY SILVESTRI GARCIA"
+},
+{
+"code": "MED160",
+"name": "MARIA TEREZA DANIEL JUSTO"
+},
+{
+"code": "MED161",
+"name": "TAMIRES MATEUS GOMES"
+},
+{
+"code": "MED162",
+"name": "ARTHUR GIORDANI ELIAS DE ALMEIDA"
+},
+{
+"code": "MED163",
+"name": "EDINARA DA SILVA SILVEIRA"
+},
+{
+"code": "MED164",
+"name": "GABRIELA BITTENCOURT DAMIANI"
+},
+{
+"code": "MED165",
+"name": "BRUNA FERNANDES SCARPARI"
+},
+{
+"code": "MED166",
+"name": "GISELI VIEIRA MACHADO MOLINA"
+},
+{
+"code": "MED167",
+"name": "RAMON COLOMBO PIROLA"
+},
+{
+"code": "MED168",
+"name": "GABRIELA NUERNBERG DOS SANTOS"
+},
+{
+"code": "MED169",
+"name": "LETICIA MAXIMIANO BRUSCATTO"
+},
+{
+"code": "MED170",
+"name": "MARIANA BENEDET SCHEIDT MULLER"
+},
+{
+"code": "MED171",
+"name": "NATALIA CUSTODIO UGGIONI"
+},
+{
+"code": "MED172",
+"name": "PAULA AGUIAR GRANDI"
+},
+{
+"code": "MED173",
+"name": "JULIANA GABRIELA BURGARDT WERNER"
+},
+{
+"code": "MED174",
+"name": "JOAO MANOEL LUMERTZ FRANCISCO"
+},
+{
+"code": "MED175",
+"name": "AMANDA LONGO PIZZOLATTI"
+},
+{
+"code": "MED176",
+"name": "MARIANA MANGILLI DE MENEZES"
+},
+{
+"code": "MED177",
+"name": "JAMILE CAMARGO CARDOSO OLIVEIRA"
+},
+{
+"code": "MED178",
+"name": "LUIZA CAROLINE NETTO ZANETTE"
+},
+{
+"code": "MED179",
+"name": "PAULO CESAR FIANI BACILA NETO"
+},
+{
+"code": "MED180",
+"name": "LARA XAVIER BAZOTTI"
+},
+{
+"code": "MED181",
+"name": "KELY CORREA BENEDET BAESSO"
+},
+{
+"code": "MED182",
+"name": "ANNANDA ELISE BRANDAO SGORLA"
+},
+{
+"code": "MED183",
+"name": "LUIZA MAZZUCCO ZANATTA"
+},
+{
+"code": "MED184",
+"name": "SAMUEL GHISLERI MINATTO"
+},
+{
+"code": "MED185",
+"name": "LETICIA MAFFIOLETTI TEIXEIRA"
+},
+{
+"code": "MED186",
+"name": "DANIELE LIELL"
+},
+{
+"code": "MED187",
+"name": "ANTONIO COSTA DOS SANTOS"
+},
+{
+"code": "MED188",
+"name": "RIDOEL DE MORAES CUNHA"
+},
+{
+"code": "MED189",
+"name": "MARCELA SACHET NUERNBERG"
+},
+{
+"code": "MED190",
+"name": "LIAH FERREIRA FILIPPI"
+},
+{
+"code": "MED191",
+"name": "ANA CLAUDIA HORR GOMES"
+},
+{
+"code": "MED192",
+"name": "MARLON LUIZ PIRES BOLDORI"
+},
+{
+"code": "MED193",
+"name": "LIVIA D'AVILA PASKULIN"
+},
+{
+"code": "MED194",
+"name": "ANA PAULA NASPOLINI"
+},
+{
+"code": "MED195",
+"name": "CAROLINA BORGES SANTINONI"
+},
+{
+"code": "MED196",
+"name": "AMANDA SORATTO CITADIN"
+},
+{
+"code": "MED197",
+"name": "LARISSA BERNARDO"
+},
+{
+"code": "MED198",
+"name": "JOANA DE LUCCA PIZZOLO"
+},
+{
+"code": "MED199",
+"name": "FERNANDA FONTOURA LISSA"
+},
+{
+"code": "MED200",
+"name": "JULIA GATTO DE OLIVEIRA"
+},
+{
+"code": "MED201",
+"name": "KETHERYN STAHNKE CECHIN MINATTO"
+},
+{
+"code": "MED202",
+"name": "FLAVIO MACHADO PATEL"
+},
+{
+"code": "MED203",
+"name": "BRUNA MILIOLI ESMERALDINO"
+},
+{
+"code": "MED204",
+"name": "BARBARA CARDOSO VIRTUOSO"
+},
+{
+"code": "MED205",
+"name": "LUANA MARIA DE OLIVEIRA PRESADO"
+},
+{
+"code": "MED206",
+"name": "JULIE CANDICE ERBS"
+},
+{
+"code": "MED207",
+"name": "MONIQUE DE SOUZA BETTIOL"
+},
+{
+"code": "MED208",
+"name": "LISANDRA ESTRADA RODRIGUEZ"
+},
+{
+"code": "MED209",
+"name": "BRUNA JUNKLAUS BAGGIO"
+},
+{
+"code": "MED210",
+"name": "DANIELA SILVA KAMINSKI"
+},
+{
+"code": "MED211",
+"name": "ELIDE CRISTINA SUNTACK FRAGOSO"
+},
+{
+"code": "MED212",
+"name": "DAVI DIOMARIO DA ROSA"
+},
+{
+"code": "MED213",
+"name": "ALEXIA UGIONI GODOY"
+},
+{
+"code": "MED214",
+"name": "GABRIELA MACHADO GOULART"
+},
+{
+"code": "MED215",
+"name": "LUIS AUGUSTO SERAFIM ROCHA"
+},
+{
+"code": "MED216",
+"name": "CAROLINA PHILIPPI SILVEIRA"
+},
+{
+"code": "MED217",
+"name": "RAFAEL TABELLI BORTOLUZZI SOUZA"
+},
+{
+"code": "MED218",
+"name": "LUIZA CARDOSO BARCELOS"
+},
+{
+"code": "MED219",
+"name": "GABRIEL OLIVEIRA COSTA"
+},
+{
+"code": "MED220",
+"name": "TAYNAN MANENTI BONFANTE"
+},
+{
+"code": "MED221",
+"name": "PAULA SZYMANSKI"
+},
+{
+"code": "MED222",
+"name": "BEATRIZ ZANELATO DE NONI"
+},
+{
+"code": "MED223",
+"name": "PAULO HENRIQUE TEIXEIRA MARTINS"
+},
+{
+"code": "MED224",
+"name": "DAVIS ROGERIO LUCIO"
+},
+{
+"code": "MED225",
+"name": "THAIS MARTINS DE OLIVEIRA"
+},
+{
+"code": "MED226",
+"name": "CARLOS ALBERTO DE MOURA ASCHOFF"
+},
+{
+"code": "MED227",
+"name": "MARIA FERNANDA LOCKS TOPANOTTI"
+},
+{
+"code": "MED228",
+"name": "PAULO JEFFERSON MENDES"
+},
+{
+"code": "MED229",
+"name": "ISABELA RIBEIRO SIQUEIRA"
+},
+{
+"code": "MED230",
+"name": "MAIKON LUCIAN MADEIRA QUARTI"
+},
+{
+"code": "MED231",
+"name": "JULIO CEZAR CECHINEL FILHO"
+},
+{
+"code": "MED232",
+"name": "RODRIGO DEMETRIO"
+},
+{
+"code": "MED233",
+"name": "AIRTON JORGE DA SILVA VARELA JUNIOR"
+},
+{
+"code": "MED234",
+"name": "CHRISTIAN DE ESCOBAR PRADO"
+},
+{
+"code": "MED235",
+"name": "MARIANA DE MATTIA SARTORI"
+},
+{
+"code": "MED236",
+"name": "JEAN ABREU MACHADO"
+},
+{
+"code": "MED237",
+"name": "LUCAS ALEXANDRE PEDROLLO SOLIMAN"
+},
+{
+"code": "MED238",
+"name": "HELOISA DE CASSIA DOS SANTOS"
+},
+{
+"code": "MED239",
+"name": "RAQUEL SPILERE KAMMER"
+},
+{
+"code": "MED240",
+"name": "JOSELAINY STELA PIRES MACHIAVELLI"
+},
+{
+"code": "MED241",
+"name": "ERALDO BELARMINO JUNIOR"
+},
+{
+"code": "MED242",
+"name": "GIL BARDINI ALVES"
+},
+{
+"code": "MED243",
+"name": "CAMILA BELLETTINI HIRSCH"
+},
+{
+"code": "MED244",
+"name": "FERNANDA OSORIO ALVES"
+},
+{
+"code": "MED245",
+"name": "RICARDO KADRI MONTEIRO"
+},
+{
+"code": "MED246",
+"name": "RHANARA CAROLINE DE ALMEIDA"
+},
+{
+"code": "MED247",
+"name": "DANIELA BURTET MACHADO"
+},
+{
+"code": "MED248",
+"name": "MILTON GIL GERI JUNIOR"
+},
+{
+"code": "MED249",
+"name": "MARCELO SANTOS PEDROSO"
+},
+{
+"code": "MED250",
+"name": "MONICA ANSELMO JUNKES ANTERO"
+},
+{
+"code": "MED251",
+"name": "GUILHERME ZIMERMANN KUMMER"
+},
+{
+"code": "MED252",
+"name": "NATALIA ALBERTON CUNHA"
+},
+{
+"code": "MED253",
+"name": "LUCIANA MULLER CARVALHO"
+},
+{
+"code": "MED254",
+"name": "SAMUEL DUTRA FERREIRA"
+},
+{
+"code": "MED255",
+"name": "YASMIN JAIME PRAZERES"
+},
+{
+"code": "MED256",
+"name": "MARINA DE CAMPOS BRANDAO"
+},
+{
+"code": "MED257",
+"name": "VERONICA BENDO DE SOUZA"
+},
+{
+"code": "MED258",
+"name": "KERLY KESSLER CAMPOS"
+},
+{
+"code": "MED259",
+"name": "IOLANDA DE SOUZA HONORATO"
+},
+{
+"code": "MED260",
+"name": "SUELEN CAPELARI"
+},
+{
+"code": "MED261",
+"name": "ANA RUTH DEVILLA DEBIASI"
+},
+{
+"code": "MED262",
+"name": "LUCAS DE SOUZA"
+},
+{
+"code": "MED263",
+"name": "BRUNA MARTINS MENDES"
+},
+{
+"code": "MED264",
+"name": "KETLINN DOS SANTOS MARCIANO"
+},
+{
+"code": "MED265",
+"name": "JOAO PAULO GAMEIRO DE AZEVEDO"
+},
+{
+"code": "MED266",
+"name": "KAMILLE FELTRIN RONSONI"
+},
+{
+"code": "MED267",
+"name": "MARIA LAURA GEREMIAS"
+},
+{
+"code": "MED268",
+"name": "EVELIM DE MEDEIROS SARTOR"
+},
+{
+"code": "MED269",
+"name": "GIULIA FRAGA MEZARI"
+},
+{
+"code": "MED270",
+"name": "PRISCILA MARIOT DA ROSA"
+},
+{
+"code": "MED271",
+"name": "GUILHERME DE SOUZA SCHAUCOSKI"
+},
+{
+"code": "MED272",
+"name": "ANDRE RAMPINELLI MANGILI"
+},
+{
+"code": "MED273",
+"name": "THAMY BENEDET TAUTZ"
+},
+{
+"code": "MED274",
+"name": "RAFAELA FUJII DE ABREU"
+},
+{
+"code": "MED275",
+"name": "GUSTAVO ALVES PROSDOCIMO"
+},
+{
+"code": "MED276",
+"name": "MARIA ELIZA BACK"
+},
+{
+"code": "MED277",
+"name": "ARTHUR MENDES LUCIANO"
+},
+{
+"code": "MED278",
+"name": "LUISA TEIXEIRA MATTIELLO KÜLKAMP"
+},
+{
+"code": "MED279",
+"name": "GUILHERME RODRIGO DAL FARRA DA SILVA"
+},
+{
+"code": "MED280",
+"name": "JULIA STOPASSOLI BUSS"
+},
+{
+"code": "MED281",
+"name": "JULIA LISBOA RAMOS DOS SANTOS"
+},
+{
+"code": "MED282",
+"name": "GABRIEL ZANETTE NASPOLINI"
+},
+{
+"code": "MED283",
+"name": "LARISSA SIQUEIRA"
+},
+{
+"code": "MED284",
+"name": "TAIRINI DAMIANI RODRIGUES"
+},
+{
+"code": "MED285",
+"name": "DANIEL VIANA BEZZI"
+},
+{
+"code": "MED286",
+"name": "PETERSON RECH HONORATO"
+},
+{
+"code": "MED287",
+"name": "THAISSA BROLESI DE SOUZA"
+},
+{
+"code": "MED288",
+"name": "FERNANDA DA SILVA SCHMITZ"
+},
+{
+"code": "MED289",
+"name": "JOAO GABRIEL ALVES MOREIRA"
+},
+{
+"code": "MED290",
+"name": "MARIANA ZANETTE FERNANDES"
+},
+{
+"code": "MED291",
+"name": "ISADORA GONCALVES FIGUEREDO"
+},
+{
+"code": "MED292",
+"name": "MANOELA RITA INACIO"
+},
+{
+"code": "MED293",
+"name": "LIZ NETTO"
+},
+{
+"code": "MED294",
+"name": "LIANA BOFF CÉ"
+},
+{
+"code": "MED295",
+"name": "MARINA SPRICIGO MARAGNO"
+},
+{
+"code": "MED296",
+"name": "CRISTIANO DE OLIVEIRA BIZELLI"
+},
+{
+"code": "MED297",
+"name": "ISABEL DE MEDEIROS MAGALHAES DE SA"
+},
+{
+"code": "MED298",
+"name": "MARINA BRUSCHI DOS SANTOS"
+},
+{
+"code": "MED299",
+"name": "HENRIQUE DA CUNHA GALVANI"
+},
+{
+"code": "MED330",
+"name": "PAULA THIESEN SCHUELTER"
+},
+{
+"code": "MED333",
+"name": "ANDRE RODRIGUES DA SILVA"
+},
+{
+"code": "MED340",
+"name": "CHRISTINE LANNES SCHOELER"
+},
+{
+"code": "MED341",
+"name": "THIAGO MAMORU SAKAE"
+},
+{
+"code": "MED342",
+"name": "ANDRE SOUZA E SILVA"
+},
+{
+"code": "MED343",
+"name": "DIEGO GOTARDO"
+},
+{
+"code": "MED344",
+"name": "VINICIUS HEURICH"
+},
+{
+"code": "MED345",
+"name": "NADIA MUNHOZ PONCE"
+},
+{
+"code": "MED346",
+"name": "CAROLINA ALCOFORADO DE ABREU"
+},
+{
+"code": "MED347",
+"name": "SARA CHAMORRO PETERSEN"
+},
+{
+"code": "MED348",
+"name": "EDGARD VIANNA ROSSI CLAUSSEN"
+},
+{
+"code": "MED349",
+"name": "LESLEY CATHERINE HARUMI ENOMOTO"
+},
+{
+"code": "MED350",
+"name": "CARLOS ANDRE TONELLI"
+},
+{
+"code": "MED351",
+"name": "CAROLINE DE MORAES PENNO"
+},
+{
+"code": "MED352",
+"name": "DEBORA MARTINS ALIANO"
+},
+{
+"code": "MED353",
+"name": "JUANA NASPOLINI CORAL"
+},
+{
+"code": "MED354",
+"name": "ADELINO RODRIGO KOHATSU PADILHA"
+},
+{
+"code": "MED355",
+"name": "GIULIA MILANESI BROGNI"
+},
+{
+"code": "MED356",
+"name": "ISABEL BIZ"
+},
+{
+"code": "MED357",
+"name": "ISABELLE DAMIAN PRUDENCIO"
+},
+{
+"code": "MED358",
+"name": "CRISTIANNE PACHECO BOHME ALVES"
+},
+{
+"code": "MED359",
+"name": "FLAVIO ANTONIO GIUGNO"
+},
+{
+"code": "MED360",
+"name": "JOELSON CARMONO LEMOS"
+},
+{
+"code": "MED361",
+"name": "JULIANA RODRIGUES DA ROSA"
+},
+{
+"code": "MED362",
+"name": "LUANA CREPALDI DE BRIDA"
+},
+{
+"code": "MED363",
+"name": "VANILLA CITADINI ZANETTE"
+},
+{
+"code": "MED364",
+"name": "CAMILA MARTINS BILESIMO"
+},
+{
+"code": "MED365",
+"name": "GEAN FERNANDES DE SA"
+},
+{
+"code": "MED366",
+"name": "ANNA CAROLINA SPILERE FURLAN"
+},
+{
+"code": "MED367",
+"name": "JOANA BARATA GOMES"
+},
+{
+"code": "MED368",
+"name": "ELAINE ALESSIO DE JESUS"
+},
+{
+"code": "MED369",
+"name": "GRAZIELA GONÇALVES PORTO"
+},
+{
+"code": "MED370",
+"name": "ANITA SILVA BRUNEL ALVES"
+},
+{
+"code": "MED371",
+"name": "LUIZ CARLOS KUMMER JUNIOR"
+},
+{
+"code": "MED372",
+"name": "FABIO RODRIGO BORGES"
+},
+{
+"code": "MED373",
+"name": "GIANCARLO BETTIN SANCHEZ"
+},
+{
+"code": "MED374",
+"name": "ANA PAULA CARDOSO PERTENCE NESI"
+},
+{
+"code": "MED375",
+"name": "CARLOS EDUARDO PASSOS"
+},
+{
+"code": "MED376",
+"name": "SCHAIANE NEOTTI CITADIN"
+},
+{
+"code": "MED377",
+"name": "ALINE BURIGO"
+},
+{
+"code": "MED378",
+"name": "MONIQUE OSELAME POSSAMAI"
+},
+{
+"code": "MED379",
+"name": "MUNIKI FERREIRA MARTINS"
+},
+{
+"code": "MED380",
+"name": "MARIANA VIANA BEZZI BIANCHI"
+},
+{
+"code": "MED381",
+"name": "NADHINE FELTRIN RONSONI"
+},
+{
+"code": "MED382",
+"name": "LAYS FIGUEREDO"
+},
+{
+"code": "MED383",
+"name": "PATRICIA NUNES ALANO"
+},
+{
+"code": "MED384",
+"name": "GABRIELA EFFTING CREMA"
+},
+{
+"code": "MED385",
+"name": "RAFAEL DE SA FERNANDES"
+},
+{
+"code": "MED386",
+"name": "CARLOS ALBERTO SIMOES TREMOCO FILHO"
+},
+{
+"code": "MED387",
+"name": "BRUNO ROSSO BIANCHI"
+},
+{
+"code": "MED388",
+"name": "LUCAS CARGNIN HENRIQUE"
+},
+{
+"code": "MED389",
+"name": "ELEONOR JOSE SOLIGO JUNIOR"
+},
+{
+"code": "MED390",
+"name": "MARCELO ROMANCINI DALEFFE"
+},
+{
+"code": "MED391",
+"name": "JAIR PAULO SCHUH"
+},
+{
+"code": "MED392",
+"name": "ALESSANDRO YOSHIZATO"
+},
+{
+"code": "MED393",
+"name": "ROBSON LUIZ DOS SANTOS"
+},
+{
+"code": "MED394",
+"name": "GENESIO HENRIQUE DE CAMPOS JUNIOR"
+},
+{
+"code": "MED395",
+"name": "MARIANE MARINHO DE SOUZA"
+},
+{
+"code": "MED396",
+"name": "THATYANE CARLA DA SILVA"
+},
+{
+"code": "MED397",
+"name": "PAULINE CUREAU MIECHUANSKI"
+},
+{
+"code": "MED398",
+"name": "CHARLANE ALESSIO DE JESUS"
+},
+{
+"code": "MED399",
+"name": "DILVANIA NICOLETTI"
+},
+{
+"code": "MED400",
+"name": "ELOA SACHET NUERNBERG"
+},
+{
+"code": "MED401",
+"name": "RICHARD COAN CARDOSO"
+},
+{
+"code": "MED402",
+"name": "MARIANA MAGALHAES"
+},
+{
+"code": "MED403",
+"name": "IANE MARIA TEIXEIRA DAGOSTIN"
+},
+{
+"code": "MED404",
+"name": "THAMYRIS FINGER TRAPANI"
+},
+{
+"code": "MED405",
+"name": "ANDRESSA CAROLINE CARDOSO DE CAMPOS"
+},
+{
+"code": "MED406",
+"name": "DANYELLA ARAUJO"
+},
+{
+"code": "MED407",
+"name": "PAULO FERREIRA JUNIOR"
+},
+{
+"code": "MED408",
+"name": "MARIA EUGENIA SAMPAIO PERITO"
+},
+{
+"code": "MED409",
+"name": "FABIO AUGUSTO MORAES WIECZOREK"
+},
+{
+"code": "MED410",
+"name": "KARINA ALESSIO DE JESUS"
+},
+{
+"code": "MED411",
+"name": "ANNE ROSSO BIANCHI"
+},
+{
+"code": "MED412",
+"name": "MARIDIA FERRARI ESTEVAM"
+},
+{
+"code": "MED413",
+"name": "ISABELA NOLLA CONCER"
+},
+{
+"code": "MED414",
+"name": "MARIA EDUARDA SCHERER COSTI"
+},
+{
+"code": "MED415",
+"name": "LIGIA MARIA HADEMANN ESSER"
+},
+{
+"code": "MED416",
+"name": "TALINE REGINA DOS SANTOS MARQUES"
+},
+{
+"code": "MED417",
+"name": "LUIZ FERNANDO FARIAS TAVARES"
+},
+{
+"code": "MED418",
+"name": "MARCIA FAYAD KALED"
+},
+{
+"code": "MED419",
+"name": "JULIANA DAL PONTE BITENCOURT"
+},
+{
+"code": "MED420",
+"name": "ALINE CARVALHO SIMOES"
+},
+{
+"code": "MED421",
+"name": "EDUARDO ADRATT"
+},
+{
+"code": "MED422",
+"name": "GILEADE FERNANDES DE SA"
+},
+{
+"code": "MED423",
+"name": "ANA CLAUDIA BORTOLOTTO MILANESI"
+},
+{
+"code": "MED424",
+"name": "AILTON GOMES DE MELO"
+},
+{
+"code": "MED425",
+"name": "BRUNA SILVA CESCONETTO"
+},
+{
+"code": "MED426",
+"name": "TUANY MARTINS NUNES"
+},
+{
+"code": "MED427",
+"name": "DEBORA MARIA CARDOSO CROCETTA"
+},
+{
+"code": "MED428",
+"name": "PAULA DE SOUZA GOMES"
+},
+{
+"code": "MED429",
+"name": "RICARDO SOUZA MATIAS"
+},
+{
+"code": "MED430",
+"name": "BARBARA APARECIDA FERNANDES"
+},
+{
+"code": "MED431",
+"name": "CLAUDIA DUARTE DOS SANTOS"
+},
+{
+"code": "MED432",
+"name": "MERIENE VIQUETTI DE SOUZA"
+},
+{
+"code": "MED433",
+"name": "ULLISSIS PIMENTA E SILVA VICENTINI"
+},
+{
+"code": "MED434",
+"name": "KAREN FAVARIN"
+},
+{
+"code": "MED435",
+"name": "VERA LUCIA MEISTER"
+},
+{
+"code": "MED436",
+"name": "JOSE ANTONIO SOUZA"
+},
+{
+"code": "MED437",
+"name": "GRAZIELA NASARIO DA ROSA"
+},
+{
+"code": "MED438",
+"name": "MARIA LETICIA SIMON"
+},
+{
+"code": "MED439",
+"name": "FERNANDO ZOMER VOLPATO"
+},
+{
+"code": "MED440",
+"name": "LEO GRACIOLLI FRANCO"
+},
+{
+"code": "MED441",
+"name": "VOLNEI SILVA"
+},
+{
+"code": "MED442",
+"name": "MARCIO LUIZ ANTONINI MELLO"
+},
+{
+"code": "MED443",
+"name": "MAITE FIEGENBAUM"
+},
+{
+"code": "MED444",
+"name": "CATARINE ANDREA ZARDO"
+},
+{
+"code": "MED445",
+"name": "LISANE BEATRIZ GIACOMOSSI"
+},
+{
+"code": "MED446",
+"name": "DULCE DESIRE BATISTA DE ALBUQUERQUE"
+},
+{
+"code": "MED447",
+"name": "MONICA NAYARA FRANCHETTI"
+},
+{
+"code": "MED448",
+"name": "HELOISA SILVA ABEL"
+},
+{
+"code": "MED449",
+"name": "CLAUDIA GUIMARAES DE OLIVEIRA PORTELA"
+},
+{
+"code": "MED450",
+"name": "ALEXANDRE DE SOUZA COELHO DE LIMA"
+},
+{
+"code": "MED451",
+"name": "FERNANDA NASPOLINI BASTOS"
+},
+{
+"code": "MED452",
+"name": "PAULA TRAJANO DA ROSA"
+},
+{
+"code": "MED453",
+"name": "CRISTINA MARTINS PEDROSA RAVAIANE"
+},
+{
+"code": "MED454",
+"name": "WILLIAN DE CARVALHO ESMERALDINO"
+},
+{
+"code": "MED455",
+"name": "LUCIANO PEREIRA BENDER"
+},
+{
+"code": "MED456",
+"name": "GABRIELA GROLLI BASSOTTO"
+},
+{
+"code": "MED457",
+"name": "LUCIANA SATIE BATISTA"
+},
+{
+"code": "MED458",
+"name": "FLAVIA POLICARPO SOARES"
+},
+{
+"code": "MED459",
+"name": "LAISSA MARA RODRIGUES TEIXEIRA"
+},
+{
+"code": "MED460",
+"name": "VIVIANE GONÇALVES MADEIRA"
+},
+{
+"code": "MED461",
+"name": "ISRAEL BARCELOS DE MELO"
+},
+{
+"code": "MED462",
+"name": "VITOR MACHADO BENINCA"
+},
+{
+"code": "MED463",
+"name": "VINICIUS FIGUEIREDO SOARES"
+},
+{
+"code": "MED464",
+"name": "JOANA CECILIA WARREN CAVALCANTI ORTH"
+},
+{
+"code": "MED465",
+"name": "GABRIELA RONCHI PITTIGLIANI"
+},
+{
+"code": "MED466",
+"name": "PAULA MENTA GARRIDO"
+},
+{
+"code": "MED467",
+"name": "PAOLA VIEIRA MANTA"
+},
+{
+"code": "MED468",
+"name": "CELESTE AIDA BRITTO MANSUR"
+},
+{
+"code": "MED469",
+"name": "ANDRE LUIZ DA SILVA MANGANELLI"
+},
+{
+"code": "MED470",
+"name": "PAOLA FIALHO PERONDI"
+},
+{
+"code": "MED471",
+"name": "KALEBI SLAVIERO DARONCHI"
+},
+{
+"code": "MED472",
+"name": "MARCELA SPILLERE ROVARIS"
+},
+{
+"code": "MED473",
+"name": "CAROLINA BARUEL ALCANTARA"
+},
+{
+"code": "MED474",
+"name": "RENATA DA SILVA LIMA"
+},
+{
+"code": "MED475",
+"name": "ANDRE NESI"
+},
+{
+"code": "MED476",
+"name": "LUIZ CEZAR TIBERIO"
+},
+{
+"code": "MED477",
+"name": "LEON IOTTI NETO"
+},
+{
+"code": "MED478",
+"name": "SUELY SATIYE TOMA"
+},
+{
+"code": "MED479",
+"name": "JACI MARA PEREIRA MARQUES"
+},
+{
+"code": "MED480",
+"name": "PATRICIA BACKES ARRUDA"
+},
+{
+"code": "MED481",
+"name": "LAILA ABDALA DE ARAUJO CHAVES"
+},
+{
+"code": "MED482",
+"name": "ADRIANE ZANIOLO"
+},
+{
+"code": "MED483",
+"name": "LUCIANA DA COSTA SANTOS PRADO"
+},
+{
+"code": "MED484",
+"name": "ANIE SAVI SERAFIM"
+},
+{
+"code": "MED485",
+"name": "MARCOS GUILHERME HORTA MASCI"
+},
+{
+"code": "MED486",
+"name": "GABRIEL CIPRIANO VIDAL HELUANY"
+},
+{
+"code": "MED487",
+"name": "ALEXANDRE RAMPINELLI MANGILI"
+},
+{
+"code": "MED489",
+"name": "CONRADO MENEGOLA"
+},
+{
+"code": "MED490",
+"name": "JOAO PAULO SVAISSER CARNEIRO"
+},
+{
+"code": "MED491",
+"name": "SASKIA REGINA FREITAS COPPENS"
+},
+{
+"code": "MED492",
+"name": "ANTONIO AUGUSTO RIANI DE SOUZA"
+},
+{
+"code": "MED495",
+"name": "BRUNA CORREA DE ARAUJO CASTRO"
+},
+{
+"code": "MED496",
+"name": "PEDRO HENRIQUE BARP REUS"
+},
+{
+"code": "MED499",
+"name": "JAQUELINE FORESTIERI BOLONHEZ"
+},
+{
+"code": "MED500",
+"name": "MARIAH SALVAN"
+},
+{
+"code": "MED501",
+"name": "GABRIEL MARTINELLO MELLER"
+},
+{
+"code": "MED502",
+"name": "CAROLINE MARGARETH PELISSIER"
+},
+{
+"code": "MED503",
+"name": "MANOELA BAU DE OLIVEIRA"
+},
+{
+"code": "MED504",
+"name": "ISABELA PIAZZA ZANETTE"
+},
+{
+"code": "MED505",
+"name": "NATALIA PASETO PILATI"
+},
+{
+"code": "MED506",
+"name": "GABRIEL DE LELLIS NETO"
+},
+{
+"code": "MED507",
+"name": "CAROLINE LOZ DA ROSA"
+},
+{
+"code": "MED509",
+"name": "LARISSA DE SOUZA MAZZUCO"
+},
+{
+"code": "MED510",
+"name": "RAFAEL STANGE DA SILVA VALLE"
+},
+{
+"code": "MED511",
+"name": "GUILHERME SLIVA"
+},
+{
+"code": "MED512",
+"name": "SILVIA DE JESUS NICOLADELLI"
+},
+{
+"code": "MED513",
+"name": "GABRIEL DE FAVERI SACCON"
+},
+{
+"code": "MED514",
+"name": "JULIA PANATO DA ROSA"
+},
+{
+"code": "MED515",
+"name": "THEREZA JENNY GOMES TEIXEIRA"
+},
+{
+"code": "MED516",
+"name": "ANNA JÚLIA PIMENTEL E SILVA"
+},
+{
+"code": "MED517",
+"name": "LENITA DUART DA SILVA DE CAMPOS"
+},
+{
+"code": "MED518",
+"name": "ANDRE MANNRICH ROVEDA"
+},
+{
+"code": "MED520",
+"name": "BIANCA KELEM MAZETTO"
+},
+{
+"code": "MED521",
+"name": "BEATRIZ BRIGIDO PEREIRA"
+},
+{
+"code": "MED522",
+"name": "MARILIA BARBIERI"
+},
+{
+"code": "MED523",
+"name": "GABRIELA THIESEN SCHUELTER"
+},
+{
+"code": "MED524",
+"name": "AMANDA FLORIANO ROVARIS"
+},
+{
+"code": "MED530",
+"name": "MARIANA AREIAS DA SILVA DE FREITAS CARVALHO"
+},
+{
+"code": "MED531",
+"name": "ANA PAULA DOMINGUES CAMPOS"
+},
+{
+"code": "MED532",
+"name": "CAMILA VIEIRA FERNANDES"
+},
+{
+"code": "MED533",
+"name": "BRUNA DE AGUIAR ARAUJO"
+},
+{
+"code": "MED534",
+"name": "STEFANI ZILLI MAFALDA"
+},
+{
+"code": "MED535",
+"name": "ELIZANDRA ROSS MARTINS"
+},
+{
+"code": "MED536",
+"name": "VILSON RAMON BONETTI"
+},
+{
+"code": "MED537",
+"name": "CAMILA SOUZA VILELA"
+},
+{
+"code": "MED538",
+"name": "NATHALY MACHIAVELLI GALEAZZI"
+},
+{
+"code": "MED539",
+"name": "MELISSA GAMA DE MESQUITA"
+},
+{
+"code": "MED540",
+"name": "SANDY BENEDET TAUTZ"
+},
+{
+"code": "MED541",
+"name": "NICOLE FIGUEREDO"
+},
+{
+"code": "MED560",
+"name": "FELIPE GUSTAVO CARCAMAN VALADARES"
+},
+{
+"code": "MED561",
+"name": "BEATRIZ GEREMIAS DOS SANTOS"
+},
+{
+"code": "MED562",
+"name": "GUSTAVO BELTRAME"
+},
+{
+"code": "MED563",
+"name": "DANIEL MAZZULA DE MELLO FERNANDES"
+},
+{
+"code": "MED564",
+"name": "DANIELLA CARDOSO CROCETTA"
+},
+{
+"code": "MED565",
+"name": "ISABELA ALVES TEIXEIRA"
+},
+{
+"code": "MED566",
+"name": "BEATRIZ BERNARDO PEREIRA"
+},
+{
+"code": "MED567",
+"name": "LUANA ALBERTON MEDEIROS"
+},
+{
+"code": "MED568",
+"name": "ANA PAULA CUCKER SORATTO"
+},
+{
+"code": "MED569",
+"name": "GABRIELLI DALMÉDICO"
+},
+{
+"code": "MED570",
+"name": "JÚLIA TURRA REICHERT"
+},
+{
+"code": "MED571",
+"name": "TAMARA SIMÃO BOSSE"
+},
+{
+"code": "MED572",
+"name": "AUGUSTO FELIPE DOS SANTOS DE BITENCOURT"
+},
+{
+"code": "MED573",
+"name": "GIOVANA MAFIOLETTI SORATTO"
+},
+{
+"code": "MED574",
+"name": "MARIA LAURA ZANETTE NASPOLINI"
+},
+{
+"code": "MED575",
+"name": "LAURA CEOLIN DE JESUS"
+},
+{
+"code": "MED576",
+"name": "LUANA GHISI UBIALI"
+},
+{
+"code": "MED578",
+"name": "BRUNA MARCOS SORATTO"
+},
+{
+"code": "MED579",
+"name": "LETÍCIA BEZ BATTI"
+},
+{
+"code": "MED580",
+"name": "FERNANDA DE SOUZA LIMA ALVES"
+},
+{
+"code": "MED581",
+"name": "RODRIGO DE SOUSA ISOPPO"
+},
+{
+"code": "MED582",
+"name": "JESSICA ZILLI NUNES"
+},
+{
+"code": "MED583",
+"name": "ANA LAURA SPILLERE DAJORI"
+},
+{
+"code": "MED584",
+"name": "LIVIA SIMONI MACCARI"
+},
+{
+"code": "MED585",
+"name": "EMILLI FRAGA FERREIRA"
+},
+{
+"code": "MED586",
+"name": "ANA PAULA AFFONSO GOMES"
+},
+{
+"code": "MED587",
+"name": "DAYANE DE PAULA SOUSA"
+},
+{
+"code": "MED588",
+"name": "ALIK ANTUNES BESERRA"
+},
+{
+"code": "MED590",
+"name": "RAFAELA AQUINO DE ALMEIDA BENITES"
+},
+{
+"code": "MED600",
+"name": "ANNE ROSSO EVANGELISTA"
+},
+{
+"code": "MED601",
+"name": "MANOELLA CAETANO DOS SANTOS"
+},
+{
+"code": "MED603",
+"name": "MARIA GIOVANNA MANENTI"
+},
+{
+"code": "MED604",
+"name": "HENRIQUE CARVALHO"
+},
+{
+"code": "MED607",
+"name": "GIOVANNA DE BONA ZAVARISE"
+},
+{
+"code": "MED608",
+"name": "MICHELI CRISTIANE HINTZ"
+},
+{
+"code": "MED609",
+"name": "MARILIA CIZESKI SALVAN"
+},
+{
+"code": "MED610",
+"name": "PAMELA SOARES DE MELO"
+},
+{
+"code": "MED611",
+"name": "LETÍCIA SEHNEM BORTOLOTTO"
+},
+{
+"code": "MED612",
+"name": "CINTIA SILVESTRE"
+},
+{
+"code": "MED613",
+"name": "JHONATAN DE CAMPOS ROSA"
+},
+{
+"code": "MED614",
+"name": "MANOELLA CAETANO"
+},
+{
+"code": "MED615",
+"name": "LARA RONCONI"
+},
+{
+"code": "MED616",
+"name": "WENDELL DELLA GIUSTINA"
+},
+{
+"code": "MED617",
+"name": "CARLOS ALBERTO DE CARVALHO"
+},
+{
+"code": "MED621",
+"name": "CAMILE BEATRIZ FERNANDES DA SILVA"
+},
+{
+"code": "MED630",
+"name": "DANIELLE DA ROCHA CARRARO RIBEIRO LAURENTINO"
+},
+{
+"code": "MED632",
+"name": "MANOEL ROBSON DAMIN MONTEIRO"
+},
+{
+"code": "MED633",
+"name": "NICOLI SANTANA DA SILVA"
+},
+{
+"code": "MED634",
+"name": "VANESSA KNIHS DE MENEZES"
+},
+{
+"code": "MED642",
+"name": "BEATRIZ BATISTA MATOS"
+},
+{
+"code": "MED643",
+"name": "RAFAELA TEZZA MATIOLA"
+},
+{
+"code": "MED644",
+"name": "MARIA LUIZA CESA"
+},
+{
+"code": "MED645",
+"name": "ADRIANA MARIA DE MEDEIROS ANTUNES DA SILVA"
+},
+{
+"code": "MED646",
+"name": "JEAN RICARDO SILVESTRE"
+},
+{
+"code": "MED647",
+"name": "MARIA HELOÍSA PERDONÁ DA SILVEIRA"
+},
+{
+"code": "MED648",
+"name": "FERNANDA DAMINELLI EUGÊNIO"
+},
+{
+"code": "MED649",
+"name": "BRUNO RONCHI MELLO"
+},
+{
+"code": "MED650",
+"name": "MARINA DUARTE PAES"
+},
+{
+"code": "MED651",
+"name": "MARIA VITORIA CANDIOTTO BURIGO"
+},
+{
+"code": "MED653",
+"name": "LUIZ ANTONIO DE LUCCA"
+},
+{
+"code": "MED658",
+"name": "MADAY MILIAN GONZALEZ"
+},
+{
+"code": "MED659",
+"name": "MAYRA LATINI VIEIRA"
+},
+{
+"code": "MED660",
+"name": "DANIELA DADALT GUEDES"
+},
+{
+"code": "MED661",
+"name": "FERNANDA VIEIRA DE SOUZA"
+},
+{
+"code": "MED662",
+"name": "NEHAD JUSUF NIMER"
+},
+{
+"code": "MED663",
+"name": "ELIEL MACHADO ROVARIS"
+},
+{
+"code": "MED664",
+"name": "STEPHANIE DA CAZ XAVIER BURGARDT"
+},
+{
+"code": "MED665",
+"name": "TAMIRES SILVA ALVES"
+},
+{
+"code": "MED666",
+"name": "SUANI CRISTINA DE SOUSA"
+},
+{
+"code": "MED667",
+"name": "FABRISSIO PORTELINHA GRAFFUNDER"
+},
+{
+"code": "MED668",
+"name": "HENRIQUE GONCALVES DUCHINI"
+},
+{
+"code": "MED669",
+"name": "BEATRIZ MIGUEL DE AGUIAR DA SILVA"
+},
+{
+"code": "MED670",
+"name": "IVAN NERES DA SILVA JÚNIOR"
+},
+{
+"code": "MED671",
+"name": "FLAVIA GHELLER SCHAIDHAUER"
+},
+{
+"code": "MED990",
+"name": "FARMACIA CLINICA TESTE"
+},
+{
+"code": "MED997",
+"name": "MEDICO TESTE II"
+},
+{
+"code": "MED998",
+"name": "MEDICO TESTE I"
+},
+{
+"code": "MED999",
+"name": "FARMACIA CLINICA"
+},
+{
+"code": "RES001",
+"name": "RESIDENTE MARCELA ASSUNCAO CAMPOS"
+},
+{
+"code": "RES002",
+"name": "VITORIA MARMITT DE CAMPOS"
+},
+{
+"code": "RES003",
+"name": "RESIDENTE EMANUEL CARDOSO MAFRA"
+},
+{
+"code": "RES004",
+"name": "RESIDENTE MARINA RIBAS KNOTH"
+},
+{
+"code": "RES005",
+"name": "RESIDENTE ISADORA FACHIM"
+},
+{
+"code": "RES006",
+"name": "VIVIANE MEDEIROS SILVEIRA"
+},
+{
+"code": "RES007",
+"name": "RESIDENTE IOLANDA DE SOUZA HONORATO"
+},
+{
+"code": "RES008",
+"name": "RESIDENTE ARLENA FERNANDES PAIM"
+},
+{
+"code": "RES009",
+"name": "RESIDENTE SUZANA KNIPHOFF DE OLIVEIRA"
+},
+{
+"code": "RES010",
+"name": "RESIDENTE LUCAS GADENZ"
+},
+{
+"code": "RES011",
+"name": "JESSICA TELLI PALMA"
+},
+{
+"code": "RES012",
+"name": "BRUNA BIANCHIN"
+},
+{
+"code": "RES013",
+"name": "MATEUS LEAL DAITX"
+},
+{
+"code": "RES014",
+"name": "RESIDENTE BRUNO PINHO ARAUJO"
+},
+{
+"code": "RES015",
+"name": "THIAGO BEZERRA G. C. DA SILVA"
+},
+{
+"code": "RES016",
+"name": "RESIDENTE BEATRIZ BRIGIDO PEREIRA"
+},
+{
+"code": "RES017",
+"name": "RESIDENTE THIAGO MEDEIROS DOS SANTOS"
+},
+{
+"code": "RES018",
+"name": "RESIDENTE BRUNA UGIONI GODOY"
+},
+{
+"code": "RES019",
+"name": "RESIDENTE THUANY SILVESTRI GARCIA"
+},
+{
+"code": "RES020",
+"name": "RESIDENTE MONICA BIZ"
+},
+{
+"code": "RES021",
+"name": "RESIDENTE MARIA HELENA ALVES"
+},
+{
+"code": "RES022",
+"name": "RESIDENTE ROGERIO MIGUEL KERBER JUNIOR"
+},
+{
+"code": "RES023",
+"name": "RESIDENTE GABRIEL DE FAVERI SACCON"
+},
+{
+"code": "RES026",
+"name": "YASMINE BARCELLOS"
+},
+{
+"code": "RES24",
+"name": "RESIDENTE SILVIA DE JESUS NICOLADELLI"
+},
+{
+"code": "RES25",
+"name": "RESIDENTE ALEXIA UGIONI GODOY"
+},
+{
+"code": "MDE605",
+"name": "AMANDA BOM NUERNBERG"
+},
+{
+"code": "MEFD0666",
+"name": "FERNANDO HENRIQUE COLONETTE WESSLER"
+}
+]

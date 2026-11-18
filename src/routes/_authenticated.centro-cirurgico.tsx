@@ -1,3 +1,5 @@
+import { DoctorNameInput } from "@/components/DoctorNameInput";
+import { rememberDoctor } from "@/lib/hospital-store";
 import { EncounterTimeline } from "@/components/EncounterTimeline";
 import { ProcedurePrintButton } from "@/components/ProcedurePrint";
 import { Button } from "@/components/ui/button";
@@ -125,7 +127,7 @@ function ScheduleForm({ day, patients }: { day: string; patients: { id: string; 
     const [h, m] = f.start.split(":").map(Number);
     const team: SurgTeam = { surgeon: f.surgeon, surgeonCrm: f.surgeonCrm, assistant: f.assistant, anesthetist: f.anesthetist, anesthetistCrm: f.anesthetistCrm, pediatrician: f.pediatrician, scrub: f.scrub, circulating: f.circulating };
     setState((st) => ({ surgeries: [...st.surgeries, { id: crypto.randomUUID(), patientId: f.patientId || undefined, patient: name, room: f.room, start: (h ?? 8) + (m ?? 0) / 60, duration: Number(f.duration) || 1, type: f.type, tuss: f.tuss, surgeon: f.surgeon, status: "Agendado", checks: {}, gastos: [], date: f.date, urgency: f.urgency, team }] }));
-    toast.success("Procedimento agendado.");
+    rememberDoctor(f.surgeon, f.surgeonCrm); rememberDoctor(f.anesthetist, f.anesthetistCrm); toast.success("Procedimento agendado.");
     setF((x) => ({ ...x, patientId: "", patient: "" }));
   };
   return (
@@ -142,7 +144,7 @@ function ScheduleForm({ day, patients }: { day: string; patients: { id: string; 
         <label><span className={lbl}>Início</span><Input type="time" value={f.start} onChange={(e) => set("start", e.target.value)} /></label>
         <label><span className={lbl}>Duração (h)</span><Input type="number" min={0.5} step={0.5} value={f.duration} onChange={(e) => set("duration", +e.target.value)} /></label>
         <div />
-        {([["surgeon", "Cirurgião / Obstetra"], ["surgeonCrm", "CRM cirurgião"], ["assistant", "Auxiliar"], ["anesthetist", "Anestesiologista"], ["anesthetistCrm", "CRM anestesista"], ["pediatrician", "Pediatra / Neonatologista"], ["scrub", "Instrumentador(a)"], ["circulating", "Circulante"]] as const).map(([k, l]) => <label key={k}><span className={lbl}>{l}</span><Input value={f[k]} onChange={(e) => set(k, e.target.value)} /></label>)}
+        {([["surgeon", "Cirurgião / Obstetra"], ["surgeonCrm", "CRM cirurgião"], ["assistant", "Auxiliar"], ["anesthetist", "Anestesiologista"], ["anesthetistCrm", "CRM anestesista"], ["pediatrician", "Pediatra / Neonatologista"], ["scrub", "Instrumentador(a)"], ["circulating", "Circulante"]] as const).map(([k, l]) => <label key={k}><span className={lbl}>{l}</span>{k === "surgeon" || k === "anesthetist" ? <DoctorNameInput value={f[k]} onChange={(v) => set(k, v)} onCrm={(c) => set(k + "Crm", c)} /> : <Input value={f[k]} onChange={(e) => set(k, e.target.value)} />}</label>)}
       </div>
       <Button className="mt-3" onClick={submit}>Agendar</Button>
     </details>
@@ -155,9 +157,9 @@ function TeamForm({ s, disabled }: { s: Surgery; disabled: boolean }) {
     <div className="rounded-md border p-3">
       <div className="mb-2 text-xs font-semibold">Equipe cirúrgica</div>
       <div className="grid grid-cols-2 gap-2">
-        {([["surgeon", "Cirurgião"], ["surgeonCrm", "CRM"], ["assistant", "Auxiliar"], ["pediatrician", "Pediatra/Neo"], ["anesthetist", "Anestesista"], ["anesthetistCrm", "CRM anestesista"], ["scrub", "Instrumentador(a)"], ["circulating", "Circulante"]] as const).map(([k, l]) => <label key={k}><span className={lbl}>{l}</span><Input disabled={disabled} value={t[k]} onChange={(e) => setT({ ...t, [k]: e.target.value })} className="h-8" /></label>)}
+        {([["surgeon", "Cirurgião"], ["surgeonCrm", "CRM"], ["assistant", "Auxiliar"], ["pediatrician", "Pediatra/Neo"], ["anesthetist", "Anestesista"], ["anesthetistCrm", "CRM anestesista"], ["scrub", "Instrumentador(a)"], ["circulating", "Circulante"]] as const).map(([k, l]) => <label key={k}><span className={lbl}>{l}</span>{k === "surgeon" || k === "anesthetist" ? <DoctorNameInput disabled={disabled} className="h-8" value={t[k]} onChange={(v) => setT((x) => ({ ...x, [k]: v }))} onCrm={(c) => setT((x) => ({ ...x, [k + "Crm"]: c }))} /> : <Input disabled={disabled} value={t[k]} onChange={(e) => setT({ ...t, [k]: e.target.value })} className="h-8" />}</label>)}
       </div>
-      <Button size="sm" variant="outline" className="mt-2" disabled={disabled} onClick={() => { updateSurg(s.id, () => ({ team: t, surgeon: t.surgeon })); toast.success("Equipe salva."); }}>Salvar equipe</Button>
+      <Button size="sm" variant="outline" className="mt-2" disabled={disabled} onClick={() => { rememberDoctor(t.surgeon, t.surgeonCrm); rememberDoctor(t.anesthetist, t.anesthetistCrm); updateSurg(s.id, () => ({ team: t, surgeon: t.surgeon })); toast.success("Equipe salva."); }}>Salvar equipe</Button>
     </div>
   );
 }
