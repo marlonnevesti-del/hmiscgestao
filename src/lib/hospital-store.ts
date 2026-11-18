@@ -125,7 +125,7 @@ export function dispenseKit(id: string, intervention: string, lots: Record<strin
   let stock = state.stock;
   meds.forEach((r) => { const m = findStockMedication(stock, r.item)!; stock = changeQty(stock, m.id, -(r.times?.length ?? 1), (lots[r.id] ?? '').trim()); });
   const at = new Date().toISOString(); const by = professionalName(state.profile);
-  const consumo = meds.map((r) => { const m = findStockMedication(state.stock, r.item)!; return { ...{ id: crypto.randomUUID(), at: new Date().toISOString(), by: professionalName(state.profile) }, kind: 'consumo' as const, from: m.location ?? 'Farmácia', to: p.name, item: m.name, code: m.code, qty: r.times?.length ?? 1, lot: (lots[r.id] ?? '').trim(), reason: 'Dispensação' }; });
+  const consumo = meds.map((r) => { const m = findStockMedication(state.stock, r.item)!; return { ...{ id: crypto.randomUUID(), at: new Date().toISOString(), by: professionalName(state.profile) }, kind: 'consumo' as const, from: m.location ?? 'Farmácia', to: p.name, item: m.name, code: m.code, qty: r.times?.length ?? 1, lot: (lots[r.id] ?? '').trim(), reason: 'Dispensação', patient: p.name, patientId: p.id, baa: e.number, ...(e.fia ? { fia: e.fia.number } : {}) }; });
   const requisition = `${String(state.movements.length + state.encounters.indexOf(e) * 7 + 230000).slice(-6)}/${new Date().getFullYear()}`;
   commitEncounter({ ...transition(e, 'AGUARDANDO_MEDICACAO', by, 'Kit dispensado'), intervention, dispensedAt: at, dispensedBy: by, requisition }, { stock, movements: [...consumo, ...state.movements], patients: state.patients.map((x) => x.id === p.id ? { ...x, prescriptions: x.prescriptions.map((r) => r.pharmacy ? { ...r, pharmacy: 'Dispensada', lot: (lots[r.id] ?? '').trim() } : r) } : x) });
 }
@@ -148,6 +148,21 @@ export function returnStock(depot: Depot, itemId: string, qty: number, lot: stri
   const items = changeQty(state[depotKey(depot)], itemId, qty, lot);
   const item = items.find((i) => i.id === itemId)!;
   setState(() => ({ [depotKey(depot)]: items, movements: logMovement({ kind: 'devolucao', from: origin.trim(), to: DEPOT_NAME[depot], item: item.name, code: item.code, qty, lot: lot.trim(), reason: reason.trim() }) }) as Partial<State>);
+}
+/** Saída via requisição: baixa itens para paciente (FIA/BAA) ou centro de custo, com nº de documento. */
+export function requisitionOut(depot: Depot, dest: { encounterId?: string; costCenter?: string; urgent?: boolean; loss?: boolean; note?: string }, lines: { id: string; lot: string; qty: number }[]) {
+  requireAction(depotAction(depot));
+  if (!lines.length) throw new Error('Inclua ao menos um item.');
+  const e = dest.encounterId ? state.encounters.find((x) => x.id === dest.encounterId) : undefined;
+  const p = e ? state.patients.find((x) => x.id === e.patientId) : undefined;
+  if (!p && !dest.costCenter?.trim()) throw new Error('Informe o paciente/atendimento ou o centro de custo.');
+  let items = state[depotKey(depot)];
+  for (const l of lines) { checkQty(l.qty); items = changeQty(items, l.id, -l.qty, l.lot); }
+  const doc = `REQ ${String(state.movements.filter((m) => m.kind === 'requisicao').length + 1).padStart(6, '0')}/${new Date().getFullYear()}`;
+  const at = new Date().toISOString(); const by = professionalName(state.profile);
+  const logs: Movement[] = lines.map((l) => { const it = items.find((i) => i.id === l.id)!; return { id: crypto.randomUUID(), at, by, kind: 'requisicao', from: DEPOT_NAME[depot], to: p ? p.name : dest.costCenter!.trim(), item: it.name, code: it.code, qty: l.qty, lot: l.lot.trim(), doc, reason: [dest.loss ? 'Perda' : '', dest.note?.trim() ?? ''].filter(Boolean).join(' · '), ...(p ? { patient: p.name, patientId: p.id, baa: e!.number, ...(e!.fia ? { fia: e!.fia.number } : {}) } : {}), ...(dest.costCenter?.trim() ? { costCenter: dest.costCenter.trim() } : {}), ...(dest.urgent ? { urgent: true } : {}) }; });
+  setState(() => ({ [depotKey(depot)]: items, movements: [...logs, ...state.movements] }) as Partial<State>);
+  return doc;
 }
 /** Registro de quebra ou extravio na farmácia: baixa o saldo. */
 export function registerBreakage(itemId: string, qty: number, lot: string, reason: string, depot: Depot = 'farmacia') {

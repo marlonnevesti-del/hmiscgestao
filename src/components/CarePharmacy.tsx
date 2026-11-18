@@ -17,6 +17,7 @@ import { findStockMedication, fmtExpiry, isStockLow, lotsByExpiry } from "@/lib/
 import { cn } from "@/lib/utils";
 import { BreakageForm, MovementLog, NursingRequestForm, RequestInbox, ReturnForm, TransferForm, EntryForm, LoanPanel } from "./SupplyPanels";
 import { LabelStudio } from "./LabelStudio";
+import { MovementMap, RequisitionOut } from "./MovementMap";
 import { ControlledCabinet, ConsumptionReport, ExpiryPanel } from "./ControlledCabinet";
 import { RequisitionPrint, printRequisition } from "./RequisitionPrint";
 
@@ -48,6 +49,7 @@ function Pharmacy() {
     <TabsContent value="quebra" className="space-y-3"><BreakageForm /><MovementLog kinds={["quebra"]} /></TabsContent>
     <TabsContent value="dispensados"><DispensedKits /></TabsContent>
     <TabsContent value="etiquetas"><LabelStudio /></TabsContent>
+    <TabsContent value="requisicao"><RequisitionOut depot="farmacia" /></TabsContent><TabsContent value="mapa"><MovementMap depot="farmacia" /></TabsContent>
   </Tabs>;
 }
 

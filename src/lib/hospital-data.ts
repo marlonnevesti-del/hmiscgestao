@@ -55,6 +55,7 @@ export const PHARMACY_TABS = [
   { id: "transferencia", label: "Transferência" }, { id: "devolucao", label: "Devolução" },
   { id: "quebra", label: "Quebra / Extravio" }, { id: "dispensados", label: "Kits dispensados" },
   { id: "etiquetas", label: "Etiquetas" },
+  { id: "requisicao", label: "Saída via requisição" }, { id: "mapa", label: "Mapa de movimentação" },
 ] as const;
 /** Warehouse sections shown as sidebar sub-items (/almoxarifado?aba=id). */
 export const WAREHOUSE_TABS = [
@@ -63,6 +64,7 @@ export const WAREHOUSE_TABS = [
   { id: "entrada", label: "Entrada NF" }, { id: "emprestimo", label: "Empréstimos" },
   { id: "transferencia", label: "Transferência" }, { id: "devolucao", label: "Devolução" },
   { id: "quebra", label: "Quebra / Extravio" }, { id: "etiquetas", label: "Etiquetas" },
+  { id: "requisicao", label: "Saída via requisição" }, { id: "mapa", label: "Mapa de movimentação" },
 ] as const;
 const UNIT_IDS: string[] = UNIT_AREAS.map((u) => u.id);
 /** Default (function-derived) permission for one tab of a care unit. */
