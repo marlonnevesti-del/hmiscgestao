@@ -40,7 +40,14 @@ const simple: Field[] = [
 export function PatientRegistrationFields({ value: r, onChange, recordNumber, readOnly = false, mode = "completo", birthError }: { birthError?: string | null; value: PatientRegistration; onChange: (value: PatientRegistration) => void; recordNumber?: string | undefined; readOnly?: boolean; mode?: RegistrationMode }) {
   const req = REQUIRED[mode];
   const mark = (key: string, label: string) => req.includes(key) ? <span className="font-semibold text-primary">{label} *</span> : mode === "simplificado" && RECOMMENDED_SIMPLE.includes(key) ? <span className="text-primary">{label}</span> : label;
-  const set = (key: keyof PatientRegistration, value: string | boolean) => onChange({ ...r, [key]: value });
+  /** Ao preencher UF + cidade de naturalidade/origem, busca o código IBGE automaticamente. */
+  const set = (key: keyof PatientRegistration, value: string | boolean) => {
+    const next = { ...r, [key]: value } as PatientRegistration;
+    onChange(next);
+    const pairs = [["birthplaceState", "birthplace", "birthplaceCode"], ["originState", "originCity", "originCityCode"]] as const;
+    for (const [uf, city, code] of pairs) if ((key === uf || key === city) && String(next[city]).trim() && String(next[uf]).length === 2)
+      void lookupCityCode(String(next[uf]), String(next[city])).then((c) => { if (c) onChange({ ...next, [code]: c }); });
+  };
   /** Atualiza um endereço e, ao completar CEP ou cidade, busca logradouro e código IBGE automaticamente. */
   const editAddress = (index: number, key: keyof PatientAddress, value: string) => {
     const base = r.addresses.length ? r.addresses : [emptyAddress()];

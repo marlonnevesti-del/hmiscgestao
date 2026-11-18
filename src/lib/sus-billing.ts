@@ -16,6 +16,13 @@ const wasAdmitted = (e: Encounter) => e.status_fluxo === "ENCAMINHADO_INTERNACAO
 
 export const SIGTAP_DEFAULT = { BPA: "0301060061", AIH: "0303010037" };
 
+/** Código real do atendimento (laudo AIH ou procedimento registrado); padrão só se nada foi informado. */
+export function pickProcedure(e: Encounter, kind: "BPA" | "AIH"): string {
+  const aih = digits(e.aihLaudo?.codigo), proc = digits(e.sigtapCode);
+  const ok = (c: string) => c.length === 10 ? c : "";
+  return (kind === "AIH" ? ok(aih) || ok(proc) : ok(proc)) || SIGTAP_DEFAULT[kind];
+}
+
 export function buildSusRows(encounters: Encounter[], patients: Patient[], competence: string, prof: Professional): SusRow[] {
   return encounters.filter((e) => competenceOf(e.openedAt) === competence).map((e) => {
     const p = patients.find((x) => x.id === e.patientId);
@@ -26,7 +33,7 @@ export function buildSusRows(encounters: Encounter[], patients: Patient[], compe
       cns: digits(r?.cns), cpf: digits(r?.cpf || p?.cpf), name: r?.civilName || p?.name || "",
       birthDate: r?.birthDate ?? "", sex: (r?.sex ?? "").slice(0, 1).toUpperCase(),
       motherName: r?.parent1 || p?.motherName || "", cityCode: digits(r?.addresses?.find((a) => a.primary)?.cityCode || r?.addresses?.find((a) => a.cityCode)?.cityCode || r?.birthplaceCode),
-      cid: (e.medical?.cid ?? "").replace(/\W/g, "").toUpperCase(), procedure: SIGTAP_DEFAULT[kind], issues: [],
+      cid: (e.medical?.cid ?? "").replace(/\W/g, "").toUpperCase(), procedure: pickProcedure(e, kind), issues: [],
     };
     row.issues = susIssues(row, prof);
     return row;

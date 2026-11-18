@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { NoPermission } from "@/components/AppShell";
 import { Letterhead, LetterFooter } from "@/components/DischargePrint";
 import { printProcedure } from "@/components/ProcedurePrint";
+import { SigtapPicker } from "@/components/SigtapPicker";
 import { can } from "@/lib/hospital-data";
 import { useStore } from "@/lib/hospital-store";
 import { aihFile, bpaFile, buildSusRows, CNES, competenceOf, type Professional, type SusRow } from "@/lib/sus-billing";
@@ -95,7 +96,7 @@ function SusBilling() {
           <div className="text-sm font-medium">Laudo de Solicitação/Autorização de APAC</div>
           <div className="grid gap-3 md:grid-cols-2">
             <label className="text-xs font-medium">Paciente<select className="mt-1 h-9 w-full rounded-md border bg-background px-2 text-sm" value={apac.patient} onChange={(e) => { const p = patients.find((x) => x.name === e.target.value); setApac({ ...apac, patient: e.target.value, cns: p?.registration?.cns ?? "" }); }}><option value="">Selecione…</option>{patients.map((p) => <option key={p.id}>{p.name}</option>)}</select></label>
-            {([["cns", "CNS do paciente"], ["procedure", "Procedimento SIGTAP (10 dígitos)"], ["cid", "CID-10 principal"], ["authorization", "Nº da autorização APAC (gestor)"], ["start", "Validade início"], ["end", "Validade fim"]] as const).map(([k, l]) => <label key={k} className="text-xs font-medium">{l}<Input type={k === "start" || k === "end" ? "date" : "text"} value={apac[k]} onChange={(e) => setApac({ ...apac, [k]: e.target.value })} /></label>)}
+            <SigtapPicker onPick={(x) => setApac((a) => ({ ...a, procedure: x.c }))} />{([["cns", "CNS do paciente"], ["procedure", "Procedimento SIGTAP (10 dígitos)"], ["cid", "CID-10 principal"], ["authorization", "Nº da autorização APAC (gestor)"], ["start", "Validade início"], ["end", "Validade fim"]] as const).map(([k, l]) => <label key={k} className="text-xs font-medium">{l}<Input type={k === "start" || k === "end" ? "date" : "text"} value={apac[k]} onChange={(e) => setApac({ ...apac, [k]: e.target.value })} /></label>)}
           </div>
           <label className="block text-xs font-medium">Justificativa / resumo clínico<textarea className="mt-1 min-h-20 w-full rounded-md border bg-background p-2 text-sm" value={apac.justification} onChange={(e) => setApac({ ...apac, justification: e.target.value })} /></label>
           <Button disabled={!apac.patient || !apac.procedure} onClick={() => print({ title: "LAUDO PARA SOLICITAÇÃO/AUTORIZAÇÃO DE PROCEDIMENTO AMBULATORIAL (APAC)", apac })}>Imprimir laudo APAC</Button>

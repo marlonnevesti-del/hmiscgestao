@@ -410,6 +410,13 @@ export function addRoom(name: string) { if (state.profile !== 'Administrador') t
 export function removeRoom(name: string) { if (state.profile !== 'Administrador') throw new Error('Apenas administradores gerenciam consultórios.'); setState((s) => ({ rooms: removeRoomName(s.rooms, name) })); }
 
 /** Salva o Laudo de AIH preenchido pelo médico no atendimento (fica no histórico). */
+/** Registra no atendimento o código SIGTAP do procedimento realizado (usado no faturamento BPA). */
+export function saveSigtapCode(id: string, code: string) {
+  const c = code.replace(/\D/g, '');
+  if (c.length !== 10) return;
+  setState((s) => ({ encounters: s.encounters.map((e) => e.id === id ? { ...e, sigtapCode: c } : e) }));
+}
+
 export function saveAihLaudo(id: string, data: Record<string, string>) {
   setState((s) => ({ encounters: s.encounters.map((e) => e.id === id ? { ...e, aihLaudo: { ...data, savedBy: s.employeeName, savedAt: new Date().toISOString() } } : e) }));
 }

@@ -25,3 +25,10 @@ describe("código IBGE", () => {
     expect(buildSusRows([e], [p], "202611", { name: "", cns: "", cbo: "" })[0]?.cityCode).toBe("4204608");
   });
 });
+
+import { pickProcedure } from "./sus-billing";
+describe("pickProcedure", () => {
+  it("usa o código do laudo de AIH na internação", () => expect(pickProcedure({ aihLaudo: { codigo: "04.11.01.003-4" } } as never, "AIH")).toBe("0411010034"));
+  it("usa o procedimento registrado no BPA", () => expect(pickProcedure({ sigtapCode: "0401010023" } as never, "BPA")).toBe("0401010023"));
+  it("cai no padrão sem código", () => expect(pickProcedure({} as never, "BPA")).toBe("0301060061"));
+});

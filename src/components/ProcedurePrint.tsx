@@ -4,8 +4,10 @@ import { Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { rememberDoctor, useStore } from "@/lib/hospital-store";
+import { rememberDoctor, saveSigtapCode, useStore } from "@/lib/hospital-store";
 import { DoctorNameInput } from "./DoctorNameInput";
+import { SigtapPicker } from "./SigtapPicker";
+import { formatCode } from "@/lib/sigtap";
 import type { Patient } from "@/lib/hospital-data";
 import { Letterhead, LetterFooter } from "./DischargePrint";
 
@@ -39,11 +41,11 @@ export function ProcedurePrintButton({ patientId, sector = "", procedure = "", s
         <DialogHeader><DialogTitle>Ficha de procedimento{p ? ` · ${p.name}` : ""}</DialogTitle></DialogHeader>
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="grid gap-1 text-xs">Setor<select aria-label="Setor" value={f.sector} onChange={(e) => set("sector")(e.target.value)} className="h-9 rounded-md border bg-background px-2 text-sm"><option value="">Selecionar</option>{SECTORS.map((s) => <option key={s}>{s}</option>)}</select></label>
-          {field("name", "Procedimento *")}{field("code", "Código SIGTAP / TUSS")}{field("date", "Data", "date")}{field("start", "Início", "time")}{field("end", "Término", "time")}
+          <SigtapPicker onPick={(x) => setF((v) => ({ ...v, name: x.n, code: formatCode(x.c) }))} />{field("name", "Procedimento *")}{field("code", "Código SIGTAP / TUSS")}{field("date", "Data", "date")}{field("start", "Início", "time")}{field("end", "Término", "time")}
           <label className="grid gap-1 text-xs">Profissional executante<DoctorNameInput value={f.professional} onChange={set("professional")} onCrm={set("register")} /></label>{field("register", "Registro (CRM / COREN / CREFITO)")}{field("assistant", "Auxiliar / equipe")}{field("indication", "Indicação / diagnóstico")}
           {area("description", "Descrição técnica")}{area("materials", "Materiais / medicamentos utilizados")}{area("complications", "Intercorrências")}{area("notes", "Orientações / observações")}
         </div>
-        <Button disabled={!f.name.trim()} onClick={() => { rememberDoctor(f.professional, f.register); setOpen(false); printProcedure(); }}><Printer className="mr-1 h-4 w-4" />Imprimir ficha</Button>
+        <Button disabled={!f.name.trim()} onClick={() => { rememberDoctor(f.professional, f.register); if (enc && f.code) saveSigtapCode(enc.id, f.code); setOpen(false); printProcedure(); }}><Printer className="mr-1 h-4 w-4" />Imprimir ficha</Button>
       </DialogContent>
     </Dialog>
     {open || f.name ? <ProcedureSheet f={f} p={p} be={enc?.number} /> : null}
