@@ -150,13 +150,13 @@ export function returnStock(depot: Depot, itemId: string, qty: number, lot: stri
   setState(() => ({ [depotKey(depot)]: items, movements: logMovement({ kind: 'devolucao', from: origin.trim(), to: DEPOT_NAME[depot], item: item.name, code: item.code, qty, lot: lot.trim(), reason: reason.trim() }) }) as Partial<State>);
 }
 /** Registro de quebra ou extravio na farmácia: baixa o saldo. */
-export function registerBreakage(itemId: string, qty: number, lot: string, reason: string) {
-  requireAction('farmacia'); checkQty(qty);
+export function registerBreakage(itemId: string, qty: number, lot: string, reason: string, depot: Depot = 'farmacia') {
+  requireAction(depotAction(depot)); checkQty(qty);
   if (!lot.trim()) throw new Error('Informe o lote do produto quebrado ou extraviado.');
   if (!reason.trim()) throw new Error('Descreva como ocorreu a quebra ou extravio.');
-  const items = changeQty(state.stock, itemId, -qty, lot);
+  const items = changeQty(state[depotKey(depot)], itemId, -qty, lot);
   const item = items.find((i) => i.id === itemId)!;
-  setState(() => ({ stock: items, movements: logMovement({ kind: 'quebra', from: 'Farmácia', to: 'Perda', item: item.name, code: item.code, qty, lot: lot.trim(), reason: reason.trim() }) }));
+  setState(() => ({ [depotKey(depot)]: items, movements: logMovement({ kind: 'quebra', from: DEPOT_NAME[depot], to: 'Perda', item: item.name, code: item.code, qty, lot: lot.trim(), reason: reason.trim() }) }));
 }
 export interface EntryLine { id: string; lot: string; expiry: string; qty: number }
 function applyLines(items: StockMedication[], lines: EntryLine[], sign: 1 | -1, needExpiry: boolean) {
@@ -484,16 +484,16 @@ export function registerCmeKitUse(code: string, surgeryId: string) {
 }
 
 /** Estorno/baixa por validade: retira do saldo o lote vencido e registra o termo de inutilização. */
-export function writeOffExpired(itemId: string, lot: string, qty: number, reason: string) {
-  requireAction('farmacia'); checkQty(qty);
-  const item = state.stock.find((i) => i.id === itemId);
+export function writeOffExpired(itemId: string, lot: string, qty: number, reason: string, depot: Depot = 'farmacia') {
+  requireAction(depotAction(depot)); checkQty(qty);
+  const item = state[depotKey(depot)].find((i) => i.id === itemId);
   if (!item) throw new Error('Medicamento não encontrado.');
   const l = item.lots?.find((x) => x.lot === lot.trim());
   if (!l) throw new Error('Selecione o lote.');
   if (reason === 'Vencimento do prazo de validade' && expiryStatus(l.expiry, new Date()) !== 'vencido') throw new Error(`O lote ${l.lot} ainda está dentro da validade.`);
   if (!reason.trim()) throw new Error('Informe o motivo do estorno.');
-  const items = changeQty(state.stock, itemId, -qty, lot);
-  setState(() => ({ stock: items, movements: logMovement({ kind: 'vencimento', from: item.location ?? 'Farmácia', to: 'Inutilização', item: item.name, code: item.code, qty, lot: l.lot, expiry: l.expiry, reason: reason.trim() }) }));
+  const items = changeQty(state[depotKey(depot)], itemId, -qty, lot);
+  setState(() => ({ [depotKey(depot)]: items, movements: logMovement({ kind: 'vencimento', from: DEPOT_NAME[depot], to: 'Inutilização', item: item.name, code: item.code, qty, lot: l.lot, expiry: l.expiry, reason: reason.trim() }) }));
 }
 
 /** Saves a doctor's name + CRM so it autofills next time (shared clinical snapshot). */

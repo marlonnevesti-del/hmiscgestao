@@ -12,8 +12,8 @@ const sel = "h-9 w-full rounded-md border bg-background px-2 text-sm";
 const now = () => new Date().toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
 
 /** Área da Farmácia para montar, pré-visualizar e imprimir etiquetas avulsas. */
-export function LabelStudio() {
-  const stock = useStore((s) => s.stock);
+export function LabelStudio({ depot = "farmacia" }: { depot?: "farmacia" | "almoxarifado" }) {
+  const stock = useStore((s) => (depot === "almoxarifado" ? s.warehouse : s.stock));
   const patients = useStore((s) => s.patients);
   const employee = useStore((s) => s.employeeName);
   const [kind, setKind] = useState<"dose" | "unit">("dose");
@@ -45,7 +45,7 @@ export function LabelStudio() {
     else {
       if (!item) { toast.error("Escolha o produto"); return; }
       if (lots.length > 1 && !lot) { toast.error("Escolha o lote"); return; }
-      if (!label.barcode) { const code = internalBarcode(item.code ?? "", Date.now() % 100000); try { linkBarcode("stock", item.id, code, chosenLot?.lot); } catch (e) { toast.error(e instanceof Error ? e.message : "Erro"); return; } label = { ...label, barcode: code }; }
+      if (!label.barcode) { const code = internalBarcode(item.code ?? "", Date.now() % 100000); try { linkBarcode(depot === "almoxarifado" ? "warehouse" : "stock", item.id, code, chosenLot?.lot); } catch (e) { toast.error(e instanceof Error ? e.message : "Erro"); return; } label = { ...label, barcode: code }; }
     }
     setPrinted(label); printLabels();
   };
