@@ -28,6 +28,11 @@ function apply(data: Partial<Snapshot>, v: number) {
 
 async function pull() {
   if (dirty || saving) return;
+  // Cheap version check first; only download the full snapshot when it changed.
+  if (version >= 0) {
+    const { data: head } = await supabase.from("clinical_state").select("version").eq("id", "main").maybeSingle();
+    if (!head || head.version === version) return;
+  }
   const { data } = await supabase.from("clinical_state").select("data, version").eq("id", "main").maybeSingle();
   if (data && data.version !== version) apply(data.data as Partial<Snapshot>, data.version);
   if (!data && version === -1) version = 0;
@@ -48,7 +53,9 @@ export function useClinicalSync() {
     let alive = true;
     void pull();
     const unsub = subscribeState(() => { if (!applying && version >= 0) { dirty = true; void push(); } });
-    const t = setInterval(() => { if (alive) { if (dirty) void push(); else void pull(); } }, 3000);
-    return () => { alive = false; clearInterval(t); unsub(); };
+    const t = setInterval(() => { if (!alive) return; if (dirty) void push(); else if (!document.hidden) void pull(); }, 3000);
+    const onVis = () => { if (!document.hidden) void pull(); };
+    document.addEventListener("visibilitychange", onVis);
+    return () => { alive = false; clearInterval(t); unsub(); document.removeEventListener("visibilitychange", onVis); };
   }, []);
 }
