@@ -7,7 +7,7 @@ export function SigtapPicker({ onPick, aihOnly }: { onPick: (p: SigtapProc) => v
   const [q, setQ] = useState('');
   const [list, setList] = useState<SigtapProc[] | null>(null);
   useEffect(() => { void loadSigtap().then(setList); }, []);
-  const hits = list && q.trim().length >= 2 ? searchSigtap(list, q, { aihOnly }) : [];
+  const hits = list && q.trim().length >= 2 ? searchSigtap(list, q, { aihOnly: !!aihOnly }) : [];
   return <div className="relative sm:col-span-2">
     <label className="text-xs">Buscar procedimento SIGTAP (nome ou código)
       <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder={list ? 'Ex.: parto, cesariano, pneumonia, 0411…' : 'Carregando tabela…'} />
