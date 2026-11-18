@@ -11,19 +11,22 @@ export interface StockMedication {
   antibiotic?: boolean;
   lots?: StockLot[];
   barcodes?: string[];
+  category?: string;
 }
 export interface StockLot { lot: string; expiry: string; quantity: number; barcode?: string }
-export interface CatalogRow { code: string; name: string; unit: string; quantity: number; unitCost: number; antibiotic: boolean; location: string; lots: StockLot[] }
+export interface CatalogRow { code: string; name: string; unit: string; quantity: number; unitCost: number; antibiotic: boolean; location: string; lots: StockLot[]; category?: string }
 
 /** Converte as linhas do relatório de saldos em itens de estoque com id estável por código e local. */
 export function catalogToStock(rows: CatalogRow[], prefix: string): StockMedication[] {
-  return rows.map((r) => ({ id: `${prefix}-${r.code}-${r.location.toLocaleLowerCase("pt-BR").replace(/\W+/g, "-")}`, code: r.code, name: r.name, presentation: r.location, location: r.location, unit: r.unit, quantity: r.quantity, minimum: 0, unitCost: r.unitCost, antibiotic: r.antibiotic, lots: r.lots }));
+  return rows.map((r) => ({ id: `${prefix}-${r.code}-${r.location.toLocaleLowerCase("pt-BR").replace(/\W+/g, "-")}`, code: r.code, name: r.name, presentation: r.location, location: r.location, unit: r.unit, quantity: r.quantity, minimum: 0, unitCost: r.unitCost, antibiotic: r.antibiotic, lots: r.lots, ...(r.category ? { category: r.category } : {}) }));
 }
 /** Acrescenta itens importados que ainda não existem, sem sobrescrever saldos já movimentados. */
 export function mergeCatalog(stock: StockMedication[], catalog: StockMedication[], removed: readonly string[] = []) {
   const byId = new Map(catalog.map((c) => [c.id, c]));
   // Itens já salvos sem lotes recebem os lotes do relatório importado.
   stock = stock.map((i) => (!i.lots || i.lots.length === 0) && byId.get(i.id)?.lots?.length ? { ...i, lots: byId.get(i.id)!.lots ?? [] } : i);
+  // Itens já salvos recebem a categoria do catálogo importado.
+  stock = stock.map((i) => !i.category && byId.get(i.id)?.category ? { ...i, category: byId.get(i.id)!.category! } : i);
   const ids = new Set([...stock.map((i) => i.id), ...removed]);
   const missing = catalog.filter((i) => !ids.has(i.id));
   return missing.length ? [...stock, ...missing].sort((a, b) => a.name.localeCompare(b.name, "pt-BR")) : stock;

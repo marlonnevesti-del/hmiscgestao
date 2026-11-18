@@ -10,10 +10,11 @@ import { DEFAULT_ROOMS, addRoomName, pushCall, removeRoomName, type PanelCall } 
 import { catalogToStock, findStockMedication, medicationKey, type StockMedication } from "./pharmacy-stock";
 import CATALOG from "./stock-catalog.json";
 import CONTROLLED from "./controlled-catalog.json";
+import WAREHOUSE from "./warehouse-catalog.json";
 import { expiryStatus } from "./controlled";
 import { changeQty, checkQty, loanReturnedQty, transferItem, type Depot, type Movement, type SupplyRequest } from "./supply-flow";
 export const PHARMACY_CATALOG = catalogToStock([...CATALOG.farm, ...CONTROLLED], 'farm');
-export const WAREHOUSE_CATALOG = catalogToStock(CATALOG.almox, 'almox');
+export const WAREHOUSE_CATALOG = catalogToStock(WAREHOUSE, 'almox');
 import { registrationPatch } from "./patient-registration-mapping";
 import type { PatientRegistration } from "./patient-registration";
 import { learnDoctor, type Doctor } from "./doctors";
