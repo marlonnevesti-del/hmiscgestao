@@ -15,7 +15,7 @@ export const formatCode = (c: string) => c.replace(/^(\d{2})(\d{2})(\d{2})(\d{3}
 /** Busca por código (com ou sem pontos) ou palavras do nome; todas as palavras precisam aparecer. */
 export function searchSigtap(list: SigtapProc[], q: string, opts: { aihOnly?: boolean; limit?: number } = {}): SigtapProc[] {
   const digits = q.replace(/\D/g, '');
-  const words = norm(q).split(/\s+/).filter((w) => w && !/^\d+$/.test(w));
+  const words = norm(q).split(/\s+/).filter((w) => /[A-Z]/.test(w));
   if (!digits && !words.length) return [];
   const out: SigtapProc[] = [];
   for (const p of list) {
