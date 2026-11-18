@@ -9,6 +9,7 @@ import { printProcedure } from "@/components/ProcedurePrint";
 import { SigtapPicker } from "@/components/SigtapPicker";
 import { can } from "@/lib/hospital-data";
 import { useStore } from "@/lib/hospital-store";
+import { DocumentGapsPanel } from "@/components/DocumentAmend";
 import { aihFile, bpaFile, buildSusRows, CNES, competenceOf, type Professional, type SusRow } from "@/lib/sus-billing";
 import { cn } from "@/lib/utils";
 
@@ -102,6 +103,7 @@ function SusBilling() {
           <Button disabled={!apac.patient || !apac.procedure} onClick={() => print({ title: "LAUDO PARA SOLICITAÇÃO/AUTORIZAÇÃO DE PROCEDIMENTO AMBULATORIAL (APAC)", apac })}>Imprimir laudo APAC</Button>
         </div>
       )}
+      <DocumentGapsPanel />
       {doc && <PrintDoc doc={doc} prof={prof} month={month} />}
     </div>
   );

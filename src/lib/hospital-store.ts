@@ -1,3 +1,4 @@
+import { AMEND_FIELDS, amendIssue, readField, type AmendField } from './document-amend';
 import { DEFAULT_KITS, checkKitUse, findKit, setBio, startCycle, type BioResult, type CmeCycle, type CmeKit, type KitStatus } from './cme';
 import { useSyncExternalStore } from "react";
 import { linkCode } from "./barcode";
@@ -419,6 +420,41 @@ export function saveSigtapCode(id: string, code: string) {
 
 export function saveAihLaudo(id: string, data: Record<string, string>) {
   setState((s) => ({ encounters: s.encounters.map((e) => e.id === id ? { ...e, aihLaudo: { ...data, savedBy: s.employeeName, savedAt: new Date().toISOString() } } : e) }));
+}
+
+/** Administrador retifica números de documento após finalização, com justificativa no histórico. */
+export function amendDocuments(id: string, values: Partial<Record<AmendField, string>>, reason: string) {
+  if (state.profile !== 'Administrador') throw new Error('Apenas administradores podem retificar documentos.');
+  if (!reason.trim()) throw new Error('Informe a justificativa.');
+  const { e, p } = getEncounter(id);
+  const changed = (Object.keys(values) as AmendField[]).filter((f) => (values[f] ?? '').trim() !== readField(p, e, f));
+  if (!changed.length) throw new Error('Nenhum campo foi alterado.');
+  for (const f of changed) { const err = amendIssue(f, values[f] ?? ''); if (err) throw new Error(err); }
+  const v = (f: AmendField) => (values[f] ?? '').trim();
+  const regKeys = changed.filter((f) => ['cns', 'cpf', 'identityDocument', 'birthCertificate', 'birthplaceCode'].includes(f));
+  if (regKeys.length || changed.includes('cityCode') || changed.includes('cpf')) {
+    updatePatient(p.id, (pp) => {
+      const r = pp.registration;
+      const patch: Partial<Patient> = {};
+      if (changed.includes('cpf')) patch.cpf = v('cpf');
+      if (r) {
+        const nr = { ...r } as typeof r;
+        for (const f of regKeys) (nr as Record<string, unknown>)[f] = v(f);
+        if (changed.includes('cityCode')) { const i = Math.max(0, nr.addresses.findIndex((a) => a.primary)); nr.addresses = nr.addresses.length ? nr.addresses.map((a, k) => k === i ? { ...a, cityCode: v('cityCode') } : a) : nr.addresses; }
+        patch.registration = nr;
+      }
+      return patch;
+    });
+  }
+  const at = new Date().toISOString(); const by = professionalName(state.profile);
+  const labels = changed.map((f) => AMEND_FIELDS.find((x) => x.id === f)!.label).join(', ');
+  const cur = state.encounters.find((x) => x.id === id)!;
+  const next: Encounter = { ...cur,
+    ...(changed.includes('cid') ? { medical: { anamnesis: '', exam: '', diagnosis: '', ...cur.medical, cid: v('cid') } } : {}),
+    ...(changed.includes('sigtapCode') ? { sigtapCode: v('sigtapCode').replace(/\D/g, '') } : {}),
+    ...(changed.includes('aihNumber') || (changed.includes('sigtapCode') && cur.aihLaudo) ? { aihLaudo: { ...cur.aihLaudo, ...(changed.includes('aihNumber') ? { aihNumber: v('aihNumber') } : {}), ...(changed.includes('sigtapCode') && cur.aihLaudo ? { codigo: v('sigtapCode').replace(/\D/g, '') } : {}) } } : {}),
+    history: [...cur.history, { status: cur.status_fluxo, at, by, note: `Documento retificado pelo administrador (${labels}): ${reason.trim()}` }] };
+  setState((s) => ({ encounters: s.encounters.map((x) => x.id === id ? next : x) }));
 }
 
 export function deleteEncounter(id: string) {

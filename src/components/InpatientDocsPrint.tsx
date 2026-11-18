@@ -1,3 +1,4 @@
+import { AmendDocumentButton } from '@/components/DocumentAmend';
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { FileText } from 'lucide-react';
@@ -102,6 +103,7 @@ export function InpatientDocsButtons({ p, e }: { p: Patient; e?: Encounter | und
   const btn = 'flex items-center gap-1.5 rounded-md border px-3 py-2 text-xs font-medium hover:bg-muted';
   return <>
     <AihLaudoButton p={p} e={e} />
+    <AmendDocumentButton p={p} e={e} />
     <button onClick={() => run('termo')} className={btn}><FileText className="h-4 w-4" />Termo internação</button>
     <button onClick={() => run('internado')} className={btn}><FileText className="h-4 w-4" />Decl. internação</button>
     <button onClick={() => run('comparecimento')} className={btn}><FileText className="h-4 w-4" />Decl. atendimento</button>
