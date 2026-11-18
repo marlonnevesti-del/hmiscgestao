@@ -11,6 +11,7 @@ import { announcement, callsForSector, SECTORS, sectorOf, type PanelCall } from 
 import { fallback, zodValidator } from "@tanstack/zod-adapter";
 import { z } from "zod";
 import { cn } from "@/lib/utils";
+import { listenCalls } from "@/lib/call-broadcast";
 
 export const Route = createFileRoute("/_authenticated/painel-tv")({
   head: () => ({ meta: [
@@ -39,13 +40,13 @@ const audioReady = () => audio()?.state === "running";
 function gong() {
   const ctx = audio();
   if (!ctx) return new Promise((r) => setTimeout(r, 0));
-  ([[659, 0], [523, 0.55]] as const).forEach(([f, t]) => {
+  ([[880, 0], [660, 0.22]] as const).forEach(([f, t]) => {
     const o = ctx.createOscillator(); const g = ctx.createGain();
     o.frequency.value = f; o.connect(g); g.connect(ctx.destination);
-    const s = ctx.currentTime + t; g.gain.setValueAtTime(0.0001, s); g.gain.exponentialRampToValueAtTime(0.5, s + 0.03); g.gain.exponentialRampToValueAtTime(0.0001, s + 1.4);
-    o.start(s); o.stop(s + 1.5);
+    const s = ctx.currentTime + t; g.gain.setValueAtTime(0.0001, s); g.gain.exponentialRampToValueAtTime(0.5, s + 0.03); g.gain.exponentialRampToValueAtTime(0.0001, s + 0.4);
+    o.start(s); o.stop(s + 0.45);
   });
-  return new Promise((r) => setTimeout(r, 1700));
+  return new Promise((r) => setTimeout(r, 650));
 }
 function cartoonIntro() {
   // "Boing" + risadinha aguda estilo desenho animado
@@ -70,7 +71,7 @@ async function speak(c: PanelCall, voice: string) {
   await (cartoon ? cartoonIntro() : gong());
   const text = cartoon ? `Atenção, amiguinho! ${announcement(c)}` : announcement(c);
   const u = new SpeechSynthesisUtterance(text); u.lang = "pt-BR";
-  u.rate = cartoon ? 1.15 : 0.9; u.pitch = cartoon ? 2 : 1.1;
+  u.rate = cartoon ? 1.2 : 1.1; u.pitch = cartoon ? 2 : 1.1;
   const pt = speechSynthesis.getVoices().filter((x) => x.lang.toLowerCase().startsWith("pt"));
   const v = pt.find((x) => FEMALE.test(x.name)) ?? pt[0]; if (v) u.voice = v;
   speechSynthesis.cancel(); speechSynthesis.speak(u);
@@ -85,6 +86,7 @@ function PanelPage() {
   const [armed, setArmed] = useState(false);
   const seen = useRef<string | null>(null);
   const [now, setNow] = useState("");
+  useEffect(() => listenCalls(), []);
   useEffect(() => { const t = () => setNow(new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })); t(); const i = setInterval(t, 10000); return () => clearInterval(i); }, []);
   // Liga o som sozinho assim que a tela abre: tenta na hora, continua tentando e
   // libera no primeiro toque/tecla, caso o navegador ainda esteja bloqueando.
