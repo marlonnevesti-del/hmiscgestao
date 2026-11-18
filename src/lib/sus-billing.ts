@@ -18,7 +18,7 @@ export const SIGTAP_DEFAULT = { BPA: "0301060061", AIH: "0303010037" };
 
 /** Código real do atendimento (laudo AIH ou procedimento registrado); padrão só se nada foi informado. */
 export function pickProcedure(e: Encounter, kind: "BPA" | "AIH"): string {
-  const aih = digits(e.aihLaudo?.codigo), proc = digits(e.sigtapCode);
+  const aih = digits(e.aihLaudo?.['codigo']), proc = digits(e.sigtapCode);
   const ok = (c: string) => c.length === 10 ? c : "";
   return (kind === "AIH" ? ok(aih) || ok(proc) : ok(proc)) || SIGTAP_DEFAULT[kind];
 }
