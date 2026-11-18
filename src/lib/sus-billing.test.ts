@@ -22,6 +22,6 @@ describe("código IBGE", () => {
   it("usa o código da naturalidade quando o endereço não tem", () => {
     const e = { id: "e", patientId: "p", openedAt: "2026-11-10T10:00:00Z", status_fluxo: "ALTA_HOSPITALAR", history: [] } as never;
     const p = { id: "p", name: "Ana", registration: { birthplaceCode: "4204608", addresses: [{ primary: true, cityCode: "" }] } } as never;
-    expect(buildSusRows([e], [p], "202611", { name: "", cns: "", cbo: "" })[0].cityCode).toBe("4204608");
+    expect(buildSusRows([e], [p], "202611", { name: "", cns: "", cbo: "" })[0]?.cityCode).toBe("4204608");
   });
 });
