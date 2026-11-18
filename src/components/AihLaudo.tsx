@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { SigtapPicker } from '@/components/SigtapPicker';
 import susLogo from '@/assets/sus-logo.png';
 import footerLogos from '@/assets/aih-footer-logos.png';
 
@@ -158,7 +159,7 @@ export function AihLaudoButton({ p, e }: { p: Patient; e?: Encounter | undefined
         <p className="text-xs text-muted-foreground">Dados puxados do cadastro e do atendimento. Corrija ou complete o que for necessário.</p>
         {f && SECTIONS.map(([title, fields]) => <div key={title} className="space-y-2">
           <h3 className="mt-2 text-sm font-semibold">{title}</h3>
-          <div className="grid gap-2 sm:grid-cols-2">{fields.map(([k, l, big]) => <label key={k} className={big ? 'text-xs sm:col-span-2' : 'text-xs'}>{l}
+          <div className="grid gap-2 sm:grid-cols-2">{title === 'Procedimento solicitado' && <SigtapPicker aihOnly onPick={(p) => { set('codigo', p.c); set('procedimento', p.n); }} />}{fields.map(([k, l, big]) => <label key={k} className={big ? 'text-xs sm:col-span-2' : 'text-xs'}>{l}
             {big ? <Textarea value={val(k)} onChange={(ev) => set(k, ev.target.value)} rows={3} /> : <Input value={val(k)} onChange={(ev) => set(k, ev.target.value)} />}</label>)}</div>
         </div>)}
         <div className="flex justify-end gap-2 pt-2">
