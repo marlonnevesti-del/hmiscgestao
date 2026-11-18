@@ -392,6 +392,11 @@ export function announcePatient(patientId: string, room: string) {
 export function addRoom(name: string) { if (state.profile !== 'Administrador') throw new Error('Apenas administradores gerenciam consultórios.'); setState((s) => ({ rooms: addRoomName(s.rooms, name) })); }
 export function removeRoom(name: string) { if (state.profile !== 'Administrador') throw new Error('Apenas administradores gerenciam consultórios.'); setState((s) => ({ rooms: removeRoomName(s.rooms, name) })); }
 
+/** Salva o Laudo de AIH preenchido pelo médico no atendimento (fica no histórico). */
+export function saveAihLaudo(id: string, data: Record<string, string>) {
+  setState((s) => ({ encounters: s.encounters.map((e) => e.id === id ? { ...e, aihLaudo: { ...data, savedBy: s.employeeName, savedAt: new Date().toISOString() } } : e) }));
+}
+
 export function deleteEncounter(id: string) {
   if (state.profile !== 'Administrador') throw new Error('Apenas administradores podem apagar atendimentos.');
   setState((s) => ({ encounters: s.encounters.filter((e) => e.id !== id), queue: s.queue.filter((q) => q.id !== id), calls: s.calls }));
