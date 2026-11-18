@@ -25,7 +25,7 @@ export function buildSusRows(encounters: Encounter[], patients: Patient[], compe
       encounter: e, patient: p, kind, date: e.openedAt.slice(0, 10),
       cns: digits(r?.cns), cpf: digits(r?.cpf || p?.cpf), name: r?.civilName || p?.name || "",
       birthDate: r?.birthDate ?? "", sex: (r?.sex ?? "").slice(0, 1).toUpperCase(),
-      motherName: r?.parent1 || p?.motherName || "", cityCode: digits(r?.addresses?.find((a) => a.primary)?.cityCode ?? r?.addresses?.[0]?.cityCode),
+      motherName: r?.parent1 || p?.motherName || "", cityCode: digits(r?.addresses?.find((a) => a.primary)?.cityCode || r?.addresses?.find((a) => a.cityCode)?.cityCode || r?.birthplaceCode),
       cid: (e.medical?.cid ?? "").replace(/\W/g, "").toUpperCase(), procedure: SIGTAP_DEFAULT[kind], issues: [],
     };
     row.issues = susIssues(row, prof);

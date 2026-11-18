@@ -41,10 +41,10 @@ function SusBilling() {
   const [comp, setComp] = useState(() => competenceOf(new Date().toISOString()));
   const [tab, setTab] = useState<Tab>("BPA");
   const [onlyIssues, setOnlyIssues] = useState(false);
-  const [prof, setProf] = useState<Professional>({ name: "", cns: "", cbo: "" });
+  const [prof, setProf] = useState<Professional>({ name: "", cns: "", cbo: "225125" });
   const [doc, setDoc] = useState<Doc>(null);
   const [apac, setApac] = useState<Apac>({ patient: "", cns: "", procedure: "", cid: "", authorization: "", start: "", end: "", justification: "" });
-  useEffect(() => { try { const v = localStorage.getItem(PROF_KEY); if (v) setProf(JSON.parse(v)); } catch { /* ignore */ } }, []);
+  useEffect(() => { try { const v = localStorage.getItem(PROF_KEY); if (v) { const p = JSON.parse(v) as Professional; setProf({ ...p, cbo: p.cbo || "225125" }); } } catch { /* ignore */ } }, []);
   const saveProf = (p: Professional) => { setProf(p); localStorage.setItem(PROF_KEY, JSON.stringify(p)); };
   const rows = useMemo(() => buildSusRows(encounters, patients, comp, prof), [encounters, patients, comp, prof]);
   const list = rows.filter((r) => r.kind === tab && (!onlyIssues || r.issues.length));
