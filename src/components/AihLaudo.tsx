@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type CSSProperties, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { FileText } from 'lucide-react';
 import { toast } from 'sonner';
@@ -9,7 +9,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Letterhead } from '@/components/DischargePrint';
+import susLogo from '@/assets/sus-logo.png';
+import footerLogos from '@/assets/aih-footer-logos.png';
 
 type F = Record<string, string>;
 const HOSP = 'HOSPITAL MATERNO INFANTIL SANTA CATARINA';
@@ -40,48 +41,98 @@ export function aihDefaults(p: Patient, e: Encounter | undefined, doctor: string
 const SECTIONS: [string, [string, string, boolean?][]][] = [
   ['Identificação do paciente', [['nome', '5 – Nome do paciente'], ['prontuario', '6 – Nº prontuário'], ['cns', '7 – CNS'], ['nascimento', '8 – Data de nascimento'], ['sexo', '9 – Sexo'], ['raca', '10 – Raça/Cor'], ['etnia', '10.1 – Etnia'], ['mae', '11 – Nome da mãe'], ['telMae', '12 – Telefone'], ['responsavel', '13 – Nome responsável'], ['telResp', '14 – Telefone'], ['endereco', '15 – Endereço'], ['municipio', '16 – Município'], ['ibge', '17 – Cód. IBGE'], ['uf', '18 – UF'], ['cep', '19 – CEP']]],
   ['Justificativa da internação', [['sintomas', '20 – Principais sinais e sintomas clínicos', true], ['condicoes', '21 – Condições que justificam a internação', true], ['exames', '22 – Principais resultados de provas diagnósticas', true], ['diagnostico', '23 – Diagnóstico inicial'], ['cid', '24 – CID10 principal'], ['cid2', '25 – CID10 secundário'], ['cid3', '26 – CID10 causas associadas']]],
-  ['Procedimento solicitado', [['procedimento', '27 – Descrição do procedimento'], ['codigo', '28 – Código procedimento'], ['clinica', '29 – Clínica'], ['carater', '30 – Caráter da internação'], ['docTipo', '31 – Documento (CNS/CPF)'], ['docProf', '32 – Nº documento do profissional'], ['profissional', '33 – Nome do profissional solicitante'], ['dataSol', '34 – Data da solicitação']]],
-  ['Causas externas (acidentes ou violências)', [['causaExt', '36/37/38 – Tipo (Trabalho / Típico / Trajeto)'], ['seguradora', '39 – CNPJ da seguradora'], ['bilhete', '40 – Nº do bilhete'], ['serie', '41 – Série'], ['cnpjEmpresa', '42 – CNPJ da empresa'], ['cnae', '43 – CNAE da empresa'], ['cbor', '44 – CBOR'], ['vinculo', '45 – Vínculo (Empregado, Autônomo...)']]],
+  ['Procedimento solicitado', [['procedimento', '27 – Descrição do procedimento'], ['codigo', '28 – Código procedimento'], ['clinica', '29 – Clínica'], ['carater', '30 – Caráter da internação'], ['docTipo', '31 – Documento do profissional (CNS ou CPF)'], ['docProf', '32 – Nº documento do profissional'], ['profissional', '33 – Nome do profissional solicitante'], ['dataSol', '34 – Data da solicitação']]],
+  ['Causas externas (acidentes ou violências)', [['causaExt', '36/37/38 – Acidente (Trabalho / Típico / Trajeto)'], ['seguradora', '39 – CNPJ da seguradora'], ['bilhete', '40 – Nº do bilhete'], ['serie', '41 – Série'], ['cnpjEmpresa', '42 – CNPJ da empresa'], ['cnae', '43 – CNAE da empresa'], ['cbor', '44 – CBOR'], ['vinculo', '45 – Vínculo (Empregado, Empregador, Autônomo, Desempregado, Aposentado, Não Segurado)']]],
   ['Autorização', [['autorizador', '46 – Profissional autorizador'], ['orgao', '47 – Cód. órgão emissor'], ['numAih', '52 – Nº da AIH'], ['docAut', '49 – Nº documento autorizador'], ['dataAut', '50 – Data']]],
 ];
 
-function Cell({ l, v, span = 1 }: { l: string; v?: string | undefined; span?: number }) {
-  return <td colSpan={span} style={{ border: '1px solid #000', padding: '2px 4px', verticalAlign: 'top' }}><div style={{ fontSize: '7pt' }}>{l}</div><div style={{ fontSize: '9pt', minHeight: '1.2em', whiteSpace: 'pre-wrap' }}>{v || ''}</div></td>;
+const B = '1px solid #000';
+const lab: CSSProperties = { fontSize: '7pt', fontWeight: 700 };
+const valS: CSSProperties = { fontSize: '9pt', whiteSpace: 'pre-wrap', marginTop: 2 };
+function C({ l, v, span = 1, h = 34, children }: { l: string; v?: string | undefined; span?: number; h?: number; children?: ReactNode }) {
+  return <td colSpan={span} style={{ border: B, padding: '3px 4px', verticalAlign: 'top', height: h }}><div style={lab}>{l}</div>{children ?? <div style={valS}>{v || ''}</div>}</td>;
 }
-function Head({ t }: { t: string }) { return <tr><td colSpan={4} style={{ border: '1px solid #000', background: '#ddd', fontWeight: 700, fontSize: '8pt', padding: '2px 4px' }}>{t}</td></tr>; }
+const box = (on: boolean) => `(${on ? 'X' : '\u00a0\u00a0'})`;
+const Title = ({ t }: { t: string }) => <div style={{ textAlign: 'center', fontWeight: 700, fontSize: '8.5pt', margin: '4px 0 1px' }}>{t}</div>;
+const T: CSSProperties = { width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' };
 
-function PrintLaudo({ f }: { f: ReturnType<typeof aihDefaults> }) {
-  const T = { width: '100%', borderCollapse: 'collapse' as const, marginBottom: 4 };
-  return <section className="doc-page">
-    <Letterhead title="LAUDO PARA SOLICITAÇÃO DE AUTORIZAÇÃO DE INTERNAÇÃO HOSPITALAR" />
-    <table style={T}><tbody>
-      <Head t={`IDENTIFICAÇÃO DO ESTABELECIMENTO DE SAÚDE — Nº DO ATENDIMENTO: ${f.atendimento || ''}`} />
-      <tr><Cell l="1 – Estabelecimento solicitante" v={HOSP} span={3} /><Cell l="2 – CNES" v={CNES} /></tr>
-      <tr><Cell l="3 – Estabelecimento executante" v={HOSP} span={3} /><Cell l="4 – CNES" v={CNES} /></tr>
-      <Head t="IDENTIFICAÇÃO DO PACIENTE" />
-      <tr><Cell l="5 – Nome do paciente" v={f.nome} span={3} /><Cell l="6 – Nº prontuário" v={f.prontuario} /></tr>
-      <tr><Cell l="7 – CNS" v={f.cns} /><Cell l="8 – Data de nascimento" v={f.nascimento} /><Cell l="9 – Sexo" v={f.sexo} /><Cell l="10 – Raça/Cor · 10.1 Etnia" v={[f.raca, f.etnia].filter(Boolean).join(' · ')} /></tr>
-      <tr><Cell l="11 – Nome da mãe" v={f.mae} span={3} /><Cell l="12 – Telefone" v={f.telMae} /></tr>
-      <tr><Cell l="13 – Nome responsável" v={f.responsavel} span={3} /><Cell l="14 – Telefone" v={f.telResp} /></tr>
-      <tr><Cell l="15 – Endereço (Rua, Nº, Bairro)" v={f.endereco} span={4} /></tr>
-      <tr><Cell l="16 – Município de residência" v={f.municipio} /><Cell l="17 – Cód. IBGE" v={f.ibge} /><Cell l="18 – UF" v={f.uf} /><Cell l="19 – CEP" v={f.cep} /></tr>
-      <Head t="JUSTIFICATIVA DA INTERNAÇÃO" />
-      <tr><Cell l="20 – Principais sinais e sintomas clínicos" v={f.sintomas} span={4} /></tr>
-      <tr><Cell l="21 – Condições que justificam a internação" v={f.condicoes} span={4} /></tr>
-      <tr><Cell l="22 – Principais resultados de provas diagnósticas" v={f.exames} span={4} /></tr>
-      <tr><Cell l="23 – Diagnóstico inicial" v={f.diagnostico} /><Cell l="24 – CID10 principal" v={f.cid} /><Cell l="25 – CID10 secundário" v={f.cid2} /><Cell l="26 – CID10 causas associadas" v={f.cid3} /></tr>
-      <Head t="PROCEDIMENTO SOLICITADO" />
-      <tr><Cell l="27 – Descrição do procedimento solicitado" v={f.procedimento} span={3} /><Cell l="28 – Código procedimento" v={f.codigo} /></tr>
-      <tr><Cell l="29 – Clínica" v={f.clinica} /><Cell l="30 – Caráter da internação" v={f.carater} /><Cell l="31 – Documento" v={f.docTipo} /><Cell l="32 – Nº documento do profissional" v={f.docProf} /></tr>
-      <tr><Cell l="33 – Nome do profissional solicitante/assistente" v={f.profissional} span={2} /><Cell l="34 – Data da solicitação" v={f.dataSol} /><Cell l="35 – Assinatura e carimbo" v={'\n\n'} /></tr>
-      <Head t="PREENCHER EM CASO DE CAUSAS EXTERNAS (ACIDENTES OU VIOLÊNCIAS)" />
-      <tr><Cell l="36/37/38 – Acidente de trabalho / típico / trajeto" v={f.causaExt} /><Cell l="39 – CNPJ da seguradora" v={f.seguradora} /><Cell l="40 – Nº do bilhete" v={f.bilhete} /><Cell l="41 – Série" v={f.serie} /></tr>
-      <tr><Cell l="42 – CNPJ da empresa" v={f.cnpjEmpresa} /><Cell l="43 – CNAE da empresa" v={f.cnae} /><Cell l="44 – CBOR" v={f.cbor} /><Cell l="45 – Vínculo com a previdência" v={f.vinculo} /></tr>
-      <Head t="AUTORIZAÇÃO" />
-      <tr><Cell l="46 – Nome do profissional autorizador" v={f.autorizador} span={2} /><Cell l="47 – Cód. órgão emissor" v={f.orgao} /><Cell l="52 – Nº da AIH" v={f.numAih} /></tr>
-      <tr><Cell l="48/49 – Documento (CNS/CPF) do autorizador" v={f.docAut} span={2} /><Cell l="50 – Data" v={f.dataAut} /><Cell l="51 – Assinatura e carimbo" v={'\n\n'} /></tr>
-    </tbody></table>
-  </section>;
+function AihHeader() {
+  return <table style={{ ...T, marginBottom: 4 }}><tbody><tr>
+    <td style={{ border: B, width: '50%', padding: 6 }}><div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><img src={susLogo} alt="SUS" style={{ height: 42 }} /><div style={{ fontWeight: 700, fontSize: '10pt', lineHeight: 1.3 }}>Sistema Único de Saúde<br />Ministério da Saúde</div></div></td>
+    <td style={{ border: B, textAlign: 'center', fontWeight: 700, fontSize: '11pt', lineHeight: 1.3, padding: 6 }}>Laudos para Solicitação de Autorização de Internação Hospitalar<br />(Laudo Manual)</td>
+  </tr></tbody></table>;
+}
+function AihFooter() {
+  return <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
+    <img src={footerLogos} alt="SUS · Santa Casa · HMISC · Governo de SC" style={{ height: 24 }} />
+    <div style={{ textAlign: 'right', fontSize: '6.5pt' }}><b>UNIDADE CRICIÚMA | HMISC</b><br />Rua Wenceslau Braz, 115, Operária Nova, Criciúma – SC. CEP 88.809-020</div>
+  </div>;
+}
+const pageS: CSSProperties = { position: 'relative', minHeight: '270mm', paddingBottom: 40, fontFamily: 'Arial, sans-serif', color: '#000', background: '#fff' };
+
+export function PrintLaudo({ f }: { f: ReturnType<typeof aihDefaults> }) {
+  const sx = f.sexo.toLowerCase(); const doc = f.docTipo.toUpperCase(); const ce = f.causaExt.toLowerCase(); const vi = f.vinculo.toLowerCase();
+  return <>
+    <section className="doc-page" style={pageS}>
+      <AihHeader />
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '8pt', fontWeight: 700, borderTop: B, paddingTop: 2 }}><span>IDENTIFICAÇÃO DO ESTABELECIMENTO DE SAÚDE</span><span>Nº DO ATENDIMENTO: {f.atendimento || '______________'}</span></div>
+      <table style={T}><tbody>
+        <tr><C l="1 – Nome do Estabelecimento Solicitante" v={HOSP} span={3} /><C l="2 – Cnes" v={CNES} /></tr>
+        <tr><C l="3 – Nome do Estabelecimento Executante" v={HOSP} span={3} /><C l="4 – Cnes" v={CNES} /></tr>
+      </tbody></table>
+      <div style={{ fontSize: '8pt', fontWeight: 700, marginTop: 3 }}>IDENTIFICAÇÃO DO PACIENTE</div>
+      <table style={T}><colgroup><col style={{ width: '31%' }} /><col style={{ width: '17%' }} /><col style={{ width: '18%' }} /><col style={{ width: '16%' }} /><col style={{ width: '18%' }} /></colgroup><tbody>
+        <tr><C l="5 – Nome do Paciente" v={f.nome} span={4} h={40} /><C l="6 – Nº Prontuário" v={f.prontuario} /></tr>
+        <tr><C l="7 – Cartão Nacional de Saúde (CNS)" v={f.cns} h={50} /><C l="8 – Data de Nascimento" v={f.nascimento} /><C l="9 – Sexo"><div style={valS}>MASC {box(sx.startsWith('m'))}{'  '}FEM {box(sx.startsWith('f'))}</div></C><C l="10 – Raça/ Cor" v={f.raca} /><C l="10.1 – Etnia" v={f.etnia} /></tr>
+      </tbody></table>
+      <table style={T}><colgroup><col style={{ width: '50%' }} /><col style={{ width: '50%' }} /></colgroup><tbody>
+        <tr><C l="11 – Nome Da Mãe" v={f.mae} h={44} /><C l="12 – Telefone de Contato" v={f.telMae || '(0    )'} /></tr>
+        <tr><C l="13 – Nome Responsável" v={f.responsavel} h={44} /><C l="14 – Telefone de Contato" v={f.telResp || '(0    )'} /></tr>
+        <tr><C l="15 – Endereço (Rua, Nº, Bairro)" v={f.endereco} span={2} h={44} /></tr>
+      </tbody></table>
+      <table style={T}><colgroup><col style={{ width: '57%' }} /><col style={{ width: '20%' }} /><col style={{ width: '7%' }} /><col style={{ width: '16%' }} /></colgroup><tbody>
+        <tr><C l="16 – Município de Residência" v={f.municipio} h={56} /><C l="17 – Cód. IBGE Município" v={f.ibge} /><C l="18 – UF" v={f.uf} /><C l="19 – CEP" v={f.cep} /></tr>
+      </tbody></table>
+      <Title t="JUSTIFICATIVA DA INTERNAÇÃO" />
+      <table style={T}><tbody>
+        <tr><C l="20 – Principais Sinais e Sintomas Clínicos" v={f.sintomas} h={70} /></tr>
+        <tr><C l="21 – Condições que Justificam a Internação" v={f.condicoes} h={70} /></tr>
+        <tr><C l="22 – Principais Resultados de Provas Diagnosticas (Resultados de Exames Realizados)" v={f.exames} h={70} /></tr>
+      </tbody></table>
+      <AihFooter />
+    </section>
+    <section className="doc-page" style={{ ...pageS, breakBefore: 'page' }}>
+      <AihHeader />
+      <table style={T}><colgroup><col style={{ width: '40%' }} /><col style={{ width: '19%' }} /><col style={{ width: '19%' }} /><col style={{ width: '22%' }} /></colgroup><tbody>
+        <tr><C l="23 – Diagnostico Inicial" v={f.diagnostico} h={50} /><C l="24 – CID10 Principal" v={f.cid} /><C l="25 – CID10 Secundário" v={f.cid2} /><C l="26 – CID10 Causas Associadas" v={f.cid3} /></tr>
+      </tbody></table>
+      <Title t="PROCEDIMENTO SOLICITADO" />
+      <table style={T}><colgroup><col style={{ width: '19%' }} /><col style={{ width: '19%' }} /><col style={{ width: '16%' }} /><col style={{ width: '22%' }} /><col style={{ width: '24%' }} /></colgroup><tbody>
+        <tr><C l="27 – Descrição do Procedimento Solicitado" v={f.procedimento} span={4} h={46} /><C l="28 – Código Procedimento" v={f.codigo} /></tr>
+        <tr><C l="29 – Clínica" v={f.clinica} h={50} /><C l="30 – Caráter da Internação" v={f.carater} /><C l="31 – Clínica"><div style={valS}>CNS {box(doc === 'CNS')}{'  '}CPF {box(doc === 'CPF')}</div></C><C l="32 – Nº Documento (CNS/CPF) do Profissional Solicitante/Assistente" v={f.docProf} span={2} /></tr>
+      </tbody></table>
+      <table style={T}><colgroup><col style={{ width: '45%' }} /><col style={{ width: '17%' }} /><col style={{ width: '38%' }} /></colgroup><tbody>
+        <tr><C l="33 – Nome do Profissional Solicitante/Assistente" v={f.profissional} h={64} /><C l="34 – Data da Solicitação" v={f.dataSol} /><C l="35 – Assinatura e Carimbo (Nº do Registro do Conselho)" v="" /></tr>
+      </tbody></table>
+      <Title t="PREENCHER EM CASO DE CAUSAS EXTERNAS (ACIDENTES OU VIOLÊNCIAS)" />
+      <table style={T}><colgroup><col style={{ width: '31%' }} /><col style={{ width: '42%' }} /><col style={{ width: '17%' }} /><col style={{ width: '10%' }} /></colgroup><tbody>
+        <tr><td rowSpan={2} style={{ border: B, padding: '3px 4px', verticalAlign: 'top', fontSize: '7.5pt', fontWeight: 700, lineHeight: 2.2 }}>
+          36 - {box(ce.includes('trabalho') && !ce.includes('típ') && !ce.includes('traj'))} Acidente de Trabalho<br />37 - {box(ce.includes('típ') || ce.includes('tip'))} Acidente de Trabalho Típico<br />38 - {box(ce.includes('traj'))} Acidente de Trabalho Trajeto</td>
+          <C l="39 – CNPJ da Seguradora" v={f.seguradora} h={40} /><C l="40 – Nº do Bilhete" v={f.bilhete} /><C l="41 – Série" v={f.serie} /></tr>
+        <tr><C l="42 – CNPJ da Empresa" v={f.cnpjEmpresa} h={60} /><C l="43 – CNAE da Empresa" v={f.cnae} /><C l="44 – CBOR" v={f.cbor} /></tr>
+        <tr><C l="45 – Vínculo com a Previdência" span={4} h={40}><div style={{ ...valS, fontSize: '8pt', display: 'flex', flexWrap: 'wrap', gap: '4px 22px', paddingLeft: 20 }}>
+          {['Empregado', 'Empregador', 'Autônomo', 'Desempregado', 'Aposentado', 'Não Segurado'].map((o) => <span key={o}>{box(vi === o.toLowerCase())} {o}</span>)}</div></C></tr>
+      </tbody></table>
+      <Title t="AUTORIZAÇÃO" />
+      <table style={T}><colgroup><col style={{ width: '16%' }} /><col style={{ width: '54%' }} /><col style={{ width: '30%' }} /></colgroup><tbody>
+        <tr><C l="46 – Nome do Profissional Autorizador" v={f.autorizador} span={2} h={46} /><C l="52 – Nº da Autorização de Internação Hospitalar" v={f.numAih} /></tr>
+        <tr><C l="47 – Cód. do Órgão Emissor" v={f.orgao} h={36} /><C l="49 – Nº Documento (CNS/CPF) do Profissional Autorizador" v={f.docAut} span={2} /></tr>
+        <tr><C l="48 – Documento"><div style={valS}>CNS {box(!f.docAut || f.docAut.replace(/\D/g, '').length !== 11)}{'  '}CPF {box(f.docAut.replace(/\D/g, '').length === 11)}</div></C><C l="51 – Assinatura e Carimbo (Nº do Registro do Conselho)" v="" span={2} h={50} /></tr>
+        <tr><C l="50 – Data da Solicitação" v={f.dataAut} span={3} h={30} /></tr>
+      </tbody></table>
+      <AihFooter />
+    </section>
+  </>;
 }
 
 export function AihLaudoButton({ p, e }: { p: Patient; e?: Encounter | undefined }) {
