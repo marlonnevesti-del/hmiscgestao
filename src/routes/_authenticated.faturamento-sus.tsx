@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { NoPermission } from "@/components/AppShell";
 import { Letterhead, LetterFooter } from "@/components/DischargePrint";
 import { printProcedure } from "@/components/ProcedurePrint";
-import { SigtapPicker } from "@/components/SigtapPicker";
 import { can } from "@/lib/hospital-data";
 import { useStore } from "@/lib/hospital-store";
 import { DocumentGapsPanel } from "@/components/DocumentAmend";
@@ -15,19 +14,18 @@ import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/faturamento-sus")({
   head: () => ({ meta: [
-    { title: "Faturamento SUS – BPA, AIH e APAC – HMI Gestão" },
-    { name: "description", content: "Competência mensal com conferência, pendências e remessas BPA, SISAIH01 e APAC." },
+    { title: "Faturamento SUS – BPA e AIH – HMI Gestão" },
+    { name: "description", content: "Competência mensal com conferência, pendências e remessas BPA e SISAIH01." },
     { property: "og:title", content: "Faturamento SUS – HMI Gestão" },
-    { property: "og:description", content: "Relatórios e remessas BPA, AIH e APAC por competência." },
+    { property: "og:description", content: "Relatórios e remessas BPA e AIH por competência." },
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary" },
   ] }),
   component: SusBilling,
 });
 
-type Tab = "BPA" | "AIH" | "APAC";
-type Doc = { title: string; rows?: SusRow[]; laudo?: SusRow; apac?: Apac } | null;
-interface Apac { patient: string; cns: string; procedure: string; cid: string; authorization: string; start: string; end: string; justification: string }
+type Tab = "BPA" | "AIH";
+type Doc = { title: string; rows?: SusRow[]; laudo?: SusRow } | null;
 const PROF_KEY = "hmisc-sus-prof";
 const fmt = (d: string) => d ? d.split("-").reverse().join("/") : "—";
 
@@ -45,7 +43,6 @@ function SusBilling() {
   const [onlyIssues, setOnlyIssues] = useState(false);
   const [prof, setProf] = useState<Professional>({ name: "", cns: "", cbo: "225125" });
   const [doc, setDoc] = useState<Doc>(null);
-  const [apac, setApac] = useState<Apac>({ patient: "", cns: "", procedure: "", cid: "", authorization: "", start: "", end: "", justification: "" });
   useEffect(() => { try { const v = localStorage.getItem(PROF_KEY); if (v) { const p = JSON.parse(v) as Professional; setProf({ ...p, cbo: p.cbo || "225125" }); } } catch { /* ignore */ } }, []);
   const saveProf = (p: Professional) => { setProf(p); localStorage.setItem(PROF_KEY, JSON.stringify(p)); };
   const rows = useMemo(() => buildSusRows(encounters, patients, comp, prof), [encounters, patients, comp, prof]);
@@ -58,7 +55,7 @@ function SusBilling() {
 
   return (
     <div className="space-y-4">
-      <div><h1 className="text-xl font-semibold">Faturamento SUS</h1><p className="text-sm text-muted-foreground">BPA (BAAs), SISAIH01 (FIAs) e APAC · CNES {CNES}</p></div>
+      <div><h1 className="text-xl font-semibold">Faturamento SUS</h1><p className="text-sm text-muted-foreground">BPA (BAAs) e SISAIH01 (FIAs) · CNES {CNES}</p></div>
       {!allowed && <NoPermission action="gerar relatórios e remessas SUS (perfil Faturamento)" />}
       <div className="grid gap-3 rounded-lg border bg-card p-4 md:grid-cols-[160px_1fr_160px_120px]">
         <label className="text-xs font-medium">Competência<Input type="month" value={`${comp.slice(0, 4)}-${comp.slice(4)}`} onChange={(e) => e.target.value && setComp(e.target.value.replace("-", ""))} /></label>
@@ -67,10 +64,9 @@ function SusBilling() {
         <label className="text-xs font-medium">CBO<Input value={prof.cbo} onChange={(e) => saveProf({ ...prof, cbo: e.target.value })} placeholder="225125" /></label>
       </div>
       <div className="flex flex-wrap gap-2">
-        {(["BPA", "AIH", "APAC"] as const).map((t) => <Button key={t} size="sm" variant={tab === t ? "default" : "outline"} onClick={() => setTab(t)}>{t === "BPA" ? "BPA · Ambulatorial (BAA)" : t === "AIH" ? "AIH · Internações (FIA)" : "APAC · Alta complexidade"}</Button>)}
+        {(["BPA", "AIH"] as const).map((t) => <Button key={t} size="sm" variant={tab === t ? "default" : "outline"} onClick={() => setTab(t)}>{t === "BPA" ? "BPA · Ambulatorial (BAA)" : "AIH · Internações (FIA)"}</Button>)}
       </div>
 
-      {tab !== "APAC" ? (
         <div className="rounded-lg border bg-card p-4">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
             <div className="text-sm"><b>{all.length}</b> atendimento(s) em {month} · <span className="text-clinical">{okCount} prontos</span> · <span className="text-destructive">{all.length - okCount} com pendência</span></div>
@@ -92,17 +88,6 @@ function SusBilling() {
           </table></div>
           <p className="mt-2 text-[11px] text-muted-foreground">O arquivo inclui só os atendimentos sem pendência. Corrija o cadastro do paciente (CNS, nascimento, sexo, município) e o CID no atendimento médico.</p>
         </div>
-      ) : (
-        <div className="space-y-3 rounded-lg border bg-card p-4">
-          <div className="text-sm font-medium">Laudo de Solicitação/Autorização de APAC</div>
-          <div className="grid gap-3 md:grid-cols-2">
-            <label className="text-xs font-medium">Paciente<select className="mt-1 h-9 w-full rounded-md border bg-background px-2 text-sm" value={apac.patient} onChange={(e) => { const p = patients.find((x) => x.name === e.target.value); setApac({ ...apac, patient: e.target.value, cns: p?.registration?.cns ?? "" }); }}><option value="">Selecione…</option>{patients.map((p) => <option key={p.id}>{p.name}</option>)}</select></label>
-            <SigtapPicker onPick={(x) => setApac((a) => ({ ...a, procedure: x.c }))} />{([["cns", "CNS do paciente"], ["procedure", "Procedimento SIGTAP (10 dígitos)"], ["cid", "CID-10 principal"], ["authorization", "Nº da autorização APAC (gestor)"], ["start", "Validade início"], ["end", "Validade fim"]] as const).map(([k, l]) => <label key={k} className="text-xs font-medium">{l}<Input type={k === "start" || k === "end" ? "date" : "text"} value={apac[k]} onChange={(e) => setApac({ ...apac, [k]: e.target.value })} /></label>)}
-          </div>
-          <label className="block text-xs font-medium">Justificativa / resumo clínico<textarea className="mt-1 min-h-20 w-full rounded-md border bg-background p-2 text-sm" value={apac.justification} onChange={(e) => setApac({ ...apac, justification: e.target.value })} /></label>
-          <Button disabled={!apac.patient || !apac.procedure} onClick={() => print({ title: "LAUDO PARA SOLICITAÇÃO/AUTORIZAÇÃO DE PROCEDIMENTO AMBULATORIAL (APAC)", apac })}>Imprimir laudo APAC</Button>
-        </div>
-      )}
       <DocumentGapsPanel />
       {doc && <PrintDoc doc={doc} prof={prof} month={month} />}
     </div>
@@ -128,12 +113,6 @@ function PrintDoc({ doc, prof, month }: { doc: NonNullable<Doc>; prof: Professio
       <div style={{ border: "1px solid #000", padding: 4, minHeight: 80 }}><div style={{ fontSize: "8pt" }}>Principais sinais, sintomas e condições</div>{doc.laudo.encounter.medical?.anamnesis} {doc.laudo.encounter.medical?.exam}</div>
       {sign}
       <div style={{ marginTop: 24, border: "1px solid #000", padding: 4, minHeight: 60 }}><div style={{ fontSize: "8pt" }}>Autorização (uso do gestor) · Nº AIH · Data · Assinatura</div></div>
-    </>}
-    {doc.apac && <>
-      <h3>Identificação</h3>{grid([["Estabelecimento", "HMISC"], ["CNES", CNES], ["Paciente", doc.apac.patient], ["CNS", doc.apac.cns], ["Nº autorização APAC", doc.apac.authorization], ["Validade", `${fmt(doc.apac.start)} a ${fmt(doc.apac.end)}`]])}
-      <h3>Procedimento</h3>{grid([["Procedimento SIGTAP", doc.apac.procedure], ["CID-10", doc.apac.cid], ["Competência", month]])}
-      <div style={{ border: "1px solid #000", padding: 4, minHeight: 100 }}><div style={{ fontSize: "8pt" }}>Justificativa</div>{doc.apac.justification}</div>
-      {sign}
     </>}
     <LetterFooter />
   </div>, document.body);

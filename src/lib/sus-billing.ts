@@ -41,8 +41,12 @@ export function buildSusRows(encounters: Encounter[], patients: Patient[], compe
 }
 
 /** Pendências que o validador do DATASUS rejeitaria. */
-export function susIssues(r: Pick<SusRow, "cns" | "cid" | "birthDate" | "sex" | "cityCode" | "motherName" | "kind">, prof: Professional): string[] {
+export function susIssues(r: Pick<SusRow, "cns" | "cid" | "birthDate" | "sex" | "cityCode" | "motherName" | "kind"> & { procedure?: string; date?: string }, prof: Professional): string[] {
   const out: string[] = [];
+  const obstetric = (r.procedure ?? "").startsWith("0411") || (r.procedure ?? "").startsWith("0310") || r.cid.startsWith("O");
+  if (obstetric && r.sex === "M") out.push("Procedimento/CID obstétrico em paciente masculino");
+  if (r.birthDate && r.date && r.birthDate > r.date) out.push("Nascimento posterior ao atendimento");
+  if (r.cid.startsWith("P") && r.birthDate && r.date && (Date.parse(r.date) - Date.parse(r.birthDate)) / 86400000 > 28) out.push("CID perinatal (P) fora do período neonatal (28 dias)");
   if (r.cns.length !== 15) out.push("Paciente sem CNS (15 dígitos)");
   if (!r.cid) out.push("Sem CID-10");
   if (!r.birthDate) out.push("Sem data de nascimento");
