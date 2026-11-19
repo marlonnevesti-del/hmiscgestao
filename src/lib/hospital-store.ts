@@ -463,6 +463,19 @@ export function amendDocuments(id: string, values: Partial<Record<AmendField, st
   setState((s) => ({ encounters: s.encounters.map((x) => x.id === id ? next : x) }));
 }
 
+/** Administrador corrige dados de abertura do BAA (unidade, especialidade, queixa, pré-consulta) com justificativa no histórico. */
+export function correctEncounter(id: string, patch: { type: string; specialty: string; complaint: string; nursingPreConsult: boolean }, reason: string) {
+  if (state.profile !== 'Administrador') throw new Error('Apenas administradores podem corrigir atendimentos.');
+  if (!reason.trim()) throw new Error('Informe a justificativa.');
+  if (!patch.specialty.trim() || !patch.complaint.trim()) throw new Error('Especialidade e queixa são obrigatórias.');
+  const { e } = getEncounter(id);
+  const at = new Date().toISOString();
+  const { nursingPreConsult: _n, ...base } = e;
+  const next: Encounter = { ...base, type: patch.type, specialty: patch.specialty.trim(), complaint: patch.complaint.trim(), ...(patch.type === 'Ambulatório' && patch.nursingPreConsult ? { nursingPreConsult: true } : {}),
+    history: [...e.history, { status: e.status_fluxo, at, by: professionalName(state.profile), note: `Atendimento corrigido pelo administrador: ${reason.trim()}` }] };
+  setState((s) => ({ encounters: s.encounters.map((x) => x.id === id ? next : x) }));
+}
+
 export function deleteEncounter(id: string) {
   if (state.profile !== 'Administrador') throw new Error('Apenas administradores podem apagar atendimentos.');
   setState((s) => ({ encounters: s.encounters.filter((e) => e.id !== id), queue: s.queue.filter((q) => q.id !== id), calls: s.calls }));

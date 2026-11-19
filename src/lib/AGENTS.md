@@ -2,3 +2,4 @@
 - Admin employee profile edits use adminUpdateEmployee (server-checked role; super_admin edits only by super_admin).
 - UTI Neonatal records are NEO_FORMS entries on patient.intensive.neo; neoReport builds its monthly indicators.
 - Ambulatory nursing pre-consult eligibility is needsNursingPreConsult in ambulatorio.ts (obstetric specialty or encounter/appointment nursingPreConsult flag).
+- Admin open BAA/FIA management is /gestao-atendimentos (admin-only via canAccessPage); edits go through correctEncounter in hospital-store with mandatory justification logged in history.

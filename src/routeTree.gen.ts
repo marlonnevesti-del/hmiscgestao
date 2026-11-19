@@ -26,6 +26,7 @@ import { Route as AuthenticatedEnfermagemRouteImport } from './routes/_authentic
 import { Route as AuthenticatedFarmaciaRouteImport } from './routes/_authenticated.farmacia'
 import { Route as AuthenticatedFaturamentoRouteImport } from './routes/_authenticated.faturamento'
 import { Route as AuthenticatedFaturamentoSusRouteImport } from './routes/_authenticated.faturamento-sus'
+import { Route as AuthenticatedGestaoAtendimentosRouteImport } from './routes/_authenticated.gestao-atendimentos'
 import { Route as AuthenticatedGestaoCirurgicaRouteImport } from './routes/_authenticated.gestao-cirurgica'
 import { Route as AuthenticatedInternacoesRouteImport } from './routes/_authenticated.internacoes'
 import { Route as AuthenticatedMaternidadeRouteImport } from './routes/_authenticated.maternidade'
@@ -132,6 +133,12 @@ const AuthenticatedFaturamentoSusRoute =
     path: '/faturamento-sus',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedGestaoAtendimentosRoute =
+  AuthenticatedGestaoAtendimentosRouteImport.update({
+    id: '/gestao-atendimentos',
+    path: '/gestao-atendimentos',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedGestaoCirurgicaRoute =
   AuthenticatedGestaoCirurgicaRouteImport.update({
     id: '/gestao-cirurgica',
@@ -223,6 +230,7 @@ export interface FileRoutesByFullPath {
   '/farmacia': typeof AuthenticatedFarmaciaRoute
   '/faturamento': typeof AuthenticatedFaturamentoRoute
   '/faturamento-sus': typeof AuthenticatedFaturamentoSusRoute
+  '/gestao-atendimentos': typeof AuthenticatedGestaoAtendimentosRoute
   '/gestao-cirurgica': typeof AuthenticatedGestaoCirurgicaRoute
   '/internacoes': typeof AuthenticatedInternacoesRoute
   '/maternidade': typeof AuthenticatedMaternidadeRoute
@@ -253,6 +261,7 @@ export interface FileRoutesByTo {
   '/farmacia': typeof AuthenticatedFarmaciaRoute
   '/faturamento': typeof AuthenticatedFaturamentoRoute
   '/faturamento-sus': typeof AuthenticatedFaturamentoSusRoute
+  '/gestao-atendimentos': typeof AuthenticatedGestaoAtendimentosRoute
   '/gestao-cirurgica': typeof AuthenticatedGestaoCirurgicaRoute
   '/internacoes': typeof AuthenticatedInternacoesRoute
   '/maternidade': typeof AuthenticatedMaternidadeRoute
@@ -286,6 +295,7 @@ export interface FileRoutesById {
   '/_authenticated/farmacia': typeof AuthenticatedFarmaciaRoute
   '/_authenticated/faturamento': typeof AuthenticatedFaturamentoRoute
   '/_authenticated/faturamento-sus': typeof AuthenticatedFaturamentoSusRoute
+  '/_authenticated/gestao-atendimentos': typeof AuthenticatedGestaoAtendimentosRoute
   '/_authenticated/gestao-cirurgica': typeof AuthenticatedGestaoCirurgicaRoute
   '/_authenticated/internacoes': typeof AuthenticatedInternacoesRoute
   '/_authenticated/maternidade': typeof AuthenticatedMaternidadeRoute
@@ -320,6 +330,7 @@ export interface FileRouteTypes {
     | '/farmacia'
     | '/faturamento'
     | '/faturamento-sus'
+    | '/gestao-atendimentos'
     | '/gestao-cirurgica'
     | '/internacoes'
     | '/maternidade'
@@ -350,6 +361,7 @@ export interface FileRouteTypes {
     | '/farmacia'
     | '/faturamento'
     | '/faturamento-sus'
+    | '/gestao-atendimentos'
     | '/gestao-cirurgica'
     | '/internacoes'
     | '/maternidade'
@@ -382,6 +394,7 @@ export interface FileRouteTypes {
     | '/_authenticated/farmacia'
     | '/_authenticated/faturamento'
     | '/_authenticated/faturamento-sus'
+    | '/_authenticated/gestao-atendimentos'
     | '/_authenticated/gestao-cirurgica'
     | '/_authenticated/internacoes'
     | '/_authenticated/maternidade'
@@ -527,6 +540,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedFaturamentoSusRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/gestao-atendimentos': {
+      id: '/_authenticated/gestao-atendimentos'
+      path: '/gestao-atendimentos'
+      fullPath: '/gestao-atendimentos'
+      preLoaderRoute: typeof AuthenticatedGestaoAtendimentosRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/gestao-cirurgica': {
       id: '/_authenticated/gestao-cirurgica'
       path: '/gestao-cirurgica'
@@ -633,6 +653,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedFarmaciaRoute: typeof AuthenticatedFarmaciaRoute
   AuthenticatedFaturamentoRoute: typeof AuthenticatedFaturamentoRoute
   AuthenticatedFaturamentoSusRoute: typeof AuthenticatedFaturamentoSusRoute
+  AuthenticatedGestaoAtendimentosRoute: typeof AuthenticatedGestaoAtendimentosRoute
   AuthenticatedGestaoCirurgicaRoute: typeof AuthenticatedGestaoCirurgicaRoute
   AuthenticatedInternacoesRoute: typeof AuthenticatedInternacoesRoute
   AuthenticatedMaternidadeRoute: typeof AuthenticatedMaternidadeRoute
@@ -661,6 +682,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedFarmaciaRoute: AuthenticatedFarmaciaRoute,
   AuthenticatedFaturamentoRoute: AuthenticatedFaturamentoRoute,
   AuthenticatedFaturamentoSusRoute: AuthenticatedFaturamentoSusRoute,
+  AuthenticatedGestaoAtendimentosRoute: AuthenticatedGestaoAtendimentosRoute,
   AuthenticatedGestaoCirurgicaRoute: AuthenticatedGestaoCirurgicaRoute,
   AuthenticatedInternacoesRoute: AuthenticatedInternacoesRoute,
   AuthenticatedMaternidadeRoute: AuthenticatedMaternidadeRoute,

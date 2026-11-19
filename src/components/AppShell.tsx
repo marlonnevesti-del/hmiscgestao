@@ -83,6 +83,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               })}
             </div>
           ))}
+          {profile === "Administrador" && <Link to="/gestao-atendimentos" title="BAAs e FIAs abertas" className="flex items-center gap-3 rounded-md px-3 py-2 text-sm hover:bg-sidebar-accent"><ClipboardList className="h-4 w-4 shrink-0" />{!collapsed && "BAAs e FIAs abertas"}</Link>}
           {canApproveEmployees(access?.roles ?? [], access?.profile.status ?? "") && <Link to="/colaboradores" title="Colaboradores" className="flex items-center gap-3 rounded-md px-3 py-2 text-sm hover:bg-sidebar-accent"><UserCog className="h-4 w-4 shrink-0" />{!collapsed && "Colaboradores"}</Link>}
           {!collapsed && <div className="px-3 pt-2 text-[10px] uppercase tracking-wider opacity-60">Acesso rápido</div>}
           {!collapsed && canAccessPage(profile, "/pacientes", accessAreas) && patients.slice(0, 5).map((p) => (
