@@ -1,6 +1,6 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useMemo, useState, type ReactNode } from "react";
-import { Ambulance, Baby, Stethoscope, Package, BedDouble, Bell, ChevronLeft, ClipboardList, HeartPulse, Pill, Receipt, Scissors, Search, ShieldCheck, Tv, UserCog, UserPlus, Users, LogOut } from "lucide-react";
+import { Ambulance, Baby, Stethoscope, Package, BedDouble, Bell, ChevronLeft, ClipboardList, HeartPulse, Pill, Receipt, Scissors, Search, ShieldCheck, ShieldAlert, Tv, UserCog, UserPlus, Users, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
@@ -24,6 +24,7 @@ const GROUPS = [
     { to: "/nir", label: "NIR – Regulação de Leitos", icon: BedDouble },
     { to: "/centro-cirurgico", label: "Centro Cirúrgico", icon: Scissors },
     { to: "/cme", label: "CME – Esterilização", icon: ShieldCheck },
+    { to: "/sciras", label: "SCIRAS / CCIH", icon: ShieldAlert },
     { to: "/farmacia", label: "Farmácia", icon: Pill },
     { to: "/enfermagem", label: "Posto de Enfermagem", icon: HeartPulse },
     { to: "/almoxarifado", label: "Almoxarifado", icon: Package },
@@ -53,7 +54,8 @@ export function AppShell({ children }: { children: ReactNode }) {
     ...patients.filter((p) => p.vitals.at(-1) && (p.vitals.at(-1)?.sat ?? 100) < 92).map((p) => ({ text: `SatO2 ${(p.vitals.at(-1)?.sat ?? 100)}% – ${p.name} (${p.bed})`, id: p.id })),
     ...patients.filter((p) => p.vitals.at(-1) && (p.vitals.at(-1)?.pas ?? 0) >= 140).map((p) => ({ text: `PA ${(p.vitals.at(-1)?.pas ?? 0)}/${(p.vitals.at(-1)?.pad ?? 0)} – ${p.name}`, id: p.id })),
     ...patients.filter((p) => p.prescriptions.some((r) => r.pharmacy === "Pendente")).map((p) => ({ text: `Medicação aguardando farmácia – ${p.name}`, to: "/farmacia" as const })),
-  ], [queue, patients]);
+    ...(can(profile, "sciras") || accessAreas?.includes("sciras") ? patients.filter((p) => p.prescriptions.some((r) => r.atb?.status === "Aguardando SCIRAS")).map((p) => ({ text: `Antimicrobiano aguardando SCIRAS – ${p.name}`, to: "/sciras" as const })) : []),
+  ], [queue, patients, profile, accessAreas]);
 
   return (
     <div className="flex min-h-screen w-full bg-background">

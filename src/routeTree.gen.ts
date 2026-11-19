@@ -31,6 +31,7 @@ import { Route as AuthenticatedNirRouteImport } from './routes/_authenticated.ni
 import { Route as AuthenticatedPainelTvRouteImport } from './routes/_authenticated.painel-tv'
 import { Route as AuthenticatedProntoSocorroRouteImport } from './routes/_authenticated.pronto-socorro'
 import { Route as AuthenticatedRecepcaoRouteImport } from './routes/_authenticated.recepcao'
+import { Route as AuthenticatedScirasRouteImport } from './routes/_authenticated.sciras'
 import { Route as AuthenticatedSolicitacaoAlmoxarifadoRouteImport } from './routes/_authenticated.solicitacao-almoxarifado'
 import { Route as AuthenticatedPacientesIndexRouteImport } from './routes/_authenticated.pacientes.index'
 import { Route as AuthenticatedPacientesIdRouteImport } from './routes/_authenticated.pacientes.$id'
@@ -154,6 +155,11 @@ const AuthenticatedRecepcaoRoute = AuthenticatedRecepcaoRouteImport.update({
   path: '/recepcao',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedScirasRoute = AuthenticatedScirasRouteImport.update({
+  id: '/sciras',
+  path: '/sciras',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedSolicitacaoAlmoxarifadoRoute =
   AuthenticatedSolicitacaoAlmoxarifadoRouteImport.update({
     id: '/solicitacao-almoxarifado',
@@ -195,6 +201,7 @@ export interface FileRoutesByFullPath {
   '/painel-tv': typeof AuthenticatedPainelTvRoute
   '/pronto-socorro': typeof AuthenticatedProntoSocorroRoute
   '/recepcao': typeof AuthenticatedRecepcaoRoute
+  '/sciras': typeof AuthenticatedScirasRoute
   '/solicitacao-almoxarifado': typeof AuthenticatedSolicitacaoAlmoxarifadoRoute
   '/pacientes/$id': typeof AuthenticatedPacientesIdRoute
   '/pacientes/': typeof AuthenticatedPacientesIndexRoute
@@ -220,6 +227,7 @@ export interface FileRoutesByTo {
   '/painel-tv': typeof AuthenticatedPainelTvRoute
   '/pronto-socorro': typeof AuthenticatedProntoSocorroRoute
   '/recepcao': typeof AuthenticatedRecepcaoRoute
+  '/sciras': typeof AuthenticatedScirasRoute
   '/solicitacao-almoxarifado': typeof AuthenticatedSolicitacaoAlmoxarifadoRoute
   '/': typeof AuthenticatedIndexRoute
   '/pacientes/$id': typeof AuthenticatedPacientesIdRoute
@@ -248,6 +256,7 @@ export interface FileRoutesById {
   '/_authenticated/painel-tv': typeof AuthenticatedPainelTvRoute
   '/_authenticated/pronto-socorro': typeof AuthenticatedProntoSocorroRoute
   '/_authenticated/recepcao': typeof AuthenticatedRecepcaoRoute
+  '/_authenticated/sciras': typeof AuthenticatedScirasRoute
   '/_authenticated/solicitacao-almoxarifado': typeof AuthenticatedSolicitacaoAlmoxarifadoRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/pacientes/$id': typeof AuthenticatedPacientesIdRoute
@@ -277,6 +286,7 @@ export interface FileRouteTypes {
     | '/painel-tv'
     | '/pronto-socorro'
     | '/recepcao'
+    | '/sciras'
     | '/solicitacao-almoxarifado'
     | '/pacientes/$id'
     | '/pacientes/'
@@ -302,6 +312,7 @@ export interface FileRouteTypes {
     | '/painel-tv'
     | '/pronto-socorro'
     | '/recepcao'
+    | '/sciras'
     | '/solicitacao-almoxarifado'
     | '/'
     | '/pacientes/$id'
@@ -329,6 +340,7 @@ export interface FileRouteTypes {
     | '/_authenticated/painel-tv'
     | '/_authenticated/pronto-socorro'
     | '/_authenticated/recepcao'
+    | '/_authenticated/sciras'
     | '/_authenticated/solicitacao-almoxarifado'
     | '/_authenticated/'
     | '/_authenticated/pacientes/$id'
@@ -499,6 +511,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRecepcaoRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/sciras': {
+      id: '/_authenticated/sciras'
+      path: '/sciras'
+      fullPath: '/sciras'
+      preLoaderRoute: typeof AuthenticatedScirasRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/solicitacao-almoxarifado': {
       id: '/_authenticated/solicitacao-almoxarifado'
       path: '/solicitacao-almoxarifado'
@@ -540,6 +559,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedPainelTvRoute: typeof AuthenticatedPainelTvRoute
   AuthenticatedProntoSocorroRoute: typeof AuthenticatedProntoSocorroRoute
   AuthenticatedRecepcaoRoute: typeof AuthenticatedRecepcaoRoute
+  AuthenticatedScirasRoute: typeof AuthenticatedScirasRoute
   AuthenticatedSolicitacaoAlmoxarifadoRoute: typeof AuthenticatedSolicitacaoAlmoxarifadoRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedPacientesIdRoute: typeof AuthenticatedPacientesIdRoute
@@ -563,6 +583,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedPainelTvRoute: AuthenticatedPainelTvRoute,
   AuthenticatedProntoSocorroRoute: AuthenticatedProntoSocorroRoute,
   AuthenticatedRecepcaoRoute: AuthenticatedRecepcaoRoute,
+  AuthenticatedScirasRoute: AuthenticatedScirasRoute,
   AuthenticatedSolicitacaoAlmoxarifadoRoute:
     AuthenticatedSolicitacaoAlmoxarifadoRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,

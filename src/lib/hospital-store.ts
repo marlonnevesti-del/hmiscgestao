@@ -13,6 +13,7 @@ import CATALOG from "./stock-catalog.json";
 import CONTROLLED from "./controlled-catalog.json";
 import WAREHOUSE from "./warehouse-catalog.json";
 import { expiryStatus } from "./controlled";
+import { atbBlocksPharmacy, emptySciras, BUNDLES, type BundleType, type Isolate, type ScirasRecord } from "./sciras";
 import { changeQty, checkQty, loanReturnedQty, transferItem, type Depot, type Movement, type SupplyRequest } from "./supply-flow";
 export const PHARMACY_CATALOG = catalogToStock([...CATALOG.farm, ...CONTROLLED], 'farm');
 export const WAREHOUSE_CATALOG = catalogToStock(WAREHOUSE, 'almox');
@@ -98,6 +99,8 @@ export function signPrescription(id: string) {
 export function validatePrescription(id: string, rxId: string) {
   requireAction('farmacia'); const { e, p } = getEncounter(id);
   if (e.status_fluxo !== 'AGUARDANDO_FARMACIA') throw new Error('Prescrição não está na farmácia.');
+  const rx = p.prescriptions.find((r) => r.id === rxId);
+  if (rx && atbBlocksPharmacy(rx)) throw new Error(rx.atb?.status === 'Negado' ? 'Antimicrobiano negado pela SCIRAS.' : 'Antimicrobiano restrito aguardando autorização da SCIRAS.');
   updatePatient(p.id, (x) => ({ prescriptions: x.prescriptions.map((r) => r.id === rxId ? { ...r, pharmacy: 'Validada' } : r) }));
 }
 /** Farmacêutico ajusta dose/apresentação de um item ainda na farmácia; registra o ajuste no próprio item. */
@@ -556,3 +559,38 @@ export function writeOffExpired(itemId: string, lot: string, qty: number, reason
 
 /** Saves a doctor's name + CRM so it autofills next time (shared clinical snapshot). */
 export function rememberDoctor(name: string, crm: string) { const next = learnDoctor(state.doctors, name, crm); if (next !== state.doctors) setState(() => ({ doctors: next })); }
+
+// ---- SCIRAS / CCIH ----
+function updateSciras(patientId: string, fn: (r: ScirasRecord) => ScirasRecord) {
+  requireAction('sciras');
+  updatePatient(patientId, (x) => ({ sciras: fn(x.sciras ?? emptySciras()) }));
+}
+export function decideAntimicrobial(patientId: string, rxId: string, approve: boolean, days: number, note: string) {
+  requireAction('sciras');
+  if (!note.trim()) throw new Error('Registre o parecer da SCIRAS.');
+  if (approve && !(days > 0)) throw new Error('Informe os dias autorizados.');
+  const at = new Date().toLocaleString('pt-BR'); const by = professionalName(state.profile);
+  updatePatient(patientId, (x) => ({ prescriptions: x.prescriptions.map((r) => r.id === rxId && r.atb ? { ...r, atb: { ...r.atb, status: approve ? 'Autorizado' : 'Negado', decidedAt: at, decidedBy: by, decisionNote: note.trim(), ...(approve ? { authorizedDays: days } : {}) } } : r) }));
+}
+export function addIsolate(patientId: string, i: Omit<Isolate, 'id' | 'at' | 'by'>) {
+  if (!i.organism.trim() || !i.material.trim()) throw new Error('Informe microrganismo e material.');
+  const iso: Isolate = { ...i, id: crypto.randomUUID(), at: new Date().toLocaleString('pt-BR'), by: professionalName(state.profile) };
+  updateSciras(patientId, (r) => ({ ...r, isolates: [iso, ...r.isolates] }));
+}
+export function openInfectionCase(patientId: string, site: string, notes: string) {
+  if (!site.trim()) throw new Error('Informe o sítio da infecção.');
+  updateSciras(patientId, (r) => ({ ...r, cases: [{ id: crypto.randomUUID(), site: site.trim(), notes: notes.trim(), openedAt: new Date().toLocaleString('pt-BR'), openedBy: professionalName(state.profile), status: 'Aberto' }, ...r.cases] }));
+}
+export function closeInfectionCase(patientId: string, caseId: string, classification: string) {
+  if (!classification) throw new Error('Classifique o caso antes de encerrar.');
+  updateSciras(patientId, (r) => ({ ...r, cases: r.cases.map((c) => c.id === caseId ? { ...c, status: 'Encerrado', classification, closedAt: new Date().toLocaleString('pt-BR'), closedBy: professionalName(state.profile) } : c) }));
+}
+export function saveBundle(patientId: string, type: BundleType, items: Record<string, boolean>) {
+  const full = Object.fromEntries(BUNDLES[type].map((k) => [k, !!items[k]]));
+  updateSciras(patientId, (r) => ({ ...r, bundles: [{ id: crypto.randomUUID(), type, at: new Date().toLocaleString('pt-BR'), by: professionalName(state.profile), items: full }, ...r.bundles] }));
+}
+export function addScirasEvolution(patientId: string, text: string) {
+  requireAction('sciras');
+  if (!text.trim()) throw new Error('Escreva a evolução.');
+  updatePatient(patientId, (x) => ({ evolutions: [{ time: new Date().toLocaleString('pt-BR'), cat: 'SCIRAS' as const, author: professionalName(state.profile), text: text.trim() }, ...x.evolutions] }));
+}

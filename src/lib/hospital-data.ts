@@ -1,5 +1,6 @@
 import type { Presentation, Regimen } from "./dose-calc";
 import type { PatientRegistration } from "./patient-registration";
+import type { AtbInfo, ScirasRecord } from "./sciras";
 export type Ward = "PSO" | "PSP" | "CO" | "AC" | "UTIN" | "ENFP";
 export const WARDS: { id: Ward; name: string }[] = [
   { id: "PSO", name: "PS Obstétrico" },
@@ -12,9 +13,9 @@ export const WARDS: { id: Ward; name: string }[] = [
 
 export type Profile = "Médico" | "Enfermeiro" | "Técnico de enfermagem" | "Fisioterapeuta" | "Administrativo" | "Farmacêutico" | "Recepção" | "Administrador" | "Outro";
 export const PROFILES: Profile[] = ["Médico", "Enfermeiro", "Farmacêutico", "Recepção"];
-export type Action = "recepcao" | "prescrever" | "evoluir" | "parto" | "checar" | "triagem" | "farmacia" | "faturar" | "cirurgia" | "almoxarifado" | "nir";
+export type Action = "recepcao" | "prescrever" | "evoluir" | "parto" | "checar" | "triagem" | "farmacia" | "faturar" | "cirurgia" | "almoxarifado" | "nir" | "sciras";
 const PERMS: Record<Profile, Action[]> = {
-  Administrador: ["recepcao", "prescrever", "evoluir", "parto", "checar", "triagem", "farmacia", "faturar", "cirurgia", "almoxarifado", "nir"],
+  Administrador: ["recepcao", "prescrever", "evoluir", "parto", "checar", "triagem", "farmacia", "faturar", "cirurgia", "almoxarifado", "nir", "sciras"],
   Outro: [],
   Médico: ["prescrever", "evoluir", "parto", "triagem", "cirurgia", "nir"],
   Enfermeiro: ["evoluir", "checar", "triagem", "cirurgia", "nir"],
@@ -26,7 +27,7 @@ const PERMS: Record<Profile, Action[]> = {
 };
 export const can = (p: Profile, a: Action) => PERMS[p].includes(a);
 /** Areas granted by the admin that also unlock the matching action, regardless of job function. */
-const ACTION_AREAS: Partial<Record<Action, string>> = { recepcao: "recepcao", triagem: "acolhimento", prescrever: "atendimento", farmacia: "farmacia", almoxarifado: "almoxarifado", checar: "enfermagem", faturar: "faturamento", cirurgia: "centro-cirurgico", nir: "nir" };
+const ACTION_AREAS: Partial<Record<Action, string>> = { recepcao: "recepcao", triagem: "acolhimento", prescrever: "atendimento", farmacia: "farmacia", almoxarifado: "almoxarifado", checar: "enfermagem", faturar: "faturamento", cirurgia: "centro-cirurgico", nir: "nir", sciras: "sciras" };
 export function canAct(p: Profile, a: Action, areas?: readonly string[] | null) {
   if (can(p, a)) return true;
   const id = ACTION_AREAS[a]; if (!id || !areas) return false;
@@ -36,7 +37,7 @@ export const ACCESS_AREAS = [
   { id: "recepcao", label: "Recepção & Cadastro" }, { id: "acolhimento", label: "Triagem / Enfermagem" },
   { id: "atendimento", label: "Consultório Médico" }, { id: "pacientes", label: "Pacientes / PEP" },
   { id: "enfermagem", label: "Posto de Enfermagem" }, { id: "centro-cirurgico", label: "Centro Cirúrgico" }, { id: "cme", label: "CME – Esterilização" },
-  { id: "farmacia", label: "Farmácia" }, { id: "almoxarifado", label: "Almoxarifado" }, { id: "faturamento", label: "Faturamento (TISS e SUS)" }, { id: "nir", label: "NIR – Regulação de Leitos" },
+  { id: "farmacia", label: "Farmácia" }, { id: "almoxarifado", label: "Almoxarifado" }, { id: "faturamento", label: "Faturamento (TISS e SUS)" }, { id: "nir", label: "NIR – Regulação de Leitos" }, { id: "sciras", label: "SCIRAS / CCIH" },
 ] as const;
 export type UnitArea = "ambulatorio" | "pronto-socorro" | "maternidade";
 export type UnitTab = "agenda" | "recepcao" | "acolhimento" | "atendimento" | "sadt" | "especialidades" | "internados";
@@ -99,20 +100,21 @@ export function canAccessPage(profile: Profile, path: string, areas?: readonly s
   if (path === "/farmacia") return can(profile, "farmacia");
   if (path === "/almoxarifado") return can(profile, "almoxarifado");
   if (path === "/nir") return can(profile, "nir");
+  if (path === "/sciras") return can(profile, "sciras");
   if (path === "/enfermagem") return can(profile, "checar");
   if (path === "/faturamento" || path === "/faturamento-sus") return can(profile, "faturar");
   return false;
 }
 
 export type PatientType = "gestante" | "puerpera" | "pediatria" | "neonato";
-export type EvoCat = "Médica" | "Enfermagem" | "Fisioterapia" | "Serviço Social";
+export type EvoCat = "Médica" | "Enfermagem" | "Fisioterapia" | "Serviço Social" | "SCIRAS";
 export type Risk = "Queda" | "Alergia" | "Flebite" | "Risco Hemorrágico";
 
 export interface Evolution { time: string; cat: EvoCat; author: string; text: string }
 export interface Vital { time: string; pas: number; pad: number; fc: number; fr: number; tax: number; sat: number; dor: number; ingesta: number; diurese: number; vomitos: number }
 export interface PartoPoint { hour: number; dilat: number; altura: number; bcf: number; contr: number }
 export type PrescCat = "Dieta" | "Hidratação" | "Medicamento" | "Cuidados" | "Exames";
-export interface Prescription { id: string; cat: PrescCat; item: string; posologia: string; times?: string[]; pharmacy?: "Pendente" | "Validada" | "Dispensada" | undefined; lot?: string | undefined }
+export interface Prescription { id: string; cat: PrescCat; item: string; posologia: string; times?: string[]; pharmacy?: "Pendente" | "Validada" | "Dispensada" | undefined; lot?: string | undefined; atb?: AtbInfo | undefined }
 export interface Newborn { apgar1: number; apgar5: number; pesoNascer: number; comprimento: number; pc: number; tipagem: string; coracaozinho: string; olhinho: string; vacinas: string[]; motherId?: string | undefined }
 
 export interface Patient {
@@ -123,7 +125,7 @@ export interface Patient {
   ward: Ward; bed: string; insurance: string; guia?: string; authorized: boolean;
   diagnosis: string; admission: string; days: number; dischargeForecast?: string;
   evolutions: Evolution[]; vitals: Vital[]; prescriptions: Prescription[]; previousPrescriptions?: Prescription[];
-  partograma?: PartoPoint[]; newborn?: Newborn; babyIds?: string[];
+  sciras?: ScirasRecord; partograma?: PartoPoint[]; newborn?: Newborn; babyIds?: string[];
 }
 
 export const PATIENTS: Patient[] = [];

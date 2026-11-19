@@ -2,6 +2,7 @@ import { EncounterTimeline } from "@/components/EncounterTimeline";
 import { ProcedurePrintButton } from "@/components/ProcedurePrint";
 import { MedicalAssessment, PrescriptionRelease } from "@/components/CareMedical";
 import { Button } from "@/components/ui/button";
+import { atbMissing, isAntimicrobial, isRestricted, newAtb, type AtbForm, type AtbInfo } from "@/lib/sciras";
 import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -116,7 +117,7 @@ function Evolucao({ p }: { p: Patient }) {
   const [text, setText] = useState("");
   const [cat, setCat] = useState<EvoCat>(profile === "Enfermeiro" ? "Enfermagem" : "Médica");
   const list = p.evolutions.filter((e) => f === "Todos" || e.cat === f);
-  const color = (c: EvoCat) => ({ Médica: "bg-primary", Enfermagem: "bg-clinical", Fisioterapia: "bg-bed-isolation", "Serviço Social": "bg-mt-orange" })[c];
+  const color = (c: EvoCat) => ({ Médica: "bg-primary", Enfermagem: "bg-clinical", Fisioterapia: "bg-bed-isolation", "Serviço Social": "bg-mt-orange", SCIRAS: "bg-destructive" })[c];
   return (
     <div className="grid gap-4 lg:grid-cols-[1fr_360px]">
       <Card title="Linha do tempo">
@@ -150,6 +151,7 @@ function Prescricao({ p }: { p: Patient }) {
   const [free, setFree] = useState(""); const [pos, setPos] = useState(""); const [typed, setTyped] = useState(false); const [typedDrug, setTypedDrug] = useState("");
   const drug = DRUGS.find((d) => d.name === drugName);
   const [calc, setCalc] = useState(() => initCalc(DRUGS[0]!));
+  const [atbF, setAtbF] = useState({ weight: "", vitals: "", dose: "", interval: "", focus: "", days: "", justification: "" });
   if (!drug) return null;
   const encounter = getState().encounters.slice().reverse().find((e) => e.patientId === p.id);
   const editable = allowed && encounter?.status_fluxo === "EM_ATENDIMENTO_MEDICO";
@@ -157,14 +159,25 @@ function Prescricao({ p }: { p: Patient }) {
   const allergy = allergyConflict(drug, p.allergies);
   const inter = interactionsWith(drug, p.prescriptions);
   const cats: PrescCat[] = ["Dieta", "Hidratação", "Medicamento", "Cuidados", "Exames"];
+  const lastV = p.vitals[p.vitals.length - 1];
+  const atbName = cat === "Medicamento" ? (typed ? typedDrug : drug.name) : "";
+  const isAtb = !!atbName && isAntimicrobial(atbName);
+  const atbForm = (): AtbForm => ({ weight: parseFloat((atbF.weight || String(p.weight || "")).replace(",", ".")) || 0, vitals: atbF.vitals || (lastV ? `PA ${lastV.pas}/${lastV.pad} · FC ${lastV.fc} · FR ${lastV.fr} · Tax ${lastV.tax} · Sat ${lastV.sat}%` : ""), dose: atbF.dose, interval: atbF.interval, focus: atbF.focus, days: parseInt(atbF.days) || 0, justification: atbF.justification });
   const add = () => {
     const isMed = cat === "Medicamento";
+    let atb: AtbInfo | undefined;
+    if (isAtb) {
+      const f = atbForm(); const miss = atbMissing(f);
+      if (miss.length) { toast.error(`Campos obrigatórios do antimicrobiano: ${miss.join(", ")}`); return; }
+      atb = newAtb(atbName, f, professionalName(profile));
+      if (f.weight !== p.weight) updatePatient(p.id, () => ({ weight: f.weight }));
+    }
     if (isMed && typed) {
       if (!editable) { toast.error("Inicie ou retome o atendimento médico para editar a prescrição."); return; }
       if (!typedDrug.trim() || !pos.trim()) { toast.error("Digite o medicamento e a posologia."); return; }
       const hit = p.allergies.find((a) => typedDrug.toLowerCase().includes(a.toLowerCase()));
       if (hit) { toast.error(`Conflito de alergia: ${hit}`); return; }
-      updatePatient(p.id, (x) => ({ prescriptions: [...x.prescriptions, { id: `rx-${Date.now()}`, cat, item: `${typedDrug.trim()} ${free.trim()}`.trim(), posologia: pos.trim(), pharmacy: "Pendente" as const }] }));
+      updatePatient(p.id, (x) => ({ prescriptions: [...x.prescriptions, { id: `rx-${Date.now()}`, cat, item: `${typedDrug.trim()} ${free.trim()}`.trim(), posologia: pos.trim(), pharmacy: "Pendente" as const, ...(atb ? { atb } : {}) }] }));
       setTypedDrug(""); setFree(""); setPos(""); toast.success("Item digitado adicionado – segue para a farmácia ao assinar"); return;
     }
     if (!editable) { toast.error("Inicie ou retome o atendimento médico para editar a prescrição."); return; }
@@ -176,7 +189,8 @@ function Prescricao({ p }: { p: Patient }) {
     const times = isMed ? Array.from({ length: nDoses }, (_, i) => `${String(Math.floor(startHour + i * every) % 24).padStart(2, "0")}:${String(minute).padStart(2, "0")}`) : undefined;
     const item = isMed ? (ped || calc.perDose || p.weight > 0 ? doseText(drug.name, dose, parseFloat(calc.mgKgDay.replace(",", ".")) || 0, drug.presentations?.[calc.presentation]) : `${drug.name} ${free || ""}`.trim()) : free;
     if (!item) return;
-    updatePatient(p.id, (x) => ({ prescriptions: [...x.prescriptions, { id: `rx-${Date.now()}`, cat, item, posologia: isMed ? (pos || `${every}/${every}h`) : pos || "—", ...(times ? { times, pharmacy: "Pendente" as const } : {}) }] }));
+    updatePatient(p.id, (x) => ({ prescriptions: [...x.prescriptions, { id: `rx-${Date.now()}`, cat, item, posologia: isMed ? (pos || `${every}/${every}h`) : pos || "—", ...(times ? { times, pharmacy: "Pendente" as const } : {}), ...(atb ? { atb } : {}) }] }));
+    if (atb) { setAtbF({ weight: "", vitals: "", dose: "", interval: "", focus: "", days: "", justification: "" }); if (atb.restricted) toast.warning("Antimicrobiano restrito: aguardando autorização da SCIRAS"); }
     setFree(""); setPos(""); toast.success("Item adicionado à prescrição");
   };
   return (
@@ -186,7 +200,7 @@ function Prescricao({ p }: { p: Patient }) {
           <div key={c} className="mb-3"><div className="mb-1 text-xs font-semibold uppercase text-primary">{c === "Hidratação" ? "Hidratação / Venóclise" : c === "Exames" ? "Solicitação de exames" : c === "Cuidados" ? "Cuidados de enfermagem" : c}</div>
             {it.length === 0 ? <div className="text-xs text-muted-foreground">—</div> : it.map((x) => (
               <div key={x.id} className="flex items-center justify-between gap-2 border-b py-1.5 text-sm"><div><span className="font-medium">{x.item}</span> <span className="text-muted-foreground">· {x.posologia}</span>{x.times && <span className="ml-1 font-mono text-[10px] text-muted-foreground">[{x.times.join(" ")}]</span>}</div>
-                <div className="flex items-center gap-2">{x.pharmacy && <span className={cn("rounded px-2 py-0.5 text-[10px] font-semibold", x.pharmacy === "Pendente" ? "bg-mt-yellow text-foreground" : "bg-clinical-soft text-clinical")}>{x.pharmacy}</span>}
+                <div className="flex items-center gap-2">{x.atb && x.atb.status !== "Livre" && <span className={cn("rounded px-2 py-0.5 text-[10px] font-semibold", x.atb.status === "Autorizado" ? "bg-clinical-soft text-clinical" : "bg-destructive text-destructive-foreground")}>SCIRAS: {x.atb.status}{x.atb.authorizedDays ? ` (${x.atb.authorizedDays}d)` : ""}</span>}{x.pharmacy && <span className={cn("rounded px-2 py-0.5 text-[10px] font-semibold", x.pharmacy === "Pendente" ? "bg-mt-yellow text-foreground" : "bg-clinical-soft text-clinical")}>{x.pharmacy}</span>}
                   {editable && <button onClick={() => updatePatient(p.id, (y) => ({ prescriptions: y.prescriptions.filter((r) => r.id !== x.id) }))} aria-label="Suspender" className="text-muted-foreground hover:text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>}</div></div>
             ))}</div>); })}
       </Card>
@@ -205,6 +219,13 @@ function Prescricao({ p }: { p: Patient }) {
             {allergy && <div className="pulse-alert flex items-start gap-2 rounded-md bg-maternal p-2 text-xs font-semibold text-primary-foreground"><AlertTriangle className="h-4 w-4 shrink-0" />Paciente alérgico(a) a {allergy}!</div>}
             {inter.map((m) => <div key={m} className="flex items-start gap-2 rounded-md bg-mt-orange p-2 text-xs font-medium text-primary-foreground"><AlertTriangle className="h-4 w-4 shrink-0" />Interação: {m}</div>)}
           </> : <input value={free} onChange={(e) => setFree(e.target.value)} placeholder="Descrição do item" className="h-8 w-full rounded-md border bg-background px-2 text-xs" />}
+          {isAtb && <div className="space-y-1.5 rounded-md border border-destructive/50 bg-destructive/5 p-2">
+            <div className="text-xs font-semibold text-destructive">Antimicrobiano{isRestricted(atbName) ? " RESTRITO – exige autorização da SCIRAS" : ""} · campos obrigatórios</div>
+            {([["weight", "Peso atualizado (kg)", String(p.weight || "")], ["vitals", "Sinais vitais", atbForm().vitals], ["dose", "Dose (ex.: 1 g)", ""], ["interval", "Intervalo (ex.: 8/8h)", ""], ["focus", "Foco infeccioso / germe", ""], ["days", "Tempo previsto (dias)", ""]] as const).map(([k, l, ph]) => (
+              <input key={k} aria-label={l} value={atbF[k]} onChange={(e) => setAtbF({ ...atbF, [k]: e.target.value })} placeholder={ph ? `${l}: ${ph}` : l} className={cn("h-8 w-full rounded-md border bg-background px-2 text-xs", !atbF[k] && !ph && "border-destructive")} />
+            ))}
+            <textarea aria-label="Justificativa da antibioticoterapia" value={atbF.justification} onChange={(e) => setAtbF({ ...atbF, justification: e.target.value })} placeholder="Justificativa da antibioticoterapia" className={cn("min-h-16 w-full rounded-md border bg-background p-2 text-xs", atbF.justification.trim().length < 10 && "border-destructive")} />
+          </div>}
           <input value={pos} onChange={(e) => setPos(e.target.value)} placeholder="Via / posologia (opcional)" className="h-8 w-full rounded-md border bg-background px-2 text-xs" />
           <button onClick={add} className="w-full rounded-md bg-clinical py-2 text-sm font-medium text-accent-foreground">Adicionar à prescrição</button>
         </div>}

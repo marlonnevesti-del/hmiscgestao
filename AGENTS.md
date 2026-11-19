@@ -51,3 +51,4 @@ use the editor.
 - Controlled-cabinet items come from src/lib/controlled-catalog.json merged into the pharmacy stock (location "Armário de Controlados"); expiry status, lot map and monthly consumption/purchase suggestion rules live in src/lib/controlled.ts; dispensations log 'consumo' and expiry write-offs log 'vencimento' movements so the report reads one history.
 
 - Warehouse request categories per user come from `allowedRequestCategories` in src/lib/warehouse-categories.ts: admin-granted "pedido:<categoria>" areas replace job-function defaults, so exceptions need no code changes.
+- SCIRAS/CCIH rules (antimicrobial lists, mandatory ATB fields, MDR readmission alert, bundles) live in src/lib/sciras.ts; ATB data rides on the prescription item and isolates/cases/bundles on patient.sciras, so pharmacy blocks restricted drugs via atbBlocksPharmacy without a separate queue.
