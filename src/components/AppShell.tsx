@@ -11,6 +11,9 @@ import { canAccessPage, canAccessUnitTab, can, PHARMACY_TABS, WAREHOUSE_TABS, UN
 import { professionalName, useStore } from "@/lib/hospital-store";
 import { cn } from "@/lib/utils";
 import { PharmacyCallAlert } from "./PharmacyCallAlert";
+import { pendingCounts } from "@/lib/dashboard";
+import { CommandPalette } from "./CommandPalette";
+import logo from "@/assets/logo-hmisc-santa-casa.png.asset.json";
 
 const GROUPS = [
   { label: "Assistência", items: [
@@ -44,6 +47,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   const accessAreas = useStore((s) => s.accessAreas);
   const { data: access } = useQuery({ queryKey: ["employee-access"], queryFn: loadEmployeeAccess });
   const queue = useStore((s) => s.queue);
+  const encounters = useStore((s) => s.encounters);
+  const counts = useMemo(() => pendingCounts(encounters, patients), [encounters, patients]);
   const path = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
   const aba = useRouterState({ select: (s) => (s.location.search as { aba?: string }).aba });
@@ -64,10 +69,9 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="flex min-h-screen w-full bg-background">
       {can(profile, "farmacia") && <PharmacyCallAlert />}
       <aside className={cn("sticky top-0 flex h-screen flex-col bg-sidebar text-sidebar-foreground transition-all print:hidden", collapsed ? "w-16" : "w-60")}>
-        <div className="flex h-14 items-center gap-2 border-b border-sidebar-border px-4">
-          <HeartPulse className="h-6 w-6 shrink-0 text-sidebar-primary" />
-          {!collapsed && <div className="leading-tight"><div className="text-sm font-semibold text-sidebar-accent-foreground">HMI Gestão</div><div className="text-[10px] uppercase tracking-wider opacity-70">Materno-Infantil</div></div>}
-        </div>
+        <Link to="/" className={cn("flex items-center border-b border-sidebar-border", collapsed ? "h-14 justify-center" : "p-3")} title="Hospital Materno Infantil Santa Catarina">
+          {collapsed ? <HeartPulse className="h-6 w-6 text-sidebar-primary" /> : <div className="w-full rounded-lg bg-card p-2 shadow-sm"><img src={logo.url} alt="Hospital Materno Infantil Santa Catarina – Santa Casa" className="mx-auto h-16 w-auto object-contain" /></div>}
+        </Link>
         <nav className="flex-1 space-y-3 overflow-y-auto p-2">
           {GROUPS.map((g) => (
             <div key={g.label} className="space-y-1">
@@ -76,7 +80,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 const active = path.startsWith(n.to);
                 return (
                   <div key={n.to}><Link to={n.to} title={n.label} className={cn("flex items-center gap-3 rounded-md px-3 py-2 text-sm", active ? "bg-sidebar-primary text-sidebar-primary-foreground" : "hover:bg-sidebar-accent")}>
-                    <n.icon className="h-4 w-4 shrink-0" />{!collapsed && n.label}
+                    <n.icon className="h-4 w-4 shrink-0" />{!collapsed && <span className="flex-1 truncate">{n.label}</span>}{!collapsed && (counts[n.to] ?? 0) > 0 && <span className={cn("rounded-full px-1.5 text-[10px] font-semibold tabular-nums", active ? "bg-sidebar-primary-foreground text-sidebar-primary" : "bg-sidebar-primary text-sidebar-primary-foreground")}>{counts[n.to]}</span>}
                   </Link>
                   {active && !collapsed && (() => { if (n.to === "/farmacia") { const cur = PHARMACY_TABS.find((t) => t.id === aba)?.id ?? "fila"; return <div className="ml-5 mt-1 space-y-0.5 border-l border-sidebar-border pl-2">{PHARMACY_TABS.map((t, i) => <Link key={t.id} to="/farmacia" search={{ aba: t.id }} className={cn("block rounded px-2 py-1 text-xs", cur === t.id ? "bg-sidebar-accent font-semibold" : "opacity-80 hover:bg-sidebar-accent")}>{i + 1}. {t.label}</Link>)}</div>; } if (n.to === "/almoxarifado") { const cur = WAREHOUSE_TABS.find((t) => t.id === aba)?.id ?? "pedidos"; return <div className="ml-5 mt-1 space-y-0.5 border-l border-sidebar-border pl-2">{WAREHOUSE_TABS.map((t, i) => <Link key={t.id} to="/almoxarifado" search={{ aba: t.id }} className={cn("block rounded px-2 py-1 text-xs", cur === t.id ? "bg-sidebar-accent font-semibold" : "opacity-80 hover:bg-sidebar-accent")}>{i + 1}. {t.label}</Link>)}</div>; } const u = UNIT_AREAS.find((x) => `/${x.id}` === n.to); if (!u) return null; const tabs = u.tabs.filter((t) => canAccessUnitTab(profile, u.id, t.id, accessAreas)); const cur = tabs.find((t) => t.id === aba)?.id ?? tabs[0]?.id; return <div className="ml-5 mt-1 space-y-0.5 border-l border-sidebar-border pl-2">{tabs.map((t, i) => <Link key={t.id} to={n.to} search={{ aba: t.id }} className={cn("block rounded px-2 py-1 text-xs", cur === t.id ? "bg-sidebar-accent font-semibold" : "opacity-80 hover:bg-sidebar-accent")}>{i + 1}. {t.label}</Link>)}</div>; })()}</div>
                 );
@@ -112,6 +116,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               </div>
             )}
           </div>
+          <CommandPalette />
           <div className="ml-auto flex items-center gap-3">
             <Popover>
               <PopoverTrigger className="relative flex items-center gap-1.5 rounded-full bg-maternal-soft px-3 py-1.5 text-xs font-medium text-maternal" aria-label="Alertas críticos">

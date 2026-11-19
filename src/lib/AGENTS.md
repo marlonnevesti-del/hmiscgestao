@@ -3,3 +3,4 @@
 - UTI Neonatal records are NEO_FORMS entries on patient.intensive.neo; neoReport builds its monthly indicators.
 - Ambulatory nursing pre-consult eligibility is needsNursingPreConsult in ambulatorio.ts (obstetric specialty or encounter/appointment nursingPreConsult flag).
 - Admin open BAA/FIA management is /gestao-atendimentos (admin-only via canAccessPage); edits go through correctEncounter in hospital-store with mandatory justification logged in history.
+- Sidebar badges and home cockpit counts come from pendingCounts in dashboard.ts so menu and painel never disagree.
