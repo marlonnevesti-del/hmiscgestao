@@ -58,4 +58,3 @@ use the editor.
 - Inpatient clinical documents (UTI bed request, surgical description, SOAP evolution, social work, referral) are field configs in src/lib/inpatient-docs.ts stored on encounter.clinicalDocs via saveClinicalDoc; /internacoes (census + readmissions) shares the nir access area, so new documents need no new snapshot keys.
 - UTI Pediátrica and UCI are separate configs in src/lib/uti-uci.ts (scales, bundles, balance, evolution templates); their records ride on patient.intensive via addIntensive so no new snapshot keys are needed; /uti-uci shares the enfermagem access area.
 
-- Official surgical kits (code, name, items) live in src/lib/surgical-kits.json + surgical-kits.ts; the Farmácia "kits" tab is read-only catalog, separate from dispensed prescriptions.

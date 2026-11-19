@@ -1,0 +1,1 @@
+- Surgical kit catalog (code, name, items) lives in surgical-kits.json/.ts; read-only, separate from dispensed prescriptions.
