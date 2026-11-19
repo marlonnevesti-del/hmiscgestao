@@ -1,7 +1,7 @@
 import type { Presentation, Regimen } from "./dose-calc";
 import type { PatientRegistration } from "./patient-registration";
 import type { AtbInfo, ScirasRecord } from "./sciras";
-export type Ward = "PSO" | "PSP" | "CO" | "AC" | "UTIN" | "ENFP";
+export type Ward = "PSO" | "PSP" | "CO" | "AC" | "UTIN" | "ENFP" | "UTIP" | "UCI";
 export const WARDS: { id: Ward; name: string }[] = [
   { id: "PSO", name: "PS Obstétrico" },
   { id: "PSP", name: "PS Pediátrico" },
@@ -9,6 +9,8 @@ export const WARDS: { id: Ward; name: string }[] = [
   { id: "AC", name: "Alojamento Conjunto" },
   { id: "UTIN", name: "UTI Neonatal" },
   { id: "ENFP", name: "Enfermaria Pediátrica" },
+  { id: "UTIP", name: "UTI Pediátrica" },
+  { id: "UCI", name: "UCI – Cuidados Intermediários" },
 ];
 
 export type Profile = "Médico" | "Enfermeiro" | "Técnico de enfermagem" | "Fisioterapeuta" | "Administrativo" | "Farmacêutico" | "Recepção" | "Administrador" | "Outro";
@@ -93,7 +95,7 @@ export function canAccessPage(profile: Profile, path: string, areas?: readonly s
   if (path === "/" || path === "/painel-tv" || path === "/solicitacao-almoxarifado") return true;
   const seg = path.split("/")[1] ?? "";
   if (UNIT_IDS.includes(seg)) { const u = UNIT_AREAS.find((x) => x.id === seg)!; return u.tabs.some((t) => canAccessUnitTab(profile, u.id, t.id, areas)); }
-  if (areas) return areas.includes(seg === "faturamento-sus" ? "faturamento" : seg === "internacoes" ? "nir" : seg);
+  if (areas) return areas.includes(seg === "faturamento-sus" ? "faturamento" : seg === "internacoes" ? "nir" : seg === "uti-uci" ? "enfermagem" : seg);
   if (path === "/recepcao") return can(profile, "recepcao");
   if (path === "/acolhimento") return can(profile, "triagem");
   if (path === "/atendimento") return can(profile, "prescrever");
@@ -103,6 +105,7 @@ export function canAccessPage(profile: Profile, path: string, areas?: readonly s
   if (path === "/almoxarifado") return can(profile, "almoxarifado");
   if (path === "/nir" || path === "/internacoes") return can(profile, "nir");
   if (path === "/sciras") return can(profile, "sciras");
+  if (path === "/uti-uci") return can(profile, "evoluir") || can(profile, "checar");
   if (path === "/enfermagem") return can(profile, "checar");
   if (path === "/faturamento" || path === "/faturamento-sus") return can(profile, "faturar");
   return false;
@@ -128,6 +131,7 @@ export interface Patient {
   diagnosis: string; admission: string; days: number; dischargeForecast?: string;
   evolutions: Evolution[]; vitals: Vital[]; prescriptions: Prescription[]; previousPrescriptions?: Prescription[];
   sciras?: ScirasRecord; partograma?: PartoPoint[]; newborn?: Newborn; babyIds?: string[];
+  intensive?: import("./uti-uci").IntensiveRecord;
 }
 
 export const PATIENTS: Patient[] = [];
@@ -136,7 +140,7 @@ export type BedStatus = "livre" | "ocupado" | "higienizacao" | "isolamento" | "a
 export interface BaseBed { id: string; ward: Ward; status: BedStatus }
 const mk = (ward: Ward, n: number, special: Record<number, BedStatus> = {}): BaseBed[] =>
   Array.from({ length: n }, (_, i) => ({ id: `${ward}-${String(i + 1).padStart(2, "0")}`, ward, status: special[i + 1] ?? "livre" }));
-export const BASE_BEDS: BaseBed[] = WARDS.flatMap((w) => mk(w.id, w.id === "AC" || w.id === "UTIN" ? 8 : 6));
+export const BASE_BEDS: BaseBed[] = WARDS.flatMap((w) => mk(w.id, w.id === "AC" || w.id === "UTIN" || w.id === "UCI" ? 8 : 6));
 export function bedStatusFor(p: Patient): BedStatus {
   if (p.dischargeForecast === "14/11") return "alta";
   if (p.diagnosis.includes("VSR")) return "isolamento";
@@ -228,7 +232,7 @@ export function interactionsWith(drug: Drug, current: Prescription[]) {
 }
 
 // ---------- Faturamento ----------
-export const DAILY_RATE: Record<Ward, number> = { PSO: 380, PSP: 350, CO: 690, AC: 420, UTIN: 2100, ENFP: 460 };
+export const DAILY_RATE: Record<Ward, number> = { PSO: 380, PSP: 350, CO: 690, AC: 420, UTIN: 2100, ENFP: 460, UTIP: 2100, UCI: 1200 };
 export const MED_PRICE = 18.5;
 export interface Admin { status: "checado" | "nao" | "adiado" | "cancelado"; by: string; at: string; reason?: string | undefined }
 export function buildBill(p: Patient, surgeries: Surgery[], admins: Record<string, Admin>) {

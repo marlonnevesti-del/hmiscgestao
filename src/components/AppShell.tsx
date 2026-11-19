@@ -17,6 +17,7 @@ const GROUPS = [
     { to: "/ambulatorio", label: "Ambulatório", icon: Stethoscope },
     { to: "/pronto-socorro", label: "Pronto Socorro", icon: Ambulance },
     { to: "/maternidade", label: "Maternidade", icon: Baby },
+    { to: "/uti-uci", label: "UTI Pediátrica · UCI", icon: HeartPulse },
     { to: "/pacientes", label: "Pacientes / PEP", icon: Users },
     { to: "/painel-tv", label: "Painel de Chamadas (TV)", icon: Tv },
   ] },

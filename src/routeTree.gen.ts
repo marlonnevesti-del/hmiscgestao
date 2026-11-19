@@ -35,6 +35,7 @@ import { Route as AuthenticatedProntoSocorroRouteImport } from './routes/_authen
 import { Route as AuthenticatedRecepcaoRouteImport } from './routes/_authenticated.recepcao'
 import { Route as AuthenticatedScirasRouteImport } from './routes/_authenticated.sciras'
 import { Route as AuthenticatedSolicitacaoAlmoxarifadoRouteImport } from './routes/_authenticated.solicitacao-almoxarifado'
+import { Route as AuthenticatedUtiUciRouteImport } from './routes/_authenticated.uti-uci'
 import { Route as AuthenticatedPacientesIndexRouteImport } from './routes/_authenticated.pacientes.index'
 import { Route as AuthenticatedPacientesIdRouteImport } from './routes/_authenticated.pacientes.$id'
 
@@ -180,6 +181,11 @@ const AuthenticatedSolicitacaoAlmoxarifadoRoute =
     path: '/solicitacao-almoxarifado',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedUtiUciRoute = AuthenticatedUtiUciRouteImport.update({
+  id: '/uti-uci',
+  path: '/uti-uci',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedPacientesIndexRoute =
   AuthenticatedPacientesIndexRouteImport.update({
     id: '/pacientes/',
@@ -219,6 +225,7 @@ export interface FileRoutesByFullPath {
   '/recepcao': typeof AuthenticatedRecepcaoRoute
   '/sciras': typeof AuthenticatedScirasRoute
   '/solicitacao-almoxarifado': typeof AuthenticatedSolicitacaoAlmoxarifadoRoute
+  '/uti-uci': typeof AuthenticatedUtiUciRoute
   '/pacientes/$id': typeof AuthenticatedPacientesIdRoute
   '/pacientes/': typeof AuthenticatedPacientesIndexRoute
 }
@@ -247,6 +254,7 @@ export interface FileRoutesByTo {
   '/recepcao': typeof AuthenticatedRecepcaoRoute
   '/sciras': typeof AuthenticatedScirasRoute
   '/solicitacao-almoxarifado': typeof AuthenticatedSolicitacaoAlmoxarifadoRoute
+  '/uti-uci': typeof AuthenticatedUtiUciRoute
   '/': typeof AuthenticatedIndexRoute
   '/pacientes/$id': typeof AuthenticatedPacientesIdRoute
   '/pacientes': typeof AuthenticatedPacientesIndexRoute
@@ -278,6 +286,7 @@ export interface FileRoutesById {
   '/_authenticated/recepcao': typeof AuthenticatedRecepcaoRoute
   '/_authenticated/sciras': typeof AuthenticatedScirasRoute
   '/_authenticated/solicitacao-almoxarifado': typeof AuthenticatedSolicitacaoAlmoxarifadoRoute
+  '/_authenticated/uti-uci': typeof AuthenticatedUtiUciRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/pacientes/$id': typeof AuthenticatedPacientesIdRoute
   '/_authenticated/pacientes/': typeof AuthenticatedPacientesIndexRoute
@@ -310,6 +319,7 @@ export interface FileRouteTypes {
     | '/recepcao'
     | '/sciras'
     | '/solicitacao-almoxarifado'
+    | '/uti-uci'
     | '/pacientes/$id'
     | '/pacientes/'
   fileRoutesByTo: FileRoutesByTo
@@ -338,6 +348,7 @@ export interface FileRouteTypes {
     | '/recepcao'
     | '/sciras'
     | '/solicitacao-almoxarifado'
+    | '/uti-uci'
     | '/'
     | '/pacientes/$id'
     | '/pacientes'
@@ -368,6 +379,7 @@ export interface FileRouteTypes {
     | '/_authenticated/recepcao'
     | '/_authenticated/sciras'
     | '/_authenticated/solicitacao-almoxarifado'
+    | '/_authenticated/uti-uci'
     | '/_authenticated/'
     | '/_authenticated/pacientes/$id'
     | '/_authenticated/pacientes/'
@@ -565,6 +577,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSolicitacaoAlmoxarifadoRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/uti-uci': {
+      id: '/_authenticated/uti-uci'
+      path: '/uti-uci'
+      fullPath: '/uti-uci'
+      preLoaderRoute: typeof AuthenticatedUtiUciRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/pacientes/': {
       id: '/_authenticated/pacientes/'
       path: '/pacientes'
@@ -603,6 +622,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedRecepcaoRoute: typeof AuthenticatedRecepcaoRoute
   AuthenticatedScirasRoute: typeof AuthenticatedScirasRoute
   AuthenticatedSolicitacaoAlmoxarifadoRoute: typeof AuthenticatedSolicitacaoAlmoxarifadoRoute
+  AuthenticatedUtiUciRoute: typeof AuthenticatedUtiUciRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedPacientesIdRoute: typeof AuthenticatedPacientesIdRoute
   AuthenticatedPacientesIndexRoute: typeof AuthenticatedPacientesIndexRoute
@@ -630,6 +650,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedScirasRoute: AuthenticatedScirasRoute,
   AuthenticatedSolicitacaoAlmoxarifadoRoute:
     AuthenticatedSolicitacaoAlmoxarifadoRoute,
+  AuthenticatedUtiUciRoute: AuthenticatedUtiUciRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedPacientesIdRoute: AuthenticatedPacientesIdRoute,
   AuthenticatedPacientesIndexRoute: AuthenticatedPacientesIndexRoute,

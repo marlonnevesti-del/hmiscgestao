@@ -330,7 +330,7 @@ function openFia(e: Encounter, ward: string, bed: string, at: string, by: string
 export function authorizeAdmission(id: string, bedId: string) {
   requireAction('nir'); const { e, p } = getEncounter(id);
   if (e.admission?.status !== 'pendente') throw new Error('Solicitação não está pendente.');
-  const bed = BASE_BEDS.find((b) => b.id === bedId && ['AC', 'UTIN', 'ENFP'].includes(b.ward));
+  const bed = BASE_BEDS.find((b) => b.id === bedId && ['AC', 'UTIN', 'ENFP', 'UTIP', 'UCI'].includes(b.ward));
   if (!bed || bed.status !== 'livre' || state.patients.some((x) => x.bed === bed.id)) throw new Error('Selecione um leito livre.');
   const at = new Date().toISOString(); const by = professionalName(state.profile);
   const moved = transition(e, 'ENCAMINHADO_INTERNACAO', by, `NIR: leito ${bed.id}`, at);
@@ -364,7 +364,7 @@ export function finishEncounter(id: string, outcome: 'internacao' | 'co' | 'exam
     commitEncounter(transition(e, 'ENCAMINHADO_CO', by, 'Urgência Obstétrica', at), { patients: state.patients.map((x) => x.id === p.id ? { ...x, ward: 'CO', bed: '' } : x), surgeries: [...state.surgeries, { id: crypto.randomUUID(), patientId: p.id, patient: p.name, room: 'Sala de Parto 1', start: new Date().getHours() + new Date().getMinutes() / 60, duration: 1, type: 'Parto Normal', tuss: '', surgeon: by, status: 'Em Preparo', checks: {}, gastos: [] }] }); return;
   }
   if (outcome === 'internacao') {
-    const bed = BASE_BEDS.find((b) => b.id === details.bed && ['AC', 'UTIN', 'ENFP'].includes(b.ward));
+    const bed = BASE_BEDS.find((b) => b.id === details.bed && ['AC', 'UTIN', 'ENFP', 'UTIP', 'UCI'].includes(b.ward));
     if (!bed || bed.status !== 'livre' || state.patients.some((x) => x.bed === bed.id)) throw new Error('Selecione um leito livre.');
     const f = openFia(transition(e, 'ENCAMINHADO_INTERNACAO', by, `Leito ${bed.id}`, at), bed.ward, bed.id, at, by);
     commitEncounter(f.e, { fiaSequence: f.seq, patients: state.patients.map((x) => x.id === p.id ? { ...x, ward: bed.ward, bed: bed.id } : x) }); return;
@@ -663,4 +663,17 @@ export function saveClinicalDoc(encounterId: string, kind: import('./inpatient-d
   const docs = { ...(e.clinicalDocs ?? {}), [kind]: [...(e.clinicalDocs?.[kind] ?? []), doc] };
   commitEncounter({ ...e, clinicalDocs: docs });
   return doc;
+}
+
+/** Registro intensivo (UTI Pediátrica / UCI): escalas, balanço hídrico, bundles, SBAR, SAE e evoluções padronizadas no paciente. */
+type IcuItem<K extends 'scales' | 'balances' | 'bundles' | 'notes'> = NonNullable<import('./uti-uci').IntensiveRecord[K]> extends (infer T)[] ? T : never;
+export function addIntensive<K extends 'scales' | 'balances' | 'bundles' | 'notes'>(patientId: string, kind: K, entry: Omit<IcuItem<K>, 'id' | 'at' | 'by'>) {
+  if (!canAct(state.profile, 'evoluir', state.accessAreas) && !canAct(state.profile, 'checar', state.accessAreas)) throw new Error('Seu perfil não permite esta ação.');
+  const rec = { ...entry, id: crypto.randomUUID(), at: new Date().toISOString(), by: professionalName(state.profile) };
+  updatePatient(patientId, (p) => ({ intensive: { ...(p.intensive ?? {}), [kind]: [...((p.intensive?.[kind] as unknown[]) ?? []), rec] } }));
+  return rec;
+}
+export function setIntensiveSafety(patientId: string, safety: import('./uti-uci').SafetyInfo) {
+  if (!canAct(state.profile, 'evoluir', state.accessAreas) && !canAct(state.profile, 'checar', state.accessAreas)) throw new Error('Seu perfil não permite esta ação.');
+  updatePatient(patientId, (p) => ({ intensive: { ...(p.intensive ?? {}), safety } }));
 }
