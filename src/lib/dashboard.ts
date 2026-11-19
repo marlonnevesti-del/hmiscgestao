@@ -17,6 +17,7 @@ export function pendingCounts(encounters: Encounter[], patients: Patient[]): Rec
     if (e.status_fluxo === "AGUARDANDO_MEDICACAO") add("/enfermagem");
   }
   for (const p of patients) if (p.prescriptions.some((r) => r.atb?.status === "Aguardando SCIRAS")) add("/sciras");
+  for (const p of patients) add("/fisioterapia", (p.physio ?? []).filter((r) => r.status === "Aguardando").length);
   add("internados", encounters.filter((e) => e.status_fluxo === "ENCAMINHADO_INTERNACAO").length);
   return c;
 }

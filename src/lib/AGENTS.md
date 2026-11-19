@@ -8,3 +8,5 @@
 - SUS billing (BPA/AIH) rows, DATASUS pending-issue rules and positional export files live in src/lib/sus-billing.ts; /faturamento-sus shares the faturamento access area so admin area grants stay consistent.
 - CME rules (kit status, autoclave cycles, validity, biological block, barcode) live in src/lib/cme.ts; kit use is registered on the surgery via registerCmeKitUse in hospital-store so traceability stays centralized.
 - Controlled-cabinet items come from src/lib/controlled-catalog.json merged into the pharmacy stock (location "Armário de Controlados"); expiry status, lot map and monthly consumption/purchase suggestion rules live in src/lib/controlled.ts; dispensations log 'consumo' and expiry write-offs log 'vencimento' movements so the report reads one history.
+
+- Physiotherapy requests ride on patient.physio (src/lib/physio.ts); doctors request from the medical assessment and /fisioterapia (shares the pacientes access area) records sessions that also append a Fisioterapia evolution, so no new snapshot keys are needed.

@@ -1,3 +1,4 @@
+import { physioRequestIssues } from './physio';
 import { AMEND_FIELDS, amendIssue, readField, type AmendField } from './document-amend';
 import { DEFAULT_KITS, checkKitUse, findKit, setBio, startCycle, type BioResult, type CmeCycle, type CmeKit, type KitStatus } from './cme';
 import { useSyncExternalStore } from "react";
@@ -689,4 +690,28 @@ export function addIntensive<K extends 'scales' | 'balances' | 'bundles' | 'note
 export function setIntensiveSafety(patientId: string, safety: import('./uti-uci').SafetyInfo) {
   if (!canAct(state.profile, 'evoluir', state.accessAreas) && !canAct(state.profile, 'checar', state.accessAreas)) throw new Error('Seu perfil não permite esta ação.');
   updatePatient(patientId, (p) => ({ intensive: { ...(p.intensive ?? {}), safety } }));
+}
+
+/** Médico solicita atendimento fisioterápico; aparece na área Fisioterapia. */
+export function requestPhysio(patientId: string, data: Pick<import('./physio').PhysioRequest, 'modality' | 'priority' | 'support' | 'justification'>) {
+  requireAction('prescrever');
+    const issues = physioRequestIssues(data); if (issues.length) throw new Error(issues.join(' '));
+  const req: import('./physio').PhysioRequest = { ...data, justification: data.justification.trim(), id: crypto.randomUUID(), requestedAt: new Date().toISOString(), requestedBy: professionalName(state.profile), status: 'Aguardando', sessions: [] };
+  updatePatient(patientId, (p) => ({ physio: [...(p.physio ?? []), req] }));
+  return req;
+}
+/** Fisioterapia registra a sessão; também entra na evolução do PEP. */
+export function recordPhysioSession(patientId: string, reqId: string, s: { conduct: string; pre: string; post: string }, finish = false) {
+  requireAction('evoluir');
+  if (!s.conduct.trim()) throw new Error('Descreva a conduta realizada.');
+  const by = professionalName(state.profile); const at = new Date().toISOString();
+  updatePatient(patientId, (p) => ({
+    physio: (p.physio ?? []).map((r) => r.id === reqId ? { ...r, status: finish ? 'Concluída' : 'Em acompanhamento', sessions: [...r.sessions, { id: crypto.randomUUID(), at, by, ...s }] } : r),
+    evolutions: [...p.evolutions, { time: new Date(at).toLocaleString('pt-BR'), cat: 'Fisioterapia', author: by, text: `${s.conduct.trim()}${s.pre ? ` | Pré: ${s.pre}` : ''}${s.post ? ` | Pós: ${s.post}` : ''}${finish ? ' | Alta da fisioterapia' : ''}` }],
+  }));
+}
+export function cancelPhysio(patientId: string, reqId: string, note: string) {
+  requireAction('prescrever');
+  if (!note.trim()) throw new Error('Informe o motivo do cancelamento.');
+  updatePatient(patientId, (p) => ({ physio: (p.physio ?? []).map((r) => r.id === reqId ? { ...r, status: 'Cancelada', closedNote: note.trim() } : r) }));
 }

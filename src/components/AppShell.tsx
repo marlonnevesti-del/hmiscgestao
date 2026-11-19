@@ -1,6 +1,6 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useMemo, useState, type ReactNode } from "react";
-import { Activity, Ambulance, Baby, Stethoscope, Package, BedDouble, Bell, ChevronLeft, ClipboardList, HeartPulse, Pill, Receipt, Scissors, Search, ShieldCheck, ShieldAlert, Tv, UserCog, UserPlus, Users, LogOut } from "lucide-react";
+import { Activity, Ambulance, Baby, Stethoscope, Package, BedDouble, Bell, ChevronLeft, ClipboardList, HeartPulse, Pill, Receipt, Scissors, Search, ShieldCheck, ShieldAlert, Tv, Dumbbell, UserCog, UserPlus, Users, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
@@ -30,6 +30,7 @@ const GROUPS = [
     { to: "/centro-cirurgico", label: "Centro Cirúrgico", icon: Scissors },
     { to: "/gestao-cirurgica", label: "SRPA · CO · Indicadores", icon: Activity },
     { to: "/cme", label: "CME – Esterilização", icon: ShieldCheck },
+    { to: "/fisioterapia", label: "Fisioterapia", icon: Dumbbell },
     { to: "/sciras", label: "SCIRAS / CCIH", icon: ShieldAlert },
     { to: "/farmacia", label: "Farmácia", icon: Pill },
     { to: "/enfermagem", label: "Posto de Enfermagem", icon: HeartPulse },
