@@ -97,7 +97,7 @@ export function canAccessPage(profile: Profile, path: string, areas?: readonly s
   if (path === "/acolhimento") return can(profile, "triagem");
   if (path === "/atendimento") return can(profile, "prescrever");
   if (path.startsWith("/pacientes")) return can(profile, "evoluir") || can(profile, "prescrever") || can(profile, "checar");
-  if (path === "/centro-cirurgico" || path === "/cme") return can(profile, "cirurgia");
+  if (path === "/centro-cirurgico" || path === "/cme" || path === "/gestao-cirurgica") return can(profile, "cirurgia");
   if (path === "/farmacia") return can(profile, "farmacia");
   if (path === "/almoxarifado") return can(profile, "almoxarifado");
   if (path === "/nir") return can(profile, "nir");
@@ -156,7 +156,7 @@ export const QUEUE: QueueItem[] = [];
 // ---------- Centro cirúrgico / obstétrico ----------
 export type SurgStatus = "Agendado" | "Em Preparo" | "Em Sala" | "RPA" | "Finalizado";
 export const SURG_STATUS: SurgStatus[] = ["Agendado", "Em Preparo", "Em Sala", "RPA", "Finalizado"];
-export const ROOMS = ["Sala de Parto 1", "Sala de Parto 2", "Sala Cirúrgica 1", "Sala Cirúrgica 2"];
+export const ROOMS = ["Sala Cirúrgica 1", "Sala Cirúrgica 2", "Sala Cirúrgica 3", "Sala Cirúrgica 4", "Sala de Parto 1", "Sala de Parto 2"];
 export const CHECKLIST = {
   signIn: ["Identidade e sítio confirmados", "Consentimento assinado", "Oxímetro funcionando", "Alergias verificadas", "Risco de sangramento avaliado"],
   timeOut: ["Equipe apresentada", "Procedimento confirmado", "Antibiótico profilático em 60 min", "Imagens disponíveis"],
@@ -168,6 +168,7 @@ export interface Surgery {
   checks: Record<string, boolean>; gastos: { item: string; qty: number; price: number }[];
   kits?: { kitId: string; name: string; cycle: string; autoclave: string; at: string; by: string }[];
   date?: string; urgency?: "Eletiva" | "Urgência"; team?: SurgTeam; report?: SurgReport;
+  procedures?: string[]; suspension?: import("./surgical-center").Suspension; saep?: import("./surgical-center").Saep; srpa?: import("./surgical-center").SrpaStay; obstetric?: import("./surgical-center").Obstetric; coBed?: string;
 }
 export const PROCEDURES = ["Cesárea", "Parto Normal", "Parto Instrumentado", "Curetagem", "Laqueadura", "Cirurgia Pediátrica", "Apendicectomia", "Herniorrafia", "Postectomia", "Orquidopexia", "Outro"];
 export const ANESTHESIA = ["Geral", "Raquianestesia", "Peridural", "Combinada", "Sedação", "Local", "Bloqueio"];

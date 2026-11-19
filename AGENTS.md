@@ -52,3 +52,4 @@ use the editor.
 
 - Warehouse request categories per user come from `allowedRequestCategories` in src/lib/warehouse-categories.ts: admin-granted "pedido:<categoria>" areas replace job-function defaults, so exceptions need no code changes.
 - SCIRAS/CCIH rules (antimicrobial lists, mandatory ATB fields, MDR readmission alert, bundles) live in src/lib/sciras.ts; ATB data rides on the prescription item and isolates/cases/bundles on patient.sciras, so pharmacy blocks restricted drugs via atbBlocksPharmacy without a separate queue.
+- Surgical center rules (suspension, SAEP counts, SRPA Aldrete-Kroulik, CO beds, Robson, CC/CO reports) live in src/lib/surgical-center.ts; SAEP/SRPA/obstetric data ride on the Surgery record (CO bed = surgery.coBed) so no new snapshot keys are needed.
