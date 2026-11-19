@@ -37,6 +37,8 @@ export const professionalName = (_p: Profile) => state.employeeName || "Colabora
 export const nowHM = () => new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
 
 import { examRequestIssues as examRequestIssuesFn, moveExam as moveExamFn } from './exam-requests';
+import type { PsDestination, PsEncounter, PsInfo, ScaleRecord, SepsisKind } from './ps-infantil';
+import { PS_BEDS } from './ps-infantil';
 function requireAction(action: Parameters<typeof can>[1]) {
   if (!canAct(state.profile, action, state.accessAreas)) throw new Error('Seu perfil não permite esta ação.');
 }
@@ -611,4 +613,44 @@ export function updateExamStatus(encounterId: string, reqId: string, to: import(
   const list = e.examRequests ?? []; const r = list.find((x) => x.id === reqId); if (!r) throw new Error('Pedido não encontrado.');
   const next = moveExamFn(r, to, professionalName(state.profile), new Date().toISOString(), extra);
   commitEncounter({ ...e, examRequests: list.map((x) => (x.id === reqId ? next : x)) });
+}
+
+// ---- Pronto-Socorro Infantil ----
+function psCommit(id: string, patch: (ps: PsInfo, e: PsEncounter) => PsInfo, note: string, status?: Encounter['status_fluxo']) {
+  const { e } = getEncounter(id); const cur = e as PsEncounter; const at = new Date().toISOString();
+  const st = status ?? e.status_fluxo;
+  commitEncounter({ ...cur, ps: patch(cur.ps ?? {}, cur), status_fluxo: st, history: [...e.history, { status: st, at, by: professionalName(state.profile), note }] } as Encounter);
+}
+export function psSetDestination(id: string, destination: PsDestination) { psCommit(id, (ps) => ({ ...ps, destination }), `Encaminhado para ${destination}`); }
+export function psSetBed(id: string, bed: string) {
+  if (!PS_BEDS.includes(bed)) throw new Error('Leito inválido.');
+  if (state.encounters.some((x) => x.id !== id && x.status_fluxo !== 'ALTA_HOSPITALAR' && (x as PsEncounter).ps?.bed === bed)) throw new Error('Leito ocupado.');
+  psCommit(id, (ps) => ({ ...ps, bed, obsAt: ps.obsAt ?? new Date().toISOString() }), `Observação · leito ${bed}`);
+}
+export function psReleaseBed(id: string) { psCommit(id, (ps) => { const { bed: _b, ...rest } = ps; return rest; }, 'Leito de observação liberado'); }
+/** Enfermagem encaminha para retorno/reavaliação médica. */
+export function psRequestReturn(id: string, note = 'Retorno médico solicitado pela enfermagem') {
+  const { e } = getEncounter(id);
+  const status = e.status_fluxo === 'AGUARDANDO_MEDICACAO' ? 'EM_OBSERVACAO_REAVALIACAO' : undefined;
+  psCommit(id, (ps) => ({ ...ps, returnRequestedAt: new Date().toISOString() }), note, status);
+}
+export function psAwaitDischarge(id: string) { psCommit(id, (ps) => ({ ...ps, awaitingDischargeAt: new Date().toISOString() }), 'Alta assistencial · aguardando alta médica'); }
+/** Alta por evasão: somente médico, encerra o atendimento e libera o leito. */
+export function psEvasion(id: string, note: string) {
+  requireAction('prescrever');
+  if (note.trim().length < 5) throw new Error('Descreva a evasão.');
+  const { e } = getEncounter(id); if (e.status_fluxo === 'ALTA_HOSPITALAR') throw new Error('Atendimento já encerrado.');
+  const at = new Date().toISOString(); const by = professionalName(state.profile);
+  psCommit(id, (ps) => { const { bed: _b, ...rest } = ps; return { ...rest, evasion: { at, by, note: note.trim() } }; }, `Alta por evasão: ${note.trim()}`, 'ALTA_HOSPITALAR');
+}
+export function psAddScale(id: string, rec: Omit<ScaleRecord, 'id' | 'at' | 'by'>) {
+  const r: ScaleRecord = { ...rec, id: crypto.randomUUID(), at: new Date().toISOString(), by: professionalName(state.profile) };
+  psCommit(id, (ps) => ({ ...ps, scales: [...(ps.scales ?? []), r] }), `Escala ${rec.scale.toUpperCase()}: ${rec.result}`);
+}
+export function psOpenSepsis(id: string, kind: SepsisKind) {
+  const s = { id: crypto.randomUUID(), kind, openedAt: new Date().toISOString(), openedBy: professionalName(state.profile), checks: {} };
+  psCommit(id, (ps) => ({ ...ps, sepsis: [...(ps.sepsis ?? []), s] }), `Protocolo de sepse ${kind} aberto`);
+}
+export function psUpdateSepsis(id: string, sepsisId: string, checks: Record<string, string>, outcome?: string) {
+  psCommit(id, (ps) => ({ ...ps, sepsis: (ps.sepsis ?? []).map((s) => s.id === sepsisId ? { ...s, checks, ...(outcome ? { outcome, closedAt: new Date().toISOString() } : {}) } : s) }), outcome ? `Protocolo de sepse encerrado: ${outcome}` : 'Protocolo de sepse atualizado');
 }

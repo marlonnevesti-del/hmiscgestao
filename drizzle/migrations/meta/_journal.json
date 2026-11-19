@@ -71,6 +71,13 @@
       "when": 1795088751392,
       "tag": "0009_amb_reports_access_area",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1795095234826,
+      "tag": "0010_ps_infantil_access_areas",
+      "breakpoints": true
     }
   ]
 }
