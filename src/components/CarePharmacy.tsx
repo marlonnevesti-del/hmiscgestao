@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { ProcedurePrintButton } from "./ProcedurePrint";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,7 +12,7 @@ import { findByBarcode } from "@/lib/barcode";
 import { BarcodeScan } from "./BarcodeScan";
 import { LabelPrint, printLabels, type Label } from "./LabelPrint";
 import { adjustPrescription, adjustStock, deleteStockItem, createStockMedication, dispenseKit, recordMedication, useStore, validatePrescription } from "@/lib/hospital-store";
-import { findStockMedication, fmtExpiry, isStockLow, lotsByExpiry } from "@/lib/pharmacy-stock";
+import { findStockMedication, fmtExpiry, lotsByExpiry } from "@/lib/pharmacy-stock";
 import { cn } from "@/lib/utils";
 import { BreakageForm, MovementLog, NursingRequestForm, RequestInbox, ReturnForm, TransferForm, EntryForm, LoanPanel } from "./SupplyPanels";
 import { LabelStudio } from "./LabelStudio";
@@ -34,13 +33,11 @@ function Pharmacy() {
   const encounters = useStore((state) => state.encounters);
   const stock = useStore((state) => state.stock);
   const list = encounters.filter((encounter) => encounter.status_fluxo === "AGUARDANDO_FARMACIA");
-  const low = stock.filter(isStockLow);
   const pending = useStore((s) => s.requests.filter((r) => r.target === "farmacia" && r.status === "Pendente").length);
   const aba = useRouterState({ select: (st) => (st.location.search as { aba?: string }).aba });
   const tab = PHARMACY_TABS.find((t) => t.id === aba)?.id ?? "fila";
   return <Tabs value={tab} className="space-y-4">
     <TabsList className="hidden"><TabsTrigger value="fila">Fila de prescrições ({list.length})</TabsTrigger><TabsTrigger value="estoque">Estoque ({stock.length})</TabsTrigger><TabsTrigger value="controlados">Armário de controlados</TabsTrigger><TabsTrigger value="validades">Validades / Estorno</TabsTrigger><TabsTrigger value="consumo">Consumo mensal</TabsTrigger><TabsTrigger value="pedidos">Pedidos da enfermagem ({pending})</TabsTrigger><TabsTrigger value="entrada">Entrada NF</TabsTrigger><TabsTrigger value="emprestimo">Empréstimos</TabsTrigger><TabsTrigger value="transferencia">Transferência</TabsTrigger><TabsTrigger value="devolucao">Devolução</TabsTrigger><TabsTrigger value="quebra">Quebra/Extravio</TabsTrigger><TabsTrigger value="dispensados">Medicamentos prescritos</TabsTrigger><TabsTrigger value="etiquetas">Etiquetas</TabsTrigger></TabsList>
-    {low.length > 0 && <div role="alert" className="flex items-start gap-2 rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm"><AlertTriangle className="mt-0.5 h-4 w-4 text-destructive" /><div><span className="font-medium">Estoque baixo:</span> {low.map((item) => `${item.name} (${item.quantity} ${item.unit})`).join(", ")}</div></div>}
     <TabsContent value="fila"><PrescriptionQueue /></TabsContent>
     <TabsContent value="estoque"><StockManager /></TabsContent>
     <TabsContent value="controlados"><ControlledCabinet /></TabsContent><TabsContent value="validades"><ExpiryPanel /></TabsContent><TabsContent value="consumo"><ConsumptionReport /></TabsContent>
