@@ -3,7 +3,7 @@ export type SpecialtyGroup = 'medica' | 'nao_medica' | 'sadt';
 export interface AmbSpecialty { id: string; name: string; group: SpecialtyGroup; active: boolean }
 export interface Appointment {
   id: string; date: string; time: string; specialtyId: string; professional: string; patientId: string;
-  note: string; status: 'agendado' | 'chegou' | 'faltou' | 'cancelado'; encounterId?: string; createdBy: string;
+  note: string; nursingPreConsult?: boolean; status: 'agendado' | 'chegou' | 'faltou' | 'cancelado'; encounterId?: string; createdBy: string;
 }
 export interface SadtReport { exam: string; technique: string; findings: string; conclusion: string; professional: string; council: string; at: string }
 
@@ -25,6 +25,11 @@ export const DEFAULT_SPECIALTIES: AmbSpecialty[] = [
 
 /** Only high-risk pregnancy goes through acolhimento in the ambulatory; everything else goes straight to care. */
 export const ambulatoryNeedsTriage = (specialty: string) => slug(specialty) === 'gestacao-de-alto-risco';
+
+const OBSTETRIC = ['gestacao-de-alto-risco', 'cardiotocografia', 'usg-doppler-obstetrico', 'usg-morfologico', 'ecocardiografia-fetal'];
+/** Ambulatory nursing pre-consult: obstetric specialties always, others only when flagged at registration/agenda. */
+export const isObstetricSpecialty = (specialty: string) => OBSTETRIC.includes(slug(specialty)) || /obstetr/i.test(specialty);
+export const needsNursingPreConsult = (e: { type: string; specialty: string; nursingPreConsult?: boolean }) => e.type === 'Ambulatório' && (!!e.nursingPreConsult || isObstetricSpecialty(e.specialty));
 
 export function addSpecialty(list: AmbSpecialty[], name: string, group: SpecialtyGroup): AmbSpecialty[] {
   const n = name.trim();

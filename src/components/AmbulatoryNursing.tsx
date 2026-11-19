@@ -6,6 +6,7 @@ import { CallPanelButton } from "./CallPanelButton";
 import { canAct, type Patient } from "@/lib/hospital-data";
 import { nowHM, professionalName, updatePatient, useStore } from "@/lib/hospital-store";
 import type { Encounter } from "@/lib/care-flow";
+import { needsNursingPreConsult } from "@/lib/ambulatorio";
 
 const FIELDS = [["pas", "PAS"], ["pad", "PAD"], ["fc", "FC"], ["fr", "FR"], ["tax", "Temp."], ["sat", "SpO₂"], ["peso", "Peso (kg)"], ["altura", "Altura (cm)"]] as const;
 
@@ -13,9 +14,9 @@ const FIELDS = [["pas", "PAS"], ["pad", "PAD"], ["fc", "FC"], ["fr", "FR"], ["ta
 export function AmbulatoryNursing() {
   const encounters = useStore((s) => s.encounters);
   const patients = useStore((s) => s.patients);
-  const list = encounters.filter((e) => e.type === "Ambulatório" && e.status_fluxo !== "ALTA_HOSPITALAR" && !String(e.status_fluxo).startsWith("INTERNA"));
+  const list = encounters.filter((e) => needsNursingPreConsult(e) && e.status_fluxo !== "ALTA_HOSPITALAR" && !String(e.status_fluxo).startsWith("INTERNA"));
   return <div className="space-y-3">
-    <p className="text-sm text-muted-foreground">Pré-consulta de enfermagem · {list.length} paciente(s) no ambulatório</p>
+    <p className="text-sm text-muted-foreground">Pré-consulta de enfermagem · {list.length} paciente(s) · atendimentos obstétricos ou marcados para pré-consulta no cadastro/agenda</p>
     {list.length === 0 ? <p className="rounded-md border border-dashed p-4 text-center text-sm text-muted-foreground">Nenhum paciente aguardando.</p>
       : list.map((e) => { const p = patients.find((x) => x.id === e.patientId); return p ? <NursingCard key={e.id} encounter={e} patient={p} /> : null; })}
   </div>;

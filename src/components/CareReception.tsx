@@ -16,13 +16,13 @@ import { ATTENDANCE_TYPES, type Encounter } from "@/lib/care-flow";
 import { can, canAct, type Patient } from "@/lib/hospital-data";
 import { deleteEncounter, openEncounter, professionalName, savePatientRegistration, useStore } from "@/lib/hospital-store";
 import { SPECIAL_CONDITIONS } from "@/lib/special-conditions";
-import { GROUP_LABELS, type CareUnit } from "@/lib/ambulatorio";
+import { GROUP_LABELS, isObstetricSpecialty, type CareUnit } from "@/lib/ambulatorio";
 
 const INITIAL_FORM = {
   name: "", cpf: "", birth: "", mother: "", guardian: "", insurance: "SUS",
   type: ATTENDANCE_TYPES[0] as string, specialty: "Obstetrícia",
   patientType: "gestante" as Patient["type"], complaint: "",
-  conditions: [] as string[], otherCondition: "",
+  conditions: [] as string[], otherCondition: "", nursingPreConsult: false,
 };
 
 export function CareReception({ unit }: { unit?: CareUnit } = {}) {
@@ -36,7 +36,7 @@ export function CareReception({ unit }: { unit?: CareUnit } = {}) {
   const [f, setF] = useState(() => unit ? { ...INITIAL_FORM, type: unit, specialty: unit === "Ambulatório" ? "" : unit === "Maternidade" ? "Obstetrícia" : "Pediatria", patientType: (unit === "Pronto socorro" ? "pediatria" : "gestante") as Patient["type"] } : INITIAL_FORM);
   const [registration, setRegistration] = useState(() => registrationFor());
   const [mode, setMode] = useState<RegistrationMode>("completo");
-  const set = (key: keyof Omit<typeof f, "conditions">, value: string) => setF((current) => ({ ...current, [key]: value }));
+  const set = (key: keyof Omit<typeof f, "conditions" | "nursingPreConsult">, value: string) => setF((current) => ({ ...current, [key]: value }));
 
   const choose = (patient: Patient) => {
     setRegistration(registrationFor(patient));
@@ -85,11 +85,11 @@ export function CareReception({ unit }: { unit?: CareUnit } = {}) {
         specialConditions: f.conditions, otherSpecialCondition: f.otherCondition.trim(),
       };
       if (!window.confirm(`Confirmar o cadastro e a abertura do atendimento de ${patient.name}?\nNascimento: ${reg.birthDate || "não informado"} · Sexo: ${reg.sex || "—"} · CNS/CPF: ${reg.cns || reg.cpf || "—"}`)) return;
-      const encounter = openEncounter(patient, f.type, f.specialty, f.complaint);
+      const encounter = openEncounter(patient, f.type, f.specialty, f.complaint, f.nursingPreConsult);
       setCreated(encounter);
       toast.success(`${encounter.number} gerado e enviado para ${encounter.status_fluxo === "AGUARDANDO_TRIAGEM" ? "triagem" : "atendimento"}`);
       clearIdentity();
-      setF((current) => ({ ...current, complaint: "" }));
+      setF((current) => ({ ...current, complaint: "", nursingPreConsult: false }));
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Não foi possível abrir o atendimento");
     }
@@ -116,6 +116,7 @@ export function CareReception({ unit }: { unit?: CareUnit } = {}) {
         {existing && <div className="md:col-span-3"><Button type="button" variant="outline" onClick={() => { try { savePatientRegistration(existing, registration); toast.success("Cadastro atualizado sem abrir novo atendimento"); } catch (error) { toast.error(error instanceof Error ? error.message : "Não foi possível salvar"); } }}>Salvar alterações do cadastro</Button></div>}
         <h2 className="mt-3 border-t pt-4 font-semibold md:col-span-3">Abertura de atendimento</h2>
         {unit === "Ambulatório" && <label className="grid gap-1 text-xs">Especialidade<select aria-label="Especialidade" value={f.specialty} onChange={(event) => set("specialty", event.target.value)} className="h-9 rounded-md border bg-background px-2"><option value="">Selecione…</option>{(["medica", "nao_medica", "sadt"] as const).map((g) => <optgroup key={g} label={GROUP_LABELS[g]}>{ambSpecialties.filter((x) => x.group === g && x.active).map((x) => <option key={x.id} value={x.name}>{x.name}</option>)}</optgroup>)}</select></label>}
+        {unit === "Ambulatório" && <label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={f.nursingPreConsult || isObstetricSpecialty(f.specialty)} disabled={isObstetricSpecialty(f.specialty)} onChange={(event) => setF((c) => ({ ...c, nursingPreConsult: event.target.checked }))} />Encaminhar para pré-consulta de enfermagem{isObstetricSpecialty(f.specialty) ? " (obrigatória: obstétrico)" : ""}</label>}
         {textFields.map(([key, label]) => <label key={key} className="grid gap-1 text-xs">{label}<Input value={f[key]} onChange={(event) => set(key, event.target.value)} required={["name", "specialty", "complaint"].includes(key)} /></label>)}
         <label className="grid gap-1 text-xs">Tipo de paciente<select aria-label="Tipo de paciente" value={f.patientType} onChange={(event) => set("patientType", event.target.value)} className="h-9 rounded-md border bg-background px-2">{[["gestante", "Gestante"], ["puerpera", "Puérpera"], ["pediatria", "Criança"], ["neonato", "Recém-nascido"]].map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label>
         {!unit && <label className="grid gap-1 text-xs">Tipo de atendimento<select value={f.type} onChange={(event) => set("type", event.target.value)} className="h-9 rounded-md border bg-background px-2">{ATTENDANCE_TYPES.map((type) => <option key={type}>{type}</option>)}</select></label>}

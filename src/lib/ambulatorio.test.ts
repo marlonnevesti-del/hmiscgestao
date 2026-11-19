@@ -15,3 +15,13 @@ describe('ambulatório', () => {
     expect(() => addSpecialty(DEFAULT_SPECIALTIES, 'genetica', 'medica')).toThrow();
   });
 });
+
+import { needsNursingPreConsult as nn } from './ambulatorio';
+describe('pré-consulta de enfermagem no ambulatório', () => {
+  it('obstétrico entra sempre', () => expect(nn({ type: 'Ambulatório', specialty: 'Gestação de Alto Risco' })).toBe(true));
+  it('outra especialidade só se marcada', () => {
+    expect(nn({ type: 'Ambulatório', specialty: 'Cardiologia Pediátrica' })).toBe(false);
+    expect(nn({ type: 'Ambulatório', specialty: 'Cardiologia Pediátrica', nursingPreConsult: true })).toBe(true);
+  });
+  it('fora do ambulatório não entra', () => expect(nn({ type: 'Pronto socorro', specialty: 'Obstetrícia', nursingPreConsult: true })).toBe(false));
+});

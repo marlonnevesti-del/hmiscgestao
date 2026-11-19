@@ -53,12 +53,12 @@ function getEncounter(id: string) {
 function commitEncounter(e: Encounter, patch: Partial<State> = {}) {
   setState((s) => ({ ...patch, encounters: s.encounters.map((x) => x.id === e.id ? e : x), queue: s.queue.filter((q) => q.id !== e.id) }));
 }
-export function openEncounter(patient: Patient, type: string, specialty: string, complaint: string) {
+export function openEncounter(patient: Patient, type: string, specialty: string, complaint: string, nursingPreConsult = false) {
   requireAction('recepcao');
   if (state.encounters.some((e) => e.patientId === patient.id && e.status_fluxo !== 'ALTA_HOSPITALAR')) throw new Error('Paciente já possui um BAA ativo.');
   const at = new Date().toISOString();
   const number = `BAA-${new Date().getFullYear()}-${String(state.beSequence + 1).padStart(6, '0')}`;
-  const e: Encounter = { id: crypto.randomUUID(), patientId: patient.id, number, type, specialty, complaint, status_fluxo: 'AGUARDANDO_TRIAGEM', openedAt: at, history: [{ status: 'AGUARDANDO_TRIAGEM', at, by: professionalName(state.profile), note: 'Recepção: abertura de BAA' }] };
+  const e: Encounter = { id: crypto.randomUUID(), patientId: patient.id, number, type, specialty, complaint, ...(nursingPreConsult && type === 'Ambulatório' ? { nursingPreConsult: true } : {}), status_fluxo: 'AGUARDANDO_TRIAGEM', openedAt: at, history: [{ status: 'AGUARDANDO_TRIAGEM', at, by: professionalName(state.profile), note: 'Recepção: abertura de BAA' }] };
   const direct = type === 'Ambulatório';
   const opened = direct ? transition(e, 'AGUARDANDO_MEDICO', professionalName(state.profile), 'Ambulatório: pré-consulta de enfermagem e atendimento', at) : e;
   setState((s) => ({ beSequence: s.beSequence + 1, patients: [...s.patients.filter((p) => p.id !== patient.id), patient], encounters: [...s.encounters, opened], queue: direct ? s.queue : [...s.queue, { id: e.id, name: patient.name, group: patient.type === 'gestante' || patient.type === 'puerpera' ? 'obstetrica' : 'pediatria', complaint, arrivedMinAgo: 0, detail: patient.age }] }));
@@ -503,7 +503,7 @@ export function checkInAppointment(id: string) {
   const a = state.appointments.find((x) => x.id === id); if (!a || a.status !== 'agendado') throw new Error('Agendamento não disponível.');
   const p = state.patients.find((x) => x.id === a.patientId); if (!p) throw new Error('Paciente não encontrado.');
   const sp = state.ambSpecialties.find((x) => x.id === a.specialtyId);
-  const e = openEncounter(p, 'Ambulatório', sp?.name ?? '', `Consulta agendada · ${sp?.name ?? ''}${a.note ? ` · ${a.note}` : ''}`);
+  const e = openEncounter(p, 'Ambulatório', sp?.name ?? '', `Consulta agendada · ${sp?.name ?? ''}${a.note ? ` · ${a.note}` : ''}`, !!a.nursingPreConsult);
   setState((s) => ({ appointments: s.appointments.map((x) => x.id === id ? { ...x, status: 'chegou', encounterId: e.id } : x) }));
   return e;
 }

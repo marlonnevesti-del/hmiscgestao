@@ -10,7 +10,7 @@ import { Letterhead } from "./DischargePrint";
 import { printProcedure } from "./ProcedurePrint";
 import { NoPermission } from "./AppShell";
 import { can, canAct } from "@/lib/hospital-data";
-import { GROUP_LABELS, type SadtReport, type SpecialtyGroup } from "@/lib/ambulatorio";
+import { GROUP_LABELS, isObstetricSpecialty, type SadtReport, type SpecialtyGroup } from "@/lib/ambulatorio";
 import type { Encounter } from "@/lib/care-flow";
 import { ExamRequestsBoard } from "./ExamRequestsBoard";
 import { checkInAppointment, createAmbSpecialty, professionalName, saveSadtReport, rememberDoctor, scheduleAppointment, setAppointmentStatus, toggleAmbSpecialty, useStore } from "@/lib/hospital-store";
@@ -45,7 +45,7 @@ export function SpecialtyManager() {
 export function AmbulatoryAgenda() {
   const list = useStore((s) => s.appointments); const specs = useStore((s) => s.ambSpecialties); const patients = useStore((s) => s.patients); const profile = useStore((s) => s.profile); const accessAreas = useStore((s) => s.accessAreas);
   const [date, setDate] = useState(today()); const [filter, setFilter] = useState("");
-  const [f, setF] = useState({ time: "", specialtyId: "", professional: "", patientId: "", note: "" }); const [q, setQ] = useState("");
+  const [f, setF] = useState({ time: "", specialtyId: "", professional: "", patientId: "", note: "", nursingPreConsult: false }); const [q, setQ] = useState("");
   const found = q.length > 1 ? patients.filter((p) => [p.name, p.cpf, p.prontuario, p.registration?.cns ?? ""].some((v) => v.toLowerCase().includes(q.toLowerCase()))).slice(0, 6) : [];
   const day = useMemo(() => list.filter((a) => a.date === date && (!filter || a.specialtyId === filter)).sort((a, b) => a.time.localeCompare(b.time)), [list, date, filter]);
   const editable = canAct(profile, "recepcao", accessAreas);
@@ -55,7 +55,7 @@ export function AmbulatoryAgenda() {
       <label className="grid gap-1 text-xs">Data<Input type="date" value={date} onChange={(e) => setDate(e.target.value)} /></label>
       <label className="grid gap-1 text-xs">Especialidade<select className={sel} value={filter} onChange={(e) => setFilter(e.target.value)}><option value="">Todas</option>{specs.filter((s) => s.active).map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></label>
     </div>
-    {editable && <form className="grid gap-2 rounded-lg border bg-card p-3 md:grid-cols-3" onSubmit={(e) => { e.preventDefault(); act(() => { scheduleAppointment({ ...f, date }); setF({ ...f, time: "", patientId: "", note: "" }); }, "Consulta agendada"); }}>
+    {editable && <form className="grid gap-2 rounded-lg border bg-card p-3 md:grid-cols-3" onSubmit={(e) => { e.preventDefault(); act(() => { scheduleAppointment({ ...f, date }); setF({ ...f, time: "", patientId: "", note: "", nursingPreConsult: false }); }, "Consulta agendada"); }}>
       <h3 className="text-sm font-semibold md:col-span-3">Agendar consulta em {new Date(`${date}T12:00`).toLocaleDateString("pt-BR")}</h3>
       <div className="grid gap-1 text-xs md:col-span-3">Paciente {chosen ? <span className="text-sm font-medium">{chosen.name} · {chosen.prontuario} <Button type="button" variant="link" size="sm" onClick={() => setF({ ...f, patientId: "" })}>trocar</Button></span> : <>
         <Input placeholder="Buscar por nome, CPF, CNS ou prontuário (paciente novo: cadastre na aba Recepção)" value={q} onChange={(e) => setQ(e.target.value)} />
@@ -65,11 +65,11 @@ export function AmbulatoryAgenda() {
       <label className="grid gap-1 text-xs">Horário<Input type="time" value={f.time} onChange={(e) => setF({ ...f, time: e.target.value })} /></label>
       <label className="grid gap-1 text-xs">Profissional<Input value={f.professional} onChange={(e) => setF({ ...f, professional: e.target.value })} /></label>
       <label className="grid gap-1 text-xs md:col-span-2">Observação<Input value={f.note} onChange={(e) => setF({ ...f, note: e.target.value })} /></label>
-      <div className="flex items-end"><Button type="submit">Agendar</Button></div>
+      <div className="flex flex-wrap items-end gap-3"><label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={f.nursingPreConsult || isObstetricSpecialty(specs.find((s) => s.id === f.specialtyId)?.name ?? "")} disabled={isObstetricSpecialty(specs.find((s) => s.id === f.specialtyId)?.name ?? "")} onChange={(e) => setF({ ...f, nursingPreConsult: e.target.checked })} />Pré-consulta de enfermagem</label><Button type="submit">Agendar</Button></div>
     </form>}
     <table className="w-full text-sm"><thead><tr className="border-b text-left text-xs text-muted-foreground"><th className="py-2">Hora</th><th>Paciente</th><th>Especialidade</th><th>Profissional</th><th>Situação</th><th /></tr></thead>
       <tbody>{day.map((a) => { const p = patients.find((x) => x.id === a.patientId); return <tr key={a.id} className="border-b">
-        <td className="py-2 font-mono">{a.time}</td><td>{p?.name ?? "—"}{a.note && <div className="text-xs text-muted-foreground">{a.note}</div>}</td><td>{specs.find((s) => s.id === a.specialtyId)?.name}</td><td>{a.professional}</td><td>{STATUS[a.status]}</td>
+        <td className="py-2 font-mono">{a.time}</td><td>{p?.name ?? "—"}{a.note && <div className="text-xs text-muted-foreground">{a.note}</div>}{a.nursingPreConsult && <div className="text-xs text-primary">Pré-consulta de enfermagem</div>}</td><td>{specs.find((s) => s.id === a.specialtyId)?.name}</td><td>{a.professional}</td><td>{STATUS[a.status]}</td>
         <td className="space-x-1 text-right">{editable && a.status === "agendado" && <><Button size="sm" onClick={() => act(() => { checkInAppointment(a.id); }, "Chegada registrada · BAA gerado")}>Registrar chegada</Button><Button size="sm" variant="ghost" onClick={() => act(() => setAppointmentStatus(a.id, "faltou"))}>Faltou</Button><Button size="sm" variant="ghost" className="text-destructive" onClick={() => act(() => setAppointmentStatus(a.id, "cancelado"))}>Cancelar</Button></>}</td>
       </tr>; })}</tbody></table>
     {!day.length && <p className="py-4 text-sm text-muted-foreground">Nenhuma consulta agendada nesta data.</p>}
