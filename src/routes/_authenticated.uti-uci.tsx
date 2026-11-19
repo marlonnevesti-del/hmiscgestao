@@ -2,12 +2,13 @@ import { createFileRoute, Link } from '@tanstack/react-router';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { AlertTriangle, ClipboardList } from 'lucide-react';
+import { Letterhead } from '@/components/DischargePrint';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { NoPermission } from '@/components/AppShell';
 import { useStore, addIntensive, setIntensiveSafety, encounterFor } from '@/lib/hospital-store';
 import { canAccessPage, type Patient } from '@/lib/hospital-data';
-import { UNITS, BH_INPUTS, BH_OUTPUTS, DEVICES, balance, balance24h, scaleSum, bundleAdherencePct, type IcuUnit, type IcuScaleDef } from '@/lib/uti-uci';
+import { UNITS, BH_INPUTS, BH_OUTPUTS, DEVICES, balance, balance24h, scaleSum, bundleAdherencePct, type IcuUnit, type IcuScaleDef, NEO_FORMS, neoReport, type NeoKind } from '@/lib/uti-uci';
 
 export const Route = createFileRoute('/_authenticated/uti-uci')({
   head: () => ({ meta: [
@@ -27,9 +28,9 @@ const dt = (s: string) => new Date(s).toLocaleString('pt-BR');
 function Page() {
   const profile = useStore((s) => s.profile); const areas = useStore((s) => s.accessAreas);
   if (!canAccessPage(profile, '/uti-uci', areas)) return <NoPermission action="acessar a UTI Pediátrica e UCI" />;
-  return <div className="space-y-4 p-4"><h1 className="text-2xl font-bold">UTI Pediátrica · UCI</h1>
-    <Tabs defaultValue="UTIP"><TabsList><TabsTrigger value="UTIP">UTI Pediátrica</TabsTrigger><TabsTrigger value="UCI">UCI</TabsTrigger></TabsList>
-      <TabsContent value="UTIP"><Unit u="UTIP" /></TabsContent><TabsContent value="UCI"><Unit u="UCI" /></TabsContent></Tabs></div>;
+  return <div className="space-y-4 p-4"><h1 className="text-2xl font-bold">UTI Pediátrica · UCI · UTI Neonatal</h1>
+    <Tabs defaultValue="UTIP"><TabsList><TabsTrigger value="UTIP">UTI Pediátrica</TabsTrigger><TabsTrigger value="UCI">UCI</TabsTrigger><TabsTrigger value="UTIN">UTI Neonatal</TabsTrigger><TabsTrigger value="neorel">Indicadores UTI Neo</TabsTrigger></TabsList>
+      <TabsContent value="UTIP"><Unit u="UTIP" /></TabsContent><TabsContent value="UCI"><Unit u="UCI" /></TabsContent><TabsContent value="UTIN"><Unit u="UTIN" /></TabsContent><TabsContent value="neorel"><NeoReport /></TabsContent></Tabs></div>;
 }
 
 function Unit({ u }: { u: IcuUnit }) {
@@ -61,9 +62,10 @@ function SafetyBanner({ p }: { p: Patient }) {
 
 function PatientPanel({ u, p }: { u: IcuUnit; p: Patient }) {
   return <div className="space-y-4"><SafetyBanner p={p} />
-    <Tabs defaultValue="escalas"><TabsList className="flex-wrap">
-      {['escalas', 'balanco', 'bundles', 'evolucao', 'sbar', 'exames', 'seguranca'].map((t) => <TabsTrigger key={t} value={t}>{({ escalas: 'Escalas', balanco: 'Balanço hídrico', bundles: 'Bundles', evolucao: 'Evoluções', sbar: 'SAE · SBAR', exames: 'Exames', seguranca: 'Editar alertas' } as Record<string, string>)[t]}</TabsTrigger>)}
+    <Tabs defaultValue={u === 'UTIN' ? 'neo' : 'escalas'}><TabsList className="flex-wrap">
+      {[...(u === 'UTIN' ? ['neo'] : []), 'escalas', 'balanco', 'bundles', 'evolucao', 'sbar', 'exames', 'seguranca'].map((t) => <TabsTrigger key={t} value={t}>{({ neo: 'Neonatal', escalas: 'Escalas', balanco: 'Balanço hídrico', bundles: 'Bundles', evolucao: 'Evoluções', sbar: 'SAE · SBAR', exames: 'Exames', seguranca: 'Editar alertas' } as Record<string, string>)[t]}</TabsTrigger>)}
     </TabsList>
+      <TabsContent value="neo"><Neo p={p} /></TabsContent>
       <TabsContent value="escalas"><Scales u={u} p={p} /></TabsContent>
       <TabsContent value="balanco"><Balance u={u} p={p} /></TabsContent>
       <TabsContent value="bundles"><Bundles u={u} p={p} /></TabsContent>
@@ -144,4 +146,58 @@ function SafetyEdit({ p }: { p: Patient }) {
     <div className="text-xs">Dispositivos<div className="mt-1 flex flex-wrap gap-2">{DEVICES.map((d) => <label key={d} className="flex items-center gap-1"><input type="checkbox" checked={f.devices.includes(d)} onChange={(e) => setF({ ...f, devices: e.target.checked ? [...f.devices, d] : f.devices.filter((x) => x !== d) })} />{d}</label>)}</div></div>
   </div><p className="mt-2 text-xs text-muted-foreground">Alergias vêm do cadastro/triagem do paciente.</p>
     <Button size="sm" className="mt-2" onClick={() => run(() => setIntensiveSafety(p.id, f), 'Alertas atualizados')}>Salvar alertas</Button></Card>;
+}
+
+
+const COLORS: Record<string, string> = { 'Médica (Neonatologista)': 'border-l-primary', 'Enfermeiro': 'border-l-accent', 'Lactário / Nutrição': 'border-l-secondary', 'Fisioterapia': 'border-l-muted-foreground', 'Fonoaudiologia': 'border-l-muted-foreground', 'Serviço Social': 'border-l-muted-foreground' };
+void COLORS;
+
+function NeoForm({ p, kind }: { p: Patient; kind: NeoKind }) {
+  const f = NEO_FORMS[kind]; const [d, setD] = useState<Record<string, string>>({});
+  return <Card title={f.title}><div className="grid grid-cols-2 gap-2">{f.fields.map((x) => <label key={x.key} className="text-xs">{x.label}
+    {x.options ? <select className="mt-1 w-full rounded border bg-background p-1" value={d[x.key] ?? ''} onChange={(e) => setD({ ...d, [x.key]: e.target.value })}><option value="">Selecione…</option>{x.options.map((o) => <option key={o}>{o}</option>)}</select>
+      : <input type={x.type ?? 'text'} className="mt-1 w-full rounded border bg-background p-1" value={d[x.key] ?? ''} onChange={(e) => setD({ ...d, [x.key]: e.target.value })} />}</label>)}</div>
+    <Button size="sm" className="mt-2" disabled={!Object.values(d).some(Boolean)} onClick={() => { if (!confirm(`Confirmar registro: ${f.title}?`)) return; run(() => { addIntensive(p.id, 'neo', { type: kind, data: d }); setD({}); }, 'Registro salvo'); }}>Registrar</Button></Card>;
+}
+
+function printHtml(id: string) { const el = document.getElementById(id); if (!el) return; const w = window.open('', '_blank'); if (!w) return; w.document.write(`<html><head><title>Impressão</title><style>body{font-family:sans-serif;padding:16px}table{border-collapse:collapse;width:100%}td,th{border:1px solid #999;padding:4px;font-size:12px}.lbl{display:inline-block;border:1px dashed #000;padding:8px;margin:4px;width:320px;font-size:12px}</style></head><body>${el.innerHTML}</body></html>`); w.document.close(); w.print(); }
+
+function Neo({ p }: { p: Patient }) {
+  const neo = (p.intensive?.neo ?? []).slice().reverse(); const rec = neo.find((e) => e.type === 'recebimento');
+  const lastGrowth = neo.find((e) => e.type === 'crescimento');
+  const devices = neo.filter((e) => e.type === 'dispositivo');
+  const [drug, setDrug] = useState({ farmaco: '', diluente: '', conc: '', vazao: '', validade: '', checagem: '' });
+  const motherId = p.newborn?.motherId;
+  return <div className="space-y-4">
+    <div className="grid gap-4 lg:grid-cols-2">
+      <Card title="Placa de identificação do leito"><div id="placa" className="space-y-1 text-sm">
+        <div className="text-lg font-bold">{p.name}</div><div>Leito <b>{p.bed}</b> · Nascimento/idade: {p.age}</div>
+        <div>Mãe: <b>{rec?.data['mae'] || p.motherName || '—'}</b> · Tipo sanguíneo: {rec?.data['tipoSang'] || '—'}</div>
+        <div>Peso nascer: {rec?.data['pesoNasc'] || p.newborn?.pesoNascer || '—'} g · Peso atual: <b>{lastGrowth?.data['peso'] || Math.round(p.weight * 1000)} g</b></div>
+        <div>IG nascer: {rec?.data['ig'] || '—'} sem · IG corrigida: <b>{lastGrowth?.data['igc'] || '—'} sem</b></div>
+        <div className="font-bold text-destructive">Alergias: {p.allergies.join(', ') || 'Nenhuma'}</div></div>
+        <div className="mt-2 flex gap-2"><Button size="sm" variant="outline" onClick={() => printHtml('placa')}>Imprimir placa</Button>
+          {motherId && <Button asChild size="sm" variant="outline"><Link to="/pacientes/$id" params={{ id: motherId }}>Prontuário da mãe</Link></Button>}</div></Card>
+      <Card title="Etiqueta de bomba de seringa"><div className="grid grid-cols-2 gap-2">{(['farmaco', 'diluente', 'conc', 'vazao', 'validade', 'checagem'] as const).map((k) => <label key={k} className="text-xs">{({ farmaco: 'Fármaco', diluente: 'Diluente', conc: 'Concentração', vazao: 'Vazão (ml/h)', validade: 'Validade', checagem: 'Dupla checagem' })[k]}<input className="mt-1 w-full rounded border bg-background p-1" value={drug[k]} onChange={(e) => setDrug({ ...drug, [k]: e.target.value })} /></label>)}</div>
+        <div id="etq" className="hidden"><div className="lbl"><b>{p.name}</b> · Leito {p.bed}<br />{drug.farmaco} em {drug.diluente} · {drug.conc}<br />Vazão {drug.vazao} ml/h · Preparo {new Date().toLocaleString('pt-BR')}<br />Validade {drug.validade} · Checado: {drug.checagem}</div>
+          {devices.filter((d) => d.data['acao'] === 'Inserção').map((d) => <div key={d.id} className="lbl"><b>{d.data['disp']}</b> · {p.name} · Leito {p.bed}<br />Inserido {dt(d.at)} · Sítio {d.data['sitio']}<br />Validade: {d.data['validade'] || '—'}</div>)}</div>
+        <Button size="sm" className="mt-2" disabled={!drug.farmaco} onClick={() => printHtml('etq')}>Imprimir etiquetas (seringa + dispositivos)</Button></Card>
+    </div>
+    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">{(Object.keys(NEO_FORMS) as NeoKind[]).map((k) => <NeoForm key={k} p={p} kind={k} />)}</div>
+    <Card title="Linha do tempo neonatal">{neo.length ? <table className="w-full text-xs"><thead><tr className="text-left"><th>Data</th><th>Tipo</th><th>Detalhes</th><th>Por</th></tr></thead><tbody>
+      {neo.map((e) => <tr key={e.id} className="border-t align-top"><td>{dt(e.at)}</td><td>{NEO_FORMS[e.type].title}</td><td>{Object.entries(e.data).filter(([, v]) => v).map(([k, v]) => `${NEO_FORMS[e.type].fields.find((f) => f.key === k)?.label ?? k}: ${v}`).join(' · ')}</td><td>{e.by}</td></tr>)}</tbody></table> : <p className="text-xs text-muted-foreground">Sem registros. Comece pelo recebimento do paciente.</p>}</Card>
+  </div>;
+}
+
+function NeoReport() {
+  const all = useStore((s) => s.patients); const beds = all.filter((p) => p.ward === 'UTIN');
+  const [comp, setComp] = useState(new Date().toISOString().slice(0, 7));
+  const r = neoReport(all, comp);
+  const T = ({ title, m }: { title: string; m: Record<string, number> }) => <Card title={title}><table className="w-full text-xs"><tbody>{Object.entries(m).length ? Object.entries(m).map(([k, v]) => <tr key={k} className="border-t"><td>{k}</td><td className="text-right font-semibold">{v}</td></tr>) : <tr><td className="text-muted-foreground">Sem dados</td></tr>}</tbody></table></Card>;
+  const csv = () => { const rows = [['Indicador', 'Valor'], ['Internações', r.admissions], ['Ocupação atual', `${beds.length}/8`], ['Sepse provável', r.sepse], ['Extubações acidentais', r.extubacao], ['Transfusões', r.transfusoes], ['Triagens alteradas', r.triagensAlteradas], ['Gestação alto risco', r.altoRisco], ...Object.entries({ ...r.peso, ...r.ig, ...r.sexo, ...r.eventos })]; const b = new Blob([rows.map((x) => x.join(';')).join('\n')], { type: 'text/csv' }); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = `uti-neonatal-${comp}.csv`; a.click(); };
+  return <div className="space-y-4"><div className="flex flex-wrap items-center gap-2 print:hidden"><input type="month" className="rounded border bg-background p-1 text-sm" value={comp} onChange={(e) => setComp(e.target.value)} /><Button size="sm" variant="outline" onClick={csv}>Exportar Excel</Button><Button size="sm" variant="outline" onClick={() => window.print()}>Imprimir</Button></div>
+    <div className="hidden print:block"><Letterhead title={`INDICADORES UTI NEONATAL – ${comp}`} /></div>
+    <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-7">{[['Internações', r.admissions], ['Ocupação atual', `${beds.length}/8 (${Math.round(beds.length / 8 * 100)}%)`], ['Sepse provável', r.sepse], ['Extubação acidental', r.extubacao], ['Transfusões', r.transfusoes], ['Triagens alteradas', r.triagensAlteradas], ['Alto risco gestacional', r.altoRisco]].map(([k, v]) => <div key={String(k)} className="rounded-lg border bg-card p-3"><div className="text-xs text-muted-foreground">{k}</div><div className="text-xl font-bold">{v}</div></div>)}</div>
+    <div className="grid gap-3 md:grid-cols-3"><T title="Peso ao nascer" m={r.peso} /><T title="Idade gestacional" m={r.ig} /><T title="Sexo" m={r.sexo} /><T title="Cidade de origem" m={r.cidade} /><T title="Diagnóstico" m={r.diagnostico} /><T title="Eventos (LPP, vacinas, altas, óbitos, transferências)" m={r.eventos} /></div>
+    <p className="text-xs text-muted-foreground">Internações contam pelo registro de "Recebimento do paciente" no mês. Consumo de materiais e medicamentos está em Prestação de contas OS (setor UTI Neo).</p></div>;
 }

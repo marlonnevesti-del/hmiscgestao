@@ -20,3 +20,17 @@ describe('UTI Pediátrica x UCI', () => {
   });
   it('adesão ao bundle', () => { expect(bundleAdherencePct({ checks: ['a', 'b'], total: 4 })).toBe(50); });
 });
+
+import { weightBand, igBand, neoReport } from './uti-uci';
+describe('UTI Neonatal', () => {
+  it('classifica peso ao nascer', () => { expect(weightBand(950)).toBe('< 1.000 g'); expect(weightBand(1499)).toBe('1.000–1.499 g'); expect(weightBand(2500)).toBe('≥ 2.500 g'); });
+  it('classifica idade gestacional', () => { expect(igBand(27)).toBe('< 28 sem'); expect(igBand(36)).toBe('32–36 sem'); });
+  it('conta internações e extubação acidental do mês', () => {
+    const r = neoReport([{ intensive: { neo: [
+      { id: '1', at: '2026-11-02T10:00:00Z', by: 'x', type: 'recebimento', data: { pesoNasc: '1200', ig: '30' } },
+      { id: '2', at: '2026-11-05T10:00:00Z', by: 'x', type: 'dispositivo', data: { acao: 'Extubação acidental' } },
+      { id: '3', at: '2026-10-05T10:00:00Z', by: 'x', type: 'recebimento', data: {} },
+    ] } }], '2026-11');
+    expect(r.admissions).toBe(1); expect(r.extubacao).toBe(1); expect(r.peso['1.000–1.499 g']).toBe(1);
+  });
+});

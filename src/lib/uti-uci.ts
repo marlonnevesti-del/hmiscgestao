@@ -2,7 +2,7 @@
 import type { Ward } from './hospital-data';
 import { SCALES as PS_SCALES, type ScaleDef as PsScaleDef } from './ps-infantil';
 
-export type IcuUnit = 'UTIP' | 'UCI';
+export type IcuUnit = 'UTIP' | 'UCI' | 'UTIN';
 export interface IcuScaleDef { id: string; name: string; items: { label: string; options: { label: string; score: number }[] }[]; interpret: (t: number) => string }
 const o = (labels: string[], start = 0) => labels.map((label, i) => ({ label, score: i + start }));
 
@@ -31,6 +31,17 @@ export const SILVERMAN: IcuScaleDef = { id: 'silverman', name: 'Silverman-Anders
   { label: 'Batimento de asa nasal', options: o(['Ausente', 'Discreto', 'Acentuado']) },
   { label: 'Gemido expiratório', options: o(['Ausente', 'Audível com estetoscópio', 'Audível sem estetoscópio']) },
 ], interpret: (t) => t === 0 ? 'Sem desconforto' : t <= 4 ? 'Desconforto leve' : t <= 7 ? 'Desconforto moderado' : 'Desconforto grave' };
+
+export const SEPSE_NEO: IcuScaleDef = { id: 'sepseneo', name: 'Protocolo de sepse neonatal', items: [
+  { label: 'Fator de risco materno (bolsa rota >18h, febre, ITU, SGB+)', options: o(['Não', 'Sim']) },
+  { label: 'Instabilidade térmica', options: o(['Não', 'Sim']) },
+  { label: 'Desconforto respiratório / apneia', options: o(['Não', 'Sim']) },
+  { label: 'Má perfusão / TEC > 3s / hipotensão', options: o(['Não', 'Sim']) },
+  { label: 'Intolerância alimentar / distensão', options: o(['Não', 'Sim']) },
+  { label: 'Hipoatividade / letargia', options: o(['Não', 'Sim']) },
+  { label: 'Glicemia alterada (<45 ou >180)', options: o(['Não', 'Sim']) },
+  { label: 'Laboratório alterado (PCR, I/T > 0,2, plaquetas <100 mil)', options: o(['Não', 'Sim']) },
+], interpret: (t) => t >= 3 ? 'Sepse provável – abrir protocolo (hemocultura + ATB na 1ª hora)' : t >= 1 ? 'Suspeita – reavaliar em 6h' : 'Sem sinais de sepse' };
 
 const ps = (id: string) => PS_SCALES.find((s) => s.id === id) as PsScaleDef as unknown as IcuScaleDef;
 
@@ -63,7 +74,55 @@ export const UNITS: Record<IcuUnit, UnitConfig> = {
       'Lactário / Nutrição': 'Tipo de dieta (LMO pasteurizado / fórmula): \nVolume prescrito: \nVolume aceito: \nVia (seio/copinho/gavagem): \nResíduo gástrico (volume/aspecto): \nIntervalo: ',
       'Fonoaudiologia': 'Sucção nutritiva / não nutritiva: \nCoordenação S-D-R: \nTransição sonda → via oral: ',
     } },
+  UTIN: { id: 'UTIN', ward: 'UTIN', name: 'UTI Neonatal', profile: 'Recém-nascidos até 28 dias em estado crítico (prematuros e termos)', balance: 'horario', almoxSectors: ['UTI Neo', 'Lactário'],
+    scales: [NIPS, SILVERMAN, SEPSE_NEO, ps('humpty'), ps('bradenq'), ps('dor')].filter(Boolean),
+    bundles: {
+      'PAV neonatal': ['Cabeceira 15–30°', 'Higiene oral com colostro/água destilada', 'Aspiração apenas se necessário', 'Circuito sem condensado', 'Avaliação diária de extubação'],
+      'Cateter umbilical / PICC': ['Higiene das mãos', 'Curativo íntegro e datado', 'Desinfecção dos conectores', 'Posição radiológica confirmada', 'Avaliação diária de necessidade'],
+      'Pele e CPAP': ['Proteção de septo nasal', 'Pronga de tamanho adequado', 'Mudança de decúbito', 'Proteção ocular na fototerapia', 'Umidificação da incubadora'],
+    },
+    evolutions: {
+      'Médica (Neonatologista)': 'DV / IG corrigida: \nPeso atual / nascimento: \nRespiratório (suporte, parâmetros, gaso): \nHemodinâmico: \nInfeccioso (culturas, D-ATB): \nMetabólico (HGT, eletrólitos, bilirrubinas): \nNutrição (dieta, NPT, volume ml/kg/d): \nConduta / previsão de alta: ',
+      'Enfermeiro': 'Incubadora / temperatura: \nDispositivos (data e sítio): \nPele / LPP: \nBundles checados: \nVínculo mãe-bebê: \nIntercorrências: ',
+      'Técnico de enfermagem': 'Sinais vitais / HGT: \nPeso das fraldas: \nAspiração: \nHigiene e conforto: \nIntercorrências: ',
+      'Lactário / Nutrição': 'Tipo de dieta (LMO / LHP / fórmula): \nVolume prescrito: \nVolume aceito: \nVia: \nResíduo gástrico: ',
+      'Fisioterapia': 'Suporte ventilatório: \nAusculta: \nCondutas: ',
+      'Fonoaudiologia': 'Sucção / coordenação S-D-R: \nTransição via oral: ',
+      'Serviço Social': 'Situação familiar: \nDocumentação (DNV, certidão, cartão SUS): \nEncaminhamentos: ',
+    } },
 };
+
+/** Registros exclusivos da UTI Neonatal (dispositivos, triagens, transfusões, crescimento, recebimento). */
+export type NeoKind = 'dispositivo' | 'triagem' | 'transfusao' | 'crescimento' | 'recebimento' | 'higienizacao' | 'evento';
+export interface NeoEntry { id: string; at: string; by: string; type: NeoKind; data: Record<string, string> }
+export const NEO_FORMS: Record<NeoKind, { title: string; fields: { key: string; label: string; options?: string[]; type?: string }[] }> = {
+  recebimento: { title: 'Recebimento do paciente', fields: [{ key: 'chegada', label: 'Hora de chegada', type: 'datetime-local' }, { key: 'origem', label: 'Origem', options: ['Centro obstétrico', 'Centro cirúrgico', 'Alojamento conjunto', 'Transferência externa', 'PS'] }, { key: 'pesoNasc', label: 'Peso ao nascer (g)', type: 'number' }, { key: 'ig', label: 'IG ao nascer (semanas)', type: 'number' }, { key: 'apgar', label: 'Apgar 1º/5º' }, { key: 'mae', label: 'Nome / prontuário da mãe' }, { key: 'tipoSang', label: 'Tipo sanguíneo RN/mãe' }, { key: 'cidade', label: 'Cidade de origem' }, { key: 'altoRisco', label: 'Gestação de alto risco', options: ['Não', 'Sim'] }] },
+  dispositivo: { title: 'Dispositivo (inserção / retirada)', fields: [{ key: 'disp', label: 'Dispositivo', options: ['VM / TOT', 'VNI / CPAP', 'Cateter umbilical venoso', 'Cateter umbilical arterial', 'PICC', 'Acesso periférico', 'SOG / SNG', 'SVD', 'Dreno'] }, { key: 'acao', label: 'Ação', options: ['Inserção', 'Retirada', 'Extubação acidental', 'Perda acidental'] }, { key: 'calibre', label: 'Calibre / nº' }, { key: 'sitio', label: 'Sítio' }, { key: 'validade', label: 'Validade', type: 'date' }] },
+  triagem: { title: 'Triagem neonatal', fields: [{ key: 'teste', label: 'Teste', options: ['Pezinho', 'Coraçãozinho', 'Olhinho', 'Orelhinha', 'Linguinha', 'LACEN (externo)', 'Cariótipo'] }, { key: 'coleta', label: 'Data da coleta', type: 'date' }, { key: 'resultado', label: 'Resultado', options: ['Aguardando', 'Normal', 'Alterado', 'Recoleta'] }, { key: 'obs', label: 'Observação / motivo recoleta' }] },
+  transfusao: { title: 'Transfusão', fields: [{ key: 'hemo', label: 'Hemocomponente', options: ['Concentrado de hemácias filtrado/irradiado', 'Plaquetas', 'Plasma', 'Crioprecipitado'] }, { key: 'volume', label: 'Volume (ml)', type: 'number' }, { key: 'tempo', label: 'Tempo de infusão' }, { key: 'bolsa', label: 'Nº da bolsa' }, { key: 'checagem', label: 'Dupla checagem por' }, { key: 'reacao', label: 'Reação', options: ['Nenhuma', 'Febre', 'Rash', 'Outra'] }] },
+  crescimento: { title: 'Crescimento (Fenton / Intergrowth)', fields: [{ key: 'igc', label: 'IG corrigida (semanas)', type: 'number' }, { key: 'peso', label: 'Peso (g)', type: 'number' }, { key: 'comp', label: 'Comprimento (cm)', type: 'number' }, { key: 'pc', label: 'Perímetro cefálico (cm)', type: 'number' }, { key: 'curva', label: 'Curva', options: ['Fenton', 'Intergrowth-21st'] }, { key: 'percentil', label: 'Percentil', options: ['< P3', 'P3–P10', 'P10–P50', 'P50–P90', 'P90–P97', '> P97'] }] },
+  higienizacao: { title: 'Higienização de leito / equipamento', fields: [{ key: 'item', label: 'Item', options: ['Incubadora', 'Berço aquecido', 'Bomba de seringa', 'Monitor', 'Ventilador', 'Leito (terminal)', 'Leito (concorrente)'] }, { key: 'obs', label: 'Observação' }] },
+  evento: { title: 'Evento / desfecho', fields: [{ key: 'evento', label: 'Evento', options: ['LPP', 'Vacina BCG', 'Vacina Hepatite B', 'Imagem realizada', 'Previsão de alta', 'Alta', 'Transferência interna', 'Transferência externa', 'Óbito'] }, { key: 'data', label: 'Data', type: 'date' }, { key: 'obs', label: 'Detalhes' }] },
+};
+export const weightBand = (g: number) => !g ? 'Não informado' : g < 1000 ? '< 1.000 g' : g < 1500 ? '1.000–1.499 g' : g < 2500 ? '1.500–2.499 g' : '≥ 2.500 g';
+export const igBand = (w: number) => !w ? 'Não informado' : w < 28 ? '< 28 sem' : w < 32 ? '28–31 sem' : w < 37 ? '32–36 sem' : '≥ 37 sem';
+const inMonth = (iso: string, comp: string) => iso.slice(0, 7) === comp;
+export function neoReport(patients: { registration?: { sex?: string }; diagnosis?: string; intensive?: IntensiveRecord }[], comp: string) {
+  const count = (m: Record<string, number>, k: string) => { m[k] = (m[k] ?? 0) + 1; };
+  const r = { admissions: 0, peso: {} as Record<string, number>, ig: {} as Record<string, number>, sexo: {} as Record<string, number>, cidade: {} as Record<string, number>, diagnostico: {} as Record<string, number>, eventos: {} as Record<string, number>, sepse: 0, extubacao: 0, altoRisco: 0, transfusoes: 0, triagensAlteradas: 0 };
+  for (const p of patients) {
+    const neo = p.intensive?.neo ?? []; const rec = neo.find((e) => e.type === 'recebimento' && inMonth(e.at, comp));
+    if (rec) { r.admissions++; count(r.peso, weightBand(Number(rec.data['pesoNasc']))); count(r.ig, igBand(Number(rec.data['ig']))); count(r.sexo, p.registration?.sex || 'Não informado'); count(r.cidade, rec.data['cidade'] || 'Não informado'); count(r.diagnostico, p.diagnosis || 'Não informado'); if (rec.data['altoRisco'] === 'Sim') r.altoRisco++; }
+    for (const e of neo.filter((x) => inMonth(x.at, comp))) {
+      if (e.type === 'evento' && e.data['evento']) count(r.eventos, e.data['evento']);
+      if (e.type === 'dispositivo' && e.data['acao'] === 'Extubação acidental') r.extubacao++;
+      if (e.type === 'transfusao') r.transfusoes++;
+      if (e.type === 'triagem' && e.data['resultado'] === 'Alterado') r.triagensAlteradas++;
+    }
+    r.sepse += (p.intensive?.scales ?? []).filter((x) => inMonth(x.at, comp) && x.scale === SEPSE_NEO.name && x.total >= 3).length;
+  }
+  return r;
+}
 
 export const unitScale = (u: IcuUnit, id: string) => UNITS[u].scales.find((s) => s.id === id);
 export const scaleSum = (picks: number[]) => picks.reduce((a, b) => a + (b || 0), 0);
@@ -85,6 +144,6 @@ export interface ScaleEntry { id: string; at: string; by: string; scale: string;
 export interface BundleEntry { id: string; at: string; by: string; bundle: string; checks: string[]; total: number }
 export interface TextEntry { id: string; at: string; by: string; kind: string; text: string }
 export interface SafetyInfo { continuous: string; devices: string[]; precaution: string; diet: string }
-export interface IntensiveRecord { scales?: ScaleEntry[]; balances?: BalanceEntry[]; bundles?: BundleEntry[]; notes?: TextEntry[]; safety?: SafetyInfo }
+export interface IntensiveRecord { scales?: ScaleEntry[]; balances?: BalanceEntry[]; bundles?: BundleEntry[]; notes?: TextEntry[]; safety?: SafetyInfo; neo?: NeoEntry[] }
 export const DEVICES = ['TOT', 'Traqueostomia', 'CVC', 'PICC', 'Cateter umbilical', 'SVD', 'SNG/SNE', 'Dreno', 'CPAP/VNI', 'Fototerapia'];
 export const bundleAdherencePct = (b: Pick<BundleEntry, 'checks' | 'total'>) => b.total ? Math.round((b.checks.length / b.total) * 100) : 0;
