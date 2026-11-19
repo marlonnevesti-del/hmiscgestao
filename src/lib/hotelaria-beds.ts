@@ -36,6 +36,21 @@ export function isHotelariaFresh(generatedAt: string, now = Date.now()) {
 }
 // Cleaning completed is intentionally not the same as a released bed.
 export function hotelariaBedAvailable(status: HotelariaStatus) { return status === "disponivel"; }
+// Occupation counts straight from Hotelaria: a bed the hospital marked occupied there
+// counts here even when SIShmisc never admitted the patient.
+export type HotelariaOccupancy = { total: number; ocupado: number; disponivel: number; higienizacao: number; bloqueado: number };
+export function hotelariaOccupancy(snapshot: HotelariaSnapshot): HotelariaOccupancy {
+  const all = snapshot.setores.flatMap((s) => s.leitos);
+  const count = (fn: (s: HotelariaStatus) => boolean) => all.filter((l) => fn(l.status)).length;
+  return {
+    total: all.length,
+    ocupado: count((s) => s === "ocupado"),
+    disponivel: count((s) => s === "disponivel"),
+    higienizacao: count((s) => s === "aguardando_higienizacao" || s === "higienizacao" || s === "higienizacao_concluida"),
+    bloqueado: count((s) => s === "bloqueado"),
+  };
+}
+export function hotelariaOccupancyRate(o: HotelariaOccupancy) { return o.total ? Math.round((o.ocupado / o.total) * 100) : 0; }
 export function sortHotelaria(snapshot: HotelariaSnapshot): HotelariaSnapshot {
   return { ...snapshot, setores: [...snapshot.setores].sort((a, b) => a.ordem - b.ordem).map((s) => ({ ...s, leitos: [...s.leitos].sort((a, b) => a.ordem - b.ordem) })) };
 }

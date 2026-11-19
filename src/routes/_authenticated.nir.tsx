@@ -4,7 +4,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { HotelariaBedMap } from "@/components/HotelariaBedMap";
 import { hotelariaBedsQuery } from "@/lib/hotelaria-beds-query";
 import { reserveHotelariaBed } from "@/lib/hotelaria-beds.functions";
-import { hotelariaBedAvailable, isHotelariaFresh } from "@/lib/hotelaria-beds";
+import { hotelariaBedAvailable, hotelariaOccupancy, hotelariaOccupancyRate, isHotelariaFresh } from "@/lib/hotelaria-beds";
 import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -45,6 +45,7 @@ function NirPage() {
   const external = hotelaria.status !== "not_configured";
   const connected = hotelaria.status === "connected" && !!hotelaria.snapshot && isHotelariaFresh(hotelaria.snapshot.generatedAt);
   const extFree = connected ? hotelaria.snapshot!.setores.flatMap((st) => st.leitos.filter((l) => hotelariaBedAvailable(l.status)).map((l) => ({ id: l.id, codigo: l.codigo, setor: st.nome }))) : [];
+  const occ = connected ? hotelariaOccupancy(hotelaria.snapshot!) : null;
   const free = external ? [] : BASE_BEDS.filter((b) => ADM_WARDS.includes(b.ward) && b.status === "livre" && !occupied(b.id));
   const total = BASE_BEDS.filter((b) => ADM_WARDS.includes(b.ward)).length;
   const pending = encounters.filter((e) => e.admission?.status === "pendente")
@@ -68,7 +69,7 @@ function NirPage() {
   return <div className="space-y-6">
     <header className="flex flex-wrap items-end justify-between gap-3">
       <div><h1 className="text-xl font-semibold">NIR – Núcleo Interno de Regulação</h1><p className="text-sm text-muted-foreground">Solicitações de internação dos médicos e liberação de leitos.</p></div>
-      <div className="flex flex-wrap gap-4 text-sm"><span><b>{pending.length}</b> aguardando</span>{!external && <><span><b>{free.length}</b> leitos locais livres</span><span>Ocupação <b>{Math.round(((total - free.length) / total) * 100)}%</b></span></>}</div>
+      <div className="flex flex-wrap gap-4 text-sm"><span><b>{pending.length}</b> aguardando</span>{occ && <><span><b>{occ.ocupado}</b> ocupados</span><span><b>{occ.disponivel}</b> livres</span><span>Ocupação <b>{hotelariaOccupancyRate(occ)}%</b></span></>}{!external && <><span><b>{free.length}</b> leitos locais livres</span><span>Ocupação <b>{Math.round(((total - free.length) / total) * 100)}%</b></span></>}</div>
     </header>
 
     <section className="space-y-3">

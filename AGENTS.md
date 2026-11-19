@@ -43,6 +43,7 @@ use the editor.
 - Loan returns use the centralized stock action with cumulative returned quantities and per-return history in the clinical snapshot; only the returned quantity changes stock and legacy settled loans remain fully returned.
 - NIR admission flow: doctors call requestAdmission (no bed); only the nir action authorizes a bed via authorizeAdmission/rejectAdmission in hospital-store, so bed allocation stays centralized.
 - Hotelaria bed reads use an approved-user server function and server-only origin/token, with a validated read-only snapshot polled in NIR; NIR authorization reserves the bed atomically in Hotelaria first (reserveHotelariaBed) and only then records it locally, preventing double allocation.
+- Bed occupancy counts come from hotelariaOccupancy/hotelariaOccupancyRate over Hotelaria statuses, so beds the hospital marked occupied there appear in NIR and the census even with no local patient; Hotelaria sends no patient name, so those beds are labelled by source, not by patient.
 
 - Admission authorization (NIR or direct) closes the BAA and opens a separately sequenced FIA record on the encounter via openFia in hospital-store, so the FIA is the single official inpatient document and billing never double-counts.
 - Care units (Ambulatório, Pronto socorro, Maternidade) share one patient registry and encounter flow; CareUnitPage filters reception, acolhimento and medical queues by encounter.type, and ambulatory specialties/agenda/SADT rules live in src/lib/ambulatorio.ts so pharmacy and billing stay unit-agnostic.

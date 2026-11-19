@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { hotelariaBedAvailable, hotelariaSnapshotSchema, isHotelariaFresh, sortHotelaria } from "./hotelaria-beds";
+import { hotelariaBedAvailable, hotelariaOccupancy, hotelariaOccupancyRate, hotelariaSnapshotSchema, isHotelariaFresh, sortHotelaria } from "./hotelaria-beds";
 
 describe("Hotelaria bed integration", () => {
   it("shows an occupied bed as unavailable", () => { expect(hotelariaBedAvailable("ocupado")).toBe(false); expect(hotelariaBedAvailable("disponivel")).toBe(true); });
@@ -24,5 +24,23 @@ d2("hotelaria camelCase payload", () => {
   i2("accepts atualizadoEm and sigla from Hotelaria", () => {
     const s = schema2.parse(norm2({ generatedAt: "2026-11-17T12:04:51.979Z", setores: [{ id: "m", nome: "Maternidade", sigla: "MAT", ordem: 1, leitos: [{ id: "b", codigo: "300.1", status: "disponivel", ordem: 1, atualizadoEm: "2026-11-16T18:27:50.632+00:00" }] }] }));
     e2(s.setores[0]!.leitos[0]!.atualizado_em).toBe("2026-11-16T18:27:50.632+00:00");
+  });
+});
+
+describe("Hotelaria occupation counts", () => {
+  const bed = (id: string, status: string) => ({ id, codigo: id, ordem: 1, status, atualizado_em: "2026-11-17T11:23:00Z" });
+  const snap = hotelariaSnapshotSchema.parse({
+    generatedAt: "2026-11-17T11:23:00Z",
+    setores: [
+      { id: "mat", nome: "Maternidade", ordem: 1, leitos: [bed("b1", "ocupado"), bed("b2", "ocupado"), bed("b3", "disponivel"), bed("b4", "aguardando_higienizacao")] },
+      { id: "utn", nome: "UTI Neonatal", ordem: 2, leitos: [bed("b5", "higienizacao"), bed("b6", "bloqueado")] },
+    ],
+  });
+  it("counts beds the hospital marked occupied in Hotelaria", () => {
+    expect(hotelariaOccupancy(snap)).toEqual({ total: 6, ocupado: 2, disponivel: 1, higienizacao: 2, bloqueado: 1 });
+  });
+  it("rounds the occupancy rate from occupied beds only", () => {
+    expect(hotelariaOccupancyRate(hotelariaOccupancy(snap))).toBe(33);
+    expect(hotelariaOccupancyRate({ total: 0, ocupado: 0, disponivel: 0, higienizacao: 0, bloqueado: 0 })).toBe(0);
   });
 });

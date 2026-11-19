@@ -24,3 +24,5 @@
 - [x] Substituir o estoque atual da farmácia pelo controle com apresentação, unidade, estoque mínimo, entradas/ajustes e alertas, preservando os saldos antigos.
 - [x] Acrescentar condições especiais à ficha de cadastro e aos avisos das filas e do prontuário: Autismo/TEA, TDAH, deficiência intelectual, deficiência física e outra.
 - [x] Separar Ambulatório (agenda, especialidades, SADT com laudo), Pronto Socorro e Maternidade com recepção, acolhimento e atendimento próprios.
+- [x] Manter a exibição dos leitos ocupados pela Hotelaria no NIR e no censo, com contagem por setor.
+- [ ] Internação direta pelo médico com leito real da Hotelaria (reserva na internação, liberação na alta) — adiada pelo usuário.
