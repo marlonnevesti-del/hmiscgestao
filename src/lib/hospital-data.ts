@@ -56,7 +56,8 @@ export const PHARMACY_TABS = [
   { id: "estoque", label: "Estoque geral" }, { id: "pedidos", label: "Pedidos da enfermagem" },
   { id: "entrada", label: "Entrada NF" }, { id: "emprestimo", label: "Empréstimos" },
   { id: "transferencia", label: "Transferência" }, { id: "devolucao", label: "Devolução" },
-  { id: "quebra", label: "Quebra / Extravio" }, { id: "dispensados", label: "Kits dispensados" },
+  { id: "quebra", label: "Quebra / Extravio" }, { id: "dispensados", label: "Medicamentos prescritos" },
+  { id: "kits", label: "Kits do centro cirúrgico" },
   { id: "etiquetas", label: "Etiquetas" },
   { id: "requisicao", label: "Saída via requisição" }, { id: "mapa", label: "Mapa de movimentação" },
 ] as const;
