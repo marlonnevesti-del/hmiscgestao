@@ -654,3 +654,13 @@ export function psOpenSepsis(id: string, kind: SepsisKind) {
 export function psUpdateSepsis(id: string, sepsisId: string, checks: Record<string, string>, outcome?: string) {
   psCommit(id, (ps) => ({ ...ps, sepsis: (ps.sepsis ?? []).map((s) => s.id === sepsisId ? { ...s, checks, ...(outcome ? { outcome, closedAt: new Date().toISOString() } : {}) } : s) }), outcome ? `Protocolo de sepse encerrado: ${outcome}` : 'Protocolo de sepse atualizado');
 }
+
+/** Salva um documento clínico da internação (UTI, descrição cirúrgica, evolução, serviço social, encaminhamento) no atendimento. */
+export function saveClinicalDoc(encounterId: string, kind: import('./inpatient-docs').ClinicalDocKind, values: Record<string, string>) {
+  requireAction('evoluir');
+  const { e } = getEncounter(encounterId);
+  const doc = { id: crypto.randomUUID(), at: new Date().toISOString(), by: professionalName(state.profile), values };
+  const docs = { ...(e.clinicalDocs ?? {}), [kind]: [...(e.clinicalDocs?.[kind] ?? []), doc] };
+  commitEncounter({ ...e, clinicalDocs: docs });
+  return doc;
+}

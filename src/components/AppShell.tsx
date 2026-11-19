@@ -22,6 +22,7 @@ const GROUPS = [
   ] },
   { label: "Apoio", items: [
     { to: "/nir", label: "NIR – Regulação de Leitos", icon: BedDouble },
+    { to: "/internacoes", label: "Censo · Internações", icon: BedDouble },
     { to: "/centro-cirurgico", label: "Centro Cirúrgico", icon: Scissors },
     { to: "/gestao-cirurgica", label: "SRPA · CO · Indicadores", icon: Activity },
     { to: "/cme", label: "CME – Esterilização", icon: ShieldCheck },

@@ -93,7 +93,7 @@ export function canAccessPage(profile: Profile, path: string, areas?: readonly s
   if (path === "/" || path === "/painel-tv" || path === "/solicitacao-almoxarifado") return true;
   const seg = path.split("/")[1] ?? "";
   if (UNIT_IDS.includes(seg)) { const u = UNIT_AREAS.find((x) => x.id === seg)!; return u.tabs.some((t) => canAccessUnitTab(profile, u.id, t.id, areas)); }
-  if (areas) return areas.includes(seg === "faturamento-sus" ? "faturamento" : seg);
+  if (areas) return areas.includes(seg === "faturamento-sus" ? "faturamento" : seg === "internacoes" ? "nir" : seg);
   if (path === "/recepcao") return can(profile, "recepcao");
   if (path === "/acolhimento") return can(profile, "triagem");
   if (path === "/atendimento") return can(profile, "prescrever");
@@ -101,7 +101,7 @@ export function canAccessPage(profile: Profile, path: string, areas?: readonly s
   if (path === "/centro-cirurgico" || path === "/cme" || path === "/gestao-cirurgica") return can(profile, "cirurgia");
   if (path === "/farmacia") return can(profile, "farmacia");
   if (path === "/almoxarifado") return can(profile, "almoxarifado");
-  if (path === "/nir") return can(profile, "nir");
+  if (path === "/nir" || path === "/internacoes") return can(profile, "nir");
   if (path === "/sciras") return can(profile, "sciras");
   if (path === "/enfermagem") return can(profile, "checar");
   if (path === "/faturamento" || path === "/faturamento-sus") return can(profile, "faturar");

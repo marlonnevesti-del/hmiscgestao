@@ -6,6 +6,7 @@ import type { Encounter } from '@/lib/care-flow';
 import type { Patient } from '@/lib/hospital-data';
 import { Letterhead } from '@/components/DischargePrint';
 import { AihLaudoButton } from '@/components/AihLaudo';
+import { ClinicalDocsButtons } from '@/components/ClinicalDocs';
 
 type Doc = 'termo' | 'internado' | 'comparecimento';
 const dt = (d?: string) => (d ? new Date(d).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : '—');
@@ -103,6 +104,7 @@ export function InpatientDocsButtons({ p, e }: { p: Patient; e?: Encounter | und
   const btn = 'flex items-center gap-1.5 rounded-md border px-3 py-2 text-xs font-medium hover:bg-muted';
   return <>
     <AihLaudoButton p={p} e={e} />
+    <ClinicalDocsButtons p={p} e={e} />
     <AmendDocumentButton p={p} e={e} />
     <button onClick={() => run('termo')} className={btn}><FileText className="h-4 w-4" />Termo internação</button>
     <button onClick={() => run('internado')} className={btn}><FileText className="h-4 w-4" />Decl. internação</button>

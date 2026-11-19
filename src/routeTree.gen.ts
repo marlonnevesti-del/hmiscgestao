@@ -27,6 +27,7 @@ import { Route as AuthenticatedFarmaciaRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedFaturamentoRouteImport } from './routes/_authenticated.faturamento'
 import { Route as AuthenticatedFaturamentoSusRouteImport } from './routes/_authenticated.faturamento-sus'
 import { Route as AuthenticatedGestaoCirurgicaRouteImport } from './routes/_authenticated.gestao-cirurgica'
+import { Route as AuthenticatedInternacoesRouteImport } from './routes/_authenticated.internacoes'
 import { Route as AuthenticatedMaternidadeRouteImport } from './routes/_authenticated.maternidade'
 import { Route as AuthenticatedNirRouteImport } from './routes/_authenticated.nir'
 import { Route as AuthenticatedPainelTvRouteImport } from './routes/_authenticated.painel-tv'
@@ -135,6 +136,12 @@ const AuthenticatedGestaoCirurgicaRoute =
     path: '/gestao-cirurgica',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedInternacoesRoute =
+  AuthenticatedInternacoesRouteImport.update({
+    id: '/internacoes',
+    path: '/internacoes',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedMaternidadeRoute =
   AuthenticatedMaternidadeRouteImport.update({
     id: '/maternidade',
@@ -204,6 +211,7 @@ export interface FileRoutesByFullPath {
   '/faturamento': typeof AuthenticatedFaturamentoRoute
   '/faturamento-sus': typeof AuthenticatedFaturamentoSusRoute
   '/gestao-cirurgica': typeof AuthenticatedGestaoCirurgicaRoute
+  '/internacoes': typeof AuthenticatedInternacoesRoute
   '/maternidade': typeof AuthenticatedMaternidadeRoute
   '/nir': typeof AuthenticatedNirRoute
   '/painel-tv': typeof AuthenticatedPainelTvRoute
@@ -231,6 +239,7 @@ export interface FileRoutesByTo {
   '/faturamento': typeof AuthenticatedFaturamentoRoute
   '/faturamento-sus': typeof AuthenticatedFaturamentoSusRoute
   '/gestao-cirurgica': typeof AuthenticatedGestaoCirurgicaRoute
+  '/internacoes': typeof AuthenticatedInternacoesRoute
   '/maternidade': typeof AuthenticatedMaternidadeRoute
   '/nir': typeof AuthenticatedNirRoute
   '/painel-tv': typeof AuthenticatedPainelTvRoute
@@ -261,6 +270,7 @@ export interface FileRoutesById {
   '/_authenticated/faturamento': typeof AuthenticatedFaturamentoRoute
   '/_authenticated/faturamento-sus': typeof AuthenticatedFaturamentoSusRoute
   '/_authenticated/gestao-cirurgica': typeof AuthenticatedGestaoCirurgicaRoute
+  '/_authenticated/internacoes': typeof AuthenticatedInternacoesRoute
   '/_authenticated/maternidade': typeof AuthenticatedMaternidadeRoute
   '/_authenticated/nir': typeof AuthenticatedNirRoute
   '/_authenticated/painel-tv': typeof AuthenticatedPainelTvRoute
@@ -292,6 +302,7 @@ export interface FileRouteTypes {
     | '/faturamento'
     | '/faturamento-sus'
     | '/gestao-cirurgica'
+    | '/internacoes'
     | '/maternidade'
     | '/nir'
     | '/painel-tv'
@@ -319,6 +330,7 @@ export interface FileRouteTypes {
     | '/faturamento'
     | '/faturamento-sus'
     | '/gestao-cirurgica'
+    | '/internacoes'
     | '/maternidade'
     | '/nir'
     | '/painel-tv'
@@ -348,6 +360,7 @@ export interface FileRouteTypes {
     | '/_authenticated/faturamento'
     | '/_authenticated/faturamento-sus'
     | '/_authenticated/gestao-cirurgica'
+    | '/_authenticated/internacoes'
     | '/_authenticated/maternidade'
     | '/_authenticated/nir'
     | '/_authenticated/painel-tv'
@@ -496,6 +509,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedGestaoCirurgicaRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/internacoes': {
+      id: '/_authenticated/internacoes'
+      path: '/internacoes'
+      fullPath: '/internacoes'
+      preLoaderRoute: typeof AuthenticatedInternacoesRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/maternidade': {
       id: '/_authenticated/maternidade'
       path: '/maternidade'
@@ -575,6 +595,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedFaturamentoRoute: typeof AuthenticatedFaturamentoRoute
   AuthenticatedFaturamentoSusRoute: typeof AuthenticatedFaturamentoSusRoute
   AuthenticatedGestaoCirurgicaRoute: typeof AuthenticatedGestaoCirurgicaRoute
+  AuthenticatedInternacoesRoute: typeof AuthenticatedInternacoesRoute
   AuthenticatedMaternidadeRoute: typeof AuthenticatedMaternidadeRoute
   AuthenticatedNirRoute: typeof AuthenticatedNirRoute
   AuthenticatedPainelTvRoute: typeof AuthenticatedPainelTvRoute
@@ -600,6 +621,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedFaturamentoRoute: AuthenticatedFaturamentoRoute,
   AuthenticatedFaturamentoSusRoute: AuthenticatedFaturamentoSusRoute,
   AuthenticatedGestaoCirurgicaRoute: AuthenticatedGestaoCirurgicaRoute,
+  AuthenticatedInternacoesRoute: AuthenticatedInternacoesRoute,
   AuthenticatedMaternidadeRoute: AuthenticatedMaternidadeRoute,
   AuthenticatedNirRoute: AuthenticatedNirRoute,
   AuthenticatedPainelTvRoute: AuthenticatedPainelTvRoute,
