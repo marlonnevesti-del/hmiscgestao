@@ -4,3 +4,7 @@
 - Ambulatory nursing pre-consult eligibility is needsNursingPreConsult in ambulatorio.ts (obstetric specialty or encounter/appointment nursingPreConsult flag).
 - Admin open BAA/FIA management is /gestao-atendimentos (admin-only via canAccessPage); edits go through correctEncounter in hospital-store with mandatory justification logged in history.
 - Sidebar badges and home cockpit counts come from pendingCounts in dashboard.ts so menu and painel never disagree.
+- OS cost report: src/lib/os-report.ts values movements by stock unitCost; /prestacao-contas shares faturamento area.
+- SUS billing (BPA/AIH) rows, DATASUS pending-issue rules and positional export files live in src/lib/sus-billing.ts; /faturamento-sus shares the faturamento access area so admin area grants stay consistent.
+- CME rules (kit status, autoclave cycles, validity, biological block, barcode) live in src/lib/cme.ts; kit use is registered on the surgery via registerCmeKitUse in hospital-store so traceability stays centralized.
+- Controlled-cabinet items come from src/lib/controlled-catalog.json merged into the pharmacy stock (location "Armário de Controlados"); expiry status, lot map and monthly consumption/purchase suggestion rules live in src/lib/controlled.ts; dispensations log 'consumo' and expiry write-offs log 'vencimento' movements so the report reads one history.
