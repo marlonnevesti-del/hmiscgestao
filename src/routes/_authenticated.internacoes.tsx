@@ -7,6 +7,8 @@ import { NoPermission } from '@/components/AppShell';
 import { useStore } from '@/lib/hospital-store';
 import { BASE_BEDS, WARDS, canAccessPage } from '@/lib/hospital-data';
 import { admissionsReport, pct } from '@/lib/inpatient-docs';
+import { useQuery } from '@tanstack/react-query';
+import { hotelariaBedsQuery } from '@/lib/hotelaria-beds-query';
 
 export const Route = createFileRoute('/_authenticated/internacoes')({
   head: () => ({ meta: [
@@ -32,10 +34,15 @@ function Page() {
 function Census() {
   const patients = useStore((s) => s.patients); const encounters = useStore((s) => s.encounters);
   const occupied = new Set([...patients.filter((p) => p.bed).map((p) => p.bed), ...encounters.filter((e) => e.fia && !e.discharge).map((e) => e.fia!.bed)]);
-  const rows = WARDS.map((w) => { const b = BASE_BEDS.filter((x) => x.ward === w.id); const o = b.filter((x) => occupied.has(x.id)).length; return { w, total: b.length, o }; }).filter((r) => r.total);
+  const { data: hot } = useQuery(hotelariaBedsQuery);
+  const real = hot?.status === 'connected' && hot.snapshot ? hot.snapshot.setores : null;
+  const rows = real
+    ? real.map((st) => ({ w: { id: st.id, name: st.nome }, total: st.leitos.length, o: st.leitos.filter((l) => l.status === 'ocupado' || occupied.has(l.codigo)).length }))
+    : WARDS.map((w) => { const b = BASE_BEDS.filter((x) => x.ward === w.id); const o = b.filter((x) => occupied.has(x.id)).length; return { w: { id: w.id, name: w.name }, total: b.length, o }; }).filter((r) => r.total);
   const T = rows.reduce((s, r) => s + r.total, 0), O = rows.reduce((s, r) => s + r.o, 0);
   const inpatients = encounters.filter((e) => e.fia && !e.discharge);
   return <div className="space-y-4">
+    <p className="text-xs text-muted-foreground">{real ? "Leitos reais da Hotelaria (Hospital Care Connect), atualizados a cada 5 s." : "Hotelaria sem atualização — mostrando leitos locais."}</p>
     <div className="grid gap-3 sm:grid-cols-4"><Kpi l="Leitos" v={T} /><Kpi l="Ocupados" v={O} /><Kpi l="Livres" v={T - O} /><Kpi l="Taxa de ocupação" v={`${pct(O, T)}%`} /></div>
     <table className="w-full rounded-lg border text-sm"><thead className="bg-muted"><tr><th className="p-2 text-left">Unidade</th><th>Leitos</th><th>Ocupados</th><th>Livres</th><th>Ocupação</th></tr></thead>
       <tbody>{rows.map((r) => { const p = pct(r.o, r.total); return <tr key={r.w.id} className="border-t"><td className="p-2">{r.w.name}</td><td className="text-center">{r.total}</td><td className="text-center">{r.o}</td><td className="text-center">{r.total - r.o}</td>

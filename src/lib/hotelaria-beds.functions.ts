@@ -53,3 +53,24 @@ export const reserveHotelariaBed = createServerFn({ method: "POST" })
       return { ok: false, message: "Sem comunicação com a Hotelaria. Reserva não feita." };
     }
   });
+// On discharge, ask Hotelaria to move the bed to "aguardando_higienizacao" (cleaning queue).
+export const releaseHotelariaBed = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ codigo: z.string().trim().min(1).max(40) }).parse(d))
+  .handler(async ({ data, context }): Promise<{ ok: boolean; message: string }> => {
+    const { data: profile, error } = await context.supabase.from("profiles").select("status").eq("id", context.userId).single();
+    if (error || profile?.status !== "approved") throw new Error("Acesso não autorizado.");
+    const origin = process.env["HOTELARIA_INTEGRATION_ORIGIN"]; const token = process.env["HOTELARIA_INTEGRATION_TOKEN"];
+    if (!origin || !token) return { ok: false, message: "Vínculo com a Hotelaria não configurado." };
+    try {
+      const url = new URL(origin);
+      if (url.protocol !== "https:") throw new Error("bad origin");
+      url.pathname = "/api/public/integracao/liberar-leito";
+      const r = await fetch(url, { method: "POST", headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json", Accept: "application/json" }, body: JSON.stringify({ codigo: data.codigo }), signal: AbortSignal.timeout(6000), redirect: "manual" });
+      if (r.ok) return { ok: true, message: `Leito ${data.codigo} enviado para higienização na Hotelaria.` };
+      console.error("Hotelaria release failed", r.status);
+      return { ok: false, message: r.status === 404 ? "A Hotelaria ainda não recebe avisos de alta — avise a higienização manualmente." : "Hotelaria não confirmou a liberação do leito." };
+    } catch {
+      return { ok: false, message: "Sem comunicação com a Hotelaria. Avise a higienização manualmente." };
+    }
+  });
