@@ -177,7 +177,7 @@ function Evolution({ patients }: { patients: Patient[] }) {
       <PatientSelect value={pid} onChange={(v) => { setPid(v); setText(""); }} patients={patients} />
       {p && <>
         <textarea aria-label="Evolução SCIRAS" className={cn(area, "min-h-40 font-mono text-xs")} value={text || template} onChange={(e) => setText(e.target.value)} />
-        <Button onClick={() => { if (run(() => addScirasEvolution(p.id, text || template), "Evolução SCIRAS registrada no prontuário")) setText(""); }}>Assinar e registrar no prontuário</Button>
+        <Button onClick={() => { if (run(() => addScirasEvolution(p.id, text || template), "Evolução SCIRAS registrada no prontuário")) setText(""); }}>Registrar no prontuário</Button>
       </>}
     </section>
   );

@@ -51,7 +51,7 @@ function NursingCard({ encounter, patient }: { encounter: Encounter; patient: Pa
     {open && <div className="mt-3 space-y-2">
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">{FIELDS.map(([k, l]) => <Input key={k} aria-label={l} placeholder={l} inputMode="decimal" value={v[k] ?? ""} onChange={(ev) => setV({ ...v, [k]: ev.target.value })} />)}</div>
       <textarea aria-label="Evolução de enfermagem" rows={6} value={text} onChange={(ev) => setText(ev.target.value)} placeholder="Evolução de enfermagem: queixa, antecedentes, orientações…" className="w-full rounded-md border bg-background p-2 text-sm" />
-      <Button onClick={save} disabled={!text.trim()}>Salvar e assinar evolução</Button>
+      <Button onClick={save} disabled={!text.trim()}>Salvar evolução</Button>
     </div>}
   </div>;
 }

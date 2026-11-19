@@ -68,7 +68,7 @@ function PrescriptionQueue() {
   return <section><h2 className="font-semibold">Prescrições aguardando dispensação ({list.length})</h2>{!list.length && <p className="py-6 text-muted-foreground">Nenhuma prescrição aguardando farmácia.</p>}{list.map((encounter) => {
     const patient = patients.find((item) => item.id === encounter.patientId);
     if (!patient) return null;
-    return <section key={encounter.id} className="space-y-3 border-b py-4"><Button variant="link" asChild><Link to="/pacientes/$id" params={{ id: patient.id }}>{patient.name} · {patient.bed || patient.ward}</Link></Button><div className="text-xs">Peso {patient.weight} kg · Assinatura: {encounter.signedBy}</div><EncounterTimeline patientId={patient.id} />
+    return <section key={encounter.id} className="space-y-3 border-b py-4"><Button variant="link" asChild><Link to="/pacientes/$id" params={{ id: patient.id }}>{patient.name} · {patient.bed || patient.ward}</Link></Button><div className="text-xs">Peso {patient.weight} kg · Liberada por: {encounter.signedBy}</div><EncounterTimeline patientId={patient.id} />
       {patient.prescriptions.filter((prescription) => prescription.pharmacy).map((prescription) => {
         const medication = findStockMedication(stock, prescription.item);
         const needed = prescription.times?.length ?? 1;

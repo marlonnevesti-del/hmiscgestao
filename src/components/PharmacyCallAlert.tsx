@@ -14,7 +14,7 @@ function chime() {
   } catch { /* som bloqueado pelo navegador */ }
 }
 
-/** Avisa a farmácia (som + aviso na tela) quando chega nova prescrição assinada. */
+/** Avisa a farmácia (som + aviso na tela) quando chega nova prescrição liberada. */
 export function PharmacyCallAlert() {
   const encounters = useStore((s) => s.encounters);
   const patients = useStore((s) => s.patients);
@@ -28,7 +28,7 @@ export function PharmacyCallAlert() {
     chime();
     fresh.forEach((e) => {
       const name = patients.find((p) => p.id === e.patientId)?.name ?? "Paciente";
-      toast.warning(`Nova prescrição para a farmácia: ${name}`, { description: `${e.number} · assinada por ${e.signedBy ?? "médico"}`, duration: 20000, action: { label: "Abrir farmácia", onClick: () => { window.location.href = "/farmacia"; } } });
+      toast.warning(`Nova prescrição para a farmácia: ${name}`, { description: `${e.number} · liberada por ${e.signedBy ?? "médico"}`, duration: 20000, action: { label: "Abrir farmácia", onClick: () => { window.location.href = "/farmacia"; } } });
       if (typeof Notification !== "undefined" && Notification.permission === "granted") new Notification("Nova prescrição", { body: name });
     });
   }, [encounters, patients]);

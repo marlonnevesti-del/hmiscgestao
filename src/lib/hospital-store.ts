@@ -96,7 +96,7 @@ export function signPrescription(id: string) {
   if (!p.prescriptions.length) throw new Error('Adicione itens à prescrição.');
   const needsPharmacy = p.prescriptions.some((r) => r.cat === 'Medicamento' || r.cat === 'Hidratação');
   const at = new Date().toISOString();
-  const next = transition(e, needsPharmacy ? 'AGUARDANDO_FARMACIA' : 'EM_OBSERVACAO_REAVALIACAO', professionalName(state.profile), 'Prescrição assinada', at);
+  const next = transition(e, needsPharmacy ? 'AGUARDANDO_FARMACIA' : 'EM_OBSERVACAO_REAVALIACAO', professionalName(state.profile), 'Prescrição liberada', at);
   commitEncounter({ ...next, signedAt: at, signedBy: professionalName(state.profile) }, { patients: state.patients.map((x) => x.id === p.id ? { ...x, prescriptions: x.prescriptions.map((r) => r.cat === 'Medicamento' || r.cat === 'Hidratação' ? { ...r, pharmacy: 'Pendente', times: r.times?.length ? r.times : [nowHM()] } : r.cat === 'Cuidados' ? { ...r, times: r.times?.length ? r.times : [nowHM()] } : r) } : x) });
 }
 export function validatePrescription(id: string, rxId: string) {

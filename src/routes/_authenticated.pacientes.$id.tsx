@@ -137,7 +137,7 @@ function Evolucao({ p }: { p: Patient }) {
           <div className="mb-2 flex gap-2"><select value={cat} onChange={(e) => setCat(e.target.value as EvoCat)} className="h-8 flex-1 rounded-md border bg-background px-2 text-xs">{CATS.map((c) => <option key={c}>{c}</option>)}</select></div>
           <div className="mb-2 flex flex-wrap gap-1">{Object.keys(SOAP).map((k) => <button key={k} onClick={() => setText(SOAP[k as keyof typeof SOAP])} className="rounded border px-2 py-0.5 text-[11px] hover:bg-muted">{k}</button>)}</div>
           <textarea value={text} onChange={(e) => setText(e.target.value)} rows={8} className="w-full rounded-md border bg-background p-2 font-mono text-xs" placeholder="Escolha um modelo ou digite…" />
-          <button disabled={!text.trim()} onClick={() => { updatePatient(p.id, (x) => ({ evolutions: [{ time: `14/11 ${nowHM()}`, cat, author: professionalName(profile), text }, ...x.evolutions] })); setText(""); toast.success("Evolução registrada e assinada"); }} className="mt-2 w-full rounded-md bg-clinical py-2 text-sm font-medium text-accent-foreground disabled:opacity-50">Assinar e registrar</button>
+          <button disabled={!text.trim()} onClick={() => { updatePatient(p.id, (x) => ({ evolutions: [{ time: `14/11 ${nowHM()}`, cat, author: professionalName(profile), text }, ...x.evolutions] })); setText(""); toast.success("Evolução registrada"); }} className="mt-2 w-full rounded-md bg-clinical py-2 text-sm font-medium text-accent-foreground disabled:opacity-50">Registrar evolução</button>
         </> : <NoPermission action="registrar evoluções" />}
       </Card>
     </div>
@@ -180,7 +180,7 @@ function Prescricao({ p }: { p: Patient }) {
       const hit = p.allergies.find((a) => typedDrug.toLowerCase().includes(a.toLowerCase()));
       if (hit) { toast.error(`Conflito de alergia: ${hit}`); return; }
       updatePatient(p.id, (x) => ({ prescriptions: [...x.prescriptions, { id: `rx-${Date.now()}`, cat, item: `${typedDrug.trim()} ${free.trim()}`.trim(), posologia: pos.trim(), pharmacy: "Pendente" as const, ...(atb ? { atb } : {}) }] }));
-      setTypedDrug(""); setFree(""); setPos(""); toast.success("Item digitado adicionado – segue para a farmácia ao assinar"); return;
+      setTypedDrug(""); setFree(""); setPos(""); toast.success("Item digitado adicionado – segue para a farmácia ao salvar a prescrição"); return;
     }
     if (!editable) { toast.error("Inicie ou retome o atendimento médico para editar a prescrição."); return; }
     if (isMed && (ped && !(p.weight > 0))) { toast.error("Peso obrigatório para dose pediátrica"); return; }
@@ -197,7 +197,7 @@ function Prescricao({ p }: { p: Patient }) {
   };
   return (
     <div className="grid gap-4 lg:grid-cols-[1fr_360px]">
-      <Card title="Prescrição vigente – 14/11/2026" action={editable && <button onClick={() => { updatePatient(p.id, (x) => ({ prescriptions: (x.previousPrescriptions ?? []).map((r, i) => ({ ...r, id: `rx-c${Date.now()}-${i}`, ...(r.cat === "Medicamento" ? { pharmacy: "Pendente" as const } : {}) })) })); toast.success("Prescrição anterior clonada – revise e assine"); }} className="flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium hover:bg-muted"><Copy className="h-3.5 w-3.5" />Clonar Prescrição Anterior</button>}>
+      <Card title="Prescrição vigente – 14/11/2026" action={editable && <button onClick={() => { updatePatient(p.id, (x) => ({ prescriptions: (x.previousPrescriptions ?? []).map((r, i) => ({ ...r, id: `rx-c${Date.now()}-${i}`, ...(r.cat === "Medicamento" ? { pharmacy: "Pendente" as const } : {}) })) })); toast.success("Prescrição anterior clonada – revise e salve"); }} className="flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium hover:bg-muted"><Copy className="h-3.5 w-3.5" />Clonar Prescrição Anterior</button>}>
         {cats.map((c) => { const it = p.prescriptions.filter((x) => x.cat === c); return (
           <div key={c} className="mb-3"><div className="mb-1 text-xs font-semibold uppercase text-primary">{c === "Hidratação" ? "Hidratação / Venóclise" : c === "Exames" ? "Solicitação de exames" : c === "Cuidados" ? "Cuidados de enfermagem" : c}</div>
             {it.length === 0 ? <div className="text-xs text-muted-foreground">—</div> : it.map((x) => (

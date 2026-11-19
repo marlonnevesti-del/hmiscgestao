@@ -253,7 +253,7 @@ export function buildBill(p: Patient, surgeries: Surgery[], admins: Record<strin
   const pend: string[] = [];
   if (!p.authorized && p.insurance !== "SUS") pend.push("Guia de convênio sem autorização");
   if (!p.guia) pend.push("Número de guia/AIH não informado");
-  if (p.evolutions.some((e) => e.text.length > 0 && e.author === "")) pend.push("Evolução sem assinatura médica");
+  if (p.evolutions.some((e) => e.text.length > 0 && e.author === "")) pend.push("Evolução sem profissional identificado");
   if (p.days >= 3 && !p.evolutions.some((e) => e.time.startsWith("14/11") && e.cat === "Médica")) pend.push("Falta evolução médica do dia");
   if (surgeries.some((s) => s.patientId === p.id && s.type === "Cesárea" && s.gastos.length > 3)) pend.push("Justificativa de OPME pendente");
   return { lines, total, pend };
