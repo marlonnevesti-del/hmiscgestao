@@ -15,6 +15,7 @@ import { PatientIcon } from "@/components/PatientIcon";
 import { SpecialConditionsBanner } from "@/components/SpecialConditions";
 import { PatientSheetPrint, printSheet } from "@/components/PatientSheetPrint";
 import { InpatientDocsButtons } from "@/components/InpatientDocsPrint";
+import { MedicalDocsButtons } from "@/components/MedicalDocs";
 import { PatientRegistrationFields } from "@/components/PatientRegistrationFields";
 import { registrationFor } from "@/lib/patient-registration-mapping";
 import { DoseCalculator, calcResult, initCalc } from "@/components/DoseCalculator";
@@ -58,12 +59,13 @@ function PEP() {
             {p.allergies.length > 0 ? <span className="pulse-alert rounded-md bg-maternal px-2 py-1 text-xs font-bold text-primary-foreground">ALERGIA: {p.allergies.join(", ")}</span> : <span className="rounded-md bg-muted px-2 py-1 text-xs">Sem alergias conhecidas</span>}
             {p.risks.map((r) => <span key={r} className={cn("rounded-full px-2 py-1 text-[10px] font-semibold", r === "Queda" ? "bg-mt-yellow text-foreground" : r === "Alergia" ? "bg-maternal-soft text-maternal" : r === "Risco Hemorrágico" ? "bg-maternal text-primary-foreground" : "bg-mt-orange text-primary-foreground")}>{r}</span>)}
           </div>
-          <div className="ml-auto flex items-center gap-3">
+          <div className="ml-auto flex flex-wrap items-center gap-3">
             <div className="text-right text-xs">{sheetEncounter?.fia ? <div className="mb-1 rounded bg-primary px-2 py-0.5 font-semibold text-primary-foreground">FIA ativa · {sheetEncounter.fia.number}</div> : sheetEncounter && <div className="mb-1 font-semibold">{sheetEncounter.number}</div>}<div className="font-mono font-semibold">{p.bed}</div><div className="text-muted-foreground">{WARDS.find((w) => w.id === p.ward)?.name} · {p.insurance}</div></div>
             <button onClick={() => setPrint(true)} className="flex items-center gap-1.5 rounded-md border px-3 py-2 text-xs font-medium hover:bg-muted"><Printer className="h-4 w-4" />Pulseira/Etiqueta</button>
             <button onClick={() => printSheet("BAA")} className="flex items-center gap-1.5 rounded-md border px-3 py-2 text-xs font-medium hover:bg-muted"><Printer className="h-4 w-4" />BAA</button>
             <ProcedurePrintButton patientId={p.id} /><button onClick={() => printSheet("FIA")} className="flex items-center gap-1.5 rounded-md border px-3 py-2 text-xs font-medium hover:bg-muted"><Printer className="h-4 w-4" />FIA</button>
             <InpatientDocsButtons p={p} e={sheetEncounter} />
+            <MedicalDocsButtons p={p} e={sheetEncounter} />
           </div>
         </div>
         <div className="mt-1 text-xs"><span className="font-medium">Diagnóstico:</span> {p.diagnosis}</div>

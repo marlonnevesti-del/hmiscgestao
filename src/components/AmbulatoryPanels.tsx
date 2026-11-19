@@ -12,6 +12,7 @@ import { NoPermission } from "./AppShell";
 import { can, canAct } from "@/lib/hospital-data";
 import { GROUP_LABELS, type SadtReport, type SpecialtyGroup } from "@/lib/ambulatorio";
 import type { Encounter } from "@/lib/care-flow";
+import { ExamRequestsBoard } from "./ExamRequestsBoard";
 import { checkInAppointment, createAmbSpecialty, professionalName, saveSadtReport, rememberDoctor, scheduleAppointment, setAppointmentStatus, toggleAmbSpecialty, useStore } from "@/lib/hospital-store";
 
 const act = (fn: () => void, ok?: string) => { try { fn(); if (ok) toast.success(ok); } catch (e) { toast.error(e instanceof Error ? e.message : "Ação não concluída"); } };
@@ -83,6 +84,7 @@ export function SadtPanel() {
   const [open, setOpen] = useState<Encounter | null>(null); const [print, setPrint] = useState<Encounter | null>(null);
   const doPrint = (e: Encounter) => { setPrint(e); setTimeout(printProcedure, 50); };
   return <div className="space-y-4">
+    <ExamRequestsBoard />
     <h3 className="font-semibold">Aguardando exame / laudo ({pending.length})</h3>
     {pending.map((e) => <div key={e.id} className="flex flex-wrap items-center justify-between gap-2 border-b py-2"><div><b>{patients.find((p) => p.id === e.patientId)?.name}</b> <span className="text-xs text-muted-foreground">{e.number} · {e.specialty}</span></div><Button size="sm" disabled={!can(profile, "prescrever")} onClick={() => setOpen(e)}>Emitir laudo</Button></div>)}
     {!pending.length && <p className="text-sm text-muted-foreground">Nenhum exame pendente.</p>}

@@ -19,7 +19,7 @@ export interface Encounter {
   id: string; number: string; patientId: string; status_fluxo: FlowStatus; openedAt: string; type: string; specialty: string; complaint: string;
   history: { status: FlowStatus; at: string; by: string; note: string }[];
   triage?: Triage; medical?: { anamnesis: string; exam: string; cid: string; diagnosis: string };
-  signedAt?: string; signedBy?: string; intervention?: string; dispensedAt?: string; dispensedBy?: string; requisition?: string; examPending?: string; discharge?: { summary: string; recipe: string; at: string; by: string }; admission?: AdmissionRequest; fia?: FiaRecord; baaClosedAt?: string; sadtReport?: import('./ambulatorio').SadtReport; aihLaudo?: Record<string, string>; sigtapCode?: string;
+  signedAt?: string; signedBy?: string; intervention?: string; dispensedAt?: string; dispensedBy?: string; requisition?: string; examPending?: string; discharge?: { summary: string; recipe: string; at: string; by: string }; admission?: AdmissionRequest; fia?: FiaRecord; baaClosedAt?: string; sadtReport?: import('./ambulatorio').SadtReport; aihLaudo?: Record<string, string>; sigtapCode?: string; examRequests?: import('./exam-requests').ExamRequest[];
 }
 const NEXT: Record<FlowStatus, FlowStatus[]> = {
   AGUARDANDO_TRIAGEM: ['AGUARDANDO_MEDICO'],

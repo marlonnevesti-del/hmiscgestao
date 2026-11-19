@@ -36,6 +36,7 @@ export const updatePatient = (id: string, fn: (p: Patient) => Partial<Patient>) 
 export const professionalName = (_p: Profile) => state.employeeName || "Colaborador";
 export const nowHM = () => new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
 
+import { examRequestIssues as examRequestIssuesFn, moveExam as moveExamFn } from './exam-requests';
 function requireAction(action: Parameters<typeof can>[1]) {
   if (!canAct(state.profile, action, state.accessAreas)) throw new Error('Seu perfil não permite esta ação.');
 }
@@ -593,4 +594,21 @@ export function addScirasEvolution(patientId: string, text: string) {
   requireAction('sciras');
   if (!text.trim()) throw new Error('Escreva a evolução.');
   updatePatient(patientId, (x) => ({ evolutions: [{ time: new Date().toLocaleString('pt-BR'), cat: 'SCIRAS' as const, author: professionalName(state.profile), text: text.trim() }, ...x.evolutions] }));
+}
+
+// Pedidos de exames: qualquer médico solicita; o SADT (prescrever ou área ambulatorio:sadt) agenda, confirma e lauda.
+export function requestExam(encounterId: string, r: Omit<import('./exam-requests').ExamRequest, 'id' | 'requestedAt' | 'requestedBy' | 'status'>) {
+  requireAction('prescrever');
+  const { e } = getEncounter(encounterId);
+  const issues = examRequestIssuesFn(r); if (issues.length) throw new Error(issues.join(' '));
+  const req = { ...r, id: crypto.randomUUID(), requestedAt: new Date().toISOString(), requestedBy: professionalName(state.profile), status: 'Solicitado' as const };
+  commitEncounter({ ...e, examRequests: [...(e.examRequests ?? []), req] });
+  return req;
+}
+export function updateExamStatus(encounterId: string, reqId: string, to: import('./exam-requests').ExamStatus, extra: Partial<import('./exam-requests').ExamRequest> = {}) {
+  if (!canAct(state.profile, 'prescrever', state.accessAreas) && !(state.accessAreas ?? []).includes('ambulatorio:sadt')) throw new Error('Seu perfil não permite esta ação.');
+  const { e } = getEncounter(encounterId);
+  const list = e.examRequests ?? []; const r = list.find((x) => x.id === reqId); if (!r) throw new Error('Pedido não encontrado.');
+  const next = moveExamFn(r, to, professionalName(state.profile), new Date().toISOString(), extra);
+  commitEncounter({ ...e, examRequests: list.map((x) => (x.id === reqId ? next : x)) });
 }
