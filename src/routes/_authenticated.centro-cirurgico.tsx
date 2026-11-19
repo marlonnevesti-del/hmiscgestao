@@ -1,3 +1,5 @@
+import { SigtapPicker } from "@/components/SigtapPicker";
+import { formatCode } from "@/lib/sigtap";
 import { DoctorNameInput } from "@/components/DoctorNameInput";
 import { rememberDoctor } from "@/lib/hospital-store";
 import { EncounterTimeline } from "@/components/EncounterTimeline";
@@ -137,6 +139,7 @@ function ScheduleForm({ day, patients }: { day: string; patients: { id: string; 
         <label className="sm:col-span-2"><span className={lbl}>Paciente cadastrado</span><select value={f.patientId} onChange={(e) => set("patientId", e.target.value)} className="h-9 w-full rounded border bg-background px-2 text-sm"><option value="">— digitar nome —</option>{patients.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</select></label>
         {!f.patientId && <label className="sm:col-span-2"><span className={lbl}>Nome do paciente</span><Input value={f.patient} onChange={(e) => set("patient", e.target.value)} /></label>}
         <label><span className={lbl}>Procedimento</span><select value={f.type} onChange={(e) => set("type", e.target.value)} className="h-9 w-full rounded border bg-background px-2 text-sm">{PROCEDURES.map((x) => <option key={x}>{x}</option>)}</select></label>
+        <div className="sm:col-span-4"><SigtapPicker onPick={(x) => set("tuss", formatCode(x.c))} /></div>
         <label><span className={lbl}>Código SIGTAP/TUSS</span><Input value={f.tuss} onChange={(e) => set("tuss", e.target.value)} /></label>
         <label><span className={lbl}>Sala</span><select value={f.room} onChange={(e) => set("room", e.target.value)} className="h-9 w-full rounded border bg-background px-2 text-sm">{ROOMS.map((x) => <option key={x}>{x}</option>)}</select></label>
         <label><span className={lbl}>Caráter</span><select value={f.urgency} onChange={(e) => set("urgency", e.target.value)} className="h-9 w-full rounded border bg-background px-2 text-sm"><option>Eletiva</option><option>Urgência</option></select></label>

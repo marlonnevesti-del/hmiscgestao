@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { amendDocuments, useStore } from '@/lib/hospital-store';
 import { AMEND_FIELDS, amendIssue, documentGaps, readField, type AmendField } from '@/lib/document-amend';
+import { SigtapPicker } from '@/components/SigtapPicker';
 import type { Encounter } from '@/lib/care-flow';
 import type { Patient } from '@/lib/hospital-data';
 
@@ -29,9 +30,10 @@ export function AmendDocumentButton({ p, e, label = 'Retificar documentos (Admin
     <Dialog open={open} onOpenChange={setOpen}><DialogContent className="max-h-[90vh] overflow-y-auto">
       <DialogHeader><DialogTitle>Retificar documentos · {p.name} · {e.fia?.number ?? e.number}</DialogTitle></DialogHeader>
       <div className="grid gap-3 sm:grid-cols-2">{fields.map((f) => { const v = vals[f.id] ?? ''; const err = amendIssue(f.id, v); const missing = gaps.includes(f.id) && !v.trim();
-        return <label key={f.id} className="text-xs font-medium">{f.label}{missing && <span className="ml-1 text-destructive">· pendente</span>}
+        const picker = f.id === 'sigtapCode' ? <SigtapPicker onPick={(p) => setVals((x) => ({ ...x, sigtapCode: p.c }))} /> : null;
+        return <div key={f.id} className={picker ? 'grid gap-2 sm:col-span-2' : ''}>{picker}<label className="text-xs font-medium">{f.label}{missing && <span className="ml-1 text-destructive">· pendente</span>}
           <Input value={v} onChange={(ev) => setVals((x) => ({ ...x, [f.id]: ev.target.value }))} aria-invalid={!!err} className={err || missing ? 'border-destructive' : ''} />
-          {err && <span className="text-[11px] text-destructive">{err}</span>}</label>; })}</div>
+          {err && <span className="text-[11px] text-destructive">{err}</span>}</label></div>; })}</div>
       <label className="text-xs font-medium">Justificativa (obrigatória)<textarea value={reason} onChange={(ev) => setReason(ev.target.value)} className="mt-1 min-h-16 w-full rounded-md border bg-background p-2 text-sm" /></label>
       <Button disabled={!reason.trim() || fields.some((f) => amendIssue(f.id, vals[f.id] ?? ''))} onClick={save}>Salvar retificação</Button>
     </DialogContent></Dialog>

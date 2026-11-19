@@ -8,7 +8,7 @@ import { Letterhead, LetterFooter } from "@/components/DischargePrint";
 import { printProcedure } from "@/components/ProcedurePrint";
 import { can } from "@/lib/hospital-data";
 import { useStore } from "@/lib/hospital-store";
-import { DocumentGapsPanel } from "@/components/DocumentAmend";
+import { AmendDocumentButton, DocumentGapsPanel } from "@/components/DocumentAmend";
 import { aihFile, bpaFile, buildSusRows, CNES, competenceOf, type Professional, type SusRow } from "@/lib/sus-billing";
 import { cn } from "@/lib/utils";
 
@@ -82,7 +82,7 @@ function SusBilling() {
               <td className="py-1">{fmt(r.date)}</td><td className="font-mono text-xs">{r.encounter.number}</td><td>{r.name}</td>
               <td className="font-mono text-xs">{r.cns || "—"}</td><td>{r.cid || "—"}</td><td className="font-mono text-xs">{r.procedure}</td>
               <td className={cn("text-xs", r.issues.length ? "text-destructive" : "text-clinical")}>{r.issues.length ? r.issues.map((i) => <div key={i}>• {i}</div>) : "OK"}</td>
-              <td>{tab === "AIH" && <Button size="sm" variant="outline" onClick={() => print({ title: "LAUDO PARA SOLICITAÇÃO DE AUTORIZAÇÃO DE INTERNAÇÃO HOSPITALAR (AIH)", laudo: r })}>Imprimir laudo</Button>}</td>
+              <td className="flex gap-1">{(() => { const pt = patients.find((x) => x.id === r.encounter.patientId); return pt ? <AmendDocumentButton p={pt} e={r.encounter} size="sm" label="Trocar código" /> : null; })()}{tab === "AIH" && <Button size="sm" variant="outline" onClick={() => print({ title: "LAUDO PARA SOLICITAÇÃO DE AUTORIZAÇÃO DE INTERNAÇÃO HOSPITALAR (AIH)", laudo: r })}>Imprimir laudo</Button>}</td>
             </tr>)}
             {!list.length && <tr><td colSpan={8} className="py-8 text-center text-muted-foreground">Nenhum atendimento nesta competência.</td></tr>}</tbody>
           </table></div>

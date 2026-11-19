@@ -9,6 +9,8 @@ import { saveClinicalDoc, professionalName, useStore } from '@/lib/hospital-stor
 import { CLINICAL_DOCS, missingFields, type ClinicalDoc, type ClinicalDocKind } from '@/lib/inpatient-docs';
 import { canAct, type Patient } from '@/lib/hospital-data';
 import type { Encounter } from '@/lib/care-flow';
+import { SigtapPicker } from '@/components/SigtapPicker';
+import { formatCode } from '@/lib/sigtap';
 import { cn } from '@/lib/utils';
 
 const ICONS = { uti: BedDouble, cirurgica: Scissors, evolucao: FileText, social: HeartHandshake, encaminhamento: Send };
@@ -70,6 +72,7 @@ function DocDialog({ kind, p, e, onClose }: { kind: ClinicalDocKind; p: Patient;
         const bad = f.required && !v[f.key]?.trim();
         const cls = cn(input, bad && 'border-destructive');
         const set = (x: string) => setV((o) => ({ ...o, [f.key]: x }));
+        if (f.key === 'sigtap') return <div key={f.key} className="grid gap-2 sm:col-span-2 sm:grid-cols-2"><SigtapPicker onPick={(p) => setV((o) => ({ ...o, sigtap: formatCode(p.c), procedimento: o['procedimento']?.trim() ? o['procedimento'] : p.n }))} /><label className="grid gap-1 text-xs font-medium">{f.label}<input className={cls} value={v[f.key] ?? ''} onChange={(x) => set(x.target.value)} /></label></div>;
         return <label key={f.key} className={cn('grid gap-1 text-xs font-medium', f.long && 'sm:col-span-2')}>{f.label}{f.required && ' *'}
           {f.options ? <select className={cls} value={v[f.key] ?? ''} onChange={(x) => set(x.target.value)}><option value="">Selecione…</option>{f.options.map((o) => <option key={o}>{o}</option>)}</select>
             : f.long ? <textarea rows={3} className={cls} value={v[f.key] ?? ''} onChange={(x) => set(x.target.value)} />
