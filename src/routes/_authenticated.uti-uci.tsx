@@ -34,7 +34,7 @@ function Page() {
 
 function Unit({ u }: { u: IcuUnit }) {
   const cfg = UNITS[u];
-  const patients = useStore((s) => s.patients.filter((p) => p.ward === cfg.ward));
+  const all = useStore((s) => s.patients); const patients = all.filter((p) => p.ward === cfg.ward);
   const [sel, setSel] = useState<string>('');
   const p = patients.find((x) => x.id === sel) ?? patients[0];
   return <div className="space-y-4">
@@ -129,7 +129,7 @@ function Notes({ p, templates }: { p: Patient; templates: Record<string, string>
 }
 
 function Exams({ p }: { p: Patient }) {
-  const reqs = useStore(() => encounterFor(p.id)?.examRequests ?? []);
+  useStore((s) => s.encounters); const reqs = encounterFor(p.id)?.examRequests ?? [];
   return <Card title="Exames solicitados (vinculados ao atendimento)">{reqs.length ? <table className="w-full text-xs"><thead><tr className="text-left"><th>Data</th><th>Tipo</th><th>Exames</th><th>Status</th><th>Resultado / laudo</th></tr></thead><tbody>
     {reqs.map((r) => <tr key={r.id} className="border-t align-top"><td>{dt(r.requestedAt)}</td><td>{r.kind}</td><td>{r.exams}</td><td><b>{r.status}</b></td><td className="whitespace-pre-wrap">{r.report || '—'}</td></tr>)}</tbody></table>
     : <p className="text-xs text-muted-foreground">Nenhum exame solicitado. O médico solicita no prontuário (PEP) e aqui a enfermagem acompanha o status e o laudo.</p>}</Card>;
