@@ -1,1 +1,2 @@
 - Surgical kit catalog (code, name, items) lives in surgical-kits.json/.ts; read-only, separate from dispensed prescriptions.
+- Admin employee profile edits use adminUpdateEmployee (server-checked role; super_admin edits only by super_admin).

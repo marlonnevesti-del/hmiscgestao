@@ -105,3 +105,48 @@ export const resolveUsernameForReset = createServerFn({ method: "POST" })
     if (rows?.length === 1 && rows[0]?.email && /^https?:$/.test(new URL(data.redirectTo).protocol)) await supabaseAdmin.auth.resetPasswordForEmail(rows[0].email, { redirectTo: data.redirectTo });
     return { ok: true };
   });
+
+export const adminEmployeeEditSchema = z.object({
+  id: z.string().uuid(),
+  full_name: z.string().trim().min(3).max(120),
+  username: z.string().trim().min(3).max(40),
+  email: z.string().trim().toLowerCase().email().max(160),
+  cpf: z.string().trim().max(20),
+  phone: z.string().trim().max(30),
+  birth_date: z.string().trim().max(20),
+  address: z.string().trim().max(200),
+  council_type: z.string().trim().max(20),
+  council_number: z.string().trim().max(30),
+  council_state: z.string().trim().max(4),
+  resend: z.boolean().optional(),
+  origin: z.string().url().optional(),
+});
+
+export const adminUpdateEmployee = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => adminEmployeeEditSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    const { data: admin } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
+    const { data: principal } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "super_admin" });
+    if (!admin && !principal) return { ok: false, message: "Somente administradores podem corrigir cadastros" };
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: targetRoles } = await supabaseAdmin.from("user_roles").select("role").eq("user_id", data.id);
+    if (!principal && (targetRoles ?? []).some((r) => r.role === "super_admin")) return { ok: false, message: "Somente o administrador principal pode alterar este cadastro" };
+    const { data: taken } = await supabaseAdmin.from("profiles").select("id").ilike("username", data.username.replace(/[%_\\]/g, "\\$&")).neq("id", data.id).limit(1);
+    if (taken?.length) return { ok: false, message: "Este nome de usuário já está em uso" };
+    const { data: current } = await supabaseAdmin.auth.admin.getUserById(data.id);
+    if (!current?.user) return { ok: false, message: "Colaborador não encontrado" };
+    const emailChanged = (current.user.email ?? "").toLowerCase() !== data.email;
+    if (emailChanged) {
+      const { error } = await supabaseAdmin.auth.admin.updateUserById(data.id, { email: data.email });
+      if (error) return { ok: false, message: "Não foi possível alterar o e-mail (talvez já esteja em uso)" };
+    }
+    const { id, resend, origin, ...fields } = data;
+    const { error } = await supabaseAdmin.from("profiles").update(fields).eq("id", id);
+    if (error) return { ok: false, message: "Não foi possível salvar o cadastro" };
+    let sent = false;
+    if (resend && !current.user.email_confirmed_at) {
+      const r = await supabaseAdmin.auth.resend({ type: "signup", email: data.email, ...(origin ? { options: { emailRedirectTo: origin } } : {}) });
+      sent = !r.error;
+    }
+    return { ok: true, message: sent ? "Cadastro corrigido e e-mail de confirmação reenviado" : "Cadastro corrigido" };
+  });
