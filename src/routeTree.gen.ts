@@ -19,6 +19,7 @@ import { Route as AuthenticatedAcolhimentoRouteImport } from './routes/_authenti
 import { Route as AuthenticatedAlmoxarifadoRouteImport } from './routes/_authenticated.almoxarifado'
 import { Route as AuthenticatedAmbulatorioRouteImport } from './routes/_authenticated.ambulatorio'
 import { Route as AuthenticatedAtendimentoRouteImport } from './routes/_authenticated.atendimento'
+import { Route as AuthenticatedBancoDeLeiteRouteImport } from './routes/_authenticated.banco-de-leite'
 import { Route as AuthenticatedCentroCirurgicoRouteImport } from './routes/_authenticated.centro-cirurgico'
 import { Route as AuthenticatedCmeRouteImport } from './routes/_authenticated.cme'
 import { Route as AuthenticatedColaboradoresRouteImport } from './routes/_authenticated.colaboradores'
@@ -93,6 +94,12 @@ const AuthenticatedAtendimentoRoute =
   AuthenticatedAtendimentoRouteImport.update({
     id: '/atendimento',
     path: '/atendimento',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedBancoDeLeiteRoute =
+  AuthenticatedBancoDeLeiteRouteImport.update({
+    id: '/banco-de-leite',
+    path: '/banco-de-leite',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedCentroCirurgicoRoute =
@@ -230,6 +237,7 @@ export interface FileRoutesByFullPath {
   '/almoxarifado': typeof AuthenticatedAlmoxarifadoRoute
   '/ambulatorio': typeof AuthenticatedAmbulatorioRoute
   '/atendimento': typeof AuthenticatedAtendimentoRoute
+  '/banco-de-leite': typeof AuthenticatedBancoDeLeiteRoute
   '/centro-cirurgico': typeof AuthenticatedCentroCirurgicoRoute
   '/cme': typeof AuthenticatedCmeRoute
   '/colaboradores': typeof AuthenticatedColaboradoresRoute
@@ -262,6 +270,7 @@ export interface FileRoutesByTo {
   '/almoxarifado': typeof AuthenticatedAlmoxarifadoRoute
   '/ambulatorio': typeof AuthenticatedAmbulatorioRoute
   '/atendimento': typeof AuthenticatedAtendimentoRoute
+  '/banco-de-leite': typeof AuthenticatedBancoDeLeiteRoute
   '/centro-cirurgico': typeof AuthenticatedCentroCirurgicoRoute
   '/cme': typeof AuthenticatedCmeRoute
   '/colaboradores': typeof AuthenticatedColaboradoresRoute
@@ -297,6 +306,7 @@ export interface FileRoutesById {
   '/_authenticated/almoxarifado': typeof AuthenticatedAlmoxarifadoRoute
   '/_authenticated/ambulatorio': typeof AuthenticatedAmbulatorioRoute
   '/_authenticated/atendimento': typeof AuthenticatedAtendimentoRoute
+  '/_authenticated/banco-de-leite': typeof AuthenticatedBancoDeLeiteRoute
   '/_authenticated/centro-cirurgico': typeof AuthenticatedCentroCirurgicoRoute
   '/_authenticated/cme': typeof AuthenticatedCmeRoute
   '/_authenticated/colaboradores': typeof AuthenticatedColaboradoresRoute
@@ -333,6 +343,7 @@ export interface FileRouteTypes {
     | '/almoxarifado'
     | '/ambulatorio'
     | '/atendimento'
+    | '/banco-de-leite'
     | '/centro-cirurgico'
     | '/cme'
     | '/colaboradores'
@@ -365,6 +376,7 @@ export interface FileRouteTypes {
     | '/almoxarifado'
     | '/ambulatorio'
     | '/atendimento'
+    | '/banco-de-leite'
     | '/centro-cirurgico'
     | '/cme'
     | '/colaboradores'
@@ -399,6 +411,7 @@ export interface FileRouteTypes {
     | '/_authenticated/almoxarifado'
     | '/_authenticated/ambulatorio'
     | '/_authenticated/atendimento'
+    | '/_authenticated/banco-de-leite'
     | '/_authenticated/centro-cirurgico'
     | '/_authenticated/cme'
     | '/_authenticated/colaboradores'
@@ -502,6 +515,13 @@ declare module '@tanstack/react-router' {
       path: '/atendimento'
       fullPath: '/atendimento'
       preLoaderRoute: typeof AuthenticatedAtendimentoRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/banco-de-leite': {
+      id: '/_authenticated/banco-de-leite'
+      path: '/banco-de-leite'
+      fullPath: '/banco-de-leite'
+      preLoaderRoute: typeof AuthenticatedBancoDeLeiteRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/centro-cirurgico': {
@@ -666,6 +686,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAlmoxarifadoRoute: typeof AuthenticatedAlmoxarifadoRoute
   AuthenticatedAmbulatorioRoute: typeof AuthenticatedAmbulatorioRoute
   AuthenticatedAtendimentoRoute: typeof AuthenticatedAtendimentoRoute
+  AuthenticatedBancoDeLeiteRoute: typeof AuthenticatedBancoDeLeiteRoute
   AuthenticatedCentroCirurgicoRoute: typeof AuthenticatedCentroCirurgicoRoute
   AuthenticatedCmeRoute: typeof AuthenticatedCmeRoute
   AuthenticatedColaboradoresRoute: typeof AuthenticatedColaboradoresRoute
@@ -696,6 +717,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAlmoxarifadoRoute: AuthenticatedAlmoxarifadoRoute,
   AuthenticatedAmbulatorioRoute: AuthenticatedAmbulatorioRoute,
   AuthenticatedAtendimentoRoute: AuthenticatedAtendimentoRoute,
+  AuthenticatedBancoDeLeiteRoute: AuthenticatedBancoDeLeiteRoute,
   AuthenticatedCentroCirurgicoRoute: AuthenticatedCentroCirurgicoRoute,
   AuthenticatedCmeRoute: AuthenticatedCmeRoute,
   AuthenticatedColaboradoresRoute: AuthenticatedColaboradoresRoute,

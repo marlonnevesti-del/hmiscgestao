@@ -1,3 +1,4 @@
+import { EMPTY_MILK_BANK, LHP_VALIDITY_DAYS, batchApproved, kcalFromCrematocrit, type MilkBank } from './milk-bank';
 import { physioRequestIssues } from './physio';
 import { AMEND_FIELDS, amendIssue, readField, type AmendField } from './document-amend';
 import { DEFAULT_KITS, checkKitUse, findKit, setBio, startCycle, type BioResult, type CmeCycle, type CmeKit, type KitStatus } from './cme';
@@ -23,8 +24,8 @@ import type { PatientRegistration } from "./patient-registration";
 import { learnDoctor, type Doctor } from "./doctors";
 import { addSpecialty, DEFAULT_SPECIALTIES, type AmbSpecialty, type Appointment, type SadtReport, type SpecialtyGroup } from "./ambulatorio";
 
-interface State { encounters: Encounter[]; beSequence: number; fiaSequence: number; stock: StockMedication[]; warehouse: StockMedication[]; profile: Profile; employeeName: string; patients: Patient[]; queue: QueueItem[]; surgeries: Surgery[]; admins: Record<string, Admin>; rooms: string[]; calls: PanelCall[]; cidGroups: CidGroup[]; cidAreas: CidArea[]; employeeArea: string; accessAreas: string[] | null; removedStock: string[]; movements: Movement[]; requests: SupplyRequest[]; ambSpecialties: AmbSpecialty[]; appointments: Appointment[]; cmeKits: CmeKit[]; cmeCycles: CmeCycle[]; doctors: Doctor[] }
-let state: State = { profile: "Outro", employeeName: "", patients: [], queue: [], surgeries: [], admins: {}, encounters: [], beSequence: 0, fiaSequence: 0, stock: PHARMACY_CATALOG, warehouse: WAREHOUSE_CATALOG, rooms: DEFAULT_ROOMS, calls: [], cidGroups: DEFAULT_CID_GROUPS, cidAreas: DEFAULT_CID_AREAS, employeeArea: "", accessAreas: null, removedStock: [], movements: [], requests: [], ambSpecialties: DEFAULT_SPECIALTIES, appointments: [], cmeKits: DEFAULT_KITS, cmeCycles: [], doctors: [] };
+interface State { encounters: Encounter[]; beSequence: number; fiaSequence: number; stock: StockMedication[]; warehouse: StockMedication[]; profile: Profile; employeeName: string; patients: Patient[]; queue: QueueItem[]; surgeries: Surgery[]; admins: Record<string, Admin>; rooms: string[]; calls: PanelCall[]; cidGroups: CidGroup[]; cidAreas: CidArea[]; employeeArea: string; accessAreas: string[] | null; removedStock: string[]; movements: Movement[]; requests: SupplyRequest[]; ambSpecialties: AmbSpecialty[]; appointments: Appointment[]; cmeKits: CmeKit[]; cmeCycles: CmeCycle[]; doctors: Doctor[]; milkBank: import('./milk-bank').MilkBank }
+let state: State = { profile: "Outro", employeeName: "", patients: [], queue: [], surgeries: [], admins: {}, encounters: [], beSequence: 0, fiaSequence: 0, stock: PHARMACY_CATALOG, warehouse: WAREHOUSE_CATALOG, rooms: DEFAULT_ROOMS, calls: [], cidGroups: DEFAULT_CID_GROUPS, cidAreas: DEFAULT_CID_AREAS, employeeArea: "", accessAreas: null, removedStock: [], movements: [], requests: [], ambSpecialties: DEFAULT_SPECIALTIES, appointments: [], cmeKits: DEFAULT_KITS, cmeCycles: [], doctors: [], milkBank: EMPTY_MILK_BANK };
 const ls = new Set<() => void>();
 export const getState = () => state;
 export function setState(fn: (s: State) => Partial<State>) { state = { ...state, ...fn(state) }; ls.forEach((l) => l()); }
@@ -714,4 +715,48 @@ export function cancelPhysio(patientId: string, reqId: string, note: string) {
   requireAction('prescrever');
   if (!note.trim()) throw new Error('Informe o motivo do cancelamento.');
   updatePatient(patientId, (p) => ({ physio: (p.physio ?? []).map((r) => r.id === reqId ? { ...r, status: 'Cancelada', closedNote: note.trim() } : r) }));
+}
+
+// ---- Banco de Leite Humano ----
+const milk = (fn: (m: MilkBank) => Partial<MilkBank>) => setState((s) => ({ milkBank: { ...EMPTY_MILK_BANK, ...s.milkBank, ...fn({ ...EMPTY_MILK_BANK, ...s.milkBank }) } }));
+export function addMilkDonor(d: { name: string; phone?: string; origin: 'Interna' | 'Domiciliar'; serologyOk: boolean }) {
+  if (!d.name.trim()) throw new Error('Informe o nome da doadora.');
+  milk((m) => ({ donors: [...m.donors, { ...d, name: d.name.trim(), id: crypto.randomUUID(), createdAt: new Date().toISOString(), active: true }] }));
+}
+export function toggleMilkDonor(id: string) { milk((m) => ({ donors: m.donors.map((d) => d.id === id ? { ...d, active: !d.active } : d) })); }
+export function addRawBottle(b: { donorId: string; collectedAt: string; volume: number; homeVisit?: boolean }) {
+  const donor = state.milkBank?.donors.find((d) => d.id === b.donorId);
+  if (!donor) throw new Error('Selecione a doadora.');
+  if (!donor.serologyOk) throw new Error('Doadora sem triagem sorológica liberada.');
+  if (!(b.volume > 0)) throw new Error('Informe o volume em mL.');
+  milk((m) => ({
+    raw: [...m.raw, { id: crypto.randomUUID(), code: `C-${String(m.raw.length + 1).padStart(4, '0')}`, donorId: b.donorId, collectedAt: new Date(b.collectedAt).toISOString(), volume: b.volume, status: 'Estoque' }],
+    visits: b.homeVisit ? [...m.visits, { id: crypto.randomUUID(), donorId: b.donorId, at: new Date(b.collectedAt).toISOString(), volume: b.volume }] : m.visits,
+  }));
+}
+export function discardRawBottle(id: string, note: string) { milk((m) => ({ raw: m.raw.map((b) => b.id === id ? { ...b, status: 'Descartado', note } : b) })); }
+export function scheduleMilkBatch(scheduledAt: string, bottleIds: string[]) {
+  if (!bottleIds.length) throw new Error('Selecione ao menos um frasco de leite cru.');
+  milk((m) => {
+    const id = crypto.randomUUID(); const vol = m.raw.filter((b) => bottleIds.includes(b.id)).reduce((t, b) => t + b.volume, 0);
+    return { batches: [...m.batches, { id, code: `P-${new Date().getFullYear()}/${String(m.batches.length + 1).padStart(3, '0')}`, scheduledAt: new Date(scheduledAt).toISOString(), bottleIds, volume: vol, remaining: 0, status: 'Agendado' }],
+      raw: m.raw.map((b) => bottleIds.includes(b.id) ? { ...b, status: 'Em lote', batchId: id } : b) };
+  });
+}
+export function finishMilkBatch(id: string, r: { dornic: number; crematocrit: number; microOk: boolean }) {
+  const ok = batchApproved(r.dornic, r.microOk); const at = new Date();
+  milk((m) => ({
+    batches: m.batches.map((b) => b.id === id ? { ...b, ...r, kcal: kcalFromCrematocrit(r.crematocrit), status: ok ? 'Aprovado' : 'Reprovado', doneAt: at.toISOString(), doneBy: professionalName(state.profile), remaining: ok ? b.volume : 0, expiresAt: new Date(at.getTime() + LHP_VALIDITY_DAYS * 86_400_000).toISOString() } : b),
+    raw: m.raw.map((b) => b.batchId === id ? { ...b, status: ok ? 'Pasteurizado' : 'Descartado' } : b),
+  }));
+  return ok;
+}
+export function setMilkRecipient(patientId: string, mlPerFeed: number, feedsPerDay: number) {
+  milk((m) => ({ recipients: [...m.recipients.filter((r) => r.patientId !== patientId), { patientId, mlPerFeed, feedsPerDay, since: m.recipients.find((r) => r.patientId === patientId)?.since ?? new Date().toISOString(), active: mlPerFeed > 0 }] }));
+}
+export function dispenseMilk(batchId: string, patientId: string, volume: number) {
+  const b = state.milkBank?.batches.find((x) => x.id === batchId);
+  if (!b || b.status !== 'Aprovado') throw new Error('Lote não liberado.');
+  if (!(volume > 0) || volume > b.remaining) throw new Error(`Volume indisponível no lote (restam ${b.remaining} mL).`);
+  milk((m) => ({ batches: m.batches.map((x) => x.id === batchId ? { ...x, remaining: x.remaining - volume } : x), dispenses: [...m.dispenses, { id: crypto.randomUUID(), batchId, patientId, volume, at: new Date().toISOString(), by: professionalName(state.profile) }] }));
 }

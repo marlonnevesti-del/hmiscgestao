@@ -10,3 +10,4 @@
 - Controlled-cabinet items come from src/lib/controlled-catalog.json merged into the pharmacy stock (location "Armário de Controlados"); expiry status, lot map and monthly consumption/purchase suggestion rules live in src/lib/controlled.ts; dispensations log 'consumo' and expiry write-offs log 'vencimento' movements so the report reads one history.
 
 - Physiotherapy requests ride on patient.physio (src/lib/physio.ts); doctors request from the medical assessment and /fisioterapia (shares the pacientes access area) records sessions that also append a Fisioterapia evolution, so no new snapshot keys are needed.
+- Milk bank (BLH) rules (raw 15-day validity, Dornic/microbiology approval, crematocrit kcal, autonomy, AT46 report) live in src/lib/milk-bank.ts; data is the milkBank snapshot key because it is hospital-level stock, not per-patient; /banco-de-leite shares the enfermagem access area.
