@@ -114,7 +114,7 @@ export function Body({ doc, p, e, companion }: { doc: Doc; p: Patient; e?: Encou
 }
 
 /** Termo de responsabilidade e declarações (internação / comparecimento), preenchidos com os dados do cadastro e atendimento. */
-export function InpatientDocsButtons({ p, e }: { p: Patient; e?: Encounter | undefined }) {
+export function InpatientDocsButtons({ p, e, only }: { p: Patient; e?: Encounter | undefined; only?: 'termos' | 'clinicos' | 'admin' }) {
   const [doc, setDoc] = useState<Doc | null>(null);
   const [companion, setCompanion] = useState('');
   const run = (d: Doc) => {
@@ -131,13 +131,14 @@ export function InpatientDocsButtons({ p, e }: { p: Patient; e?: Encounter | und
   };
   const btn = 'flex items-center gap-1.5 rounded-md border px-3 py-2 text-xs font-medium hover:bg-muted';
   return <>
-    <AihLaudoButton p={p} e={e} />
-    <ClinicalDocsButtons p={p} e={e} />
-    <AmendDocumentButton p={p} e={e} />
+    {(!only || only === 'clinicos') && <><AihLaudoButton p={p} e={e} /><ClinicalDocsButtons p={p} e={e} /></>}
+    {(!only || only === 'admin') && <AmendDocumentButton p={p} e={e} />}
+    {(!only || only === 'termos') && <>
     <button onClick={() => run('termo')} className={btn}><FileText className="h-4 w-4" />Termo internação</button>
     <button onClick={() => run('internado')} className={btn}><FileText className="h-4 w-4" />Decl. internação</button>
     <button onClick={() => run('comparecimento')} className={btn}><FileText className="h-4 w-4" />Decl. atendimento</button>
     <button onClick={() => run('acompanhante')} className={btn}><FileText className="h-4 w-4" />Decl. acompanhante</button>
+    </>}
     {doc && typeof document !== 'undefined' && createPortal(<div className="print-doc-root term-root"><Body doc={doc} p={p} e={e} companion={companion} /></div>, document.body)}
   </>;
 }

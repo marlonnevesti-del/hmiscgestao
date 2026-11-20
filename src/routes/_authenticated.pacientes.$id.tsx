@@ -1,3 +1,5 @@
+import { ActionGroup } from "@/components/ActionGroup";
+import { FileText, Stethoscope, FlaskConical } from "lucide-react";
 import { EncounterTimeline } from "@/components/EncounterTimeline";
 import { ProcedurePrintButton } from "@/components/ProcedurePrint";
 import { MedicalAssessment, PrescriptionRelease } from "@/components/CareMedical";
@@ -65,9 +67,11 @@ function PEP() {
             <div className="text-right text-xs">{sheetEncounter?.fia ? <div className="mb-1 rounded bg-primary px-2 py-0.5 font-semibold text-primary-foreground">FIA ativa · {sheetEncounter.fia.number}</div> : sheetEncounter && <div className="mb-1 font-semibold">{sheetEncounter.number}</div>}<div className="font-mono font-semibold">{p.bed}</div><div className="text-muted-foreground">{WARDS.find((w) => w.id === p.ward)?.name} · {p.insurance}</div></div>
             <button onClick={() => setPrint(true)} className="flex items-center gap-1.5 rounded-md border px-3 py-2 text-xs font-medium hover:bg-muted"><Printer className="h-4 w-4" />Pulseira/Etiqueta</button>
             <button onClick={() => printSheet("BAA")} className="flex items-center gap-1.5 rounded-md border px-3 py-2 text-xs font-medium hover:bg-muted"><Printer className="h-4 w-4" />BAA</button>
-            <ProcedurePrintButton patientId={p.id} /><button onClick={() => printSheet("FIA")} className="flex items-center gap-1.5 rounded-md border px-3 py-2 text-xs font-medium hover:bg-muted"><Printer className="h-4 w-4" />FIA</button>
-            <InpatientDocsButtons p={p} e={sheetEncounter} />
-            <MedicalDocsButtons p={p} e={sheetEncounter} />
+            <button onClick={() => printSheet("FIA")} className="flex items-center gap-1.5 rounded-md border px-3 py-2 text-xs font-medium hover:bg-muted"><Printer className="h-4 w-4" />FIA</button>
+            <ActionGroup label="Termos & Declarações" icon={<FileText className="h-4 w-4" />}><InpatientDocsButtons p={p} e={sheetEncounter} only="termos" /></ActionGroup>
+            <ActionGroup label="Documentos clínicos" icon={<Stethoscope className="h-4 w-4" />}><InpatientDocsButtons p={p} e={sheetEncounter} only="clinicos" /><ProcedurePrintButton patientId={p.id} /></ActionGroup>
+            <ActionGroup label="Exames & Receitas" icon={<FlaskConical className="h-4 w-4" />}><MedicalDocsButtons p={p} e={sheetEncounter} /></ActionGroup>
+            <InpatientDocsButtons p={p} e={sheetEncounter} only="admin" />
           </div>
         </div>
         <div className="mt-1 text-xs"><span className="font-medium">Diagnóstico:</span> {p.diagnosis}</div>
