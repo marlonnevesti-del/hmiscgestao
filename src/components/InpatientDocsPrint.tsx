@@ -8,7 +8,7 @@ import { Letterhead } from '@/components/DischargePrint';
 import { AihLaudoButton } from '@/components/AihLaudo';
 import { ClinicalDocsButtons } from '@/components/ClinicalDocs';
 
-type Doc = 'termo' | 'internado' | 'comparecimento';
+type Doc = 'termo' | 'internado' | 'comparecimento' | 'acompanhante';
 const dt = (d?: string) => (d ? new Date(d).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : '—');
 const today = () => new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
 const line = (v?: string) => v?.trim() || '____________________________';
@@ -77,6 +77,13 @@ function Body({ doc, p, e, companion }: { doc: Doc; p: Patient; e?: Encounter | 
     <p style={{ textAlign: 'right', marginTop: '4em' }}>Criciúma - SC, {today()}.</p>
     <div className="doc-sign"><div className="line" />Responsável pela Declaração</div>
   </section>;
+  if (doc === 'acompanhante') return <section className="doc-page">
+    <Letterhead title="DECLARAÇÃO DE ACOMPANHANTE" />
+    <p style={{ textAlign: 'justify', lineHeight: 1.8, textIndent: '3em' }}>Declaramos para os devidos fins e efeitos, que o Sr.(a) <b>{p.name.toUpperCase()}</b> recebeu atendimento médico nesta Unidade Hospitalar em <b>{dt(e?.openedAt)}</b>, {e?.discharge?.at ? <>tendo recebido alta em <b>{dt(e.discharge.at)}</b>.</> : <>permanecendo no hospital.</>}</p>
+    <p style={{ textAlign: 'justify', lineHeight: 1.8, textIndent: '3em' }}>Acompanhou o(a) paciente o(a) Sr(a) <b>{companion ? companion.toUpperCase() : line()}</b>.</p>
+    <p style={{ textAlign: 'center', marginTop: '4em' }}>Criciúma - SC, {today()}.</p>
+    <div className="doc-sign"><div className="line" />Responsável</div>
+  </section>;
   return <section className="doc-page">
     <Letterhead title="DECLARAÇÃO" />
     <p style={{ textAlign: 'justify', lineHeight: 1.8 }}>Declaramos, para os devidos fins e efeitos, que o(a) Sr.(a) <b>{p.name.toUpperCase()}</b> recebeu atendimento médico nesta Unidade Hospitalar no período de <b>{dt(e?.openedAt)}</b> a <b>{dt(e?.discharge?.at || new Date().toISOString())}</b>.{companion && <> Acompanhou o(a) paciente o(a) Sr.(a) <b>{companion.toUpperCase()}</b>.</>}</p>
@@ -109,6 +116,7 @@ export function InpatientDocsButtons({ p, e }: { p: Patient; e?: Encounter | und
     <button onClick={() => run('termo')} className={btn}><FileText className="h-4 w-4" />Termo internação</button>
     <button onClick={() => run('internado')} className={btn}><FileText className="h-4 w-4" />Decl. internação</button>
     <button onClick={() => run('comparecimento')} className={btn}><FileText className="h-4 w-4" />Decl. atendimento</button>
+    <button onClick={() => run('acompanhante')} className={btn}><FileText className="h-4 w-4" />Decl. acompanhante</button>
     {doc && typeof document !== 'undefined' && createPortal(<div className="print-doc-root term-root"><Body doc={doc} p={p} e={e} companion={companion} /></div>, document.body)}
   </>;
 }
