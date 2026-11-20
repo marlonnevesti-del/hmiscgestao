@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { Printer } from "lucide-react";
+import { PatientSheetPrint, printSheet } from "./PatientSheetPrint";
 import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -33,6 +35,12 @@ export function CareReception({ unit }: { unit?: CareUnit } = {}) {
   const [search, setSearch] = useState("");
   const [existing, setExisting] = useState("");
   const [created, setCreated] = useState<Encounter | null>(null);
+  // Assim que o atendimento é confirmado, a BAA abre direto para impressão e assinatura.
+  useEffect(() => {
+    if (!created) return;
+    const t = setTimeout(() => printSheet("BAA"), 400);
+    return () => clearTimeout(t);
+  }, [created]);
   const [f, setF] = useState(() => unit ? { ...INITIAL_FORM, type: unit, specialty: unit === "Ambulatório" ? "" : unit === "Maternidade" ? "Obstetrícia" : "Pediatria", patientType: (unit === "Pronto socorro" ? "pediatria" : "gestante") as Patient["type"] } : INITIAL_FORM);
   const [registration, setRegistration] = useState(() => registrationFor());
   const [mode, setMode] = useState<RegistrationMode>("completo");
@@ -145,8 +153,9 @@ export function CareReception({ unit }: { unit?: CareUnit } = {}) {
     <Dialog open={!!created} onOpenChange={(open) => !open && setCreated(null)}>
       <DialogContent><DialogHeader><DialogTitle>Etiqueta / Pulseira · {created?.number}</DialogTitle></DialogHeader>
         <div className="border-2 border-primary p-4"><b>{patients.find((patient) => patient.id === created?.patientId)?.name}</b><div>{created?.number} · {patients.find((patient) => patient.id === created?.patientId)?.prontuario}</div><div>Mãe: {patients.find((patient) => patient.id === created?.patientId)?.motherName}</div><div>Responsável: {patients.find((patient) => patient.id === created?.patientId)?.guardian}</div></div>
-        <Button onClick={() => window.print()}>Imprimir etiqueta / pulseira</Button><Button variant="outline" asChild><Link to="/acolhimento">Abrir triagem</Link></Button>
+        <Button onClick={() => printSheet("BAA")}><Printer className="h-4 w-4" />Imprimir BAA novamente</Button><Button variant="outline" onClick={() => window.print()}>Imprimir etiqueta / pulseira</Button><Button variant="outline" asChild><Link to="/acolhimento">Abrir triagem</Link></Button>
       </DialogContent>
     </Dialog>
+    {created && (() => { const cp = patients.find((patient) => patient.id === created.patientId); return cp ? <PatientSheetPrint p={cp} e={created} user={professionalName(profile)} /> : null; })()}
   </div>;
 }
