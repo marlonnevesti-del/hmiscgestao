@@ -9,7 +9,9 @@ import { printProcedure } from "@/components/ProcedurePrint";
 import { can } from "@/lib/hospital-data";
 import { useStore } from "@/lib/hospital-store";
 import { AmendDocumentButton, DocumentGapsPanel } from "@/components/DocumentAmend";
-import { aihFile, bpaFile, buildSusRows, CNES, competenceOf, type Professional, type SusRow } from "@/lib/sus-billing";
+import { documentGaps } from "@/lib/document-amend";
+import { semaphoreOf, semaphoreSummary } from "@/lib/billing-semaphore";
+import { aihFile, bpaFile, buildSusRows, CNES, competenceOf, SIGTAP_DEFAULT, type Professional, type SusRow } from "@/lib/sus-billing";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/faturamento-sus")({
@@ -46,8 +48,10 @@ function SusBilling() {
   useEffect(() => { try { const v = localStorage.getItem(PROF_KEY); if (v) { const p = JSON.parse(v) as Professional; setProf({ ...p, cbo: p.cbo || "225125" }); } } catch { /* ignore */ } }, []);
   const saveProf = (p: Professional) => { setProf(p); localStorage.setItem(PROF_KEY, JSON.stringify(p)); };
   const rows = useMemo(() => buildSusRows(encounters, patients, comp, prof), [encounters, patients, comp, prof]);
-  const list = rows.filter((r) => r.kind === tab && (!onlyIssues || r.issues.length));
   const all = rows.filter((r) => r.kind === tab);
+  const sem = all.map((r) => ({ ...r, level: semaphoreOf(r.issues, { defaultProcedure: r.procedure === SIGTAP_DEFAULT[r.kind], gaps: r.patient ? documentGaps(r.patient, r.encounter) : [] }) }));
+  const summary = semaphoreSummary(sem);
+  const list = sem.filter((r) => !onlyIssues || r.issues.length);
   const okCount = all.filter((r) => !r.issues.length).length;
   const allowed = can(profile, "faturar");
   const print = (d: NonNullable<Doc>) => { setDoc(d); printProcedure(); };
@@ -76,15 +80,23 @@ function SusBilling() {
               <Button size="sm" disabled={!allowed || !okCount} onClick={() => tab === "BPA" ? download(`PA${CNES}.${comp.slice(4)}`, bpaFile(rows, comp, prof)) : download(`AIH${CNES}_${comp}.txt`, aihFile(rows, comp, prof))}>Baixar arquivo {tab === "BPA" ? "BPA" : "SISAIH01"} ({okCount})</Button>
             </div>
           </div>
+          <div className="mb-3 space-y-2">
+            <div className="flex flex-wrap gap-2" aria-label="Semáforo pré-faturamento">
+              <span className="rounded-full bg-clinical-soft px-3 py-1 text-sm text-clinical">{summary.green} Prontos</span>
+              <span className="rounded-full bg-mt-yellow px-3 py-1 text-sm text-foreground">{summary.yellow} Risco de glosa</span>
+              <span className="rounded-full bg-maternal-soft px-3 py-1 text-sm text-maternal">{summary.red} Bloqueados</span>
+            </div>
+            <p className="text-xs text-muted-foreground">Vermelho = dados do paciente incompletos; amarelo = CNS/CBO do profissional, código SIGTAP padrão ou pendência de documento; verde = pronto para remessa.</p>
+          </div>
           <div className="overflow-x-auto"><table className="w-full text-sm">
-            <thead className="text-left text-xs uppercase text-muted-foreground"><tr><th>Data</th><th>Nº</th><th>Paciente</th><th>CNS</th><th>CID</th><th>SIGTAP</th><th>Situação</th><th></th></tr></thead>
-            <tbody>{list.map((r) => <tr key={r.encounter.id} className="border-t align-top">
+            <thead className="text-left text-xs uppercase text-muted-foreground"><tr><th><span className="sr-only">Semáforo</span></th><th>Data</th><th>Nº</th><th>Paciente</th><th>CNS</th><th>CID</th><th>SIGTAP</th><th>Situação</th><th></th></tr></thead>
+            <tbody>{list.map((r) => <tr key={r.encounter.id} className="border-t align-top"><td className="py-1 pr-2"><span role="img" aria-label={r.level === "green" ? "Pronto" : r.level === "yellow" ? "Risco de glosa" : "Bloqueado"} className={cn("inline-block size-2.5 rounded-full", r.level === "green" ? "bg-clinical" : r.level === "yellow" ? "bg-mt-yellow" : "bg-maternal")} /></td>
               <td className="py-1">{fmt(r.date)}</td><td className="font-mono text-xs">{r.encounter.number}</td><td>{r.name}</td>
               <td className="font-mono text-xs">{r.cns || "—"}</td><td>{r.cid || "—"}</td><td className="font-mono text-xs">{r.procedure}</td>
               <td className={cn("text-xs", r.issues.length ? "text-destructive" : "text-clinical")}>{r.issues.length ? r.issues.map((i) => <div key={i}>• {i}</div>) : "OK"}</td>
               <td className="flex gap-1">{(() => { const pt = patients.find((x) => x.id === r.encounter.patientId); return pt ? <AmendDocumentButton p={pt} e={r.encounter} size="sm" label="Trocar código" /> : null; })()}{tab === "AIH" && <Button size="sm" variant="outline" onClick={() => print({ title: "LAUDO PARA SOLICITAÇÃO DE AUTORIZAÇÃO DE INTERNAÇÃO HOSPITALAR (AIH)", laudo: r })}>Imprimir laudo</Button>}</td>
             </tr>)}
-            {!list.length && <tr><td colSpan={8} className="py-8 text-center text-muted-foreground">Nenhum atendimento nesta competência.</td></tr>}</tbody>
+            {!list.length && <tr><td colSpan={9} className="py-8 text-center text-muted-foreground">Nenhum atendimento nesta competência.</td></tr>}</tbody>
           </table></div>
           <p className="mt-2 text-[11px] text-muted-foreground">O arquivo inclui só os atendimentos sem pendência. Corrija o cadastro do paciente (CNS, nascimento, sexo, município) e o CID no atendimento médico.</p>
         </div>

@@ -10,6 +10,7 @@ import { admissionsReport, pct } from '@/lib/inpatient-docs';
 import { useQuery } from '@tanstack/react-query';
 import { hotelariaBedsQuery } from '@/lib/hotelaria-beds-query';
 import { Link } from '@tanstack/react-router';
+import { HandoverButton } from '@/components/HandoverPrint';
 import { bedBadges, stayDays, stayTone } from '@/lib/bed-board';
 
 export const Route = createFileRoute('/_authenticated/internacoes')({
@@ -50,7 +51,7 @@ function Census() {
       <tbody>{rows.map((r) => { const p = pct(r.o, r.total); return <tr key={r.w.id} className="border-t"><td className="p-2">{r.w.name}</td><td className="text-center">{r.total}</td><td className="text-center">{r.o}</td><td className="text-center">{r.total - r.o}</td>
         <td className="p-2"><div className="h-2 rounded bg-muted"><div className={p >= 85 ? 'h-2 rounded bg-destructive' : 'h-2 rounded bg-primary'} style={{ width: `${p}%` }} /></div><span className="text-xs">{p}%</span></td></tr>; })}</tbody></table>
     <div className="space-y-2"><div className="flex flex-wrap items-center gap-3"><h2 className="font-semibold">Gestão à vista · Pacientes internados ({inpatients.length})</h2>
-      <span className="text-xs text-muted-foreground">Selos: vermelho = alergia / 7+ dias · amarelo = isolamento / 5+ dias · azul = leite humano / fisioterapia</span></div>
+      <span className="text-xs text-muted-foreground">Selos: vermelho = alergia / 7+ dias · amarelo = isolamento / 5+ dias · azul = leite humano / fisioterapia</span><HandoverButton /></div>
       {!inpatients.length && <p className="rounded-lg border p-4 text-center text-sm text-muted-foreground">Nenhum paciente internado.</p>}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">{inpatients.map((e) => { const p = patients.find((x) => x.id === e.patientId); const d = stayDays(e.fia!.openedAt); const t = stayTone(d); const badges = bedBadges(p, e.fia!.openedAt, milk);
         const border = t === 'danger' ? 'border-l-destructive' : t === 'warn' ? 'border-l-chart-4' : 'border-l-primary';

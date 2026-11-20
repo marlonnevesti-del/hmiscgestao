@@ -12,3 +12,4 @@
 - Physiotherapy requests ride on patient.physio (src/lib/physio.ts); doctors request from the medical assessment and /fisioterapia (shares the pacientes access area) records sessions that also append a Fisioterapia evolution, so no new snapshot keys are needed.
 - Milk bank (BLH) rules (raw 15-day validity, Dornic/microbiology approval, crematocrit kcal, autonomy, AT46 report) live in src/lib/milk-bank.ts; data is the milkBank snapshot key because it is hospital-level stock, not per-patient; /banco-de-leite shares the enfermagem access area.
 - Bed-board badges (allergy, MDR isolation, stay length, milk, physio) are derived in src/lib/bed-board.ts from existing patient data, so the census needs no new stored fields.
+- Shift medication board (med-shift.ts), pre-billing semaphore (billing-semaphore.ts over susIssues/documentGaps) and SBAR handover (handover.ts) are derived from existing snapshot data, so they add no stored fields.
