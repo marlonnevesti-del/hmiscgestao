@@ -9,6 +9,8 @@ import { BASE_BEDS, WARDS, canAccessPage } from '@/lib/hospital-data';
 import { admissionsReport, pct } from '@/lib/inpatient-docs';
 import { useQuery } from '@tanstack/react-query';
 import { hotelariaBedsQuery } from '@/lib/hotelaria-beds-query';
+import { Link } from '@tanstack/react-router';
+import { bedBadges, stayDays, stayTone } from '@/lib/bed-board';
 
 export const Route = createFileRoute('/_authenticated/internacoes')({
   head: () => ({ meta: [
@@ -32,7 +34,7 @@ function Page() {
 }
 
 function Census() {
-  const patients = useStore((s) => s.patients); const encounters = useStore((s) => s.encounters);
+  const patients = useStore((s) => s.patients); const encounters = useStore((s) => s.encounters); const milk = useStore((s) => s.milkBank);
   const occupied = new Set([...patients.filter((p) => p.bed).map((p) => p.bed), ...encounters.filter((e) => e.fia && !e.discharge).map((e) => e.fia!.bed)]);
   const { data: hot } = useQuery(hotelariaBedsQuery);
   const real = hot?.status === 'connected' && hot.snapshot ? hot.snapshot.setores : null;
@@ -47,9 +49,17 @@ function Census() {
     <table className="w-full rounded-lg border text-sm"><thead className="bg-muted"><tr><th className="p-2 text-left">Unidade</th><th>Leitos</th><th>Ocupados</th><th>Livres</th><th>Ocupação</th></tr></thead>
       <tbody>{rows.map((r) => { const p = pct(r.o, r.total); return <tr key={r.w.id} className="border-t"><td className="p-2">{r.w.name}</td><td className="text-center">{r.total}</td><td className="text-center">{r.o}</td><td className="text-center">{r.total - r.o}</td>
         <td className="p-2"><div className="h-2 rounded bg-muted"><div className={p >= 85 ? 'h-2 rounded bg-destructive' : 'h-2 rounded bg-primary'} style={{ width: `${p}%` }} /></div><span className="text-xs">{p}%</span></td></tr>; })}</tbody></table>
-    <div className="rounded-lg border"><div className="border-b p-2 font-semibold">Pacientes internados ({inpatients.length})</div>
-      <table className="w-full text-sm"><tbody>{inpatients.map((e) => { const p = patients.find((x) => x.id === e.patientId); const d = (Date.now() - Date.parse(e.fia!.openedAt)) / 86_400_000;
-        return <tr key={e.id} className="border-t"><td className="p-2">{p?.name}</td><td>{e.fia!.number}</td><td>{e.fia!.ward} / {e.fia!.bed}</td><td>{e.fia!.cid}</td><td>{Math.floor(d)} dia(s)</td></tr>; })}</tbody></table></div>
+    <div className="space-y-2"><div className="flex flex-wrap items-center gap-3"><h2 className="font-semibold">Gestão à vista · Pacientes internados ({inpatients.length})</h2>
+      <span className="text-xs text-muted-foreground">Selos: vermelho = alergia / 7+ dias · amarelo = isolamento / 5+ dias · azul = leite humano / fisioterapia</span></div>
+      {!inpatients.length && <p className="rounded-lg border p-4 text-center text-sm text-muted-foreground">Nenhum paciente internado.</p>}
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">{inpatients.map((e) => { const p = patients.find((x) => x.id === e.patientId); const d = stayDays(e.fia!.openedAt); const t = stayTone(d); const badges = bedBadges(p, e.fia!.openedAt, milk);
+        const border = t === 'danger' ? 'border-l-destructive' : t === 'warn' ? 'border-l-chart-4' : 'border-l-primary';
+        return <Link key={e.id} to="/pacientes/$id" params={{ id: e.patientId }} className={`block rounded-lg border border-l-4 bg-card p-3 transition hover:shadow-md ${border}`}>
+          <div className="flex items-start justify-between gap-2"><div className="text-lg font-bold">{e.fia!.bed}</div><div className="text-xs text-muted-foreground">{e.fia!.ward}</div></div>
+          <div className="truncate font-medium">{p?.name ?? '—'}</div>
+          <div className="text-xs text-muted-foreground">FIA {e.fia!.number} · CID {e.fia!.cid || '—'} · {d} dia(s)</div>
+          {!!badges.length && <div className="mt-2 flex flex-wrap gap-1">{badges.map((b) => <span key={b.key} className={`rounded px-1.5 py-0.5 text-[11px] font-medium ${b.tone === 'danger' ? 'bg-destructive/15 text-destructive' : b.tone === 'warn' ? 'bg-chart-4/20 text-foreground' : 'bg-primary/10 text-primary'}`}>{b.label}</span>)}</div>}
+        </Link>; })}</div></div>
   </div>;
 }
 
