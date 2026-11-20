@@ -23,6 +23,8 @@ import { doseText } from "@/lib/dose-calc";
 import { DRUGS, WARDS, allergyConflict, can, interactionsWith, type EvoCat, type Patient, type PrescCat, type Vital } from "@/lib/hospital-data";
 import { getState, nowHM, professionalName, registerBirth, updatePatient, useStore } from "@/lib/hospital-store";
 import { cn } from "@/lib/utils";
+import { defaultEvoCat, needsCatConfirm } from "@/lib/evolution-category";
+import { Maximize2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/pacientes/$id")({
   loader: ({ params }) => { const p = getState().patients.find((x) => x.id === params.id); if (!p) throw notFound(); return { name: p.name }; },
@@ -117,11 +119,17 @@ function Evolucao({ p }: { p: Patient }) {
   const profile = useStore((s) => s.profile);
   const [f, setF] = useState<EvoCat | "Todos">("Todos");
   const [text, setText] = useState("");
-  const [cat, setCat] = useState<EvoCat>(profile === "Enfermeiro" ? "Enfermagem" : "Médica");
+  const employeeName = useStore((s) => s.employeeName);
+  const own = defaultEvoCat(profile, employeeName);
+  const [cat, setCat] = useState<EvoCat>(own);
+  const [pending, setPending] = useState<EvoCat | null>(null);
+  const [focus, setFocus] = useState(false);
+  const pickCat = (c: EvoCat) => { if (c === cat) return; if (needsCatConfirm(own, c)) setPending(c); else setCat(c); };
+  const save = () => { updatePatient(p.id, (x) => ({ evolutions: [{ time: new Date().toLocaleString("pt-BR"), cat, author: professionalName(profile), text }, ...x.evolutions] })); setText(""); setFocus(false); toast.success("Evolução registrada"); };
   const list = p.evolutions.filter((e) => f === "Todos" || e.cat === f);
   const color = (c: EvoCat) => ({ Médica: "bg-primary", Enfermagem: "bg-clinical", Fisioterapia: "bg-bed-isolation", "Serviço Social": "bg-mt-orange", SCIRAS: "bg-destructive" })[c];
   return (
-    <div className="grid gap-4 lg:grid-cols-[1fr_360px]">
+    <div className="grid gap-4 lg:grid-cols-[1fr_minmax(420px,44%)]">
       <Card title="Linha do tempo">
         <div className="mb-3 flex flex-wrap gap-1">{(["Todos", ...CATS] as const).map((x) => <button key={x} onClick={() => setF(x)} className={cn("rounded-full border px-3 py-1 text-xs", f === x && "bg-primary text-primary-foreground")}>{x}</button>)}</div>
         <ol className="space-y-3 border-l-2 pl-4">
@@ -132,12 +140,20 @@ function Evolucao({ p }: { p: Patient }) {
           {list.length === 0 && <li className="text-sm text-muted-foreground">Nenhum registro nesta categoria.</li>}
         </ol>
       </Card>
-      <Card title="Nova evolução">
+      <Card title="Nova evolução" action={can(profile, "evoluir") ? <button onClick={() => setFocus(true)} className="flex items-center gap-1 rounded border px-2 py-1 text-xs hover:bg-muted"><Maximize2 className="h-3 w-3" />Expandir</button> : undefined}>
         {can(profile, "evoluir") ? <>
-          <div className="mb-2 flex gap-2"><select value={cat} onChange={(e) => setCat(e.target.value as EvoCat)} className="h-8 flex-1 rounded-md border bg-background px-2 text-xs">{CATS.map((c) => <option key={c}>{c}</option>)}</select></div>
-          <div className="mb-2 flex flex-wrap gap-1">{Object.keys(SOAP).map((k) => <button key={k} onClick={() => setText(SOAP[k as keyof typeof SOAP])} className="rounded border px-2 py-0.5 text-[11px] hover:bg-muted">{k}</button>)}</div>
-          <textarea value={text} onChange={(e) => setText(e.target.value)} rows={8} className="w-full rounded-md border bg-background p-2 font-mono text-xs" placeholder="Escolha um modelo ou digite…" />
-          <button disabled={!text.trim()} onClick={() => { updatePatient(p.id, (x) => ({ evolutions: [{ time: `14/11 ${nowHM()}`, cat, author: professionalName(profile), text }, ...x.evolutions] })); setText(""); toast.success("Evolução registrada"); }} className="mt-2 w-full rounded-md bg-clinical py-2 text-sm font-medium text-accent-foreground disabled:opacity-50">Registrar evolução</button>
+          <div className="mb-2 flex gap-2"><select aria-label="Categoria da evolução" value={cat} onChange={(e) => pickCat(e.target.value as EvoCat)} className="h-9 flex-1 rounded-md border bg-background px-2 text-sm">{CATS.map((c) => <option key={c}>{c}</option>)}</select></div>
+          <div className="mb-2 flex flex-wrap gap-1">{Object.keys(SOAP).map((k) => <button key={k} onClick={() => setText(SOAP[k as keyof typeof SOAP])} className="rounded border px-2 py-0.5 text-xs hover:bg-muted">{k}</button>)}</div>
+          <textarea value={text} onChange={(e) => setText(e.target.value)} rows={16} className="min-h-[340px] w-full resize-y rounded-md border bg-background p-3 text-sm leading-relaxed" placeholder="Escolha um modelo ou digite…" />
+          <button disabled={!text.trim()} onClick={save} className="mt-2 w-full rounded-md bg-clinical py-2 text-sm font-medium text-accent-foreground disabled:opacity-50">Registrar evolução</button>
+          <Dialog open={focus} onOpenChange={setFocus}><DialogContent className="max-w-5xl"><DialogHeader><DialogTitle>Nova evolução · {cat} · {p.name}</DialogTitle></DialogHeader>
+            <textarea autoFocus value={text} onChange={(e) => setText(e.target.value)} className="h-[65vh] w-full resize-none rounded-md border bg-background p-4 text-base leading-relaxed" placeholder="Digite a evolução…" />
+            <div className="flex justify-end gap-2"><Button variant="outline" onClick={() => setFocus(false)}>Voltar</Button><Button disabled={!text.trim()} onClick={save}>Registrar evolução</Button></div>
+          </DialogContent></Dialog>
+          <Dialog open={!!pending} onOpenChange={(o) => !o && setPending(null)}><DialogContent><DialogHeader><DialogTitle>Alterar categoria da evolução?</DialogTitle></DialogHeader>
+            <p className="text-sm">Sua função no sistema corresponde a <b>{own}</b>. Deseja realmente registrar esta evolução como <b>{pending}</b>?</p>
+            <div className="flex justify-end gap-2"><Button variant="outline" onClick={() => setPending(null)}>Cancelar</Button><Button onClick={() => { if (pending) setCat(pending); setPending(null); }}>Confirmar alteração</Button></div>
+          </DialogContent></Dialog>
         </> : <NoPermission action="registrar evoluções" />}
       </Card>
     </div>
