@@ -8,7 +8,7 @@ import { Letterhead } from '@/components/DischargePrint';
 import { AihLaudoButton } from '@/components/AihLaudo';
 import { ClinicalDocsButtons } from '@/components/ClinicalDocs';
 
-type Doc = 'termo' | 'internado' | 'comparecimento' | 'acompanhante';
+export type Doc = 'termo' | 'internado' | 'comparecimento' | 'acompanhante' | 'pertences' | 'recusa';
 const dt = (d?: string) => (d ? new Date(d).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : '—');
 const today = () => new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
 const line = (v?: string) => v?.trim() || '____________________________';
@@ -35,7 +35,7 @@ function address(p: Patient) {
   return [[a.streetType, a.street].filter(Boolean).join(' '), a.number, a.complement, a.neighborhood, [a.city, a.state].filter(Boolean).join(' - '), a.postalCode && `CEP ${a.postalCode}`].filter(Boolean).join(', ') || '—';
 }
 
-function Body({ doc, p, e, companion }: { doc: Doc; p: Patient; e?: Encounter | undefined; companion: string }) {
+export function Body({ doc, p, e, companion }: { doc: Doc; p: Patient; e?: Encounter | undefined; companion: string }) {
   const r = p.registration;
   const birth = r?.birthDate ? new Date(`${r.birthDate}T12:00:00`).toLocaleDateString('pt-BR') : '—';
   const bed = e?.fia?.bed || p.bed;
@@ -76,6 +76,27 @@ function Body({ doc, p, e, companion }: { doc: Doc; p: Patient; e?: Encounter | 
     <p style={{ textAlign: 'justify', lineHeight: 1.8 }}>Declaro, para os devidos fins, que o(a) paciente <b>{p.name.toUpperCase()}</b> está internado(a) neste hospital no leito <b>{bed}</b> da unidade <b>{ward}</b>{doctor ? <> sob cuidados do(a) profissional <b>{doctor}</b></> : null}, no período de <b>{dt(e?.fia?.openedAt || e?.openedAt)}</b> a <b>{dt(new Date().toISOString())}</b> (ainda internado(a)).{companion && <> Acompanhante: <b>{companion.toUpperCase()}</b>.</>}</p>
     <p style={{ textAlign: 'right', marginTop: '4em' }}>Criciúma - SC, {today()}.</p>
     <div className="doc-sign"><div className="line" />Responsável pela Declaração</div>
+  </section>;
+  if (doc === 'pertences') return <section className="doc-page">
+    <Letterhead title="TERMO DE GUARDA E RETIRADA DE PERTENCES" />
+    <p><b>Paciente:</b> {p.name || line()} · <b>Prontuário:</b> {p.prontuario || line()} · <b>Atendimento:</b> {e?.number || line()}</p>
+    <p>Relação dos pertences entregues para guarda do hospital:</p>
+    <table className="doc-id"><tbody>{Array.from({ length: 8 }, (_, i) => <tr key={i}><td style={{ height: '1.8em' }}>{i + 1}.</td><td style={{ width: '20%' }}>Qtd:</td></tr>)}</tbody></table>
+    <p style={{ textAlign: 'justify' }}>Declaro que entreguei os pertences acima para guarda e que os retirei em perfeitas condições na data abaixo. O hospital não se responsabiliza por objetos não relacionados neste termo.</p>
+    <p><b>Entregue em:</b> ____/____/______ às ____:____ &nbsp;&nbsp; <b>Retirado em:</b> ____/____/______ às ____:____</p>
+    <p style={{ textAlign: 'right', marginTop: '2em' }}>Criciúma - SC, {today()}.</p>
+    <div className="doc-sign"><div className="line" />Paciente / Responsável</div>
+    <div className="doc-sign"><div className="line" />Colaborador do hospital</div>
+  </section>;
+  if (doc === 'recusa') return <section className="doc-page">
+    <Letterhead title="TERMO DE RECUSA / DESISTÊNCIA DE ATENDIMENTO" />
+    <p style={{ textAlign: 'justify', lineHeight: 1.8 }}>Eu, {line()}, CPF {line()}, ( ) paciente ( ) responsável legal por <b>{p.name ? p.name.toUpperCase() : line()}</b>{p.prontuario ? <>, prontuário <b>{p.prontuario}</b></> : null}, declaro que fui devidamente informado(a) pela equipe do Hospital Materno Infantil Santa Catarina sobre o quadro clínico, a necessidade do atendimento/tratamento proposto e os riscos decorrentes da sua recusa ou interrupção.</p>
+    <p style={{ textAlign: 'justify', lineHeight: 1.8 }}>Ainda assim, por livre e espontânea vontade, RECUSO / DESISTO do atendimento ou tratamento indicado, assumindo inteira responsabilidade pelas consequências desta decisão e isentando o hospital e sua equipe.</p>
+    <p><b>Motivo:</b> {line()}{line()}</p>
+    <p style={{ textAlign: 'right', marginTop: '2em' }}>Criciúma - SC, {today()}.</p>
+    <div className="doc-sign"><div className="line" />Paciente / Responsável</div>
+    <div className="doc-sign"><div className="line" />Testemunha</div>
+    <div className="doc-sign"><div className="line" />Profissional responsável</div>
   </section>;
   if (doc === 'acompanhante') return <section className="doc-page">
     <Letterhead title="DECLARAÇÃO DE ACOMPANHANTE" />
