@@ -386,6 +386,18 @@ export function reopenEncounter(id: string, reason: string) {
   const { discharge: _d, ...rest } = e;
   commitEncounter({ ...rest, status_fluxo: prev, history: [...e.history, { status: prev, at, by: professionalName(state.profile), note: `Alta desfeita pelo administrador: ${reason.trim()}${prev === 'ENCAMINHADO_INTERNACAO' ? ' (redefinir leito)' : ''}` }] });
 }
+/** Administrador desfaz uma internação: cancela a FIA, reabre a BAA e libera o leito. Retorna o leito liberado. */
+export function revertAdmission(id: string, reason: string): string {
+  if (state.profile !== 'Administrador') throw new Error('Apenas administradores podem desfazer internações.');
+  if (!reason.trim()) throw new Error('Informe a justificativa.');
+  const { e, p } = getEncounter(id);
+  if (!e.fia || e.status_fluxo !== 'ENCAMINHADO_INTERNACAO') throw new Error('Atendimento não está internado com FIA aberta.');
+  const at = new Date().toISOString(); const by = professionalName(state.profile);
+  const { fia, baaClosedAt: _b, admission, ...rest } = e;
+  const bed = p.bed;
+  commitEncounter({ ...rest, ...(admission ? { admission: { ...admission, status: 'recusada' as const, note: `Internação desfeita pelo administrador: ${reason.trim()}` } } : {}), status_fluxo: 'EM_OBSERVACAO_REAVALIACAO', history: [...e.history, { status: 'EM_OBSERVACAO_REAVALIACAO', at, by, note: `${fia.number} cancelada · ${e.number} reaberta pelo administrador: ${reason.trim()}` }] }, { patients: state.patients.map((x) => x.id === p.id ? { ...x, bed: '' } : x) });
+  return bed;
+}
 /** Registra o parto: cria prontuário "RN de <mãe>" vinculado e converte a mãe em puérpera. */
 export function registerBirth(motherId: string, nb: Omit<Newborn, "motherId">, mode: "Parto Normal" | "Cesárea", sex: "F" | "M"): string {
   const m = state.patients.find((p) => p.id === motherId);

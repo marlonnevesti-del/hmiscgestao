@@ -5,8 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AmendDocumentButton } from "@/components/DocumentAmend";
-import { correctEncounter, deleteEncounter, reopenEncounter, useStore } from "@/lib/hospital-store";
+import { correctEncounter, deleteEncounter, reopenEncounter, revertAdmission, useStore } from "@/lib/hospital-store";
 import { ATTENDANCE_TYPES, type Encounter } from "@/lib/care-flow";
+import { BASE_BEDS } from "@/lib/hospital-data";
+import { releaseHotelariaBed } from "@/lib/hotelaria-beds.functions";
 import { employeeHead } from "@/lib/employee-rules";
 
 export const Route = createFileRoute("/_authenticated/gestao-atendimentos")({
@@ -39,6 +41,11 @@ function AdminEncounters() {
     act(() => deleteEncounter(e.id), "Atendimento apagado");
   };
   const reopen = (e: Encounter) => { const r = window.prompt("Justificativa para desfazer a alta:"); if (r) act(() => reopenEncounter(e.id, r), "Alta desfeita"); };
+  const revert = (e: Encounter, name: string) => {
+    if (!window.confirm(`Desfazer a internação de ${name}? A ${e.fia?.number} será cancelada, a ${e.number} reaberta e o leito liberado.`)) return;
+    const r = window.prompt("Justificativa para desfazer a internação (obrigatória):"); if (!r) return;
+    act(() => { const bed = revertAdmission(e.id, r); if (bed && !BASE_BEDS.some((b) => b.id === bed)) void releaseHotelariaBed({ data: { codigo: bed } }).then((x) => x.ok ? toast.success(x.message) : toast.warning(x.message)).catch(() => toast.warning("Sem comunicação com a Hotelaria.")); }, "Internação desfeita · BAA reaberta");
+  };
   const counts = { abertos: encounters.filter(open).length, baa: encounters.filter((e) => open(e) && !e.fia).length, fia: encounters.filter((e) => open(e) && e.fia).length, todos: encounters.length };
   return <div className="space-y-4">
     <div><h1 className="text-xl font-semibold">BAAs e FIAs abertas</h1><p className="text-sm text-muted-foreground">Visualize todos os atendimentos, corrija dados de abertura e documentos, desfaça altas ou apague registros lançados por engano.</p></div>
@@ -62,6 +69,7 @@ function AdminEncounters() {
               <Button size="sm" variant="outline" onClick={() => setEdit(e)}>Corrigir</Button>
               {p && <AmendDocumentButton p={p} e={e} label="Documentos" />}
               {e.status_fluxo === "ALTA_HOSPITALAR" && <Button size="sm" variant="outline" onClick={() => reopen(e)}>Desfazer alta</Button>}
+              {e.fia && e.status_fluxo === "ENCAMINHADO_INTERNACAO" && <Button size="sm" variant="outline" onClick={() => revert(e, name)}>Desfazer internação</Button>}
               <Button size="sm" variant="ghost" className="text-destructive" onClick={() => remove(e, name)}>Apagar</Button>
             </td>
           </tr>; })}
