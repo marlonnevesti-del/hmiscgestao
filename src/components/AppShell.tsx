@@ -16,12 +16,14 @@ import { CommandPalette } from "./CommandPalette";
 import logo from "@/assets/logo-hmisc-santa-casa.png.asset.json";
 
 const GROUPS = [
-  { label: "Assistência", items: [
+  { label: "Recepção", items: [
     { to: "/ambulatorio", label: "Ambulatório", icon: Stethoscope },
     { to: "/pronto-socorro", label: "Pronto Socorro", icon: Ambulance },
     { to: "/maternidade", label: "Maternidade", icon: Baby },
-    { to: "/uti-uci", label: "UTI Ped · UCI · UTI Neo", icon: HeartPulse },
     { to: "/documentos-recepcao", label: "Documentos Recepção", icon: Printer },
+  ] },
+  { label: "Assistência", items: [
+    { to: "/uti-uci", label: "UTI Ped · UCI · UTI Neo", icon: HeartPulse },
     { to: "/pacientes", label: "Pacientes / PEP", icon: Users },
     { to: "/painel-tv", label: "Painel de Chamadas (TV)", icon: Tv },
   ] },
