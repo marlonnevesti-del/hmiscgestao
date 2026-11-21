@@ -4,6 +4,8 @@ import { WARDS, type Patient } from '@/lib/hospital-data';
 import { registrationFor } from '@/lib/patient-registration-mapping';
 import { patientAge } from '@/lib/patient-registration';
 import { Letterhead } from './DischargePrint';
+import { doctorForDocument } from '@/lib/hospital-store';
+import { documentCns } from '@/lib/doctors';
 
 export type SheetKind = 'BAA' | 'FIA';
 
@@ -48,7 +50,7 @@ function Sheet({ kind, p, e, user }: { kind: SheetKind; p: Patient; e?: Encounte
     <div className="sheet-row"><F l="Profissão" v={r.profession} /></div>
     <div className="sheet-row"><F l="Nome do Pai" v={r.parent2} /></div>
     <div className="sheet-row"><F l="Nome da Mãe" v={r.parent1 || p.motherName} /></div>
-    <div className="sheet-row"><F l="Médico Responsável" v={doctor} /></div>
+    <div className="sheet-row"><F l="Médico Responsável" v={doctor} /><F l="CRM" v={doctorForDocument(doctor)?.crm} /><F l="CNS do médico" v={documentCns(doctorForDocument(doctor))} /></div>
     <h3>Documentos</h3>
     <div className="sheet-row"><F l="CPF" v={r.cpf || p.cpf} /><F l="CNS" v={r.cns} /><F l="Identidade" v={r.identityDocument} /><F l="Órg.Emissor" /></div>
     <h3>Endereço</h3>

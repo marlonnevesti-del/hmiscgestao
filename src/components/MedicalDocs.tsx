@@ -12,7 +12,7 @@ import type { Encounter } from "@/lib/care-flow";
 import type { Patient } from "@/lib/hospital-data";
 import { canAct } from "@/lib/hospital-data";
 import { KIND_LABELS, controlledRxIssues, type ControlledRx, type ExamKind, type ExamRequest } from "@/lib/exam-requests";
-import { professionalName, rememberDoctor, requestExam, useStore } from "@/lib/hospital-store";
+import { currentDoctorFields, professionalName, rememberDoctor, requestExam, useStore } from "@/lib/hospital-store";
 
 const today = () => new Date().toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
 const birth = (p: Patient) => (p.registration?.birthDate ? new Date(`${p.registration.birthDate}T12:00:00`).toLocaleDateString("pt-BR") : p.age);
@@ -62,7 +62,7 @@ function RxSheet({ p, rx, name, council }: { p: Patient; rx: ControlledRx; name:
 
 function ExamDialog({ p, e, kind, onClose }: { p: Patient; e: Encounter; kind: ExamKind; onClose: () => void }) {
   const me = useStore((s) => professionalName(s.profile));
-  const [f, setF] = useState({ exams: "", justification: e.medical?.diagnosis ?? "", cid: e.medical?.cid ?? "", material: "", site: "", clinical: "", by: me, council: "" });
+  const [f, setF] = useState(() => { const d = currentDoctorFields(); return { exams: "", justification: e.medical?.diagnosis ?? "", cid: e.medical?.cid ?? "", material: "", site: "", clinical: "", by: d.name || me, council: d.crm }; });
   const [printed, setPrinted] = useState<ExamRequest | null>(null);
   const s = (k: keyof typeof f) => (x: { target: { value: string } }) => setF({ ...f, [k]: x.target.value });
   const save = () => { try { rememberDoctor(f.by, f.council); const r = requestExam(e.id, { kind, exams: f.exams, justification: f.justification, cid: f.cid, council: f.council, ...(kind === "patologico" ? { material: f.material, site: f.site, clinical: f.clinical } : {}) }); toast.success(kind === "laboratorial" ? "Pedido registrado" : "Pedido enviado ao SADT"); setPrinted(r); print(() => { setPrinted(null); onClose(); }); } catch (x) { toast.error(x instanceof Error ? x.message : "Erro"); } };
@@ -81,7 +81,7 @@ function ExamDialog({ p, e, kind, onClose }: { p: Patient; e: Encounter; kind: E
 function RxDialog({ p, onClose }: { p: Patient; onClose: () => void }) {
   const me = useStore((s) => professionalName(s.profile));
   const [rx, setRx] = useState<ControlledRx>({ items: [{ drug: "", qty: "", dose: "" }], buyer: "", buyerDoc: "", buyerAddress: "" });
-  const [doc, setDoc] = useState({ name: me, council: "" }); const [on, setOn] = useState(false);
+  const [doc, setDoc] = useState(() => { const d = currentDoctorFields(); return { name: d.name || me, council: d.crm }; }); const [on, setOn] = useState(false);
   const item = (i: number, k: "drug" | "qty" | "dose", v: string) => setRx({ ...rx, items: rx.items.map((x, j) => (j === i ? { ...x, [k]: v } : x)) });
   const go = () => { const issues = controlledRxIssues(rx); if (issues.length) { toast.error(issues.join(" ")); return; } if (!window.confirm("Confirma a emissão da receita de controle especial (2 vias)?")) return; rememberDoctor(doc.name, doc.council); setOn(true); print(() => { setOn(false); onClose(); }); };
   return <>

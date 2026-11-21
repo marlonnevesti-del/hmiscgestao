@@ -4,7 +4,9 @@ import { FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Encounter } from '@/lib/care-flow';
 import type { Patient } from '@/lib/hospital-data';
-import { saveAihLaudo, useStore } from '@/lib/hospital-store';
+import { currentDoctorFields, doctorForDocument, saveAihLaudo, useStore } from '@/lib/hospital-store';
+import { documentCns } from '@/lib/doctors';
+import { DoctorNameInput } from './DoctorNameInput';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -140,7 +142,7 @@ export function AihLaudoButton({ p, e }: { p: Patient; e?: Encounter | undefined
   const employee = useStore((s) => s.employeeName);
   const [f, setF] = useState<ReturnType<typeof aihDefaults> | null>(null);
   const [printing, setPrinting] = useState(false);
-  const open = () => setF({ ...aihDefaults(p, e, employee), ...(e?.aihLaudo ?? {}) });
+  const open = () => { const me = currentDoctorFields(); const base = aihDefaults(p, e, me.name || employee); const d = doctorForDocument(base.profissional); setF({ ...base, docProf: documentCns(d), ...(e?.aihLaudo ?? {}) }); };
   const set = (k: string, v: string) => setF((x) => (x ? { ...x, [k]: v } : x));
   const val = (k: string) => (f as F | null)?.[k] ?? '';
   const save = () => { if (e && f) { saveAihLaudo(e.id, f); toast.success('Laudo de AIH salvo no atendimento'); } };
@@ -160,7 +162,7 @@ export function AihLaudoButton({ p, e }: { p: Patient; e?: Encounter | undefined
         {f && SECTIONS.map(([title, fields]) => <div key={title} className="space-y-2">
           <h3 className="mt-2 text-sm font-semibold">{title}</h3>
           <div className="grid gap-2 sm:grid-cols-2">{title === 'Procedimento solicitado' && <SigtapPicker aihOnly onPick={(p) => { set('codigo', p.c); set('procedimento', p.n); }} />}{fields.map(([k, l, big]) => <label key={k} className={big ? 'text-xs sm:col-span-2' : 'text-xs'}>{l}
-            {big ? <Textarea value={val(k)} onChange={(ev) => set(k, ev.target.value)} rows={3} /> : <Input value={val(k)} onChange={(ev) => set(k, ev.target.value)} />}</label>)}</div>
+            {k === 'profissional' ? <DoctorNameInput value={val(k)} onChange={(v) => set(k, v)} onCns={(cns) => { set('docTipo', 'CNS'); set('docProf', cns); }} /> : big ? <Textarea value={val(k)} onChange={(ev) => set(k, ev.target.value)} rows={3} /> : <Input value={val(k)} onChange={(ev) => set(k, ev.target.value)} />}</label>)}</div>
         </div>)}
         <div className="flex justify-end gap-2 pt-2">
           <Button variant="outline" disabled={!e} onClick={save}>Salvar</Button>

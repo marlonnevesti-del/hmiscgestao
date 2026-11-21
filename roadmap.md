@@ -1,4 +1,5 @@
 # Roadmap
+- [x] Consolidar as duas planilhas do corpo clínico sem duplicar médicos; guardar CNS somente no estado clínico protegido e completar seleção nos documentos (199 médicos importados; 49 CNS aguardam correção da fonte).
 - [x] Preparar leitura segura dos leitos da Hotelaria no NIR e documentar ativação e servidor interno.
 - [ ] Ativar sincronização real e reservas bidirecionais — depende de endpoint e reserva transacional publicados no aplicativo Hotelaria e credenciais de integração.
 - [x] Definir função dos colaboradores, restringir áreas por função e limitar a recepção a três opções.

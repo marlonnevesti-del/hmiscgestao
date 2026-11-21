@@ -4,7 +4,7 @@ import { Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { rememberDoctor, saveSigtapCode, useStore } from "@/lib/hospital-store";
+import { currentDoctorFields, rememberDoctor, saveSigtapCode, useStore } from "@/lib/hospital-store";
 import { DoctorNameInput } from "./DoctorNameInput";
 import { SigtapPicker } from "./SigtapPicker";
 import { formatCode } from "@/lib/sigtap";
@@ -29,7 +29,7 @@ export function ProcedurePrintButton({ patientId, sector = "", procedure = "", s
   const employee = useStore((s) => s.employeeName);
   const [open, setOpen] = useState(false);
   const now = new Date();
-  const blank = (): Proc => ({ sector, name: procedure, code: "", date: now.toISOString().slice(0, 10), start: now.toTimeString().slice(0, 5), end: "", professional: employee, register: "", assistant: "", indication: enc?.medical?.diagnosis ?? enc?.complaint ?? "", description: "", materials: "", complications: "", notes: "" });
+  const blank = (): Proc => ({ sector, name: procedure, code: "", date: now.toISOString().slice(0, 10), start: now.toTimeString().slice(0, 5), end: "", professional: currentDoctorFields().name || employee, register: currentDoctorFields().crm, assistant: "", indication: enc?.medical?.diagnosis ?? enc?.complaint ?? "", description: "", materials: "", complications: "", notes: "" });
   const [f, setF] = useState<Proc>(blank);
   const set = (k: keyof Proc) => (v: string) => setF((x) => ({ ...x, [k]: v }));
   const field = (k: keyof Proc, label: string, type = "text") => <label className="grid gap-1 text-xs">{label}<Input type={type} value={f[k]} onChange={(e) => set(k)(e.target.value)} /></label>;

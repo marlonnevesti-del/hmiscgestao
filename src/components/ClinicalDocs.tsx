@@ -5,7 +5,8 @@ import { BedDouble, FileText, HeartHandshake, Scissors, Send } from 'lucide-reac
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Letterhead } from '@/components/DischargePrint';
-import { saveClinicalDoc, professionalName, useStore } from '@/lib/hospital-store';
+import { currentDoctorFields, saveClinicalDoc, professionalName, useStore } from '@/lib/hospital-store';
+import { DoctorNameInput } from './DoctorNameInput';
 import { CLINICAL_DOCS, missingFields, type ClinicalDoc, type ClinicalDocKind } from '@/lib/inpatient-docs';
 import { canAct, type Patient } from '@/lib/hospital-data';
 import type { Encounter } from '@/lib/care-flow';
@@ -48,7 +49,7 @@ function Sheet({ kind, p, e, d }: { kind: ClinicalDocKind; p: Patient; e: Encoun
 function DocDialog({ kind, p, e, onClose }: { kind: ClinicalDocKind; p: Patient; e: Encounter; onClose: () => void }) {
   const me = useStore((s) => professionalName(s.profile));
   const cfg = CLINICAL_DOCS[kind];
-  const [v, setV] = useState(() => defaults(kind, p, e, me));
+  const [v, setV] = useState<Record<string, string>>(() => { const d = currentDoctorFields(); const medical = ['uti', 'cirurgica', 'evolucao'].includes(kind); return { ...defaults(kind, p, e, medical ? d.name || me : me), ...(medical ? { crm: d.crm } : {}) }; });
   const [printing, setPrinting] = useState<ClinicalDoc | null>(null);
   const history = e.clinicalDocs?.[kind] ?? [];
   const miss = missingFields(kind, v);
@@ -72,6 +73,7 @@ function DocDialog({ kind, p, e, onClose }: { kind: ClinicalDocKind; p: Patient;
         const bad = f.required && !v[f.key]?.trim();
         const cls = cn(input, bad && 'border-destructive');
         const set = (x: string) => setV((o) => ({ ...o, [f.key]: x }));
+        if (['medico', 'cirurgiao'].includes(f.key)) return <label key={f.key} className="grid gap-1 text-xs font-medium">{f.label}<DoctorNameInput value={v[f.key] ?? ''} onChange={set} onCrm={(crm) => setV((o) => ({ ...o, crm }))} /></label>;
         if (f.key === 'sigtap') return <div key={f.key} className="grid gap-2 sm:col-span-2 sm:grid-cols-2"><SigtapPicker onPick={(p) => setV((o) => ({ ...o, sigtap: formatCode(p.c), procedimento: o['procedimento']?.trim() ? o['procedimento'] : p.n }))} /><label className="grid gap-1 text-xs font-medium">{f.label}<input className={cls} value={v[f.key] ?? ''} onChange={(x) => set(x.target.value)} /></label></div>;
         return <label key={f.key} className={cn('grid gap-1 text-xs font-medium', f.long && 'sm:col-span-2')}>{f.label}{f.required && ' *'}
           {f.options ? <select className={cls} value={v[f.key] ?? ''} onChange={(x) => set(x.target.value)}><option value="">Selecione…</option>{f.options.map((o) => <option key={o}>{o}</option>)}</select>
