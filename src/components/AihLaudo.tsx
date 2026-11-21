@@ -1,4 +1,4 @@
-import { useState, type CSSProperties, type ReactNode } from 'react';
+import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { FileText } from 'lucide-react';
 import { toast } from 'sonner';
@@ -12,6 +12,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { SigtapPicker } from '@/components/SigtapPicker';
+import { loadSigtap } from '@/lib/sigtap';
+import { loadSigtapRules, sigtapGlosas } from '@/lib/sigtap-compat';
 import susLogo from '@/assets/sus-logo.png';
 import footerLogos from '@/assets/aih-footer-logos.png';
 
@@ -138,6 +140,26 @@ export function PrintLaudo({ f }: { f: ReturnType<typeof aihDefaults> }) {
   </>;
 }
 
+function GlosaCheck({ f, p }: { f: F; p: Patient }) {
+  const [msgs, setMsgs] = useState<string[] | null>(null);
+  const code = (f['codigo'] ?? '').replace(/\D/g, ''), cid = f['cid'] ?? '';
+  useEffect(() => {
+    if (code.length !== 10) { setMsgs(null); return; }
+    let live = true;
+    Promise.all([loadSigtap(), loadSigtapRules()]).then(([list, rules]) => {
+      if (!live) return;
+      const proc = list.find((x) => x.c === code);
+      const r = p.registration;
+      setMsgs(proc ? sigtapGlosas(rules, proc, { cid, sex: r?.sex ?? '', birthDate: r?.birthDate ?? '', date: new Date().toISOString().slice(0, 10) }) : ['Código SIGTAP não encontrado na tabela oficial']);
+    });
+    return () => { live = false; };
+  }, [code, cid, p]);
+  if (!msgs) return null;
+  return msgs.length
+    ? <div className="rounded-md border border-destructive bg-destructive/10 p-2 text-xs text-destructive"><b>Risco de glosa:</b>{msgs.map((m) => <div key={m}>• {m}</div>)}</div>
+    : <div className="rounded-md border border-clinical/40 bg-clinical/10 p-2 text-xs text-clinical">Procedimento compatível com CID, sexo e idade (SIGTAP oficial).</div>;
+}
+
 export function AihLaudoButton({ p, e }: { p: Patient; e?: Encounter | undefined }) {
   const employee = useStore((s) => s.employeeName);
   const [f, setF] = useState<ReturnType<typeof aihDefaults> | null>(null);
@@ -164,6 +186,7 @@ export function AihLaudoButton({ p, e }: { p: Patient; e?: Encounter | undefined
           <div className="grid gap-2 sm:grid-cols-2">{title === 'Procedimento solicitado' && <SigtapPicker aihOnly onPick={(p) => { set('codigo', p.c); set('procedimento', p.n); }} />}{fields.map(([k, l, big]) => <label key={k} className={big ? 'text-xs sm:col-span-2' : 'text-xs'}>{l}
             {k === 'profissional' ? <DoctorNameInput value={val(k)} onChange={(v) => set(k, v)} onCns={(cns) => { set('docTipo', 'CNS'); set('docProf', cns); }} /> : big ? <Textarea value={val(k)} onChange={(ev) => set(k, ev.target.value)} rows={3} /> : <Input value={val(k)} onChange={(ev) => set(k, ev.target.value)} />}</label>)}</div>
         </div>)}
+        {f && <GlosaCheck f={f as F} p={p} />}
         <div className="flex justify-end gap-2 pt-2">
           <Button variant="outline" disabled={!e} onClick={save}>Salvar</Button>
           <Button onClick={print}>Salvar e imprimir</Button>

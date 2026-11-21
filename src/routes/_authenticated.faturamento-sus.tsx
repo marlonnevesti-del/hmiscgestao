@@ -11,6 +11,8 @@ import { useStore } from "@/lib/hospital-store";
 import { AmendDocumentButton, DocumentGapsPanel } from "@/components/DocumentAmend";
 import { documentGaps } from "@/lib/document-amend";
 import { semaphoreOf, semaphoreSummary } from "@/lib/billing-semaphore";
+import { loadSigtap, type SigtapProc } from "@/lib/sigtap";
+import { loadSigtapRules, sigtapGlosas, type SigtapRules } from "@/lib/sigtap-compat";
 import { aihFile, bpaFile, cihaFile, cihaFileName, buildSusRows, CNES, competenceOf, SIGTAP_DEFAULT, type Professional, type SusRow } from "@/lib/sus-billing";
 import { cn } from "@/lib/utils";
 
@@ -47,7 +49,13 @@ function SusBilling() {
   const [doc, setDoc] = useState<Doc>(null);
   useEffect(() => { try { const v = localStorage.getItem(PROF_KEY); if (v) { const p = JSON.parse(v) as Professional; setProf({ ...p, cbo: p.cbo || "225125" }); } } catch { /* ignore */ } }, []);
   const saveProf = (p: Professional) => { setProf(p); localStorage.setItem(PROF_KEY, JSON.stringify(p)); };
-  const rows = useMemo(() => buildSusRows(encounters, patients, comp, prof), [encounters, patients, comp, prof]);
+  const [sig, setSig] = useState<{ list: SigtapProc[]; rules: SigtapRules } | null>(null);
+  useEffect(() => { Promise.all([loadSigtap(), loadSigtapRules()]).then(([list, rules]) => setSig({ list, rules })); }, []);
+  const rows = useMemo(() => buildSusRows(encounters, patients, comp, prof).map((r) => {
+    if (!sig) return r;
+    const g = sigtapGlosas(sig.rules, sig.list.find((x) => x.c === r.procedure), r);
+    return g.length ? { ...r, issues: [...r.issues, ...g] } : r;
+  }), [encounters, patients, comp, prof, sig]);
   const all = tab === "CIHA" ? rows : rows.filter((r) => r.kind === tab);
   const sem = all.map((r) => ({ ...r, level: semaphoreOf(r.issues, { defaultProcedure: r.procedure === SIGTAP_DEFAULT[r.kind], gaps: r.patient ? documentGaps(r.patient, r.encounter) : [] }) }));
   const summary = semaphoreSummary(sem);

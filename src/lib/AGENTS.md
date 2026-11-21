@@ -13,3 +13,4 @@
 - Milk bank (BLH) rules (raw 15-day validity, Dornic/microbiology approval, crematocrit kcal, autonomy, AT46 report) live in src/lib/milk-bank.ts; data is the milkBank snapshot key because it is hospital-level stock, not per-patient; /banco-de-leite shares the enfermagem access area.
 - Bed-board badges (allergy, MDR isolation, stay length, milk, physio) are derived in src/lib/bed-board.ts from existing patient data, so the census needs no new stored fields.
 - Shift medication board (med-shift.ts), pre-billing semaphore (billing-semaphore.ts over susIssues/documentGaps) and SBAR handover (handover.ts) are derived from existing snapshot data, so they add no stored fields.
+- SIGTAP glosa rules (CID list per procedure, sex, age in months, permanence) come from the official DATASUS table in sigtap-rules.json via sigtap-compat.ts, lazy-loaded and applied in Laudo AIH and Faturamento SUS so both flag the same issues.
