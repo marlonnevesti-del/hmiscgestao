@@ -35,3 +35,9 @@ describe("pickProcedure", () => {
   it("usa o procedimento registrado no BPA", () => expect(pickProcedure({ sigtapCode: "0401010023" } as never, "BPA")).toBe("0401010023"));
   it("cai no padrão sem código", () => expect(pickProcedure({} as never, "BPA")).toBe("0301060061"));
 });
+
+import { cihaFile, cihaFileName } from "./sus-billing";
+describe("CIHA-01", () => {
+  it("nome do arquivo segue CNES+AAAAMM.CHA", () => { expect(cihaFileName("202611")).toBe("2077485202611.CHA"); });
+  it("sem movimento gera header e registro tipo 3", () => { expect(cihaFile([], "202611")).toBe("120774851.0.0.0\r\n3\r\n"); });
+});

@@ -90,3 +90,30 @@ export function ageAt(birth: string, at: string) {
   if (d.getMonth() < b.getMonth() || (d.getMonth() === b.getMonth() && d.getDate() < b.getDate())) a--;
   return Math.max(0, a);
 }
+
+/** Nome oficial da remessa CIHA01: CNES + AAAA + MM + ".CHA". */
+export const cihaFileName = (competence: string) => `${CNES}${competence}.CHA`;
+const ddmmaaaa = (iso: string) => { const d = iso.slice(0, 10).split("-"); return d.length === 3 ? `${d[2]}${d[1]}${d[0]}` : "00000000"; };
+
+/**
+ * Remessa de importação do CIHA01 (Portarias GM/MS 637/2007 e 1.171/2011).
+ * Header tipo 1; internações (FIA) tipo 2; ambulatoriais (BAA) tipo 4; sem movimento tipo 3.
+ * Endereço/nascimento/sexo seguem as posições oficiais (2–131); os campos seguintes seguem a ordem da portaria.
+ */
+export function cihaFile(rows: SusRow[], competence: string): string {
+  const ok = rows.filter((r) => r.issues.length === 0);
+  const header = `1${num(CNES, 7)}${pad("1.0.0.0", 7)}`;
+  if (!ok.length) return [header, "3"].join("\r\n") + "\r\n";
+  const lines = ok.map((r) => {
+    const a = r.patient?.registration?.addresses?.find((x) => x.primary) ?? r.patient?.registration?.addresses?.[0];
+    const street = [a?.streetType, a?.street].filter(Boolean).join(" ");
+    const out = r.encounter.discharge?.at || r.encounter.history.at(-1)?.at || r.encounter.openedAt;
+    return [
+      r.kind === "AIH" ? "2" : "4", pad(plain(r.name), 60), pad(plain(street), 25), pad(plain(a?.number ?? ""), 5), pad(plain(a?.complement ?? ""), 15),
+      num(r.cityCode.slice(0, 6), 6), pad(plain(a?.state ?? "SC"), 2), num(a?.postalCode ?? "", 8), ddmmaaaa(r.birthDate), r.sex,
+      num(r.cns, 15), pad(r.encounter.number, 15), num(r.procedure, 10), pad(r.cid, 4), pad("", 4),
+      ddmmaaaa(r.date), ddmmaaaa(out), r.encounter.discharge ? "11" : "00", "06", num(competence, 6),
+    ].join("");
+  });
+  return [header, ...lines].join("\r\n") + "\r\n";
+}

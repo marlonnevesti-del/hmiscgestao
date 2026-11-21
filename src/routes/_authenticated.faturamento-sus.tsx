@@ -11,7 +11,7 @@ import { useStore } from "@/lib/hospital-store";
 import { AmendDocumentButton, DocumentGapsPanel } from "@/components/DocumentAmend";
 import { documentGaps } from "@/lib/document-amend";
 import { semaphoreOf, semaphoreSummary } from "@/lib/billing-semaphore";
-import { aihFile, bpaFile, buildSusRows, CNES, competenceOf, SIGTAP_DEFAULT, type Professional, type SusRow } from "@/lib/sus-billing";
+import { aihFile, bpaFile, cihaFile, cihaFileName, buildSusRows, CNES, competenceOf, SIGTAP_DEFAULT, type Professional, type SusRow } from "@/lib/sus-billing";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/faturamento-sus")({
@@ -26,7 +26,7 @@ export const Route = createFileRoute("/_authenticated/faturamento-sus")({
   component: SusBilling,
 });
 
-type Tab = "BPA" | "AIH";
+type Tab = "BPA" | "AIH" | "CIHA";
 type Doc = { title: string; rows?: SusRow[]; laudo?: SusRow } | null;
 const PROF_KEY = "hmisc-sus-prof";
 const fmt = (d: string) => d ? d.split("-").reverse().join("/") : "—";
@@ -48,7 +48,7 @@ function SusBilling() {
   useEffect(() => { try { const v = localStorage.getItem(PROF_KEY); if (v) { const p = JSON.parse(v) as Professional; setProf({ ...p, cbo: p.cbo || "225125" }); } } catch { /* ignore */ } }, []);
   const saveProf = (p: Professional) => { setProf(p); localStorage.setItem(PROF_KEY, JSON.stringify(p)); };
   const rows = useMemo(() => buildSusRows(encounters, patients, comp, prof), [encounters, patients, comp, prof]);
-  const all = rows.filter((r) => r.kind === tab);
+  const all = tab === "CIHA" ? rows : rows.filter((r) => r.kind === tab);
   const sem = all.map((r) => ({ ...r, level: semaphoreOf(r.issues, { defaultProcedure: r.procedure === SIGTAP_DEFAULT[r.kind], gaps: r.patient ? documentGaps(r.patient, r.encounter) : [] }) }));
   const summary = semaphoreSummary(sem);
   const list = sem.filter((r) => !onlyIssues || r.issues.length);
@@ -59,7 +59,7 @@ function SusBilling() {
 
   return (
     <div className="space-y-4">
-      <div><h1 className="text-xl font-semibold">Faturamento SUS</h1><p className="text-sm text-muted-foreground">BPA (BAAs) e SISAIH01 (FIAs) · CNES {CNES}</p></div>
+      <div><h1 className="text-xl font-semibold">Faturamento SUS</h1><p className="text-sm text-muted-foreground">BPA (BAAs), SISAIH01 (FIAs) e CIHA-01 · CNES {CNES}</p></div>
       {!allowed && <NoPermission action="gerar relatórios e remessas SUS (perfil Faturamento)" />}
       <div className="grid gap-3 rounded-lg border bg-card p-4 md:grid-cols-[160px_1fr_160px_120px]">
         <label className="text-xs font-medium">Competência<Input type="month" value={`${comp.slice(0, 4)}-${comp.slice(4)}`} onChange={(e) => e.target.value && setComp(e.target.value.replace("-", ""))} /></label>
@@ -68,7 +68,7 @@ function SusBilling() {
         <label className="text-xs font-medium">CBO<Input value={prof.cbo} onChange={(e) => saveProf({ ...prof, cbo: e.target.value })} placeholder="225125" /></label>
       </div>
       <div className="flex flex-wrap gap-2">
-        {(["BPA", "AIH"] as const).map((t) => <Button key={t} size="sm" variant={tab === t ? "default" : "outline"} onClick={() => setTab(t)}>{t === "BPA" ? "BPA · Ambulatorial (BAA)" : "AIH · Internações (FIA)"}</Button>)}
+        {(["BPA", "AIH", "CIHA"] as const).map((t) => <Button key={t} size="sm" variant={tab === t ? "default" : "outline"} onClick={() => setTab(t)}>{t === "BPA" ? "BPA · Ambulatorial (BAA)" : t === "AIH" ? "AIH · Internações (FIA)" : "CIHA-01 · Hospitalar e Ambulatorial"}</Button>)}
       </div>
 
         <div className="rounded-lg border bg-card p-4">
@@ -76,8 +76,8 @@ function SusBilling() {
             <div className="text-sm"><b>{all.length}</b> atendimento(s) em {month} · <span className="text-clinical">{okCount} prontos</span> · <span className="text-destructive">{all.length - okCount} com pendência</span></div>
             <div className="flex flex-wrap gap-2">
               <label className="flex items-center gap-1 text-xs"><input type="checkbox" checked={onlyIssues} onChange={(e) => setOnlyIssues(e.target.checked)} /> Só pendências</label>
-              <Button size="sm" variant="outline" disabled={!all.length} onClick={() => print({ title: `RELATÓRIO DE CONFERÊNCIA ${tab === "BPA" ? "BPA-I" : "AIH"} – COMPETÊNCIA ${month}`, rows: all })}>Imprimir conferência</Button>
-              <Button size="sm" disabled={!allowed || !okCount} onClick={() => tab === "BPA" ? download(`PA${CNES}.${comp.slice(4)}`, bpaFile(rows, comp, prof)) : download(`AIH${CNES}_${comp}.txt`, aihFile(rows, comp, prof))}>Baixar arquivo {tab === "BPA" ? "BPA" : "SISAIH01"} ({okCount})</Button>
+              <Button size="sm" variant="outline" disabled={!all.length} onClick={() => print({ title: `RELATÓRIO DE CONFERÊNCIA ${tab === "BPA" ? "BPA-I" : tab === "AIH" ? "AIH" : "CIHA-01"} – COMPETÊNCIA ${month}`, rows: all })}>Imprimir conferência</Button>
+              <Button size="sm" disabled={!allowed || !okCount} onClick={() => tab === "BPA" ? download(`PA${CNES}.${comp.slice(4)}`, bpaFile(rows, comp, prof)) : tab === "AIH" ? download(`AIH${CNES}_${comp}.txt`, aihFile(rows, comp, prof)) : download(cihaFileName(comp), cihaFile(rows, comp))}>Baixar arquivo {tab === "BPA" ? "BPA" : tab === "AIH" ? "SISAIH01" : "CIHA-01"} ({okCount})</Button>
             </div>
           </div>
           <div className="mb-3 space-y-2">
