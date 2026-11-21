@@ -449,7 +449,7 @@ export function saveAihLaudo(id: string, data: Record<string, string>) {
 
 /** Administrador retifica números de documento após finalização, com justificativa no histórico. */
 export function amendDocuments(id: string, values: Partial<Record<AmendField, string>>, reason: string) {
-  if (state.profile !== 'Administrador') throw new Error('Apenas administradores podem retificar documentos.');
+  if (!canAct(state.profile, 'faturar', state.accessAreas)) throw new Error('Apenas Faturamento ou Administrador podem retificar documentos.');
   if (!reason.trim()) throw new Error('Informe a justificativa.');
   const { e, p } = getEncounter(id);
   const changed = (Object.keys(values) as AmendField[]).filter((f) => (values[f] ?? '').trim() !== readField(p, e, f));

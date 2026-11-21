@@ -8,15 +8,16 @@ import { amendDocuments, useStore } from '@/lib/hospital-store';
 import { AMEND_FIELDS, amendIssue, documentGaps, readField, type AmendField } from '@/lib/document-amend';
 import { SigtapPicker } from '@/components/SigtapPicker';
 import type { Encounter } from '@/lib/care-flow';
-import type { Patient } from '@/lib/hospital-data';
+import { canAct, type Patient } from '@/lib/hospital-data';
 
 /** Botão (só Administrador) que reabre os números de documento de um atendimento para preenchimento. */
-export function AmendDocumentButton({ p, e, label = 'Retificar documentos (Admin)', size = 'sm' }: { p: Patient; e?: Encounter | undefined; label?: string; size?: 'sm' | 'default' }) {
+export function AmendDocumentButton({ p, e, label = 'Retificar documentos', size = 'sm' }: { p: Patient; e?: Encounter | undefined; label?: string; size?: 'sm' | 'default' }) {
   const profile = useStore((s) => s.profile);
+  const areas = useStore((s) => s.accessAreas);
   const [open, setOpen] = useState(false);
   const [vals, setVals] = useState<Partial<Record<AmendField, string>>>({});
   const [reason, setReason] = useState('');
-  if (profile !== 'Administrador' || !e) return null;
+  if (!canAct(profile, 'faturar', areas) || !e) return null;
   const fields = AMEND_FIELDS.filter((f) => !f.inpatientOnly || e.fia);
   const gaps = documentGaps(p, e);
   const start = () => { setVals(Object.fromEntries(fields.map((f) => [f.id, readField(p, e, f.id)]))); setReason(''); setOpen(true); };
@@ -43,16 +44,17 @@ export function AmendDocumentButton({ p, e, label = 'Retificar documentos (Admin
 /** Painel central do Administrador: atendimentos com números de documento faltando. */
 export function DocumentGapsPanel() {
   const profile = useStore((s) => s.profile);
+  const areas = useStore((s) => s.accessAreas);
   const encounters = useStore((s) => s.encounters);
   const patients = useStore((s) => s.patients);
   const [q, setQ] = useState('');
-  if (profile !== 'Administrador') return null;
+  if (!canAct(profile, 'faturar', areas)) return null;
   const rows = encounters.map((e) => { const p = patients.find((x) => x.id === e.patientId); return p ? { e, p, gaps: documentGaps(p, e) } : null; })
     .filter((r): r is NonNullable<typeof r> => !!r && r.gaps.length > 0)
     .filter((r) => !q.trim() || `${r.p.name} ${r.e.number} ${r.e.fia?.number ?? ''}`.toLowerCase().includes(q.toLowerCase()));
   const label = (f: AmendField) => AMEND_FIELDS.find((x) => x.id === f)!.label;
   return <div className="rounded-lg border bg-card p-4">
-    <div className="mb-3 flex flex-wrap items-center justify-between gap-2"><div><div className="text-sm font-medium">Pendências de documentos (Administrador)</div><div className="text-xs text-muted-foreground">{rows.length} atendimento(s) com número faltando</div></div>
+    <div className="mb-3 flex flex-wrap items-center justify-between gap-2"><div><div className="text-sm font-medium">Pendências de documentos</div><div className="text-xs text-muted-foreground">{rows.length} atendimento(s) com número faltando</div></div>
       <Input value={q} onChange={(ev) => setQ(ev.target.value)} placeholder="Buscar paciente ou nº" className="w-60" /></div>
     <div className="overflow-x-auto"><table className="w-full text-sm"><thead className="text-left text-xs uppercase text-muted-foreground"><tr><th>Nº</th><th>Paciente</th><th>Faltando</th><th></th></tr></thead>
       <tbody>{rows.slice(0, 100).map((r) => <tr key={r.e.id} className="border-t align-top"><td className="py-1 font-mono text-xs">{r.e.fia?.number ?? r.e.number}</td><td>{r.p.name}</td>
