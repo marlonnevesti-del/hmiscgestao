@@ -13,6 +13,7 @@ import { can, canAct } from "@/lib/hospital-data";
 import { GROUP_LABELS, isObstetricSpecialty, type SadtReport, type SpecialtyGroup } from "@/lib/ambulatorio";
 import type { Encounter } from "@/lib/care-flow";
 import { ExamRequestsBoard } from "./ExamRequestsBoard";
+import { doctorsForSpecialty, mergeDoctors } from "@/lib/doctors";
 import { checkInAppointment, createAmbSpecialty, professionalName, saveSadtReport, rememberDoctor, scheduleAppointment, setAppointmentStatus, toggleAmbSpecialty, useStore } from "@/lib/hospital-store";
 
 const act = (fn: () => void, ok?: string) => { try { fn(); if (ok) toast.success(ok); } catch (e) { toast.error(e instanceof Error ? e.message : "Ação não concluída"); } };
@@ -50,7 +51,16 @@ export function AmbulatoryAgenda() {
   const day = useMemo(() => list.filter((a) => a.date === date && (!filter || a.specialtyId === filter)).sort((a, b) => a.time.localeCompare(b.time)), [list, date, filter]);
   const editable = canAct(profile, "recepcao", accessAreas);
   const chosen = patients.find((p) => p.id === f.patientId);
+  const learned = useStore((s) => s.doctors);
+  const specName = specs.find((s) => s.id === f.specialtyId)?.name ?? "";
+  const docs = useMemo(() => doctorsForSpecialty(mergeDoctors(learned ?? []), specName), [learned, specName]);
+  const [find, setFind] = useState("");
+  const findHits = find.trim().length > 1 ? list.filter((a) => { const p = patients.find((x) => x.id === a.patientId); return p && [p.name, p.cpf, p.prontuario, p.registration?.cns ?? ""].some((v) => v.toLowerCase().includes(find.trim().toLowerCase())); }).sort((a, b) => (b.date + b.time).localeCompare(a.date + a.time)).slice(0, 15) : [];
   return <div className="space-y-4">
+    <div className="rounded-lg border bg-card p-3">
+      <label className="grid gap-1 text-xs">Procurar agendamento (qualquer data)<Input placeholder="Nome, CPF, CNS ou prontuário do paciente" value={find} onChange={(e) => setFind(e.target.value)} /></label>
+      {find.trim().length > 1 && <ul className="mt-2 space-y-1 text-sm">{findHits.map((a) => <li key={a.id}><button type="button" className="text-left hover:underline" onClick={() => { setDate(a.date); setFilter(""); setFind(""); }}>{new Date(`${a.date}T12:00`).toLocaleDateString("pt-BR")} {a.time} · <b>{patients.find((x) => x.id === a.patientId)?.name}</b> · {specs.find((s) => s.id === a.specialtyId)?.name} · {a.professional || "—"} · {STATUS[a.status]}</button></li>)}{!findHits.length && <li className="text-muted-foreground">Nenhum agendamento encontrado.</li>}</ul>}
+    </div>
     <div className="flex flex-wrap items-end gap-2">
       <label className="grid gap-1 text-xs">Data<Input type="date" value={date} onChange={(e) => setDate(e.target.value)} /></label>
       <label className="grid gap-1 text-xs">Especialidade<select className={sel} value={filter} onChange={(e) => setFilter(e.target.value)}><option value="">Todas</option>{specs.filter((s) => s.active).map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></label>
@@ -63,7 +73,7 @@ export function AmbulatoryAgenda() {
       </div>
       <label className="grid gap-1 text-xs">Especialidade<select className={sel} value={f.specialtyId} onChange={(e) => setF({ ...f, specialtyId: e.target.value })}><option value="">Selecione…</option>{(["medica", "nao_medica", "sadt"] as const).map((g) => <optgroup key={g} label={GROUP_LABELS[g]}>{specs.filter((s) => s.group === g && s.active).map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</optgroup>)}</select></label>
       <label className="grid gap-1 text-xs">Horário<Input type="time" value={f.time} onChange={(e) => setF({ ...f, time: e.target.value })} /></label>
-      <label className="grid gap-1 text-xs">Profissional<Input value={f.professional} onChange={(e) => setF({ ...f, professional: e.target.value })} /></label>
+      <label className="grid gap-1 text-xs">Profissional{docs.length ? <select className={sel} value={docs.some((d) => d.name === f.professional) ? f.professional : f.professional ? "__outro" : ""} onChange={(e) => setF({ ...f, professional: e.target.value === "__outro" ? " " : e.target.value })}><option value="">Selecione…</option>{docs.map((d) => <option key={d.crm ?? d.name} value={d.name}>{d.name}{d.crm ? ` · ${d.crm}` : ""}</option>)}<option value="__outro">Outro profissional…</option></select> : null}{(!docs.length || (f.professional && !docs.some((d) => d.name === f.professional))) && <Input placeholder={specName && !docs.length ? "Nenhum médico cadastrado nesta especialidade – digite" : "Nome do profissional"} value={f.professional.trimStart()} onChange={(e) => setF({ ...f, professional: e.target.value || " " })} />}</label>
       <label className="grid gap-1 text-xs md:col-span-2">Observação<Input value={f.note} onChange={(e) => setF({ ...f, note: e.target.value })} /></label>
       <div className="flex flex-wrap items-end gap-3"><label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={f.nursingPreConsult || isObstetricSpecialty(specs.find((s) => s.id === f.specialtyId)?.name ?? "")} disabled={isObstetricSpecialty(specs.find((s) => s.id === f.specialtyId)?.name ?? "")} onChange={(e) => setF({ ...f, nursingPreConsult: e.target.checked })} />Pré-consulta de enfermagem</label><Button type="submit">Agendar</Button></div>
     </form>}
@@ -74,6 +84,18 @@ export function AmbulatoryAgenda() {
       </tr>; })}</tbody></table>
     {!day.length && <p className="py-4 text-sm text-muted-foreground">Nenhuma consulta agendada nesta data.</p>}
   </div>;
+}
+
+/** Agendados de hoje na recepção: entrada com um clique. */
+export function TodayAppointments() {
+  const list = useStore((s) => s.appointments); const specs = useStore((s) => s.ambSpecialties); const patients = useStore((s) => s.patients); const profile = useStore((s) => s.profile); const accessAreas = useStore((s) => s.accessAreas);
+  const t = today(); const day = list.filter((a) => a.date === t && a.status === "agendado").sort((a, b) => a.time.localeCompare(b.time));
+  const editable = canAct(profile, "recepcao", accessAreas);
+  return <section className="rounded-lg border bg-card p-3">
+    <h3 className="mb-2 text-sm font-semibold">Agendados de hoje aguardando chegada ({day.length})</h3>
+    {day.map((a) => <div key={a.id} className="flex flex-wrap items-center justify-between gap-2 border-b py-1.5 text-sm"><span><span className="font-mono">{a.time}</span> · <b>{patients.find((p) => p.id === a.patientId)?.name}</b> · {specs.find((s) => s.id === a.specialtyId)?.name} · {a.professional || "—"}</span>{editable && <Button size="sm" onClick={() => act(() => { checkInAppointment(a.id); }, "Chegada registrada · BAA gerado")}>Registrar chegada</Button>}</div>)}
+    {!day.length && <p className="text-sm text-muted-foreground">Nenhum paciente agendado pendente hoje.</p>}
+  </section>;
 }
 
 export function SadtPanel() {

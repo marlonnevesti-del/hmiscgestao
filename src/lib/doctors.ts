@@ -44,3 +44,10 @@ export function learnDoctor(learned: Doctor[], name: string, crm: string): Docto
   const known = findDoctor(mergeDoctors(learned), nm); if (known?.crm && norm(known.crm) === norm(c)) return learned;
   return [...learned.filter((d) => norm(d.name) !== norm(nm)), { ...known, name: known?.name ?? nm.toUpperCase(), crm: c }];
 }
+
+/** Doctors whose catalog specialty matches the agenda specialty (either name contains the other, per segment). */
+export function doctorsForSpecialty(list: Doctor[], specialty: string): Doctor[] {
+  const parts = specialty.split('/').map(norm).filter((s) => s.length > 2);
+  if (!parts.length) return [];
+  return list.filter((d) => (d.specialty ?? '').split(';').map(norm).filter(Boolean).some((ds) => parts.some((p) => ds.includes(p) || p.includes(ds))));
+}
