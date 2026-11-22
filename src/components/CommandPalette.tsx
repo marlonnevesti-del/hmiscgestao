@@ -7,7 +7,7 @@ import { useStore } from "@/lib/hospital-store";
 
 const PAGES = [
   ["/", "Painel inicial"], ["/ambulatorio", "Ambulatório"], ["/pronto-socorro", "Pronto Socorro"], ["/maternidade", "Maternidade"],
-  ["/uti-uci", "UTI Ped · UCI · UTI Neo"], ["/pacientes", "Pacientes / PEP"], ["/painel-tv", "Painel de Chamadas (TV)"], ["/nir", "NIR – Leitos"],
+  ["/uti-uci", "UTI Ped · UCI · UTI Neo"], ["/pacientes", "Pacientes / PEP"], ["/nir", "NIR – Leitos"],
   ["/internacoes", "Censo · Internações"], ["/centro-cirurgico", "Centro Cirúrgico"], ["/gestao-cirurgica", "SRPA · CO · Indicadores"], ["/cme", "CME"],
   ["/sciras", "SCIRAS / CCIH"], ["/farmacia", "Farmácia"], ["/enfermagem", "Posto de Enfermagem"], ["/almoxarifado", "Almoxarifado"],
   ["/solicitacao-almoxarifado", "Solicitação ao Almoxarifado"], ["/faturamento", "Faturamento TISS"], ["/faturamento-sus", "Faturamento SUS"], ["/prestacao-contas", "Prestação de contas OS"],

@@ -94,10 +94,11 @@ export const defaultAreas = (profile: Profile): string[] => [
 export function canAccessPage(profile: Profile, path: string, areas?: readonly string[] | null) {
   if (profile === "Administrador") return true;
   if (path.startsWith("/gestao-atendimentos")) return false;
-  if (path === "/" || path === "/painel-tv" || path === "/solicitacao-almoxarifado") return true;
+  if (path === "/" || path === "/solicitacao-almoxarifado") return true;
   const seg = path.split("/")[1] ?? "";
   if (UNIT_IDS.includes(seg)) { const u = UNIT_AREAS.find((x) => x.id === seg)!; return u.tabs.some((t) => canAccessUnitTab(profile, u.id, t.id, areas)); }
-  if (areas) return areas.includes(seg === "faturamento-sus" || seg === "prestacao-contas" ? "faturamento" : seg === "internacoes" ? "nir" : seg === "documentos-recepcao" ? "recepcao" : seg === "uti-uci" ? "enfermagem" : seg === "fisioterapia" ? "pacientes" : seg === "banco-de-leite" ? "enfermagem" : seg);
+  if (areas) return areas.includes(seg === "faturamento-sus" || seg === "prestacao-contas" ? "faturamento" : seg === "internacoes" ? "nir" : seg === "documentos-recepcao" || seg === "painel-tv" ? "recepcao" : seg === "uti-uci" ? "enfermagem" : seg === "fisioterapia" ? "pacientes" : seg === "banco-de-leite" ? "enfermagem" : seg);
+  if (path === "/painel-tv") return can(profile, "recepcao");
   if (path === "/recepcao" || path === "/documentos-recepcao") return can(profile, "recepcao") || can(profile, "checar");
   if (path === "/acolhimento") return can(profile, "triagem");
   if (path === "/atendimento") return can(profile, "prescrever");

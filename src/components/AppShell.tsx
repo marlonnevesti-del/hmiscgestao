@@ -25,7 +25,6 @@ const GROUPS = [
   { label: "Assistência", items: [
     { to: "/uti-uci", label: "UTI Ped · UCI · UTI Neo", icon: HeartPulse },
     { to: "/pacientes", label: "Pacientes / PEP", icon: Users },
-    { to: "/painel-tv", label: "Painel de Chamadas (TV)", icon: Tv },
   ] },
   { label: "Apoio", items: [
     { to: "/nir", label: "NIR – Regulação de Leitos", icon: BedDouble },
@@ -101,6 +100,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             </Link>
           ))}
         </nav>
+        {canAccessPage(profile, "/painel-tv", accessAreas) && <a href="/painel-tv" target="_blank" rel="noopener" title="Painel de Chamadas (TV) – abre em nova aba" className="mx-2 mt-2 flex items-center gap-3 rounded-md border border-sidebar-border px-3 py-2 text-xs hover:bg-sidebar-accent"><Tv className="h-4 w-4 shrink-0" />{!collapsed && "Painel de Chamadas (TV) ↗"}</a>}
         <button onClick={() => setCollapsed(!collapsed)} className="m-2 flex items-center justify-center gap-2 rounded-md p-2 text-xs hover:bg-sidebar-accent" aria-label="Recolher menu">
           <ChevronLeft className={cn("h-4 w-4 transition-transform", collapsed && "rotate-180")} />{!collapsed && "Recolher"}
         </button>
