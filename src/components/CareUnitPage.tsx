@@ -1,5 +1,6 @@
 import type React from "react";
 import { CareReception } from "./CareReception";
+import { UnitCoordination } from "./UnitCoordination";
 import { CareTriage } from "./CareTriage";
 import { MedicalQueue } from "./CareMedical";
 import { InpatientList } from "./InpatientList";
@@ -19,7 +20,7 @@ export function CareUnitPage({ unit }: { unit: CareUnit }) {
   const areas = useStore((s) => s.accessAreas);
   const area: UnitArea = amb ? "ambulatorio" : unit === "Maternidade" ? "maternidade" : "pronto-socorro";
   const tabs = UNIT_AREAS.find((u) => u.id === area)!.tabs.filter((t) => canAccessUnitTab(profile, area, t.id, areas));
-  const body: Record<string, React.ReactNode> = { agenda: <AmbulatoryAgenda />, recepcao: amb ? <div className="space-y-4"><TodayAppointments /><CareReception unit={unit} /></div> : <CareReception unit={unit} />, acolhimento: amb ? <AmbulatoryNursing /> : <CareTriage unit={unit} />, atendimento: <MedicalQueue unit={unit} />, sadt: <SadtPanel />, especialidades: <SpecialtyManager />, internados: <InpatientList unit={unit} />, relatorios: <AmbulatoryReports />, aguardando: <PsWaiting />, observacao: <PsObservation />, assistencia: <PsCare />, coordenacao: <PsCoordination /> };
+  const body: Record<string, React.ReactNode> = { agenda: <AmbulatoryAgenda />, recepcao: amb ? <div className="space-y-4"><TodayAppointments /><CareReception unit={unit} /></div> : <CareReception unit={unit} />, acolhimento: amb ? <AmbulatoryNursing /> : <CareTriage unit={unit} />, atendimento: <MedicalQueue unit={unit} />, sadt: <SadtPanel />, especialidades: <SpecialtyManager />, internados: <InpatientList unit={unit} />, relatorios: <AmbulatoryReports />, aguardando: <PsWaiting />, observacao: <PsObservation />, assistencia: <PsCare />, coordenacao: unit === "Pronto socorro" ? <PsCoordination /> : <UnitCoordination unit={unit} /> };
   const aba = useRouterState({ select: (s) => (s.location.search as { aba?: string }).aba });
   if (!tabs.length) return <p className="text-muted-foreground">Você não tem acesso a nenhuma área desta unidade.</p>;
   return <div className="space-y-4">
