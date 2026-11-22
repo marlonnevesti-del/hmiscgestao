@@ -21,7 +21,7 @@ export const PHARMACY_CATALOG = catalogToStock([...CATALOG.farm, ...CONTROLLED],
 export const WAREHOUSE_CATALOG = catalogToStock(WAREHOUSE, 'almox');
 import { registrationPatch } from "./patient-registration-mapping";
 import type { PatientRegistration } from "./patient-registration";
-import { documentCns, learnDoctor, mergeDoctors, mergeImportedDoctors, resolveDoctor, type Doctor } from "./doctors";
+import { doctorKey, validDoctorCns, documentCns, learnDoctor, mergeDoctors, mergeImportedDoctors, resolveDoctor, type Doctor } from "./doctors";
 import { addSpecialty, DEFAULT_SPECIALTIES, type AmbSpecialty, type Appointment, type SadtReport, type SpecialtyGroup } from "./ambulatorio";
 
 interface State { encounters: Encounter[]; beSequence: number; fiaSequence: number; stock: StockMedication[]; warehouse: StockMedication[]; profile: Profile; employeeName: string; patients: Patient[]; queue: QueueItem[]; surgeries: Surgery[]; admins: Record<string, Admin>; rooms: string[]; calls: PanelCall[]; cidGroups: CidGroup[]; cidAreas: CidArea[]; employeeArea: string; accessAreas: string[] | null; removedStock: string[]; movements: Movement[]; requests: SupplyRequest[]; ambSpecialties: AmbSpecialty[]; appointments: Appointment[]; cmeKits: CmeKit[]; cmeCycles: CmeCycle[]; doctors: Doctor[]; milkBank: import('./milk-bank').MilkBank }
@@ -599,6 +599,17 @@ export function importDoctors(doctors: Doctor[]) {
   const next = mergeImportedDoctors(state.doctors, doctors);
   setState(() => ({ doctors: next }));
   return doctors.length;
+}
+/** Admin correction of one doctor; the edited entry overrides the catalog and is kept in the shared snapshot. */
+export function updateDoctor(original: Doctor, next: Doctor) {
+  if (!canAccessPage(state.profile, '/colaboradores', state.accessAreas)) throw new Error('Área exclusiva para administradores.');
+  if (!next.name.trim()) throw new Error('Informe o nome do médico.');
+  const cns = (next.cns ?? '').replace(/\D/g, '');
+  if (cns && !validDoctorCns(cns)) throw new Error('CNS inválido: confira os 15 dígitos.');
+  const clean: Doctor = { ...original, ...next, name: next.name.trim().toUpperCase(), cns, cnsStatus: cns ? 'Corrigido pelo administrador' : 'CNS ausente' };
+  const rest = state.doctors.filter((d) => doctorKey(d) !== doctorKey(original) && d.name !== original.name);
+  if (cns && mergeDoctors(rest).some((d) => d.cns === cns && doctorKey(d) !== doctorKey(clean))) throw new Error('Este CNS já pertence a outro médico.');
+  setState(() => ({ doctors: [...rest, clean] }));
 }
 
 // ---- SCIRAS / CCIH ----
