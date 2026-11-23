@@ -75,10 +75,10 @@ const keyOf = (x: unknown) => idOf(x) ?? JSON.stringify(x);
 const isObj = (x: unknown): x is Record<string, unknown> => !!x && typeof x === "object" && !Array.isArray(x);
 
 /** Mescla de três vias recursiva: campos e listas internas (evoluções, sinais, prescrições) se somam. */
-export function merge3(b: unknown, l: unknown, r: unknown): unknown {
+export function merge3(b: unknown, l: unknown, r: unknown, sum = false): unknown {
   if (same(l, b)) return r;
   if (same(r, b) || same(l, r)) return l;
-  if (typeof l === "number" && typeof r === "number" && typeof b === "number") return l + r - b; // saldos: soma as duas baixas
+  if (sum && typeof l === "number" && typeof r === "number" && typeof b === "number") return l + r - b; // saldos: soma as duas baixas
   if (Array.isArray(l) && Array.isArray(r)) {
     const bm = new Map((Array.isArray(b) ? b : []).map((x) => [keyOf(x), x]));
     const lm = new Map(l.map((x) => [keyOf(x), x]));
@@ -88,7 +88,7 @@ export function merge3(b: unknown, l: unknown, r: unknown): unknown {
       const k = keyOf(rv); seen.add(k);
       const lv = lm.get(k), bv = bm.get(k);
       if (lv === undefined) { if (bv === undefined || !same(rv, bv)) result.push(rv); continue; } // apagado aqui e intacto lá
-      result.push(bv === undefined ? lv : merge3(bv, lv, rv));
+      result.push(bv === undefined ? lv : merge3(bv, lv, rv, sum));
     }
     // novos neste computador, mantendo a posição relativa (início ou fim da lista)
     l.forEach((lv, i) => { const k = keyOf(lv); if (seen.has(k) || bm.has(k)) return; if (i < l.length / 2) result.unshift(lv); else result.push(lv); });
@@ -100,7 +100,7 @@ export function merge3(b: unknown, l: unknown, r: unknown): unknown {
     for (const k of new Set([...Object.keys(l), ...Object.keys(r)])) {
       if (!(k in l) && k in bo) continue; // removido aqui
       if (!(k in r) && k in bo && same(l[k], bo[k])) continue; // removido lá
-      out[k] = k in l && k in r ? merge3(bo[k], l[k], r[k]) : k in l ? l[k] : r[k];
+      out[k] = k in l && k in r ? merge3(bo[k], l[k], r[k], sum) : k in l ? l[k] : r[k];
     }
     return out;
   }
@@ -112,7 +112,7 @@ export function mergeSnapshots(baseS: Partial<Snapshot>, local: Partial<Snapshot
   const out: Record<string, unknown> = { ...remote };
   for (const key of KEYS) {
     const l = local[key], r = remote[key];
-    out[key] = typeof l === "number" && typeof r === "number" ? Math.max(l, r) : merge3(baseS[key], l, r); // sequências BAA/FIA
+    out[key] = typeof l === "number" && typeof r === "number" ? Math.max(l, r) : merge3(baseS[key], l, r, key === "stock" || key === "warehouse" || key === "milkBank"); // sequências BAA/FIA; só saldos somam baixas
   }
   return out as Partial<Snapshot>;
 }

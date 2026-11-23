@@ -37,3 +37,11 @@ describe("merge3 entre computadores", () => {
     expect(out.beSequence).toBe(12);
   });
 });
+
+describe("campos clínicos não somam", () => {
+  it("peso alterado nos dois computadores fica com o deste computador", async () => {
+    const { mergeSnapshots } = await import("./clinical-sync");
+    const out = mergeSnapshots({ patients: [{ id: "p", weight: 10 }] }, { patients: [{ id: "p", weight: 11 }] }, { patients: [{ id: "p", weight: 12 }] }) as { patients: { weight: number }[] };
+    expect(out.patients[0]?.weight).toBe(11);
+  });
+});
