@@ -24,7 +24,7 @@ import { DoseCalculator, calcResult, initCalc } from "@/components/DoseCalculato
 import { doseText } from "@/lib/dose-calc";
 import { DRUGS, WARDS, allergyConflict, can, interactionsWith, type EvoCat, type Patient, type PrescCat, type Vital } from "@/lib/hospital-data";
 import { getState, nowHM, professionalName, recordPhysioSession, registerBirth, updatePatient, useStore } from "@/lib/hospital-store";
-import { isPhysioOpen } from "@/lib/physio";
+import { identifiedPhysioEvolution, isPhysioOpen } from "@/lib/physio";
 import { cn } from "@/lib/utils";
 import { defaultEvoCat, needsCatConfirm } from "@/lib/evolution-category";
 import { Maximize2 } from "lucide-react";
@@ -155,7 +155,7 @@ function Evolucao({ p }: { p: Patient }) {
       <Card title="Nova evolução" action={can(profile, "evoluir") ? <button onClick={() => setFocus(true)} className="flex items-center gap-1 rounded border px-2 py-1 text-xs hover:bg-muted"><Maximize2 className="h-3 w-3" />Expandir</button> : undefined}>
         {can(profile, "evoluir") ? <>
           <div className="mb-2 flex gap-2"><select aria-label="Categoria da evolução" value={cat} onChange={(e) => pickCat(e.target.value as EvoCat)} className="h-9 flex-1 rounded-md border bg-background px-2 text-sm">{CATS.map((c) => <option key={c}>{c}</option>)}</select></div>
-          {cat === "Fisioterapia" && <select aria-label="Tipo de evolução" value={physioType} onChange={(e) => { setPhysioType(e.target.value); if (e.target.value) setText(PHYSIO_EVO[e.target.value as keyof typeof PHYSIO_EVO]); }} className="mb-2 h-9 w-full rounded-md border bg-background px-2 text-sm"><option value="">Tipo de evolução…</option>{Object.keys(PHYSIO_EVO).map((k) => <option key={k}>{k}</option>)}</select>}
+          {cat === "Fisioterapia" && <select aria-label="Tipo de evolução" value={physioType} onChange={(e) => { setPhysioType(e.target.value); if (e.target.value) setText(identifiedPhysioEvolution(p, PHYSIO_EVO[e.target.value as keyof typeof PHYSIO_EVO])); }} className="mb-2 h-9 w-full rounded-md border bg-background px-2 text-sm"><option value="">Tipo de evolução…</option>{Object.keys(PHYSIO_EVO).map((k) => <option key={k}>{k}</option>)}</select>}
           {cat !== "Fisioterapia" && <div className="mb-2 flex flex-wrap gap-1">{Object.keys(SOAP).map((k) => <button key={k} onClick={() => setText(SOAP[k as keyof typeof SOAP])} className="rounded border px-2 py-0.5 text-xs hover:bg-muted">{k}</button>)}</div>}
           <textarea value={text} onChange={(e) => setText(e.target.value)} rows={16} className="min-h-[340px] w-full resize-y rounded-md border bg-background p-3 text-sm leading-relaxed" placeholder="Escolha um modelo ou digite…" />
           <button disabled={!text.trim()} onClick={() => save()} className="mt-2 w-full rounded-md bg-clinical py-2 text-sm font-medium text-accent-foreground disabled:opacity-50">Registrar evolução</button>

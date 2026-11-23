@@ -26,6 +26,10 @@ export function physioRequestIssues(r: Pick<PhysioRequest, 'modality' | 'justifi
   return i;
 }
 export const isPhysioOpen = (r: PhysioRequest) => r.status === 'Aguardando' || r.status === 'Em acompanhamento';
+/** Identificação do paciente atual; não altera o corpo clínico do modelo. */
+export function identifiedPhysioEvolution(patient: { name: string; age: string; bed: string }, template: string): string {
+  return `PACIENTE: ${patient.name} | IDADE: ${patient.age || 'Não informada'} | LEITO: ${patient.bed || 'Não informado'}\n------------------------------------------------------------\n\n${template}`;
+}
 /** Urgentes primeiro, depois as mais antigas. */
 export const sortPhysio = <T extends { req: PhysioRequest }>(list: T[]) =>
   [...list].sort((a, b) => (a.req.priority === b.req.priority ? a.req.requestedAt.localeCompare(b.req.requestedAt) : a.req.priority === 'Urgente' ? -1 : 1));

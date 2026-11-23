@@ -2,12 +2,29 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { getState, recordPhysioSession, requestPhysio, setState } from './hospital-store';
 import { pendingCounts } from './dashboard';
 import type { Patient } from './hospital-data';
+import { identifiedPhysioEvolution } from './physio';
 
 const pt = (): Patient => ({ id: 'p1', prontuario: '1', name: 'João', cpf: '', type: 'pediatria', age: '3m', weight: 6, allergies: [], risks: [], ward: 'UTIP', bed: 'UTIP-02', insurance: 'SUS', authorized: true, diagnosis: '', admission: '', days: 1, evolutions: [], vitals: [], prescriptions: [] });
 const req = { modality: 'Respiratória' as const, priority: 'Urgente' as const, support: 'Cateter nasal', justification: 'Bronquiolite' };
 beforeEach(() => setState(() => ({ profile: 'Médico', employeeName: 'Dra', patients: [pt()], encounters: [] })));
 
 describe('fisioterapia', () => {
+  it('identifica cada modelo com os dados do paciente atual, sem reutilizar outra identidade', () => {
+    const original = pt();
+    const other = { ...original, name: 'Ana', age: '12d', bed: 'NEO-01' };
+    for (const template of ['UTINEO', 'UTIPED', 'Pediatria']) {
+      const first = identifiedPhysioEvolution(original, template);
+      const second = identifiedPhysioEvolution(other, template);
+      expect(first).toContain('João');
+      expect(first).toContain('3m');
+      expect(first).toContain('UTIP-02');
+      expect(second).toContain('Ana');
+      expect(second).toContain('12d');
+      expect(second).toContain('NEO-01');
+      expect(second).not.toContain('João');
+      expect(second.endsWith(template)).toBe(true);
+    }
+  });
   it('pedido do médico aparece como aguardando na Fisioterapia', () => {
     requestPhysio('p1', req);
     expect(pendingCounts([], getState().patients)['/fisioterapia']).toBe(1);
