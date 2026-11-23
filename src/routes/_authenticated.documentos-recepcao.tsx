@@ -29,6 +29,7 @@ const DOCS: { id: Doc; label: string; companion?: boolean }[] = [
   { id: "internado", label: "Declaração de paciente internado", companion: true },
   { id: "pertences", label: "Termo de guarda e retirada de pertences" },
   { id: "recusa", label: "Termo de recusa / desistência de atendimento" },
+  { id: "altaEnf", label: "Orientação de alta da enfermagem – Alojamento Conjunto" },
 ];
 const BLANK = { id: "", name: "", prontuario: "", cpf: "", age: "", bed: "", ward: "" } as unknown as Patient;
 

@@ -44,13 +44,22 @@ export function DischargePrint({ e, p }: { e: Encounter; p: Patient }) {
   if (!e.discharge || typeof document === 'undefined') return null;
   return createPortal(<div className="print-doc-root">
     <section className="doc-page">
-      <Header title="SUMÁRIO DE ALTA" e={e} p={p} />
-      <p><b>Entrada:</b> {fmt(e.openedAt)} · <b>Alta:</b> {fmt(e.discharge.at)}</p>
-      {e.medical && <p><b>Diagnóstico:</b> {e.medical.cid} — {e.medical.diagnosis}</p>}
-      <h3>Resumo e orientações de alta</h3>
-      <p className="pre">{e.discharge.summary}</p>
+      <Letterhead title="NOTA DE ALTA" />
+      <table className="doc-id"><tbody>
+        <tr><td><b>Nome do Paciente:</b> {p.name}</td><td><b>Sexo:</b> {p.registration?.sex || '—'}</td></tr>
+        <tr><td><b>Data de Nascimento:</b> {p.registration?.birthDate ? new Date(`${p.registration.birthDate}T12:00:00`).toLocaleDateString('pt-BR') : '—'}</td><td><b>Idade:</b> {p.age}</td></tr>
+        <tr><td><b>Prontuário:</b> {p.prontuario} · <b>Atendimento:</b> {e.number}</td><td><b>Data da Alta:</b> {fmt(e.discharge.at)}</td></tr>
+        <tr><td colSpan={2}><b>CID Diagnóstico:</b> {e.medical ? `${e.medical.cid} - ${e.medical.diagnosis}` : '—'}</td></tr>
+      </tbody></table>
+      <div style={{ border: '1.5px solid currentColor', padding: '0.4em 0.6em', marginTop: '0.6em' }}>
+        <b>Motivo da Internação:</b>
+        <p className="pre" style={{ margin: '0.3em 0 0' }}>{e.medical?.diagnosis || '—'}{p.allergies.length ? `\nAlergias: ${p.allergies.join(', ')}` : '\nAlergias: nega'}</p>
+      </div>
+      <div style={{ border: '1.5px solid currentColor', padding: '0.4em 0.6em', marginTop: '0.6em' }}>
+        <b>Observações nota de alta:</b>
+        <p className="pre" style={{ margin: '0.3em 0 0' }}>{e.discharge.summary}</p>
+      </div>
       <Sign e={e} />
-      <LetterFooter />
     </section>
     <section className="doc-page">
       <Header title="RECEITUÁRIO" e={e} p={p} />
