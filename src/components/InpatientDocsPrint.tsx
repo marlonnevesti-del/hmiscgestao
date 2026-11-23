@@ -8,7 +8,7 @@ import { Letterhead } from '@/components/DischargePrint';
 import { AihLaudoButton } from '@/components/AihLaudo';
 import { ClinicalDocsButtons } from '@/components/ClinicalDocs';
 
-export type Doc = 'termo' | 'internado' | 'comparecimento' | 'acompanhante' | 'pertences' | 'recusa' | 'altaEnf';
+export type Doc = 'termo' | 'internado' | 'comparecimento' | 'acompanhante' | 'pertences' | 'recusa' | 'altaEnf' | 'altaCir' | 'altaPed' | 'notaAlta';
 const dt = (d?: string) => (d ? new Date(d).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : '—');
 const today = () => new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
 const line = (v?: string) => v?.trim() || '____________________________';
@@ -89,6 +89,8 @@ export function Body({ doc, p, e, companion }: { doc: Doc; p: Patient; e?: Encou
     <div className="doc-sign"><div className="line" />Colaborador do hospital</div></div>
   </section>;
   if (doc === 'altaEnf') return <AltaEnfermagem p={p} e={e} />;
+  if (doc === 'altaCir' || doc === 'altaPed') return <AltaSimples p={p} e={e} kind={doc} />;
+  if (doc === 'notaAlta') return <NotaAlta p={p} e={e} />;
   if (doc === 'recusa') return <section className="doc-page">
     <Letterhead title="TERMO DE RECUSA / DESISTÊNCIA DE ATENDIMENTO" />
     <p style={{ textAlign: 'justify', lineHeight: 1.8 }}>Eu, {line()}, CPF {line()}, ( ) paciente ( ) responsável legal por <b>{p.name ? p.name.toUpperCase() : line()}</b>{p.prontuario ? <>, prontuário <b>{p.prontuario}</b></> : null}, declaro que fui devidamente informado(a) pela equipe do Hospital Materno Infantil Santa Catarina sobre o quadro clínico, a necessidade do atendimento/tratamento proposto e os riscos decorrentes da sua recusa ou interrupção.</p>
@@ -119,7 +121,7 @@ export function InpatientDocsButtons({ p, e, only }: { p: Patient; e?: Encounter
   const [doc, setDoc] = useState<Doc | null>(null);
   const [companion, setCompanion] = useState('');
   const run = (d: Doc) => {
-    if (d !== 'termo' && d !== 'altaEnf') {
+    if (!['termo', 'altaEnf', 'altaCir', 'altaPed', 'notaAlta'].includes(d)) {
       const c = window.prompt('Nome do acompanhante (deixe em branco se não houver):', p.guardian || p.registration?.guardian || '');
       if (c === null) return;
       setCompanion(c.trim());
@@ -140,6 +142,9 @@ export function InpatientDocsButtons({ p, e, only }: { p: Patient; e?: Encounter
     <button onClick={() => run('comparecimento')} className={btn}><FileText className="h-4 w-4" />Decl. atendimento</button>
     <button onClick={() => run('acompanhante')} className={btn}><FileText className="h-4 w-4" />Decl. acompanhante</button>
     <button onClick={() => run('altaEnf')} className={btn}><FileText className="h-4 w-4" />Orientação alta enfermagem</button>
+    <button onClick={() => run('altaCir')} className={btn}><FileText className="h-4 w-4" />Alta enf. clínica cirúrgica</button>
+    <button onClick={() => run('altaPed')} className={btn}><FileText className="h-4 w-4" />Alta enf. pediatria</button>
+    <button onClick={() => run('notaAlta')} className={btn}><FileText className="h-4 w-4" />Nota de alta</button>
     </>}
     {doc && typeof document !== 'undefined' && createPortal(<div className="print-doc-root term-root"><Body doc={doc} p={p} e={e} companion={companion} /></div>, document.body)}
   </>;
@@ -180,4 +185,44 @@ function AltaEnfermagem({ p, e }: { p: Patient; e?: Encounter | undefined }) {
       <div className="doc-signs"><div className="doc-sign"><div className="line" />Puérpera / Responsável</div><div className="doc-sign"><div className="line" />Enfermeiro(a) – Carimbo / COREN</div></div>
     </section>
   </>;
+}
+
+const lines = (n: number) => Array.from({ length: n }, (_, i) => <div key={i} style={{ borderBottom: '1px solid currentColor', height: '1.5em' }} />);
+const birthOf = (p: Patient) => (p.registration?.birthDate ? new Date(`${p.registration.birthDate}T12:00:00`).toLocaleDateString('pt-BR') : '');
+
+/** Orientações de alta da enfermagem – Clínica Cirúrgica e Internação Pediátrica (modelos institucionais HMISC, 1 folha A4). */
+function AltaSimples({ p, e, kind }: { p: Patient; e?: Encounter | undefined; kind: 'altaCir' | 'altaPed' }) {
+  const title = kind === 'altaCir' ? 'ORIENTAÇÕES DE ALTA DA ENFERMAGEM – CLÍNICA CIRÚRGICA' : 'ORIENTAÇÕES DE ALTA DA ENFERMAGEM – INTERNAÇÃO PEDIÁTRICA';
+  return <section className="doc-page" style={{ fontSize: '10pt', lineHeight: 1.3 }}>
+    <Letterhead title={title} />
+    <table className="doc-id"><tbody>
+      <tr><td><b>Nome do Paciente:</b> {p.name || line()}</td><td><b>Prontuário:</b> {p.prontuario || line()}</td></tr>
+      <tr><td><b>Data de Nascimento:</b> {birthOf(p) || line()}</td><td><b>Data da alta:</b> {e?.discharge?.at ? dt(e.discharge.at) : '____/____/______'}</td></tr>
+    </tbody></table>
+    {kind === 'altaCir' ? <>
+      <p>Para uma boa recuperação siga algumas orientações importantes:</p>
+      {['1. USO SEGURO DE MEDICAMENTOS', '2. CUIDADO COM A FERIDA OPERATÓRIA E CURATIVOS', '3. CUIDADOS COM DRENOS E CATETERES'].map((t) => <div key={t} style={{ breakInside: 'avoid' }}><h3 style={{ margin: '0.6em 0 0.2em', fontSize: '10.5pt' }}>{t}</h3>{lines(4)}</div>)}
+      <p style={{ marginTop: '0.8em' }}><b>OBSERVAÇÃO:</b></p>{lines(4)}
+    </> : <><p style={{ marginTop: '0.8em' }}><b>OBSERVAÇÃO:</b></p>{lines(16)}</>}
+    <p style={{ textAlign: 'right', marginTop: '1.2em' }}>Criciúma - SC, {today()}.</p>
+    <div className="doc-signs"><div className="doc-sign"><div className="line" />Paciente / Responsável</div><div className="doc-sign"><div className="line" />Enfermeiro(a) – Carimbo / COREN</div></div>
+  </section>;
+}
+
+/** Nota de Alta médica (modelo institucional HMISC); preenche com o desfecho quando houver. */
+function NotaAlta({ p, e }: { p: Patient; e?: Encounter | undefined }) {
+  const box = (t: string, v: string | undefined, n: number) => <div style={{ border: '1.5px solid currentColor', padding: '0.4em 0.6em', marginTop: '0.6em' }}><b>{t}</b>{v ? <p className="pre" style={{ margin: '0.3em 0 0' }}>{v}</p> : lines(n)}</div>;
+  return <section className="doc-page">
+    <Letterhead title="NOTA DE ALTA" />
+    <table className="doc-id"><tbody>
+      <tr><td><b>Nome do Paciente:</b> {p.name || line()}</td><td><b>Sexo:</b> {p.registration?.sex || '______'}</td></tr>
+      <tr><td><b>Data de Nascimento:</b> {birthOf(p) || line()}</td><td><b>Idade:</b> {p.age || '______'}</td></tr>
+      <tr><td><b>Data da Alta:</b> {e?.discharge?.at ? dt(e.discharge.at) : '____/____/______'}</td><td><b>Prontuário:</b> {p.prontuario || line()}</td></tr>
+      <tr><td colSpan={2}><b>CID Diagnóstico:</b> {e?.medical ? `${e.medical.cid} - ${e.medical.diagnosis}` : line()}</td></tr>
+    </tbody></table>
+    {box('Motivo da Internação:', e?.medical?.diagnosis, 3)}
+    {box('Observações nota de alta:', e?.discharge?.summary, 10)}
+    <p style={{ textAlign: 'right', marginTop: '1.2em' }}>Criciúma - SC, {today()}.</p>
+    <div className="doc-sign"><div className="line" />{e?.discharge?.by || 'Médico(a)'}<br />Carimbo / CRM</div>
+  </section>;
 }
