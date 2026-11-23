@@ -121,7 +121,7 @@ export function canAccessPage(profile: Profile, path: string, areas?: readonly s
 }
 
 export type PatientType = "gestante" | "puerpera" | "pediatria" | "neonato";
-export type EvoCat = "Médica" | "Enfermagem" | "Fisioterapia" | "Serviço Social" | "SCIRAS";
+export type EvoCat = "Médica" | "Enfermagem" | "Fisioterapia" | "Serviço Social" | "SCIRAS" | "Raio-X" | "Gesso";
 export type Risk = "Queda" | "Alergia" | "Flebite" | "Risco Hemorrágico";
 
 export interface Evolution { time: string; cat: EvoCat; author: string; text: string }
