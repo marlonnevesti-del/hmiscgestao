@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { NoPermission } from '@/components/AppShell';
 import { useStore, addIntensive, setIntensiveSafety, encounterFor } from '@/lib/hospital-store';
 import { canAccessPage, type Patient } from '@/lib/hospital-data';
-import { UNITS, BH_INPUTS, BH_OUTPUTS, DEVICES, balance, balance24h, scaleSum, bundleAdherencePct, type IcuUnit, type IcuScaleDef, NEO_FORMS, neoReport, type NeoKind } from '@/lib/uti-uci';
+import { UNITS, BH_INPUTS, BH_OUTPUTS, NEO_BH_INPUTS, NEO_BH_OUTPUTS, pam, DEVICES, balance, balance24h, scaleSum, bundleAdherencePct, type IcuUnit, type IcuScaleDef, type BalanceEntry, NEO_FORMS, neoReport, type NeoKind } from '@/lib/uti-uci';
 
 export const Route = createFileRoute('/_authenticated/uti-uci')({
   head: () => ({ meta: [
@@ -63,9 +63,10 @@ function SafetyBanner({ p }: { p: Patient }) {
 function PatientPanel({ u, p }: { u: IcuUnit; p: Patient }) {
   return <div className="space-y-4"><SafetyBanner p={p} />
     <Tabs defaultValue={u === 'UTIN' ? 'neo' : 'escalas'}><TabsList className="flex-wrap">
-      {[...(u === 'UTIN' ? ['neo'] : []), 'escalas', 'balanco', 'bundles', 'evolucao', 'sbar', 'exames', 'seguranca'].map((t) => <TabsTrigger key={t} value={t}>{({ neo: 'Neonatal', escalas: 'Escalas', balanco: 'Balanço hídrico', bundles: 'Bundles', evolucao: 'Evoluções', sbar: 'SAE · SBAR', exames: 'Exames', seguranca: 'Editar alertas' } as Record<string, string>)[t]}</TabsTrigger>)}
+      {[...(u === 'UTIN' ? ['neo', 'sinais'] : []), 'escalas', 'balanco', 'bundles', 'evolucao', 'sbar', 'exames', 'seguranca'].map((t) => <TabsTrigger key={t} value={t}>{({ neo: 'Neonatal', sinais: 'Sinais vitais', escalas: 'Escalas', balanco: 'Balanço hídrico', bundles: 'Bundles', evolucao: 'Evoluções', sbar: 'SAE · SBAR', exames: 'Exames', seguranca: 'Editar alertas' } as Record<string, string>)[t]}</TabsTrigger>)}
     </TabsList>
       <TabsContent value="neo"><Neo p={p} /></TabsContent>
+      <TabsContent value="sinais"><NeoVitals p={p} /></TabsContent>
       <TabsContent value="escalas"><Scales u={u} p={p} /></TabsContent>
       <TabsContent value="balanco"><Balance u={u} p={p} /></TabsContent>
       <TabsContent value="bundles"><Bundles u={u} p={p} /></TabsContent>
@@ -102,11 +103,40 @@ function Balance({ u, p }: { u: IcuUnit; p: Patient }) {
   return <div className="grid gap-4 lg:grid-cols-2"><Card title={horario ? 'Balanço horário (ml)' : 'Balanço por turno (ml)'}>
     <div className="mb-2 grid grid-cols-2 gap-2"><label className="text-xs">Período<select className="mt-1 w-full rounded border bg-background p-1" value={period} onChange={(e) => setPeriod(e.target.value)}>{(horario ? ['1h', '2h', '4h', '6h', '12h'] : ['Manhã (6h)', 'Tarde (6h)', 'Noite 1 (6h)', 'Noite 2 (6h)']).map((x) => <option key={x}>{x}</option>)}</select></label>
       <label className="text-xs">Peso (kg)<input type="number" step="0.01" className="mt-1 w-full rounded border bg-background p-1" value={w} onChange={(e) => setW(Number(e.target.value))} /></label></div>
-    <div className="text-xs font-semibold">Entradas</div><div className="grid grid-cols-2 gap-2">{BH_INPUTS.map((k) => num(setInp, inp, k))}</div>
-    <div className="mt-2 text-xs font-semibold">Perdas</div><div className="grid grid-cols-2 gap-2">{BH_OUTPUTS.map((k) => num(setOut, out, k))}</div>
+    <div className="text-xs font-semibold">Entradas</div><div className="grid grid-cols-2 gap-2">{(u === 'UTIN' ? NEO_BH_INPUTS : BH_INPUTS).map((k) => num(setInp, inp, k))}</div>
+    <div className="mt-2 text-xs font-semibold">{u === 'UTIN' ? 'Saídas' : 'Perdas'}</div><div className="grid grid-cols-2 gap-2">{(u === 'UTIN' ? NEO_BH_OUTPUTS : BH_OUTPUTS).map((k) => num(setOut, out, k))}</div>
     <div className="mt-3 text-sm">Entradas {r.inputs} · Perdas {r.outputs} · Balanço <b>{r.net > 0 ? '+' : ''}{r.net} ml</b> · Débito urinário <b className={r.oliguria ? 'text-destructive' : ''}>{r.debito} ml/kg/h</b>{r.oliguria && ' (oligúria)'}</div>
     <Button size="sm" className="mt-2" onClick={() => run(() => { addIntensive(p.id, 'balances', { period, inputs: inp, outputs: out, weightKg: w, hours }); setInp({}); setOut({}); }, 'Balanço registrado')}>Registrar</Button></Card>
-    <Card title={`Acumulado 24h: ${balance24h(p.intensive?.balances ?? [])} ml`}>{list.map((b) => { const x = balance(b); return <div key={b.id} className="border-b py-1 text-xs">{dt(b.at)} · {b.period}: E {x.inputs} / P {x.outputs} = <b>{x.net}</b> ml · {x.debito} ml/kg/h<div className="text-muted-foreground">{b.by}</div></div>; })}</Card></div>;
+    {u === 'UTIN' ? <NeoBalanceTable list={list} total={balance24h(p.intensive?.balances ?? [])} /> : <Card title={`Acumulado 24h: ${balance24h(p.intensive?.balances ?? [])} ml`}>{list.map((b) => { const x = balance(b); return <div key={b.id} className="border-b py-1 text-xs">{dt(b.at)} · {b.period}: E {x.inputs} / P {x.outputs} = <b>{x.net}</b> ml · {x.debito} ml/kg/h<div className="text-muted-foreground">{b.by}</div></div>; })}</Card>}</div>;
+}
+
+function NeoBalanceTable({ list, total }: { list: BalanceEntry[]; total: number }) {
+  const th = 'border px-1 py-1 text-[10px] font-semibold';
+  return <Card title={`Resultado do balanço · acumulado 24h: ${total > 0 ? '+' : ''}${total} ml`}><div className="overflow-x-auto"><table className="w-full border-collapse text-xs"><thead>
+    <tr><th className={th} rowSpan={2}>Data/hora</th><th className={`${th} bg-primary/10`} colSpan={NEO_BH_INPUTS.length + 1}>ENTRADAS (ml)</th><th className={`${th} bg-destructive/10`} colSpan={NEO_BH_OUTPUTS.length + 1}>SAÍDAS (ml)</th><th className={th} rowSpan={2}>Balanço</th><th className={th} rowSpan={2}>ml/kg/h</th></tr>
+    <tr>{NEO_BH_INPUTS.map((k) => <th key={k} className={`${th} bg-primary/5`}>{k}</th>)}<th className={`${th} bg-primary/10`}>Total</th>{NEO_BH_OUTPUTS.map((k) => <th key={k} className={`${th} bg-destructive/5`}>{k}</th>)}<th className={`${th} bg-destructive/10`}>Total</th></tr></thead>
+    <tbody>{list.length ? list.map((b) => { const x = balance(b); return <tr key={b.id} className="text-center">
+      <td className="border px-1">{dt(b.at)}<div className="text-[10px] text-muted-foreground">{b.period} · {b.by}</div></td>
+      {NEO_BH_INPUTS.map((k) => <td key={k} className="border px-1">{b.inputs[k] || '—'}</td>)}<td className="border px-1 font-bold">{x.inputs}</td>
+      {NEO_BH_OUTPUTS.map((k) => <td key={k} className="border px-1">{b.outputs[k] || '—'}</td>)}<td className="border px-1 font-bold">{x.outputs}</td>
+      <td className="border px-1 font-bold">{x.net > 0 ? '+' : ''}{x.net}</td><td className={`border px-1 ${x.oliguria ? 'font-bold text-destructive' : ''}`}>{x.debito}</td></tr>; })
+      : <tr><td colSpan={NEO_BH_INPUTS.length + NEO_BH_OUTPUTS.length + 5} className="p-2 text-center text-muted-foreground">Sem registros.</td></tr>}</tbody></table></div></Card>;
+}
+
+function NeoVitals({ p }: { p: Patient }) {
+  const empty = { time: new Date().toTimeString().slice(0, 5), pas: '', pad: '', fc: '', fr: '', tax: '', tIncub: '', sat: '', fio2: '', hgt: '', dor: '' };
+  const [f, setF] = useState(empty);
+  const list = (p.intensive?.vitals ?? []).slice().reverse();
+  const n = (k: keyof typeof f) => parseFloat(String(f[k]).replace(',', '.')) || 0;
+  const fields: [keyof typeof f, string][] = [['time', 'Hora'], ['pas', 'PA sistólica'], ['pad', 'PA diastólica'], ['fc', 'FC (bpm)'], ['fr', 'FR (irpm)'], ['tax', 'Temp. axilar (°C)'], ['tIncub', 'Temp. incubadora (°C)'], ['sat', 'SatO₂ (%)'], ['fio2', 'Suporte / FiO₂'], ['hgt', 'HGT (mg/dl)'], ['dor', 'Dor NIPS (0-7)']];
+  const save = () => run(() => { if (!n('fc') && !n('sat') && !n('tax')) throw new Error('Informe ao menos FC, SatO₂ ou temperatura.'); addIntensive(p.id, 'vitals', { time: f.time, pas: n('pas'), pad: n('pad'), fc: n('fc'), fr: n('fr'), tax: n('tax'), tIncub: n('tIncub'), sat: n('sat'), fio2: f.fio2, hgt: n('hgt'), dor: n('dor') }); setF(empty); }, 'Sinais vitais registrados');
+  const c = (v: number) => v || '—';
+  return <div className="space-y-4"><Card title="Registrar sinais vitais"><div className="grid grid-cols-2 gap-2 md:grid-cols-6">{fields.map(([k, l]) => <label key={k} className="text-xs">{l}<input type={k === 'time' ? 'time' : k === 'fio2' ? 'text' : 'number'} className="mt-1 w-full rounded border bg-background p-1" value={f[k]} onChange={(e) => setF({ ...f, [k]: e.target.value })} /></label>)}</div>
+    <div className="mt-2 text-xs">PAM calculada: <b>{c(pam(n('pas'), n('pad')))}</b> mmHg</div><Button size="sm" className="mt-2" onClick={save}>Registrar</Button></Card>
+    <Card title="Folha de sinais vitais"><div className="overflow-x-auto"><table className="w-full border-collapse text-xs"><thead><tr className="bg-muted">{['Data/hora', 'PAS', 'PAD', 'PAM', 'FC', 'FR', 'Tax', 'T. incub.', 'SatO₂', 'Suporte', 'HGT', 'Dor', 'Por'].map((h) => <th key={h} className="border px-1 py-1">{h}</th>)}</tr></thead>
+      <tbody>{list.length ? list.map((v) => <tr key={v.id} className="text-center"><td className="border px-1">{new Date(v.at).toLocaleDateString('pt-BR')} {v.time}</td><td className="border">{c(v.pas)}</td><td className="border">{c(v.pad)}</td><td className="border font-semibold">{c(pam(v.pas, v.pad))}</td><td className={`border ${v.fc && (v.fc < 100 || v.fc > 180) ? 'font-bold text-destructive' : ''}`}>{c(v.fc)}</td><td className={`border ${v.fr && (v.fr < 30 || v.fr > 60) ? 'font-bold text-destructive' : ''}`}>{c(v.fr)}</td><td className={`border ${v.tax && (v.tax < 36.5 || v.tax > 37.5) ? 'font-bold text-destructive' : ''}`}>{c(v.tax)}</td><td className="border">{c(v.tIncub)}</td><td className={`border ${v.sat && v.sat < 90 ? 'font-bold text-destructive' : ''}`}>{c(v.sat)}</td><td className="border">{v.fio2 || '—'}</td><td className={`border ${v.hgt && (v.hgt < 45 || v.hgt > 180) ? 'font-bold text-destructive' : ''}`}>{c(v.hgt)}</td><td className={`border ${v.dor > 3 ? 'font-bold text-destructive' : ''}`}>{v.dor}</td><td className="border">{v.by}</td></tr>)
+        : <tr><td colSpan={13} className="p-2 text-center text-muted-foreground">Sem registros.</td></tr>}</tbody></table></div>
+      <p className="mt-1 text-[10px] text-muted-foreground">Em vermelho: valores fora da faixa neonatal (FC 100–180, FR 30–60, Tax 36,5–37,5, SatO₂ ≥ 90, HGT 45–180, NIPS &gt; 3).</p></Card></div>;
 }
 
 function Bundles({ u, p }: { u: IcuUnit; p: Patient }) {

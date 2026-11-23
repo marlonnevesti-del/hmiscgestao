@@ -721,8 +721,8 @@ export function saveClinicalDoc(encounterId: string, kind: import('./inpatient-d
 }
 
 /** Registro intensivo (UTI Pediátrica / UCI): escalas, balanço hídrico, bundles, SBAR, SAE e evoluções padronizadas no paciente. */
-type IcuItem<K extends 'scales' | 'balances' | 'bundles' | 'notes' | 'neo'> = NonNullable<import('./uti-uci').IntensiveRecord[K]> extends (infer T)[] ? T : never;
-export function addIntensive<K extends 'scales' | 'balances' | 'bundles' | 'notes' | 'neo'>(patientId: string, kind: K, entry: Omit<IcuItem<K>, 'id' | 'at' | 'by'>) {
+type IcuItem<K extends 'scales' | 'balances' | 'bundles' | 'notes' | 'neo' | 'vitals'> = NonNullable<import('./uti-uci').IntensiveRecord[K]> extends (infer T)[] ? T : never;
+export function addIntensive<K extends 'scales' | 'balances' | 'bundles' | 'notes' | 'neo' | 'vitals'>(patientId: string, kind: K, entry: Omit<IcuItem<K>, 'id' | 'at' | 'by'>) {
   if (!canAct(state.profile, 'evoluir', state.accessAreas) && !canAct(state.profile, 'checar', state.accessAreas)) throw new Error('Seu perfil não permite esta ação.');
   const rec = { ...entry, id: crypto.randomUUID(), at: new Date().toISOString(), by: professionalName(state.profile) };
   updatePatient(patientId, (p) => ({ intensive: { ...(p.intensive ?? {}), [kind]: [...((p.intensive?.[kind] as unknown[]) ?? []), rec] } }));

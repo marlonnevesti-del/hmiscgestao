@@ -140,10 +140,15 @@ export function balance24h(list: BalanceEntry[], now = Date.now()) {
   return list.filter((b) => now - new Date(b.at).getTime() <= 86_400_000).reduce((a, b) => a + balance(b).net, 0);
 }
 
+/** Sinais vitais da UTI Neonatal (aba própria, separada do balanço hídrico). */
+export interface NeoVital { id: string; at: string; by: string; time: string; pas: number; pad: number; fc: number; fr: number; tax: number; tIncub: number; sat: number; fio2: string; hgt: number; dor: number }
+export const pam = (pas: number, pad: number) => pas > 0 && pad > 0 ? Math.round((pas + 2 * pad) / 3) : 0;
+export const NEO_BH_INPUTS = ['Soro / manutenção EV', 'NPT', 'Medicações EV', 'Expansão / hemoderivados', 'Dieta SOG/SNG', 'Dieta oral / seio', 'Medicação oral'];
+export const NEO_BH_OUTPUTS = ['Diurese', 'Evacuação', 'Resíduo gástrico', 'Vômitos / regurgitação', 'Drenos', 'Coletas de sangue'];
 export interface ScaleEntry { id: string; at: string; by: string; scale: string; total: number; result: string }
 export interface BundleEntry { id: string; at: string; by: string; bundle: string; checks: string[]; total: number }
 export interface TextEntry { id: string; at: string; by: string; kind: string; text: string }
 export interface SafetyInfo { continuous: string; devices: string[]; precaution: string; diet: string }
-export interface IntensiveRecord { scales?: ScaleEntry[]; balances?: BalanceEntry[]; bundles?: BundleEntry[]; notes?: TextEntry[]; safety?: SafetyInfo; neo?: NeoEntry[] }
+export interface IntensiveRecord { vitals?: NeoVital[]; scales?: ScaleEntry[]; balances?: BalanceEntry[]; bundles?: BundleEntry[]; notes?: TextEntry[]; safety?: SafetyInfo; neo?: NeoEntry[] }
 export const DEVICES = ['TOT', 'Traqueostomia', 'CVC', 'PICC', 'Cateter umbilical', 'SVD', 'SNG/SNE', 'Dreno', 'CPAP/VNI', 'Fototerapia'];
 export const bundleAdherencePct = (b: Pick<BundleEntry, 'checks' | 'total'>) => b.total ? Math.round((b.checks.length / b.total) * 100) : 0;
