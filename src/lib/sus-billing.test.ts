@@ -41,3 +41,13 @@ describe("CIHA-01", () => {
   it("nome do arquivo segue CNES+AAAAMM.CHA", () => { expect(cihaFileName("202611")).toBe("2077485202611.CHA"); });
   it("sem movimento gera header e registro tipo 3", () => { expect(cihaFile([], "202611")).toBe("120774851.0.0.0\r\n3\r\n"); });
 });
+
+import { aihIssues } from "./sus-billing";
+describe("campos oficiais da AIH", () => {
+  const base = { aihNumber: "4226100012345", aihAuthorizedAt: "2026-11-02", exitReason: "12", births: [], date: "2026-11-01" };
+  it("completa não tem pendência", () => expect(aihIssues(base)).toEqual([]));
+  it("nº da AIH exige 13 dígitos", () => expect(aihIssues({ ...base, aihNumber: "123" })).toContain("Sem nº da AIH autorizada (13 dígitos)"));
+  it("exige motivo de saída", () => expect(aihIssues({ ...base, exitReason: "" })).toContain("Sem motivo de saída SUS"));
+  it("motivo de parto exige RN", () => expect(aihIssues({ ...base, exitReason: "61" })).toContain("Motivo de parto sem RN vinculado"));
+  it("RN vivo exige DNV", () => expect(aihIssues({ ...base, exitReason: "61", births: [{ rnId: "r", name: "RN", dnv: "", weight: 3100, weeks: "39", alive: true }] })).toContain("RN: sem nº da DNV"));
+});

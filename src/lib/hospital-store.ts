@@ -447,6 +447,12 @@ export function saveAihLaudo(id: string, data: Record<string, string>) {
   setState((s) => ({ encounters: s.encounters.map((e) => e.id === id ? { ...e, aihLaudo: { ...data, savedBy: s.employeeName, savedAt: new Date().toISOString() } } : e) }));
 }
 
+/** Faturamento registra nº/data da AIH autorizada, motivo de saída SUS e DNVs, sem apagar o laudo. */
+export function saveAihAuthorization(id: string, data: Record<string, string>) {
+  if (!canAct(state.profile, 'faturar', state.accessAreas)) throw new Error('Apenas Faturamento ou Administrador podem registrar a AIH.');
+  setState((s) => ({ encounters: s.encounters.map((e) => e.id === id ? { ...e, aihLaudo: { ...(e.aihLaudo ?? {}), ...data, aihSavedBy: s.employeeName, aihSavedAt: new Date().toISOString() } } : e) }));
+}
+
 /** Administrador retifica números de documento após finalização, com justificativa no histórico. */
 export function amendDocuments(id: string, values: Partial<Record<AmendField, string>>, reason: string) {
   if (!canAct(state.profile, 'faturar', state.accessAreas)) throw new Error('Apenas Faturamento ou Administrador podem retificar documentos.');

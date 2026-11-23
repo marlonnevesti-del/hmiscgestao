@@ -7,13 +7,15 @@ import { NoPermission } from "@/components/AppShell";
 import { Letterhead, LetterFooter } from "@/components/DischargePrint";
 import { printProcedure } from "@/components/ProcedurePrint";
 import { can } from "@/lib/hospital-data";
-import { useStore } from "@/lib/hospital-store";
+import { saveAihAuthorization, useStore } from "@/lib/hospital-store";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { toast } from "sonner";
 import { AmendDocumentButton, DocumentGapsPanel } from "@/components/DocumentAmend";
 import { documentGaps } from "@/lib/document-amend";
 import { semaphoreOf, semaphoreSummary } from "@/lib/billing-semaphore";
 import { loadSigtap, type SigtapProc } from "@/lib/sigtap";
 import { loadSigtapRules, sigtapGlosas, type SigtapRules } from "@/lib/sigtap-compat";
-import { aihFile, bpaFile, cihaFile, cihaFileName, buildSusRows, CNES, competenceOf, SIGTAP_DEFAULT, type Professional, type SusRow } from "@/lib/sus-billing";
+import { aihFile, bpaFile, cihaFile, cihaFileName, buildSusRows, EXIT_REASONS, isObstetricExit, CNES, competenceOf, SIGTAP_DEFAULT, type Professional, type SusRow } from "@/lib/sus-billing";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/faturamento-sus")({
@@ -47,6 +49,7 @@ function SusBilling() {
   const [onlyIssues, setOnlyIssues] = useState(false);
   const [prof, setProf] = useState<Professional>({ name: "", cns: "", cbo: "225125" });
   const [doc, setDoc] = useState<Doc>(null);
+  const [edit, setEdit] = useState<SusRow | null>(null);
   useEffect(() => { try { const v = localStorage.getItem(PROF_KEY); if (v) { const p = JSON.parse(v) as Professional; setProf({ ...p, cbo: p.cbo || "225125" }); } } catch { /* ignore */ } }, []);
   const saveProf = (p: Professional) => { setProf(p); localStorage.setItem(PROF_KEY, JSON.stringify(p)); };
   const [sig, setSig] = useState<{ list: SigtapProc[]; rules: SigtapRules } | null>(null);
@@ -102,16 +105,48 @@ function SusBilling() {
               <td className="py-1">{fmt(r.date)}</td><td className="font-mono text-xs">{r.encounter.number}</td><td>{r.name}</td>
               <td className="font-mono text-xs">{r.cns || "—"}</td><td>{r.cid || "—"}</td><td className="font-mono text-xs">{r.procedure}</td>
               <td className={cn("text-xs", r.issues.length ? "text-destructive" : "text-clinical")}>{r.issues.length ? r.issues.map((i) => <div key={i}>• {i}</div>) : "OK"}</td>
-              <td className="flex gap-1">{(() => { const pt = patients.find((x) => x.id === r.encounter.patientId); return pt ? <AmendDocumentButton p={pt} e={r.encounter} size="sm" label="Trocar código" /> : null; })()}{tab === "AIH" && <Button size="sm" variant="outline" onClick={() => print({ title: "LAUDO PARA SOLICITAÇÃO DE AUTORIZAÇÃO DE INTERNAÇÃO HOSPITALAR (AIH)", laudo: r })}>Imprimir laudo</Button>}</td>
+              <td className="flex gap-1">{(() => { const pt = patients.find((x) => x.id === r.encounter.patientId); return pt ? <AmendDocumentButton p={pt} e={r.encounter} size="sm" label="Trocar código" /> : null; })()}{tab === "AIH" && allowed && <Button size="sm" variant="outline" onClick={() => setEdit(r)}>Dados AIH</Button>}{tab === "AIH" && <Button size="sm" variant="outline" onClick={() => print({ title: "LAUDO PARA SOLICITAÇÃO DE AUTORIZAÇÃO DE INTERNAÇÃO HOSPITALAR (AIH)", laudo: r })}>Imprimir laudo</Button>}</td>
             </tr>)}
             {!list.length && <tr><td colSpan={9} className="py-8 text-center text-muted-foreground">Nenhum atendimento nesta competência.</td></tr>}</tbody>
           </table></div>
           <p className="mt-2 text-[11px] text-muted-foreground">O arquivo inclui só os atendimentos sem pendência. Corrija o cadastro do paciente (CNS, nascimento, sexo, município) e o CID no atendimento médico.</p>
         </div>
       <DocumentGapsPanel />
+      {edit && <AihDataDialog row={edit} onClose={() => setEdit(null)} />}
       {doc && <PrintDoc doc={doc} prof={prof} month={month} />}
     </div>
   );
+}
+
+function AihDataDialog({ row, onClose }: { row: SusRow; onClose: () => void }) {
+  const l = row.encounter.aihLaudo ?? {};
+  const [f, setF] = useState<Record<string, string>>(() => ({ aihNumero: l['aihNumero'] ?? "", aihData: l['aihData'] ?? "", motivoSaida: l['motivoSaida'] ?? "", ...Object.fromEntries(row.births.flatMap((b) => [[`dnv_${b.rnId}`, b.dnv], [`rnObito_${b.rnId}`, b.alive ? "" : "1"]])) }));
+  const set = (k: string, v: string) => setF((x) => ({ ...x, [k]: v }));
+  const save = () => {
+    if (!window.confirm("Confirmar gravação dos dados oficiais desta AIH?")) return;
+    try { saveAihAuthorization(row.encounter.id, { ...f, aihNumero: (f['aihNumero'] ?? "").replace(/\D/g, "") }); toast.success("Dados da AIH gravados"); onClose(); } catch (e) { toast.error((e as Error).message); }
+  };
+  return <Dialog open onOpenChange={(o) => !o && onClose()}><DialogContent className="max-w-lg">
+    <DialogHeader><DialogTitle>Dados oficiais da AIH · {row.name}</DialogTitle></DialogHeader>
+    <div className="grid gap-3">
+      <label className="text-xs font-medium">Nº da AIH autorizada (13 dígitos)<Input inputMode="numeric" maxLength={13} value={f['aihNumero']} onChange={(e) => set("aihNumero", e.target.value.replace(/\D/g, ""))} placeholder="42…" /></label>
+      <label className="text-xs font-medium">Data de autorização<Input type="date" value={f['aihData']} onChange={(e) => set("aihData", e.target.value)} /></label>
+      <label className="text-xs font-medium">Motivo de saída / permanência (Tabela SUS)
+        <select className="mt-1 w-full rounded-md border bg-background px-2 py-2 text-sm" value={f['motivoSaida']} onChange={(e) => set("motivoSaida", e.target.value)}>
+          <option value="">Selecione…</option>{EXIT_REASONS.map(([c, n]) => <option key={c} value={c}>{c} – {n}</option>)}
+        </select></label>
+      {(isObstetricExit(f['motivoSaida'] ?? "") || row.births.length > 0) && <div className="space-y-2 rounded-md border p-3">
+        <div className="text-sm font-semibold">Recém-nascidos (da Maternidade)</div>
+        {!row.births.length && <p className="text-xs text-destructive">Nenhum RN vinculado a esta paciente. Registre o parto na Maternidade.</p>}
+        {row.births.map((b) => <div key={b.rnId} className="grid gap-2 border-t pt-2 sm:grid-cols-2">
+          <div className="text-xs sm:col-span-2"><b>{b.name}</b> · Peso {b.weight || "—"} g · IG {b.weeks || "—"} semanas</div>
+          <label className="text-xs font-medium">Nº da DNV<Input inputMode="numeric" maxLength={11} value={f[`dnv_${b.rnId}`] ?? ""} onChange={(e) => set(`dnv_${b.rnId}`, e.target.value.replace(/\D/g, ""))} /></label>
+          <label className="flex items-end gap-2 text-xs"><input type="checkbox" checked={f[`rnObito_${b.rnId}`] === "1"} onChange={(e) => set(`rnObito_${b.rnId}`, e.target.checked ? "1" : "")} /> Natimorto / óbito do RN</label>
+        </div>)}
+      </div>}
+    </div>
+    <DialogFooter><Button variant="outline" onClick={onClose}>Cancelar</Button><Button onClick={save}>Salvar</Button></DialogFooter>
+  </DialogContent></Dialog>;
 }
 
 function PrintDoc({ doc, prof, month }: { doc: NonNullable<Doc>; prof: Professional; month: string }) {
@@ -127,7 +162,7 @@ function PrintDoc({ doc, prof, month }: { doc: NonNullable<Doc>; prof: Professio
       <p>Total: {doc.rows.length} · Prontos: {doc.rows.filter((r) => !r.issues.length).length} · Com pendência: {doc.rows.filter((r) => r.issues.length).length}</p>
     </>}
     {doc.laudo && <>
-      <h3>Identificação do estabelecimento</h3>{grid([["Estabelecimento solicitante", "HMISC"], ["CNES", CNES], ["Nº FIA / atendimento", doc.laudo.encounter.number]])}
+      <h3>Identificação do estabelecimento</h3>{grid([["Estabelecimento solicitante", "HMISC"], ["CNES", CNES], ["Nº FIA / atendimento", doc.laudo.encounter.number], ["Nº AIH autorizada", doc.laudo.aihNumber], ["Data de autorização", fmt(doc.laudo.aihAuthorizedAt)], ["Motivo de saída", EXIT_REASONS.find(([c]) => c === doc.laudo?.exitReason)?.join(" – ") ?? ""]])}
       <h3>Identificação do paciente</h3>{grid([["Nome", doc.laudo.name], ["CNS", doc.laudo.cns], ["CPF", doc.laudo.cpf], ["Data de nascimento", fmt(doc.laudo.birthDate)], ["Sexo", doc.laudo.sex], ["Nome da mãe", doc.laudo.motherName], ["Município (IBGE)", doc.laudo.cityCode], ["Data de internação", fmt(doc.laudo.date)], ["Caráter", "Urgência"]])}
       <h3>Justificativa da internação</h3>{grid([["Diagnóstico", doc.laudo.encounter.medical?.diagnosis ?? ""], ["CID-10 principal", doc.laudo.cid], ["Procedimento solicitado (SIGTAP)", doc.laudo.procedure]])}
       <div style={{ border: "1px solid #000", padding: 4, minHeight: 80 }}><div style={{ fontSize: "8pt" }}>Principais sinais, sintomas e condições</div>{doc.laudo.encounter.medical?.anamnesis} {doc.laudo.encounter.medical?.exam}</div>

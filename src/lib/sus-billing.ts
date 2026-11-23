@@ -7,7 +7,24 @@ export interface SusRow {
   encounter: Encounter; patient?: Patient | undefined; kind: "BPA" | "AIH";
   date: string; cns: string; cpf: string; name: string; birthDate: string; sex: string; motherName: string;
   cityCode: string; cid: string; procedure: string; issues: string[];
+  aihNumber: string; aihAuthorizedAt: string; exitReason: string; births: AihBirth[];
 }
+export interface AihBirth { rnId: string; name: string; dnv: string; weight: number; weeks: string; alive: boolean }
+
+/** Motivos de saída/permanência da Tabela SUS (SIH/SUS). */
+export const EXIT_REASONS: [string, string][] = [
+  ["11", "Alta curado"], ["12", "Alta melhorado"], ["14", "Alta a pedido"], ["15", "Alta com previsão de retorno"], ["16", "Alta por evasão"], ["18", "Alta por outros motivos"],
+  ["21", "Permanência por características da doença"], ["22", "Permanência por intercorrência"], ["23", "Permanência por impossibilidade sócio-familiar"], ["28", "Permanência por outros motivos"],
+  ["31", "Transferência para outro estabelecimento"], ["32", "Transferência para internação domiciliar"],
+  ["41", "Óbito com DO fornecida pelo médico assistente"], ["42", "Óbito com DO fornecida pelo IML"], ["43", "Óbito com DO fornecida pelo SVO"],
+  ["51", "Encerramento administrativo"],
+  ["61", "Alta da mãe/puérpera e do recém-nascido"], ["62", "Alta da mãe/puérpera e permanência do RN"], ["63", "Alta da mãe/puérpera e óbito do RN"],
+  ["64", "Alta da mãe/puérpera com óbito fetal"], ["65", "Óbito da gestante e do concepto"], ["66", "Óbito da mãe/puérpera e alta do RN"], ["67", "Óbito da mãe/puérpera e permanência do RN"],
+];
+export const isObstetricExit = (c: string) => /^6[1-7]$/.test(c);
+/** Nº AIH: 13 dígitos (UF + ano + sequência + dígito). */
+export const validAihNumber = (v = "") => /^\d{13}$/.test(v.replace(/\D/g, ""));
+export const validDnv = (v = "") => /^\d{8,11}$/.test(v.replace(/\D/g, ""));
 
 /** Competência AAAAMM a partir de uma data ISO. */
 export const competenceOf = (iso: string) => { const d = new Date(iso); return Number.isNaN(d.getTime()) ? "" : `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}`; };
@@ -23,6 +40,14 @@ export function pickProcedure(e: Encounter, kind: "BPA" | "AIH"): string {
   return (kind === "AIH" ? ok(aih) || ok(proc) : ok(proc)) || SIGTAP_DEFAULT[kind];
 }
 
+/** RNs vinculados à mãe, com DNV informado no laudo AIH (chave dnv_<id>). */
+export function birthsOf(e: Encounter, p: Patient | undefined, patients: Patient[]): AihBirth[] {
+  return (p?.babyIds ?? []).map((id) => patients.find((x) => x.id === id)).filter((b): b is Patient => !!b).map((b) => ({
+    rnId: b.id, name: b.name, dnv: digits(e.aihLaudo?.[`dnv_${b.id}`]), weight: b.newborn?.pesoNascer ?? Math.round(b.weight * 1000),
+    weeks: (p?.ig ?? "").match(/\d+/)?.[0] ?? "", alive: e.aihLaudo?.[`rnObito_${b.id}`] !== "1",
+  }));
+}
+
 export function buildSusRows(encounters: Encounter[], patients: Patient[], competence: string, prof: Professional): SusRow[] {
   return encounters.filter((e) => competenceOf(e.openedAt) === competence).map((e) => {
     const p = patients.find((x) => x.id === e.patientId);
@@ -34,6 +59,8 @@ export function buildSusRows(encounters: Encounter[], patients: Patient[], compe
       birthDate: r?.birthDate ?? "", sex: (r?.sex ?? "").slice(0, 1).toUpperCase(),
       motherName: r?.parent1 || p?.motherName || "", cityCode: digits(r?.addresses?.find((a) => a.primary)?.cityCode || r?.addresses?.find((a) => a.cityCode)?.cityCode || r?.birthplaceCode),
       cid: (e.medical?.cid ?? "").replace(/\W/g, "").toUpperCase(), procedure: pickProcedure(e, kind), issues: [],
+      aihNumber: digits(e.aihLaudo?.['aihNumero']), aihAuthorizedAt: e.aihLaudo?.['aihData'] ?? "", exitReason: e.aihLaudo?.['motivoSaida'] ?? "",
+      births: kind === "AIH" ? birthsOf(e, p, patients) : [],
     };
     row.issues = susIssues(row, prof);
     return row;
@@ -53,8 +80,25 @@ export function susIssues(r: Pick<SusRow, "cns" | "cid" | "birthDate" | "sex" | 
   if (r.sex !== "M" && r.sex !== "F") out.push("Sem sexo");
   if (r.cityCode.length < 6) out.push("Sem código IBGE do município");
   if (r.kind === "AIH" && !r.motherName) out.push("Sem nome da mãe");
+  if (r.kind === "AIH") out.push(...aihIssues(r as Partial<SusRow>));
   if (digits(prof.cns).length !== 15) out.push("Profissional sem CNS");
   if (digits(prof.cbo).length !== 6) out.push("Profissional sem CBO");
+  return out;
+}
+
+/** Campos oficiais da AIH: número autorizado, data, motivo de saída e dados do RN. */
+export function aihIssues(r: Partial<Pick<SusRow, "aihNumber" | "aihAuthorizedAt" | "exitReason" | "births" | "date">>): string[] {
+  const out: string[] = [];
+  if (!validAihNumber(r.aihNumber)) out.push("Sem nº da AIH autorizada (13 dígitos)");
+  if (!r.aihAuthorizedAt) out.push("Sem data de autorização da AIH");
+  if (!r.exitReason) out.push("Sem motivo de saída SUS");
+  else if (!EXIT_REASONS.some(([c]) => c === r.exitReason)) out.push("Motivo de saída inválido");
+  if (r.exitReason && isObstetricExit(r.exitReason)) {
+    const b = r.births ?? [];
+    if (!b.length) out.push("Motivo de parto sem RN vinculado");
+    b.forEach((x) => { if (x.alive && !validDnv(x.dnv)) out.push(`${x.name}: sem nº da DNV`); if (!x.weight) out.push(`${x.name}: sem peso ao nascer`); });
+    if (b.length && !b[0]?.weeks) out.push("Sem idade gestacional (semanas)");
+  }
   return out;
 }
 
@@ -79,7 +123,8 @@ export function aihFile(rows: SusRow[], competence: string, prof: Professional):
   return rows.filter((r) => r.kind === "AIH" && r.issues.length === 0).map((r) => [
     num(CNES, 7), competence, pad(r.encounter.number, 13), r.date.replace(/-/g, ""), num(r.procedure, 10), pad(r.cid, 4),
     num(r.cns, 15), pad(plain(r.name), 70), r.birthDate.replace(/-/g, ""), r.sex, pad(plain(r.motherName), 70), num(r.cityCode, 7),
-    num(prof.cns, 15), num(prof.cbo, 6),
+    num(prof.cns, 15), num(prof.cbo, 6), num(r.aihNumber, 13), r.aihAuthorizedAt.replace(/-/g, "").padEnd(8, "0"), num(r.exitReason, 2),
+    ...r.births.flatMap((b) => [num(b.dnv, 11), num(b.weight, 4), num(b.weeks, 2), b.alive ? "1" : "2"]),
   ].join("")).join("\r\n") + "\r\n";
 }
 
@@ -112,7 +157,7 @@ export function cihaFile(rows: SusRow[], competence: string): string {
       r.kind === "AIH" ? "2" : "4", pad(plain(r.name), 60), pad(plain(street), 25), pad(plain(a?.number ?? ""), 5), pad(plain(a?.complement ?? ""), 15),
       num(r.cityCode.slice(0, 6), 6), pad(plain(a?.state ?? "SC"), 2), num(a?.postalCode ?? "", 8), ddmmaaaa(r.birthDate), r.sex,
       num(r.cns, 15), pad(r.encounter.number, 15), num(r.procedure, 10), pad(r.cid, 4), pad("", 4),
-      ddmmaaaa(r.date), ddmmaaaa(out), r.encounter.discharge ? "11" : "00", "06", num(competence, 6),
+      ddmmaaaa(r.date), ddmmaaaa(out), num(r.exitReason || (r.encounter.discharge ? "11" : "00"), 2), "06", num(competence, 6),
     ].join("");
   });
   return [header, ...lines].join("\r\n") + "\r\n";
