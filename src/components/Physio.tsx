@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { Link } from '@tanstack/react-router';
+import { Link, useNavigate } from '@tanstack/react-router';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { can, type Patient } from '@/lib/hospital-data';
-import { cancelPhysio, recordPhysioSession, requestPhysio, useStore } from '@/lib/hospital-store';
+import { cancelPhysio, requestPhysio, useStore } from '@/lib/hospital-store';
 import { PHYSIO_MODALITIES, PHYSIO_SUPPORT, PHYSIO_FREQUENCIES, frequencyBadge, type PhysioFrequency, isPhysioOpen, sortPhysio, type PhysioModality, type PhysioPriority, type PhysioRequest } from '@/lib/physio';
 import { cn } from '@/lib/utils';
 
@@ -39,7 +39,7 @@ export function PhysioBoard() {
   const patients = useStore((s) => s.patients); const profile = useStore((s) => s.profile);
   const [tab, setTab] = useState<'Aguardando' | 'Em acompanhamento' | 'hist'>('Aguardando');
   const [sector, setSector] = useState('');
-  const [active, setActive] = useState<Row | null>(null);
+  const navigate = useNavigate();
   const rows: Row[] = patients.flatMap((p) => (p.physio ?? []).map((req) => ({ p, req })));
   const sectors = [...new Set(rows.map((r) => r.p.ward))];
   const shown = sortPhysio(rows.filter((r) => (tab === 'hist' ? !isPhysioOpen(r.req) || r.req.sessions.length : r.req.status === tab) && (!sector || r.p.ward === sector)));
@@ -62,24 +62,11 @@ export function PhysioBoard() {
         {req.sessions.map((s) => <div key={s.id} className="mt-2 rounded-md bg-muted/50 p-2 text-xs"><b>{new Date(s.at).toLocaleString('pt-BR')} · {s.by}</b><div>{s.conduct}</div>{(s.pre || s.post) && <div className="text-muted-foreground">Pré: {s.pre || '—'} · Pós: {s.post || '—'}</div>}</div>)}
       </div>
       <div className="mt-3 flex flex-wrap gap-2">
-        {isPhysioOpen(req) && <Button disabled={!can(profile, 'evoluir')} onClick={() => setActive({ p, req })}>{req.status === 'Aguardando' ? 'Iniciar atendimento' : 'Evoluir fisioterapia'}</Button>}
+        {isPhysioOpen(req) && <Button disabled={!can(profile, 'evoluir')} onClick={() => navigate({ to: '/pacientes/$id', params: { id: p.id } })}>{req.status === 'Aguardando' ? 'Iniciar atendimento' : 'Evoluir fisioterapia'}</Button>}
         <Button variant="outline" asChild><Link to="/pacientes/$id" params={{ id: p.id }}>Ver prontuário</Link></Button>
         {isPhysioOpen(req) && can(profile, 'prescrever') && <Button variant="ghost" onClick={() => { const why = window.prompt('Motivo do cancelamento:'); if (why == null) return; run(() => { cancelPhysio(p.id, req.id, why); toast.success('Solicitação cancelada'); }); }}>Cancelar pedido</Button>}
       </div>
     </section>)}
-    {active && <SessionDialog row={active} onClose={() => setActive(null)} />}
   </div>;
 }
 
-function SessionDialog({ row, onClose }: { row: Row; onClose: () => void }) {
-  const [s, setS] = useState({ conduct: '', pre: '', post: '' });
-  const save = (finish: boolean) => { if (finish && !window.confirm(`Confirmar alta da fisioterapia de ${row.p.name}?`)) return; run(() => { recordPhysioSession(row.p.id, row.req.id, s, finish); toast.success(finish ? 'Sessão registrada e acompanhamento concluído' : 'Sessão registrada no prontuário'); onClose(); }); };
-  return <Dialog open onOpenChange={(o) => !o && onClose()}><DialogContent><DialogHeader><DialogTitle>Sessão de fisioterapia · {row.p.name}</DialogTitle></DialogHeader>
-    <div className="grid gap-3 text-sm">
-      <label className="grid gap-1">Conduta realizada<textarea className="min-h-24 rounded-md border bg-background p-2" placeholder="Higiene brônquica, aspiração, posicionamento, exercícios motores..." value={s.conduct} onChange={(e) => setS({ ...s, conduct: e.target.value })} /></label>
-      <label className="grid gap-1">Antes da sessão (SatO2, FR, ausculta)<input className={field} value={s.pre} onChange={(e) => setS({ ...s, pre: e.target.value })} /></label>
-      <label className="grid gap-1">Depois da sessão (SatO2, FR, ausculta)<input className={field} value={s.post} onChange={(e) => setS({ ...s, post: e.target.value })} /></label>
-      <div className="flex flex-wrap gap-2"><Button onClick={() => save(false)}>Registrar sessão</Button><Button variant="outline" onClick={() => save(true)}>Registrar e dar alta da fisioterapia</Button></div>
-    </div>
-  </DialogContent></Dialog>;
-}
