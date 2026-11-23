@@ -1,2529 +1,3389 @@
 [
-{
-"code": "MED001",
-"name": "RAFAELA BAESSO REDDIG",
-"specialty": "Dermatologia",
-"crm": "CRM/SC 24686",
-"rqe": "22302"
-},
-{
-"code": "MED002",
-"name": "LARISSA CHAIANE ORTH",
-"specialty": "Clínica Médica",
-"crm": "CRM/RS 48145",
-"rqe": "41148"
-},
-{
-"code": "MED003",
-"name": "MARIANA MANTOVANI MEIRA SANTOS",
-"specialty": "Cirurgia Geral",
-"crm": "CRM/PR 44147",
-"rqe": "36971"
-},
-{
-"code": "MED004",
-"name": "THAIS DE OLIVEIRA SOUSA",
-"specialty": "Pediatria; Gastroenterologia Pediátrica",
-"crm": "CRM/SC 22381",
-"rqe": "18942; 17116"
-},
-{
-"code": "MED005",
-"name": "RICARDO GRIGOLETTO DE BRITO",
-"specialty": "Ginecologia e Obstetrícia",
-"crm": "CRM/PR 52472",
-"rqe": "32557"
-},
-{
-"code": "MED007",
-"name": "FABIANE ROSA E SILVA",
-"specialty": "Pediatria",
-"crm": "CRM/SC 28454",
-"rqe": "23497"
-},
-{
-"code": "MED009",
-"name": "MONIQUE CONSENSO SAVIATO",
-"specialty": "Pediatria",
-"crm": "CRM/SC 19953",
-"rqe": "15593"
-},
-{
-"code": "MED014",
-"name": "ELOISA DE LUCA CASAGRANDE",
-"specialty": "Pediatria",
-"crm": "CRM/SC 20685",
-"rqe": "14950"
-},
-{
-"code": "MED026",
-"name": "GUSTAVO DE OLIVEIRA BERNARDO",
-"specialty": "Pediatria; Pneumologia Pediátrica",
-"crm": "CRM/SC 20686",
-"rqe": "16783; 17295"
-},
-{
-"code": "MED031",
-"name": "ANA PAULA TROMBIN SOARES",
-"specialty": "Pediatria",
-"crm": "CRM/SC 19707",
-"rqe": "14610"
-},
-{
-"code": "MED073",
-"name": "NATHALIA DE OLIVEIRA SOUZA LOCH",
-"specialty": "Pediatria",
-"crm": "CRM/SC 18435",
-"rqe": "15938"
-},
-{
-"code": "MED105",
-"name": "MARINA MARTINS BIFF",
-"specialty": "Pediatria",
-"crm": "CRM/SC 26094",
-"rqe": "23381"
-},
-{
-"code": "MED116",
-"name": "JULIA KELLERS DE SOUZA",
-"specialty": "Pediatria",
-"crm": "CRM/SC 26067",
-"rqe": "21891"
-},
-{
-"code": "MED006",
-"name": "ANA CAROLINA DE OLIVEIRA PRESADO"
-},
-{
-"code": "MED008",
-"name": "GISLEINE BITTENCOURT SCOTTI"
-},
-{
-"code": "MED010",
-"name": "MONICA BIZ"
-},
-{
-"code": "MED011",
-"name": "FREDERICO GUILHERME W. C. DE AZEREDO"
-},
-{
-"code": "MED012",
-"name": "TIAGO BORGERT BRESCIANI"
-},
-{
-"code": "MED013",
-"name": "LUCAS HENRIQUE ROSSATO"
-},
-{
-"code": "MED015",
-"name": "BRUNO MASSIH DE OLIVEIRA"
-},
-{
-"code": "MED016",
-"name": "ISADORA BOEING"
-},
-{
-"code": "MED017",
-"name": "FRANCIEL WAWRZYNIAK"
-},
-{
-"code": "MED018",
-"name": "SHAYRLENE QUAREZEMIN DE MATOS"
-},
-{
-"code": "MED019",
-"name": "TANISE MACEDO BOTELHO"
-},
-{
-"code": "MED020",
-"name": "DANIELE PAOLA DA SILVA WIZBICKI"
-},
-{
-"code": "MED021",
-"name": "MARIA CAROLINE SERAPHIM MELLO"
-},
-{
-"code": "MED022",
-"name": "NATHALIA BECKER GERALDI"
-},
-{
-"code": "MED023",
-"name": "OSVALDO GARCEZ DUTRA JUNIOR"
-},
-{
-"code": "MED024",
-"name": "LETICIA SOARES BOING"
-},
-{
-"code": "MED025",
-"name": "HELCIO FELIPPE"
-},
-{
-"code": "MED027",
-"name": "LEANDRO ARIELDEI RICARDI"
-},
-{
-"code": "MED028",
-"name": "BRUNA ROMAGNA PETERLE"
-},
-{
-"code": "MED029",
-"name": "SERGIO COSTA COELHO LEAL"
-},
-{
-"code": "MED030",
-"name": "RODRIGO PACHECO SANTOS DA SILVA"
-},
-{
-"code": "MED032",
-"name": "FERNANDA DORS TIGRE DA SILVA"
-},
-{
-"code": "MED033",
-"name": "STEFANI ZILLI MAFALDA"
-},
-{
-"code": "MED034",
-"name": "VINICIUS CAIRES DELGADO"
-},
-{
-"code": "MED035",
-"name": "LAURA CARMINATI CIMOLIN"
-},
-{
-"code": "MED036",
-"name": "MARIA FERNANDA SOUZA DE LUCA"
-},
-{
-"code": "MED037",
-"name": "IGOR PAULO DA SILVA ABREU"
-},
-{
-"code": "MED038",
-"name": "TASSIANA DE BOIT MILANEZ"
-},
-{
-"code": "MED039",
-"name": "RONALD BENEDET BARROSO"
-},
-{
-"code": "MED040",
-"name": "TAYSI ALIXANDRINO BEZA"
-},
-{
-"code": "MED041",
-"name": "ANA LUIZA PEREIRA CORDOVA"
-},
-{
-"code": "MED042",
-"name": "ANDRESSA DE MARCO MACHADO"
-},
-{
-"code": "MED043",
-"name": "EDUARDO BORGES DE MEDEIROS"
-},
-{
-"code": "MED044",
-"name": "MARICELE ALMEIDA DA SILVA"
-},
-{
-"code": "MED045",
-"name": "PABLO ROCHA"
-},
-{
-"code": "MED046",
-"name": "HELIANA MARCIA CABRAL TAVARES DE LIMA"
-},
-{
-"code": "MED047",
-"name": "MAURICIO CESAR KAMINSKI"
-},
-{
-"code": "MED048",
-"name": "THIAGO SERAFIM CESA",
-"specialty": "Bucomaxilofacial"
-},
-{
-"code": "MED049",
-"name": "CAMILA COAN DA SOLLER"
-},
-{
-"code": "MED050",
-"name": "LUIZ CARLOS CUSTODIO"
-},
-{
-"code": "MED051",
-"name": "FERNANDA SAVI DAMIANI"
-},
-{
-"code": "MED052",
-"name": "KATRINE CITTADIN BARDINI"
-},
-{
-"code": "MED053",
-"name": "BRUNA UGIONI GODOY"
-},
-{
-"code": "MED054",
-"name": "LEONARDO RIOS SANTANA"
-},
-{
-"code": "MED055",
-"name": "ERIKA LOPES RUY"
-},
-{
-"code": "MED056",
-"name": "LANNES LEAL CUNHA"
-},
-{
-"code": "MED057",
-"name": "GLAUBER CASSELLI BEZERRA SILVA"
-},
-{
-"code": "MED058",
-"name": "TAMIRES DE SOUZA GARCIA"
-},
-{
-"code": "MED059",
-"name": "LAURA FOLCHINI FELIPPE"
-},
-{
-"code": "MED060",
-"name": "PAMELA GOMES"
-},
-{
-"code": "MED061",
-"name": "MICHELLE KRAS ALVES MILETO"
-},
-{
-"code": "MED062",
-"name": "MATHEUS CURCIO LOCATELLI"
-},
-{
-"code": "MED063",
-"name": "PATRICIA ANCELMO MARTINS"
-},
-{
-"code": "MED0631",
-"name": "JULIA RONCHI"
-},
-{
-"code": "MED0634",
-"name": "ANDREIA RODRIGUES LUZ DOS SANTOS"
-},
-{
-"code": "MED0635",
-"name": "LUIGI AURELIO SARTOR"
-},
-{
-"code": "MED064",
-"name": "CLEO GAMA PINHEIRO"
-},
-{
-"code": "MED0641",
-"name": "LOURDES MARIA ROZENDO NUNES MENDES"
-},
-{
-"code": "MED065",
-"name": "CINTHIA REUS COELHO"
-},
-{
-"code": "MED066",
-"name": "GUSTAVO ZOMER JUNG"
-},
-{
-"code": "MED0667",
-"name": "ISABELA CORRÊA DE OLIVEIRA"
-},
-{
-"code": "MED0668",
-"name": "LAUREN MARFIL MARINS"
-},
-{
-"code": "MED067",
-"name": "ELBERT RICHARS JONES OLIVEIRA"
-},
-{
-"code": "MED068",
-"name": "EDUARDO ALI DOMINGUEZ"
-},
-{
-"code": "MED069",
-"name": "KAYANE FOLCHINI CESCA"
-},
-{
-"code": "MED070",
-"name": "GUSTAVO DALMORO"
-},
-{
-"code": "MED071",
-"name": "ANDRE CAZARRE TAVARES"
-},
-{
-"code": "MED072",
-"name": "MANUELA JUSTI DE FARIAS"
-},
-{
-"code": "MED074",
-"name": "ERIKA HILBERT SANDRINI PADAO"
-},
-{
-"code": "MED075",
-"name": "VINICIUS RENE GIOMBELLI"
-},
-{
-"code": "MED076",
-"name": "MARCELO CARDOSO"
-},
-{
-"code": "MED077",
-"name": "CAUE GEORGE AGARDI"
-},
-{
-"code": "MED078",
-"name": "FERNANDA MARQUES FERNANDES LIMA"
-},
-{
-"code": "MED079",
-"name": "UBIRATAN PINTO GONCALVES"
-},
-{
-"code": "MED080",
-"name": "EMERSON APARECIDO CRUZ"
-},
-{
-"code": "MED081",
-"name": "RENATO LUIZ MAFIOLETI"
-},
-{
-"code": "MED082",
-"name": "MATHEUS FELIPE REBELLO"
-},
-{
-"code": "MED083",
-"name": "GUSTAVO THOMAZ DE AQUINO"
-},
-{
-"code": "MED084",
-"name": "PEDRO MORENO DA SILVA"
-},
-{
-"code": "MED085",
-"name": "BRUNA ZAGO"
-},
-{
-"code": "MED086",
-"name": "FRANCISCA MARIA ARAUJO DA SILVA"
-},
-{
-"code": "MED087",
-"name": "JADER MICKAEL SOUZA"
-},
-{
-"code": "MED088",
-"name": "CARLOS EDUARDO MENEGHEL DE SOUZA"
-},
-{
-"code": "MED089",
-"name": "DANIEL DE PAULA SANTANA"
-},
-{
-"code": "MED090",
-"name": "SULLIVAN ARTHUR CITADIN"
-},
-{
-"code": "MED091",
-"name": "CRISTIANO RESINA INACIO DA SILVA"
-},
-{
-"code": "MED092",
-"name": "RICARDO PULEO SOUZA"
-},
-{
-"code": "MED093",
-"name": "CLIVER ARAUJO ALMEIDA SOUSA"
-},
-{
-"code": "MED094",
-"name": "LUIZ MARIO ENDERLE SIGNOR"
-},
-{
-"code": "MED095",
-"name": "ROSELAINE STURIAO"
-},
-{
-"code": "MED096",
-"name": "ADEMAR MILTON DE SOUZA FILHO"
-},
-{
-"code": "MED097",
-"name": "ARLENA FERNANDES PAIM"
-},
-{
-"code": "MED098",
-"name": "THIAGO MEDEIROS DOS SANTOS"
-},
-{
-"code": "MED099",
-"name": "CAROLINE SERAFIM DAGOSTIN"
-},
-{
-"code": "MED100",
-"name": "MARIA LUIZA DAL TOE POZZOBON"
-},
-{
-"code": "MED101",
-"name": "ANNETA MARCON MARTINS"
-},
-{
-"code": "MED102",
-"name": "JULIANE ZORZI DE ANDRADE"
-},
-{
-"code": "MED103",
-"name": "PAULA RIGHETO BEZ"
-},
-{
-"code": "MED104",
-"name": "MOISES ALVES FRANCO"
-},
-{
-"code": "MED106",
-"name": "RICARDO DE STEFANI DALPONTE"
-},
-{
-"code": "MED107",
-"name": "ANNIIKA PAULA CECAGNO"
-},
-{
-"code": "MED108",
-"name": "ESTEFANI MOLINAR"
-},
-{
-"code": "MED109",
-"name": "LAURA ALVES FREIRE"
-},
-{
-"code": "MED110",
-"name": "HERCILIO BRIGHENTE VOLPATO"
-},
-{
-"code": "MED111",
-"name": "BARBARA CALISTRO BORCHARDT"
-},
-{
-"code": "MED112",
-"name": "RODRIGO SOARES ALVES DA COSTA"
-},
-{
-"code": "MED113",
-"name": "ISABELLE MARTINS PESCADOR"
-},
-{
-"code": "MED114",
-"name": "PATRICIA BELUCO MORETI"
-},
-{
-"code": "MED115",
-"name": "MATEUS SCARABELOT MEDEIROS"
-},
-{
-"code": "MED117",
-"name": "GABRIEL WESTPHAL FERNANDES"
-},
-{
-"code": "MED118",
-"name": "ALEXIA JUVENCIO DE CARVALHO"
-},
-{
-"code": "MED119",
-"name": "BRUNA LUIZA CLAUDIANO VOSS"
-},
-{
-"code": "MED120",
-"name": "BRUNA BERVIAN CANDIDO"
-},
-{
-"code": "MED121",
-"name": "ANE TRENTO BURIGO PAVEI"
-},
-{
-"code": "MED122",
-"name": "DEMIAN KNABEN"
-},
-{
-"code": "MED123",
-"name": "GISLAINE BENEDET"
-},
-{
-"code": "MED124",
-"name": "LUANNA CORREA DE OLIVEIRA FREITAS BERETRE"
-},
-{
-"code": "MED125",
-"name": "LAIS CONSTANTE MACHADO"
-},
-{
-"code": "MED126",
-"name": "CICERA DOS SANTOS MOURA"
-},
-{
-"code": "MED127",
-"name": "ARTHUR DAJORI RONCHI"
-},
-{
-"code": "MED128",
-"name": "JULIA MICHELON TOMAZZONI"
-},
-{
-"code": "MED129",
-"name": "BRUNO AUGUSTO SOUZA DOS SANTOS"
-},
-{
-"code": "MED130",
-"name": "TUANI DA ROCHA UGGIONI"
-},
-{
-"code": "MED131",
-"name": "VINICIUS OLIVEIRA NITZ"
-},
-{
-"code": "MED132",
-"name": "JOAO LUIZ TAVARES MENDES"
-},
-{
-"code": "MED133",
-"name": "BRUNA WATERKEMPER MONDARDO"
-},
-{
-"code": "MED134",
-"name": "MAURICIO FAERMANN BARCELOS"
-},
-{
-"code": "MED135",
-"name": "ROBERTA CONSTANTINO DAGOSTIN"
-},
-{
-"code": "MED136",
-"name": "AMANDA DO LIVRAMENTO"
-},
-{
-"code": "MED137",
-"name": "PALOMA OLIVEIRA SCHUELTER"
-},
-{
-"code": "MED138",
-"name": "GIORDANA SPALDING PILLA"
-},
-{
-"code": "MED139",
-"name": "SUZANA KNIPHOFF DE OLIVEIRA"
-},
-{
-"code": "MED140",
-"name": "VILSON LUIZ MACIEL"
-},
-{
-"code": "MED141",
-"name": "MARIANNE ONGARATTO LUMI"
-},
-{
-"code": "MED142",
-"name": "LUCAS RIBEIRO KRASILCHIK",
-"specialty": "Cirurgia Geral Pediátrica"
-},
-{
-"code": "MED143",
-"name": "ANA PAULA BISPO STRASSI"
-},
-{
-"code": "MED144",
-"name": "HELENA HERTEL CORREA"
-},
-{
-"code": "MED145",
-"name": "MARINA FIGUEIREDO DE SA"
-},
-{
-"code": "MED146",
-"name": "DEBORA FORNASA BONETTI"
-},
-{
-"code": "MED147",
-"name": "ALINE JOCHEN DE OLIVEIRA"
-},
-{
-"code": "MED148",
-"name": "GEORGIA STOPASSOLI DE CARVALHO"
-},
-{
-"code": "MED149",
-"name": "JESSICA DA SILVA GOULART"
-},
-{
-"code": "MED150",
-"name": "DEBORA CAMPOS PULIDO"
-},
-{
-"code": "MED151",
-"name": "JULIA DAL BO CASSETTARI"
-},
-{
-"code": "MED152",
-"name": "NARAYANA IRMANI DA SILVA"
-},
-{
-"code": "MED153",
-"name": "CAMILA LEHMKUHL DE ARRUDA"
-},
-{
-"code": "MED154",
-"name": "VICTOR AFONSO PAVEI DAGOSTIM"
-},
-{
-"code": "MED155",
-"name": "JAQUELINE BERNARDI"
-},
-{
-"code": "MED156",
-"name": "SAMANDA TORQUATO"
-},
-{
-"code": "MED157",
-"name": "LAYNE HELLMANN AVILA SOUZA"
-},
-{
-"code": "MED158",
-"name": "CAROLINA MARQUES DE AVELLAR DAL BO"
-},
-{
-"code": "MED159",
-"name": "THUANY SILVESTRI GARCIA"
-},
-{
-"code": "MED160",
-"name": "MARIA TEREZA DANIEL JUSTO"
-},
-{
-"code": "MED161",
-"name": "TAMIRES MATEUS GOMES"
-},
-{
-"code": "MED162",
-"name": "ARTHUR GIORDANI ELIAS DE ALMEIDA"
-},
-{
-"code": "MED163",
-"name": "EDINARA DA SILVA SILVEIRA"
-},
-{
-"code": "MED164",
-"name": "GABRIELA BITTENCOURT DAMIANI"
-},
-{
-"code": "MED165",
-"name": "BRUNA FERNANDES SCARPARI"
-},
-{
-"code": "MED166",
-"name": "GISELI VIEIRA MACHADO MOLINA"
-},
-{
-"code": "MED167",
-"name": "RAMON COLOMBO PIROLA"
-},
-{
-"code": "MED168",
-"name": "GABRIELA NUERNBERG DOS SANTOS"
-},
-{
-"code": "MED169",
-"name": "LETICIA MAXIMIANO BRUSCATTO"
-},
-{
-"code": "MED170",
-"name": "MARIANA BENEDET SCHEIDT MULLER"
-},
-{
-"code": "MED171",
-"name": "NATALIA CUSTODIO UGGIONI"
-},
-{
-"code": "MED172",
-"name": "PAULA AGUIAR GRANDI"
-},
-{
-"code": "MED173",
-"name": "JULIANA GABRIELA BURGARDT WERNER"
-},
-{
-"code": "MED174",
-"name": "JOAO MANOEL LUMERTZ FRANCISCO"
-},
-{
-"code": "MED175",
-"name": "AMANDA LONGO PIZZOLATTI"
-},
-{
-"code": "MED176",
-"name": "MARIANA MANGILLI DE MENEZES"
-},
-{
-"code": "MED177",
-"name": "JAMILE CAMARGO CARDOSO OLIVEIRA"
-},
-{
-"code": "MED178",
-"name": "LUIZA CAROLINE NETTO ZANETTE"
-},
-{
-"code": "MED179",
-"name": "PAULO CESAR FIANI BACILA NETO"
-},
-{
-"code": "MED180",
-"name": "LARA XAVIER BAZOTTI"
-},
-{
-"code": "MED181",
-"name": "KELY CORREA BENEDET BAESSO"
-},
-{
-"code": "MED182",
-"name": "ANNANDA ELISE BRANDAO SGORLA"
-},
-{
-"code": "MED183",
-"name": "LUIZA MAZZUCCO ZANATTA"
-},
-{
-"code": "MED184",
-"name": "SAMUEL GHISLERI MINATTO"
-},
-{
-"code": "MED185",
-"name": "LETICIA MAFFIOLETTI TEIXEIRA"
-},
-{
-"code": "MED186",
-"name": "DANIELE LIELL"
-},
-{
-"code": "MED187",
-"name": "ANTONIO COSTA DOS SANTOS"
-},
-{
-"code": "MED188",
-"name": "RIDOEL DE MORAES CUNHA"
-},
-{
-"code": "MED189",
-"name": "MARCELA SACHET NUERNBERG"
-},
-{
-"code": "MED190",
-"name": "LIAH FERREIRA FILIPPI"
-},
-{
-"code": "MED191",
-"name": "ANA CLAUDIA HORR GOMES"
-},
-{
-"code": "MED192",
-"name": "MARLON LUIZ PIRES BOLDORI"
-},
-{
-"code": "MED193",
-"name": "LIVIA D'AVILA PASKULIN"
-},
-{
-"code": "MED194",
-"name": "ANA PAULA NASPOLINI"
-},
-{
-"code": "MED195",
-"name": "CAROLINA BORGES SANTINONI"
-},
-{
-"code": "MED196",
-"name": "AMANDA SORATTO CITADIN"
-},
-{
-"code": "MED197",
-"name": "LARISSA BERNARDO"
-},
-{
-"code": "MED198",
-"name": "JOANA DE LUCCA PIZZOLO"
-},
-{
-"code": "MED199",
-"name": "FERNANDA FONTOURA LISSA"
-},
-{
-"code": "MED200",
-"name": "JULIA GATTO DE OLIVEIRA"
-},
-{
-"code": "MED201",
-"name": "KETHERYN STAHNKE CECHIN MINATTO"
-},
-{
-"code": "MED202",
-"name": "FLAVIO MACHADO PATEL"
-},
-{
-"code": "MED203",
-"name": "BRUNA MILIOLI ESMERALDINO"
-},
-{
-"code": "MED204",
-"name": "BARBARA CARDOSO VIRTUOSO"
-},
-{
-"code": "MED205",
-"name": "LUANA MARIA DE OLIVEIRA PRESADO"
-},
-{
-"code": "MED206",
-"name": "JULIE CANDICE ERBS"
-},
-{
-"code": "MED207",
-"name": "MONIQUE DE SOUZA BETTIOL"
-},
-{
-"code": "MED208",
-"name": "LISANDRA ESTRADA RODRIGUEZ"
-},
-{
-"code": "MED209",
-"name": "BRUNA JUNKLAUS BAGGIO"
-},
-{
-"code": "MED210",
-"name": "DANIELA SILVA KAMINSKI"
-},
-{
-"code": "MED211",
-"name": "ELIDE CRISTINA SUNTACK FRAGOSO"
-},
-{
-"code": "MED212",
-"name": "DAVI DIOMARIO DA ROSA"
-},
-{
-"code": "MED213",
-"name": "ALEXIA UGIONI GODOY"
-},
-{
-"code": "MED214",
-"name": "GABRIELA MACHADO GOULART"
-},
-{
-"code": "MED215",
-"name": "LUIS AUGUSTO SERAFIM ROCHA"
-},
-{
-"code": "MED216",
-"name": "CAROLINA PHILIPPI SILVEIRA"
-},
-{
-"code": "MED217",
-"name": "RAFAEL TABELLI BORTOLUZZI SOUZA"
-},
-{
-"code": "MED218",
-"name": "LUIZA CARDOSO BARCELOS"
-},
-{
-"code": "MED219",
-"name": "GABRIEL OLIVEIRA COSTA"
-},
-{
-"code": "MED220",
-"name": "TAYNAN MANENTI BONFANTE"
-},
-{
-"code": "MED221",
-"name": "PAULA SZYMANSKI"
-},
-{
-"code": "MED222",
-"name": "BEATRIZ ZANELATO DE NONI"
-},
-{
-"code": "MED223",
-"name": "PAULO HENRIQUE TEIXEIRA MARTINS"
-},
-{
-"code": "MED224",
-"name": "DAVIS ROGERIO LUCIO"
-},
-{
-"code": "MED225",
-"name": "THAIS MARTINS DE OLIVEIRA"
-},
-{
-"code": "MED226",
-"name": "CARLOS ALBERTO DE MOURA ASCHOFF",
-"specialty": "Genética"
-},
-{
-"code": "MED227",
-"name": "MARIA FERNANDA LOCKS TOPANOTTI"
-},
-{
-"code": "MED228",
-"name": "PAULO JEFFERSON MENDES"
-},
-{
-"code": "MED229",
-"name": "ISABELA RIBEIRO SIQUEIRA"
-},
-{
-"code": "MED230",
-"name": "MAIKON LUCIAN MADEIRA QUARTI"
-},
-{
-"code": "MED231",
-"name": "JULIO CEZAR CECHINEL FILHO"
-},
-{
-"code": "MED232",
-"name": "RODRIGO DEMETRIO",
-"specialty": "Cirurgia Geral Pediátrica; Urologia Pediátrica"
-},
-{
-"code": "MED233",
-"name": "AIRTON JORGE DA SILVA VARELA JUNIOR"
-},
-{
-"code": "MED234",
-"name": "CHRISTIAN DE ESCOBAR PRADO",
-"specialty": "Cirurgia Geral Pediátrica"
-},
-{
-"code": "MED235",
-"name": "MARIANA DE MATTIA SARTORI"
-},
-{
-"code": "MED236",
-"name": "JEAN ABREU MACHADO"
-},
-{
-"code": "MED237",
-"name": "LUCAS ALEXANDRE PEDROLLO SOLIMAN"
-},
-{
-"code": "MED238",
-"name": "HELOISA DE CASSIA DOS SANTOS"
-},
-{
-"code": "MED239",
-"name": "RAQUEL SPILERE KAMMER"
-},
-{
-"code": "MED240",
-"name": "JOSELAINY STELA PIRES MACHIAVELLI"
-},
-{
-"code": "MED241",
-"name": "ERALDO BELARMINO JUNIOR",
-"specialty": "Neurologia Pediátrica"
-},
-{
-"code": "MED242",
-"name": "GIL BARDINI ALVES",
-"specialty": "Alergia e Imunologia"
-},
-{
-"code": "MED243",
-"name": "CAMILA BELLETTINI HIRSCH",
-"specialty": "Infectologia Pediátrica"
-},
-{
-"code": "MED244",
-"name": "FERNANDA OSORIO ALVES"
-},
-{
-"code": "MED245",
-"name": "RICARDO KADRI MONTEIRO"
-},
-{
-"code": "MED246",
-"name": "RHANARA CAROLINE DE ALMEIDA"
-},
-{
-"code": "MED247",
-"name": "DANIELA BURTET MACHADO",
-"specialty": "Fonoaudiologia"
-},
-{
-"code": "MED248",
-"name": "MILTON GIL GERI JUNIOR"
-},
-{
-"code": "MED249",
-"name": "MARCELO SANTOS PEDROSO"
-},
-{
-"code": "MED250",
-"name": "MONICA ANSELMO JUNKES ANTERO"
-},
-{
-"code": "MED251",
-"name": "GUILHERME ZIMERMANN KUMMER"
-},
-{
-"code": "MED252",
-"name": "NATALIA ALBERTON CUNHA"
-},
-{
-"code": "MED253",
-"name": "LUCIANA MULLER CARVALHO"
-},
-{
-"code": "MED254",
-"name": "SAMUEL DUTRA FERREIRA"
-},
-{
-"code": "MED255",
-"name": "YASMIN JAIME PRAZERES"
-},
-{
-"code": "MED256",
-"name": "MARINA DE CAMPOS BRANDAO"
-},
-{
-"code": "MED257",
-"name": "VERONICA BENDO DE SOUZA"
-},
-{
-"code": "MED258",
-"name": "KERLY KESSLER CAMPOS"
-},
-{
-"code": "MED259",
-"name": "IOLANDA DE SOUZA HONORATO",
-"specialty": "Ginecologia"
-},
-{
-"code": "MED260",
-"name": "SUELEN CAPELARI"
-},
-{
-"code": "MED261",
-"name": "ANA RUTH DEVILLA DEBIASI"
-},
-{
-"code": "MED262",
-"name": "LUCAS DE SOUZA"
-},
-{
-"code": "MED263",
-"name": "BRUNA MARTINS MENDES"
-},
-{
-"code": "MED264",
-"name": "KETLINN DOS SANTOS MARCIANO"
-},
-{
-"code": "MED265",
-"name": "JOAO PAULO GAMEIRO DE AZEVEDO"
-},
-{
-"code": "MED266",
-"name": "KAMILLE FELTRIN RONSONI"
-},
-{
-"code": "MED267",
-"name": "MARIA LAURA GEREMIAS"
-},
-{
-"code": "MED268",
-"name": "EVELIM DE MEDEIROS SARTOR",
-"specialty": "Cardiologia Pediátrica"
-},
-{
-"code": "MED269",
-"name": "GIULIA FRAGA MEZARI"
-},
-{
-"code": "MED270",
-"name": "PRISCILA MARIOT DA ROSA"
-},
-{
-"code": "MED271",
-"name": "GUILHERME DE SOUZA SCHAUCOSKI"
-},
-{
-"code": "MED272",
-"name": "ANDRE RAMPINELLI MANGILI",
-"specialty": "Pneumologia Pediátrica"
-},
-{
-"code": "MED273",
-"name": "THAMY BENEDET TAUTZ"
-},
-{
-"code": "MED274",
-"name": "RAFAELA FUJII DE ABREU"
-},
-{
-"code": "MED275",
-"name": "GUSTAVO ALVES PROSDOCIMO"
-},
-{
-"code": "MED276",
-"name": "MARIA ELIZA BACK"
-},
-{
-"code": "MED277",
-"name": "ARTHUR MENDES LUCIANO",
-"specialty": "Cirurgia Ginecológica"
-},
-{
-"code": "MED278",
-"name": "LUISA TEIXEIRA MATTIELLO KÜLKAMP"
-},
-{
-"code": "MED279",
-"name": "GUILHERME RODRIGO DAL FARRA DA SILVA"
-},
-{
-"code": "MED280",
-"name": "JULIA STOPASSOLI BUSS"
-},
-{
-"code": "MED281",
-"name": "JULIA LISBOA RAMOS DOS SANTOS"
-},
-{
-"code": "MED282",
-"name": "GABRIEL ZANETTE NASPOLINI"
-},
-{
-"code": "MED283",
-"name": "LARISSA SIQUEIRA"
-},
-{
-"code": "MED284",
-"name": "TAIRINI DAMIANI RODRIGUES"
-},
-{
-"code": "MED285",
-"name": "DANIEL VIANA BEZZI"
-},
-{
-"code": "MED286",
-"name": "PETERSON RECH HONORATO"
-},
-{
-"code": "MED287",
-"name": "THAISSA BROLESI DE SOUZA"
-},
-{
-"code": "MED288",
-"name": "FERNANDA DA SILVA SCHMITZ"
-},
-{
-"code": "MED289",
-"name": "JOAO GABRIEL ALVES MOREIRA"
-},
-{
-"code": "MED290",
-"name": "MARIANA ZANETTE FERNANDES"
-},
-{
-"code": "MED291",
-"name": "ISADORA GONCALVES FIGUEREDO"
-},
-{
-"code": "MED292",
-"name": "MANOELA RITA INACIO"
-},
-{
-"code": "MED293",
-"name": "LIZ NETTO"
-},
-{
-"code": "MED294",
-"name": "LIANA BOFF CÉ"
-},
-{
-"code": "MED295",
-"name": "MARINA SPRICIGO MARAGNO"
-},
-{
-"code": "MED296",
-"name": "CRISTIANO DE OLIVEIRA BIZELLI"
-},
-{
-"code": "MED297",
-"name": "ISABEL DE MEDEIROS MAGALHAES DE SA"
-},
-{
-"code": "MED298",
-"name": "MARINA BRUSCHI DOS SANTOS"
-},
-{
-"code": "MED299",
-"name": "HENRIQUE DA CUNHA GALVANI",
-"specialty": "Gastroenterologia Pediátrica"
-},
-{
-"code": "MED330",
-"name": "PAULA THIESEN SCHUELTER"
-},
-{
-"code": "MED333",
-"name": "ANDRE RODRIGUES DA SILVA"
-},
-{
-"code": "MED340",
-"name": "CHRISTINE LANNES SCHOELER"
-},
-{
-"code": "MED341",
-"name": "THIAGO MAMORU SAKAE"
-},
-{
-"code": "MED342",
-"name": "ANDRE SOUZA E SILVA"
-},
-{
-"code": "MED343",
-"name": "DIEGO GOTARDO"
-},
-{
-"code": "MED344",
-"name": "VINICIUS HEURICH"
-},
-{
-"code": "MED345",
-"name": "NADIA MUNHOZ PONCE"
-},
-{
-"code": "MED346",
-"name": "CAROLINA ALCOFORADO DE ABREU"
-},
-{
-"code": "MED347",
-"name": "SARA CHAMORRO PETERSEN"
-},
-{
-"code": "MED348",
-"name": "EDGARD VIANNA ROSSI CLAUSSEN"
-},
-{
-"code": "MED349",
-"name": "LESLEY CATHERINE HARUMI ENOMOTO"
-},
-{
-"code": "MED350",
-"name": "CARLOS ANDRE TONELLI",
-"specialty": "Endocrinologia Pediátrica"
-},
-{
-"code": "MED351",
-"name": "CAROLINE DE MORAES PENNO"
-},
-{
-"code": "MED352",
-"name": "DEBORA MARTINS ALIANO"
-},
-{
-"code": "MED353",
-"name": "JUANA NASPOLINI CORAL"
-},
-{
-"code": "MED354",
-"name": "ADELINO RODRIGO KOHATSU PADILHA"
-},
-{
-"code": "MED355",
-"name": "GIULIA MILANESI BROGNI",
-"specialty": "Gestação de Alto Risco"
-},
-{
-"code": "MED356",
-"name": "ISABEL BIZ"
-},
-{
-"code": "MED357",
-"name": "ISABELLE DAMIAN PRUDENCIO"
-},
-{
-"code": "MED358",
-"name": "CRISTIANNE PACHECO BOHME ALVES"
-},
-{
-"code": "MED359",
-"name": "FLAVIO ANTONIO GIUGNO"
-},
-{
-"code": "MED360",
-"name": "JOELSON CARMONO LEMOS"
-},
-{
-"code": "MED361",
-"name": "JULIANA RODRIGUES DA ROSA"
-},
-{
-"code": "MED362",
-"name": "LUANA CREPALDI DE BRIDA"
-},
-{
-"code": "MED363",
-"name": "VANILLA CITADINI ZANETTE"
-},
-{
-"code": "MED364",
-"name": "CAMILA MARTINS BILESIMO"
-},
-{
-"code": "MED365",
-"name": "GEAN FERNANDES DE SA"
-},
-{
-"code": "MED366",
-"name": "ANNA CAROLINA SPILERE FURLAN"
-},
-{
-"code": "MED367",
-"name": "JOANA BARATA GOMES"
-},
-{
-"code": "MED368",
-"name": "ELAINE ALESSIO DE JESUS"
-},
-{
-"code": "MED369",
-"name": "GRAZIELA GONÇALVES PORTO"
-},
-{
-"code": "MED370",
-"name": "ANITA SILVA BRUNEL ALVES"
-},
-{
-"code": "MED371",
-"name": "LUIZ CARLOS KUMMER JUNIOR"
-},
-{
-"code": "MED372",
-"name": "FABIO RODRIGO BORGES"
-},
-{
-"code": "MED373",
-"name": "GIANCARLO BETTIN SANCHEZ"
-},
-{
-"code": "MED374",
-"name": "ANA PAULA CARDOSO PERTENCE NESI"
-},
-{
-"code": "MED375",
-"name": "CARLOS EDUARDO PASSOS"
-},
-{
-"code": "MED376",
-"name": "SCHAIANE NEOTTI CITADIN"
-},
-{
-"code": "MED377",
-"name": "ALINE BURIGO"
-},
-{
-"code": "MED378",
-"name": "MONIQUE OSELAME POSSAMAI"
-},
-{
-"code": "MED379",
-"name": "MUNIKI FERREIRA MARTINS"
-},
-{
-"code": "MED380",
-"name": "MARIANA VIANA BEZZI BIANCHI"
-},
-{
-"code": "MED381",
-"name": "NADHINE FELTRIN RONSONI",
-"specialty": "Ginecologia"
-},
-{
-"code": "MED382",
-"name": "LAYS FIGUEREDO"
-},
-{
-"code": "MED383",
-"name": "PATRICIA NUNES ALANO"
-},
-{
-"code": "MED384",
-"name": "GABRIELA EFFTING CREMA"
-},
-{
-"code": "MED385",
-"name": "RAFAEL DE SA FERNANDES"
-},
-{
-"code": "MED386",
-"name": "CARLOS ALBERTO SIMOES TREMOCO FILHO"
-},
-{
-"code": "MED387",
-"name": "BRUNO ROSSO BIANCHI"
-},
-{
-"code": "MED388",
-"name": "LUCAS CARGNIN HENRIQUE"
-},
-{
-"code": "MED389",
-"name": "ELEONOR JOSE SOLIGO JUNIOR"
-},
-{
-"code": "MED390",
-"name": "MARCELO ROMANCINI DALEFFE"
-},
-{
-"code": "MED391",
-"name": "JAIR PAULO SCHUH",
-"specialty": "Ortopedia Pediátrica"
-},
-{
-"code": "MED392",
-"name": "ALESSANDRO YOSHIZATO",
-"specialty": "Ortopedia Pediátrica"
-},
-{
-"code": "MED393",
-"name": "ROBSON LUIZ DOS SANTOS",
-"specialty": "Ortopedia Pediátrica"
-},
-{
-"code": "MED394",
-"name": "GENESIO HENRIQUE DE CAMPOS JUNIOR"
-},
-{
-"code": "MED395",
-"name": "MARIANE MARINHO DE SOUZA"
-},
-{
-"code": "MED396",
-"name": "THATYANE CARLA DA SILVA"
-},
-{
-"code": "MED397",
-"name": "PAULINE CUREAU MIECHUANSKI"
-},
-{
-"code": "MED398",
-"name": "CHARLANE ALESSIO DE JESUS"
-},
-{
-"code": "MED399",
-"name": "DILVANIA NICOLETTI"
-},
-{
-"code": "MED400",
-"name": "ELOA SACHET NUERNBERG"
-},
-{
-"code": "MED401",
-"name": "RICHARD COAN CARDOSO"
-},
-{
-"code": "MED402",
-"name": "MARIANA MAGALHAES"
-},
-{
-"code": "MED403",
-"name": "IANE MARIA TEIXEIRA DAGOSTIN"
-},
-{
-"code": "MED404",
-"name": "THAMYRIS FINGER TRAPANI"
-},
-{
-"code": "MED405",
-"name": "ANDRESSA CAROLINE CARDOSO DE CAMPOS"
-},
-{
-"code": "MED406",
-"name": "DANYELLA ARAUJO"
-},
-{
-"code": "MED407",
-"name": "PAULO FERREIRA JUNIOR",
-"specialty": "Gestação de Alto Risco"
-},
-{
-"code": "MED408",
-"name": "MARIA EUGENIA SAMPAIO PERITO"
-},
-{
-"code": "MED409",
-"name": "FABIO AUGUSTO MORAES WIECZOREK",
-"specialty": "Cirurgia Ginecológica"
-},
-{
-"code": "MED410",
-"name": "KARINA ALESSIO DE JESUS",
-"specialty": "Infertilidade"
-},
-{
-"code": "MED411",
-"name": "ANNE ROSSO BIANCHI"
-},
-{
-"code": "MED412",
-"name": "MARIDIA FERRARI ESTEVAM"
-},
-{
-"code": "MED413",
-"name": "ISABELA NOLLA CONCER"
-},
-{
-"code": "MED414",
-"name": "MARIA EDUARDA SCHERER COSTI"
-},
-{
-"code": "MED415",
-"name": "LIGIA MARIA HADEMANN ESSER"
-},
-{
-"code": "MED416",
-"name": "TALINE REGINA DOS SANTOS MARQUES"
-},
-{
-"code": "MED417",
-"name": "LUIZ FERNANDO FARIAS TAVARES"
-},
-{
-"code": "MED418",
-"name": "MARCIA FAYAD KALED"
-},
-{
-"code": "MED419",
-"name": "JULIANA DAL PONTE BITENCOURT"
-},
-{
-"code": "MED420",
-"name": "ALINE CARVALHO SIMOES"
-},
-{
-"code": "MED421",
-"name": "EDUARDO ADRATT"
-},
-{
-"code": "MED422",
-"name": "GILEADE FERNANDES DE SA"
-},
-{
-"code": "MED423",
-"name": "ANA CLAUDIA BORTOLOTTO MILANESI"
-},
-{
-"code": "MED424",
-"name": "AILTON GOMES DE MELO"
-},
-{
-"code": "MED425",
-"name": "BRUNA SILVA CESCONETTO"
-},
-{
-"code": "MED426",
-"name": "TUANY MARTINS NUNES"
-},
-{
-"code": "MED427",
-"name": "DEBORA MARIA CARDOSO CROCETTA"
-},
-{
-"code": "MED428",
-"name": "PAULA DE SOUZA GOMES"
-},
-{
-"code": "MED429",
-"name": "RICARDO SOUZA MATIAS"
-},
-{
-"code": "MED430",
-"name": "BARBARA APARECIDA FERNANDES"
-},
-{
-"code": "MED431",
-"name": "CLAUDIA DUARTE DOS SANTOS"
-},
-{
-"code": "MED432",
-"name": "MERIENE VIQUETTI DE SOUZA"
-},
-{
-"code": "MED433",
-"name": "ULLISSIS PIMENTA E SILVA VICENTINI"
-},
-{
-"code": "MED434",
-"name": "KAREN FAVARIN"
-},
-{
-"code": "MED435",
-"name": "VERA LUCIA MEISTER"
-},
-{
-"code": "MED436",
-"name": "JOSE ANTONIO SOUZA"
-},
-{
-"code": "MED437",
-"name": "GRAZIELA NASARIO DA ROSA"
-},
-{
-"code": "MED438",
-"name": "MARIA LETICIA SIMON"
-},
-{
-"code": "MED439",
-"name": "FERNANDO ZOMER VOLPATO"
-},
-{
-"code": "MED440",
-"name": "LEO GRACIOLLI FRANCO"
-},
-{
-"code": "MED441",
-"name": "VOLNEI SILVA"
-},
-{
-"code": "MED442",
-"name": "MARCIO LUIZ ANTONINI MELLO"
-},
-{
-"code": "MED443",
-"name": "MAITE FIEGENBAUM"
-},
-{
-"code": "MED444",
-"name": "CATARINE ANDREA ZARDO"
-},
-{
-"code": "MED445",
-"name": "LISANE BEATRIZ GIACOMOSSI"
-},
-{
-"code": "MED446",
-"name": "DULCE DESIRE BATISTA DE ALBUQUERQUE"
-},
-{
-"code": "MED447",
-"name": "MONICA NAYARA FRANCHETTI"
-},
-{
-"code": "MED448",
-"name": "HELOISA SILVA ABEL"
-},
-{
-"code": "MED449",
-"name": "CLAUDIA GUIMARAES DE OLIVEIRA PORTELA"
-},
-{
-"code": "MED450",
-"name": "ALEXANDRE DE SOUZA COELHO DE LIMA"
-},
-{
-"code": "MED451",
-"name": "FERNANDA NASPOLINI BASTOS"
-},
-{
-"code": "MED452",
-"name": "PAULA TRAJANO DA ROSA"
-},
-{
-"code": "MED453",
-"name": "CRISTINA MARTINS PEDROSA RAVAIANE"
-},
-{
-"code": "MED454",
-"name": "WILLIAN DE CARVALHO ESMERALDINO"
-},
-{
-"code": "MED455",
-"name": "LUCIANO PEREIRA BENDER",
-"specialty": "Cardiologia Pediátrica"
-},
-{
-"code": "MED456",
-"name": "GABRIELA GROLLI BASSOTTO"
-},
-{
-"code": "MED457",
-"name": "LUCIANA SATIE BATISTA"
-},
-{
-"code": "MED458",
-"name": "FLAVIA POLICARPO SOARES"
-},
-{
-"code": "MED459",
-"name": "LAISSA MARA RODRIGUES TEIXEIRA"
-},
-{
-"code": "MED460",
-"name": "VIVIANE GONÇALVES MADEIRA"
-},
-{
-"code": "MED461",
-"name": "ISRAEL BARCELOS DE MELO"
-},
-{
-"code": "MED462",
-"name": "VITOR MACHADO BENINCA"
-},
-{
-"code": "MED463",
-"name": "VINICIUS FIGUEIREDO SOARES"
-},
-{
-"code": "MED464",
-"name": "JOANA CECILIA WARREN CAVALCANTI ORTH"
-},
-{
-"code": "MED465",
-"name": "GABRIELA RONCHI PITTIGLIANI"
-},
-{
-"code": "MED466",
-"name": "PAULA MENTA GARRIDO"
-},
-{
-"code": "MED467",
-"name": "PAOLA VIEIRA MANTA"
-},
-{
-"code": "MED468",
-"name": "CELESTE AIDA BRITTO MANSUR"
-},
-{
-"code": "MED469",
-"name": "ANDRE LUIZ DA SILVA MANGANELLI"
-},
-{
-"code": "MED470",
-"name": "PAOLA FIALHO PERONDI"
-},
-{
-"code": "MED471",
-"name": "KALEBI SLAVIERO DARONCHI"
-},
-{
-"code": "MED472",
-"name": "MARCELA SPILLERE ROVARIS"
-},
-{
-"code": "MED473",
-"name": "CAROLINA BARUEL ALCANTARA"
-},
-{
-"code": "MED474",
-"name": "RENATA DA SILVA LIMA"
-},
-{
-"code": "MED475",
-"name": "ANDRE NESI"
-},
-{
-"code": "MED476",
-"name": "LUIZ CEZAR TIBERIO"
-},
-{
-"code": "MED477",
-"name": "LEON IOTTI NETO"
-},
-{
-"code": "MED478",
-"name": "SUELY SATIYE TOMA"
-},
-{
-"code": "MED479",
-"name": "JACI MARA PEREIRA MARQUES"
-},
-{
-"code": "MED480",
-"name": "PATRICIA BACKES ARRUDA"
-},
-{
-"code": "MED481",
-"name": "LAILA ABDALA DE ARAUJO CHAVES"
-},
-{
-"code": "MED482",
-"name": "ADRIANE ZANIOLO"
-},
-{
-"code": "MED483",
-"name": "LUCIANA DA COSTA SANTOS PRADO"
-},
-{
-"code": "MED484",
-"name": "ANIE SAVI SERAFIM"
-},
-{
-"code": "MED485",
-"name": "MARCOS GUILHERME HORTA MASCI"
-},
-{
-"code": "MED486",
-"name": "GABRIEL CIPRIANO VIDAL HELUANY"
-},
-{
-"code": "MED487",
-"name": "ALEXANDRE RAMPINELLI MANGILI"
-},
-{
-"code": "MED489",
-"name": "CONRADO MENEGOLA"
-},
-{
-"code": "MED490",
-"name": "JOAO PAULO SVAISSER CARNEIRO"
-},
-{
-"code": "MED491",
-"name": "SASKIA REGINA FREITAS COPPENS"
-},
-{
-"code": "MED492",
-"name": "ANTONIO AUGUSTO RIANI DE SOUZA"
-},
-{
-"code": "MED495",
-"name": "BRUNA CORREA DE ARAUJO CASTRO"
-},
-{
-"code": "MED496",
-"name": "PEDRO HENRIQUE BARP REUS"
-},
-{
-"code": "MED499",
-"name": "JAQUELINE FORESTIERI BOLONHEZ"
-},
-{
-"code": "MED500",
-"name": "MARIAH SALVAN"
-},
-{
-"code": "MED501",
-"name": "GABRIEL MARTINELLO MELLER"
-},
-{
-"code": "MED502",
-"name": "CAROLINE MARGARETH PELISSIER"
-},
-{
-"code": "MED503",
-"name": "MANOELA BAU DE OLIVEIRA"
-},
-{
-"code": "MED504",
-"name": "ISABELA PIAZZA ZANETTE"
-},
-{
-"code": "MED505",
-"name": "NATALIA PASETO PILATI"
-},
-{
-"code": "MED506",
-"name": "GABRIEL DE LELLIS NETO"
-},
-{
-"code": "MED507",
-"name": "CAROLINE LOZ DA ROSA"
-},
-{
-"code": "MED509",
-"name": "LARISSA DE SOUZA MAZZUCO"
-},
-{
-"code": "MED510",
-"name": "RAFAEL STANGE DA SILVA VALLE"
-},
-{
-"code": "MED511",
-"name": "GUILHERME SLIVA"
-},
-{
-"code": "MED512",
-"name": "SILVIA DE JESUS NICOLADELLI"
-},
-{
-"code": "MED513",
-"name": "GABRIEL DE FAVERI SACCON"
-},
-{
-"code": "MED514",
-"name": "JULIA PANATO DA ROSA"
-},
-{
-"code": "MED515",
-"name": "THEREZA JENNY GOMES TEIXEIRA"
-},
-{
-"code": "MED516",
-"name": "ANNA JÚLIA PIMENTEL E SILVA"
-},
-{
-"code": "MED517",
-"name": "LENITA DUART DA SILVA DE CAMPOS"
-},
-{
-"code": "MED518",
-"name": "ANDRE MANNRICH ROVEDA"
-},
-{
-"code": "MED520",
-"name": "BIANCA KELEM MAZETTO"
-},
-{
-"code": "MED521",
-"name": "BEATRIZ BRIGIDO PEREIRA",
-"specialty": "Gestação de Alto Risco"
-},
-{
-"code": "MED522",
-"name": "MARILIA BARBIERI"
-},
-{
-"code": "MED523",
-"name": "GABRIELA THIESEN SCHUELTER"
-},
-{
-"code": "MED524",
-"name": "AMANDA FLORIANO ROVARIS"
-},
-{
-"code": "MED530",
-"name": "MARIANA AREIAS DA SILVA DE FREITAS CARVALHO"
-},
-{
-"code": "MED531",
-"name": "ANA PAULA DOMINGUES CAMPOS"
-},
-{
-"code": "MED532",
-"name": "CAMILA VIEIRA FERNANDES"
-},
-{
-"code": "MED533",
-"name": "BRUNA DE AGUIAR ARAUJO"
-},
-{
-"code": "MED534",
-"name": "STEFANI ZILLI MAFALDA",
-"specialty": "Gestação de Alto Risco"
-},
-{
-"code": "MED535",
-"name": "ELIZANDRA ROSS MARTINS"
-},
-{
-"code": "MED536",
-"name": "VILSON RAMON BONETTI",
-"specialty": "Dermatologia Pediátrica"
-},
-{
-"code": "MED537",
-"name": "CAMILA SOUZA VILELA",
-"specialty": "Oftalmologia Pediátrica"
-},
-{
-"code": "MED538",
-"name": "NATHALY MACHIAVELLI GALEAZZI"
-},
-{
-"code": "MED539",
-"name": "MELISSA GAMA DE MESQUITA"
-},
-{
-"code": "MED540",
-"name": "SANDY BENEDET TAUTZ"
-},
-{
-"code": "MED541",
-"name": "NICOLE FIGUEREDO"
-},
-{
-"code": "MED560",
-"name": "FELIPE GUSTAVO CARCAMAN VALADARES"
-},
-{
-"code": "MED561",
-"name": "BEATRIZ GEREMIAS DOS SANTOS"
-},
-{
-"code": "MED562",
-"name": "GUSTAVO BELTRAME"
-},
-{
-"code": "MED563",
-"name": "DANIEL MAZZULA DE MELLO FERNANDES"
-},
-{
-"code": "MED564",
-"name": "DANIELLA CARDOSO CROCETTA"
-},
-{
-"code": "MED565",
-"name": "ISABELA ALVES TEIXEIRA"
-},
-{
-"code": "MED566",
-"name": "BEATRIZ BERNARDO PEREIRA"
-},
-{
-"code": "MED567",
-"name": "LUANA ALBERTON MEDEIROS"
-},
-{
-"code": "MED568",
-"name": "ANA PAULA CUCKER SORATTO"
-},
-{
-"code": "MED569",
-"name": "GABRIELLI DALMÉDICO"
-},
-{
-"code": "MED570",
-"name": "JÚLIA TURRA REICHERT"
-},
-{
-"code": "MED571",
-"name": "TAMARA SIMÃO BOSSE"
-},
-{
-"code": "MED572",
-"name": "AUGUSTO FELIPE DOS SANTOS DE BITENCOURT"
-},
-{
-"code": "MED573",
-"name": "GIOVANA MAFIOLETTI SORATTO"
-},
-{
-"code": "MED574",
-"name": "MARIA LAURA ZANETTE NASPOLINI"
-},
-{
-"code": "MED575",
-"name": "LAURA CEOLIN DE JESUS"
-},
-{
-"code": "MED576",
-"name": "LUANA GHISI UBIALI"
-},
-{
-"code": "MED578",
-"name": "BRUNA MARCOS SORATTO"
-},
-{
-"code": "MED579",
-"name": "LETÍCIA BEZ BATTI"
-},
-{
-"code": "MED580",
-"name": "FERNANDA DE SOUZA LIMA ALVES"
-},
-{
-"code": "MED581",
-"name": "RODRIGO DE SOUSA ISOPPO"
-},
-{
-"code": "MED582",
-"name": "JESSICA ZILLI NUNES"
-},
-{
-"code": "MED583",
-"name": "ANA LAURA SPILLERE DAJORI"
-},
-{
-"code": "MED584",
-"name": "LIVIA SIMONI MACCARI"
-},
-{
-"code": "MED585",
-"name": "EMILLI FRAGA FERREIRA"
-},
-{
-"code": "MED586",
-"name": "ANA PAULA AFFONSO GOMES",
-"specialty": "Mastologia"
-},
-{
-"code": "MED587",
-"name": "DAYANE DE PAULA SOUSA"
-},
-{
-"code": "MED588",
-"name": "ALIK ANTUNES BESERRA"
-},
-{
-"code": "MED590",
-"name": "RAFAELA AQUINO DE ALMEIDA BENITES"
-},
-{
-"code": "MED600",
-"name": "ANNE ROSSO EVANGELISTA",
-"specialty": "Otorrinolaringologia Pediátrica"
-},
-{
-"code": "MED601",
-"name": "MANOELLA CAETANO DOS SANTOS"
-},
-{
-"code": "MED603",
-"name": "MARIA GIOVANNA MANENTI"
-},
-{
-"code": "MED604",
-"name": "HENRIQUE CARVALHO",
-"specialty": "Otorrinolaringologia Pediátrica"
-},
-{
-"code": "MED607",
-"name": "GIOVANNA DE BONA ZAVARISE"
-},
-{
-"code": "MED608",
-"name": "MICHELI CRISTIANE HINTZ"
-},
-{
-"code": "MED609",
-"name": "MARILIA CIZESKI SALVAN"
-},
-{
-"code": "MED610",
-"name": "PAMELA SOARES DE MELO"
-},
-{
-"code": "MED611",
-"name": "LETÍCIA SEHNEM BORTOLOTTO"
-},
-{
-"code": "MED612",
-"name": "CINTIA SILVESTRE"
-},
-{
-"code": "MED613",
-"name": "JHONATAN DE CAMPOS ROSA"
-},
-{
-"code": "MED614",
-"name": "MANOELLA CAETANO"
-},
-{
-"code": "MED615",
-"name": "LARA RONCONI"
-},
-{
-"code": "MED616",
-"name": "WENDELL DELLA GIUSTINA"
-},
-{
-"code": "MED617",
-"name": "CARLOS ALBERTO DE CARVALHO"
-},
-{
-"code": "MED621",
-"name": "CAMILE BEATRIZ FERNANDES DA SILVA"
-},
-{
-"code": "MED630",
-"name": "DANIELLE DA ROCHA CARRARO RIBEIRO LAURENTINO"
-},
-{
-"code": "MED632",
-"name": "MANOEL ROBSON DAMIN MONTEIRO"
-},
-{
-"code": "MED633",
-"name": "NICOLI SANTANA DA SILVA"
-},
-{
-"code": "MED634",
-"name": "VANESSA KNIHS DE MENEZES",
-"specialty": "Neonatologia; Pediatria Geral"
-},
-{
-"code": "MED642",
-"name": "BEATRIZ BATISTA MATOS"
-},
-{
-"code": "MED643",
-"name": "RAFAELA TEZZA MATIOLA"
-},
-{
-"code": "MED644",
-"name": "MARIA LUIZA CESA"
-},
-{
-"code": "MED645",
-"name": "ADRIANA MARIA DE MEDEIROS ANTUNES DA SILVA"
-},
-{
-"code": "MED646",
-"name": "JEAN RICARDO SILVESTRE"
-},
-{
-"code": "MED647",
-"name": "MARIA HELOÍSA PERDONÁ DA SILVEIRA"
-},
-{
-"code": "MED648",
-"name": "FERNANDA DAMINELLI EUGÊNIO"
-},
-{
-"code": "MED649",
-"name": "BRUNO RONCHI MELLO"
-},
-{
-"code": "MED650",
-"name": "MARINA DUARTE PAES"
-},
-{
-"code": "MED651",
-"name": "MARIA VITORIA CANDIOTTO BURIGO"
-},
-{
-"code": "MED653",
-"name": "LUIZ ANTONIO DE LUCCA"
-},
-{
-"code": "MED658",
-"name": "MADAY MILIAN GONZALEZ"
-},
-{
-"code": "MED659",
-"name": "MAYRA LATINI VIEIRA"
-},
-{
-"code": "MED660",
-"name": "DANIELA DADALT GUEDES"
-},
-{
-"code": "MED661",
-"name": "FERNANDA VIEIRA DE SOUZA"
-},
-{
-"code": "MED662",
-"name": "NEHAD JUSUF NIMER"
-},
-{
-"code": "MED663",
-"name": "ELIEL MACHADO ROVARIS"
-},
-{
-"code": "MED664",
-"name": "STEPHANIE DA CAZ XAVIER BURGARDT"
-},
-{
-"code": "MED665",
-"name": "TAMIRES SILVA ALVES",
-"specialty": "Genética"
-},
-{
-"code": "MED666",
-"name": "SUANI CRISTINA DE SOUSA"
-},
-{
-"code": "MED667",
-"name": "FABRISSIO PORTELINHA GRAFFUNDER",
-"specialty": "Oftalmologia Pediátrica"
-},
-{
-"code": "MED668",
-"name": "HENRIQUE GONCALVES DUCHINI"
-},
-{
-"code": "MED669",
-"name": "BEATRIZ MIGUEL DE AGUIAR DA SILVA"
-},
-{
-"code": "MED670",
-"name": "IVAN NERES DA SILVA JÚNIOR"
-},
-{
-"code": "MED671",
-"name": "FLAVIA GHELLER SCHAIDHAUER"
-},
-{
-"code": "MED990",
-"name": "FARMACIA CLINICA TESTE"
-},
-{
-"code": "MED997",
-"name": "MEDICO TESTE II"
-},
-{
-"code": "MED998",
-"name": "MEDICO TESTE I"
-},
-{
-"code": "MED999",
-"name": "FARMACIA CLINICA"
-},
-{
-"code": "RES001",
-"name": "RESIDENTE MARCELA ASSUNCAO CAMPOS"
-},
-{
-"code": "RES002",
-"name": "VITORIA MARMITT DE CAMPOS"
-},
-{
-"code": "RES003",
-"name": "RESIDENTE EMANUEL CARDOSO MAFRA"
-},
-{
-"code": "RES004",
-"name": "RESIDENTE MARINA RIBAS KNOTH"
-},
-{
-"code": "RES005",
-"name": "RESIDENTE ISADORA FACHIM"
-},
-{
-"code": "RES006",
-"name": "VIVIANE MEDEIROS SILVEIRA"
-},
-{
-"code": "RES007",
-"name": "RESIDENTE IOLANDA DE SOUZA HONORATO"
-},
-{
-"code": "RES008",
-"name": "RESIDENTE ARLENA FERNANDES PAIM"
-},
-{
-"code": "RES009",
-"name": "RESIDENTE SUZANA KNIPHOFF DE OLIVEIRA"
-},
-{
-"code": "RES010",
-"name": "RESIDENTE LUCAS GADENZ"
-},
-{
-"code": "RES011",
-"name": "JESSICA TELLI PALMA"
-},
-{
-"code": "RES012",
-"name": "BRUNA BIANCHIN"
-},
-{
-"code": "RES013",
-"name": "MATEUS LEAL DAITX"
-},
-{
-"code": "RES014",
-"name": "RESIDENTE BRUNO PINHO ARAUJO"
-},
-{
-"code": "RES015",
-"name": "THIAGO BEZERRA G. C. DA SILVA"
-},
-{
-"code": "RES016",
-"name": "RESIDENTE BEATRIZ BRIGIDO PEREIRA"
-},
-{
-"code": "RES017",
-"name": "RESIDENTE THIAGO MEDEIROS DOS SANTOS"
-},
-{
-"code": "RES018",
-"name": "RESIDENTE BRUNA UGIONI GODOY"
-},
-{
-"code": "RES019",
-"name": "RESIDENTE THUANY SILVESTRI GARCIA"
-},
-{
-"code": "RES020",
-"name": "RESIDENTE MONICA BIZ"
-},
-{
-"code": "RES021",
-"name": "RESIDENTE MARIA HELENA ALVES"
-},
-{
-"code": "RES022",
-"name": "RESIDENTE ROGERIO MIGUEL KERBER JUNIOR"
-},
-{
-"code": "RES023",
-"name": "RESIDENTE GABRIEL DE FAVERI SACCON"
-},
-{
-"code": "RES026",
-"name": "YASMINE BARCELLOS"
-},
-{
-"code": "RES24",
-"name": "RESIDENTE SILVIA DE JESUS NICOLADELLI"
-},
-{
-"code": "RES25",
-"name": "RESIDENTE ALEXIA UGIONI GODOY"
-},
-{
-"code": "MDE605",
-"name": "AMANDA BOM NUERNBERG"
-},
-{
-"code": "MEFD0666",
-"name": "FERNANDO HENRIQUE COLONETTE WESSLER"
-},
-{
-"code": "MULTI604",
-"name": "BEATRIZ CAETANO COSTA",
-"specialty": "Fisioterapia",
-"crm": "",
-"rqe": ""
-},
-{
-"code": "MULTI605",
-"name": "DIELE ANTUNES",
-"specialty": "Nutrição",
-"crm": "",
-"rqe": ""
-},
-{
-"code": "MULTI606",
-"name": "DANIELA GAMA ARNS",
-"specialty": "Psicologia",
-"crm": "",
-"rqe": ""
-},
-{
-"code": "MULTI607",
-"name": "AMANDA DOS SANTOS DE SOUZA",
-"specialty": "Psicologia",
-"crm": "",
-"rqe": ""
-},
-{
-"code": "MULTI608",
-"name": "ROSE CRISPIM SOARES",
-"specialty": "Serviço Social",
-"crm": "",
-"rqe": ""
-},
-{
-"code": "MULTI609",
-"name": "FERNANDA WELINTON",
-"specialty": "Serviço Social",
-"crm": "",
-"rqe": ""
-}
+  {
+    "code": "MED001",
+    "name": "RAFAELA BAESSO REDDIG",
+    "specialty": "Dermatologia",
+    "crm": "CRM/SC 24686",
+    "rqe": "22302"
+  },
+  {
+    "code": "MED002",
+    "name": "LARISSA CHAIANE ORTH",
+    "specialty": "Clínica Médica",
+    "crm": "CRM/RS 48145",
+    "rqe": "41148"
+  },
+  {
+    "code": "MED003",
+    "name": "MARIANA MANTOVANI MEIRA SANTOS",
+    "specialty": "Cirurgia Geral",
+    "crm": "CRM/PR 44147",
+    "rqe": "36971"
+  },
+  {
+    "code": "MED004",
+    "name": "THAIS DE OLIVEIRA SOUSA",
+    "specialty": "Pediatria; Gastroenterologia Pediátrica",
+    "crm": "CRM/SC 22381",
+    "rqe": "18942; 17116"
+  },
+  {
+    "code": "MED005",
+    "name": "RICARDO GRIGOLETTO DE BRITO",
+    "specialty": "Ginecologia e Obstetrícia",
+    "crm": "CRM/PR 52472",
+    "rqe": "32557"
+  },
+  {
+    "code": "MED007",
+    "name": "FABIANE ROSA E SILVA",
+    "specialty": "Pediatria",
+    "crm": "CRM/SC 28454",
+    "rqe": "23497"
+  },
+  {
+    "code": "MED009",
+    "name": "MONIQUE CONSENSO SAVIATO",
+    "specialty": "Pediatria",
+    "crm": "CRM/SC 19953",
+    "rqe": "15593",
+    "cns": "702003816465286",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED014",
+    "name": "ELOISA DE LUCA CASAGRANDE",
+    "specialty": "Pediatria",
+    "crm": "CRM/SC 20685",
+    "rqe": "14950"
+  },
+  {
+    "code": "MED026",
+    "name": "GUSTAVO DE OLIVEIRA BERNARDO",
+    "specialty": "Pediatria; Pneumologia Pediátrica",
+    "crm": "CRM/SC 20686",
+    "rqe": "16783; 17295",
+    "cns": "702402560431022",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED031",
+    "name": "ANA PAULA TROMBIN SOARES",
+    "specialty": "Pediatria",
+    "crm": "CRM/SC 19707",
+    "rqe": "14610"
+  },
+  {
+    "code": "MED073",
+    "name": "NATHALIA DE OLIVEIRA SOUZA LOCH",
+    "specialty": "Pediatria",
+    "crm": "CRM/SC 18435",
+    "rqe": "15938"
+  },
+  {
+    "code": "MED105",
+    "name": "MARINA MARTINS BIFF",
+    "specialty": "Pediatria",
+    "crm": "CRM/SC 26094",
+    "rqe": "23381",
+    "cns": "708608038668183",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED116",
+    "name": "JULIA KELLERS DE SOUZA",
+    "specialty": "Pediatria",
+    "crm": "CRM/SC 26067",
+    "rqe": "21891"
+  },
+  {
+    "code": "MED006",
+    "name": "ANA CAROLINA DE OLIVEIRA PRESADO"
+  },
+  {
+    "code": "MED008",
+    "name": "GISLEINE BITTENCOURT SCOTTI"
+  },
+  {
+    "code": "MED010",
+    "name": "MONICA BIZ"
+  },
+  {
+    "code": "MED011",
+    "name": "FREDERICO GUILHERME W. C. DE AZEREDO"
+  },
+  {
+    "code": "MED012",
+    "name": "TIAGO BORGERT BRESCIANI"
+  },
+  {
+    "code": "MED013",
+    "name": "LUCAS HENRIQUE ROSSATO"
+  },
+  {
+    "code": "MED015",
+    "name": "BRUNO MASSIH DE OLIVEIRA"
+  },
+  {
+    "code": "MED016",
+    "name": "ISADORA BOEING"
+  },
+  {
+    "code": "MED017",
+    "name": "FRANCIEL WAWRZYNIAK"
+  },
+  {
+    "code": "MED018",
+    "name": "SHAYRLENE QUAREZEMIN DE MATOS"
+  },
+  {
+    "code": "MED019",
+    "name": "TANISE MACEDO BOTELHO"
+  },
+  {
+    "code": "MED020",
+    "name": "DANIELE PAOLA DA SILVA WIZBICKI"
+  },
+  {
+    "code": "MED021",
+    "name": "MARIA CAROLINE SERAPHIM MELLO"
+  },
+  {
+    "code": "MED022",
+    "name": "NATHALIA BECKER GERALDI"
+  },
+  {
+    "code": "MED023",
+    "name": "OSVALDO GARCEZ DUTRA JUNIOR"
+  },
+  {
+    "code": "MED024",
+    "name": "LETICIA SOARES BOING"
+  },
+  {
+    "code": "MED025",
+    "name": "HELCIO FELIPPE"
+  },
+  {
+    "code": "MED027",
+    "name": "LEANDRO ARIELDEI RICARDI"
+  },
+  {
+    "code": "MED028",
+    "name": "BRUNA ROMAGNA PETERLE"
+  },
+  {
+    "code": "MED029",
+    "name": "SERGIO COSTA COELHO LEAL"
+  },
+  {
+    "code": "MED030",
+    "name": "RODRIGO PACHECO SANTOS DA SILVA"
+  },
+  {
+    "code": "MED032",
+    "name": "FERNANDA DORS TIGRE DA SILVA"
+  },
+  {
+    "code": "MED033",
+    "name": "STEFANI ZILLI MAFALDA"
+  },
+  {
+    "code": "MED034",
+    "name": "VINICIUS CAIRES DELGADO"
+  },
+  {
+    "code": "MED035",
+    "name": "LAURA CARMINATI CIMOLIN"
+  },
+  {
+    "code": "MED036",
+    "name": "MARIA FERNANDA SOUZA DE LUCA"
+  },
+  {
+    "code": "MED037",
+    "name": "IGOR PAULO DA SILVA ABREU"
+  },
+  {
+    "code": "MED038",
+    "name": "TASSIANA DE BOIT MILANEZ"
+  },
+  {
+    "code": "MED039",
+    "name": "RONALD BENEDET BARROSO"
+  },
+  {
+    "code": "MED040",
+    "name": "TAYSI ALIXANDRINO BEZA"
+  },
+  {
+    "code": "MED041",
+    "name": "ANA LUIZA PEREIRA CORDOVA",
+    "crm": "CRM/SC 28138",
+    "specialty": "Clínica Médica, Ginecologia e Obstetrícia",
+    "cns": "708702154956290",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED042",
+    "name": "ANDRESSA DE MARCO MACHADO",
+    "crm": "CRM/SC 23932",
+    "specialty": "Pediatria",
+    "cns": "700001639865807",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED043",
+    "name": "EDUARDO BORGES DE MEDEIROS"
+  },
+  {
+    "code": "MED044",
+    "name": "MARICELE ALMEIDA DA SILVA"
+  },
+  {
+    "code": "MED045",
+    "name": "PABLO ROCHA"
+  },
+  {
+    "code": "MED046",
+    "name": "HELIANA MARCIA CABRAL TAVARES DE LIMA"
+  },
+  {
+    "code": "MED047",
+    "name": "MAURICIO CESAR KAMINSKI"
+  },
+  {
+    "code": "MED048",
+    "name": "THIAGO SERAFIM CESA",
+    "specialty": "Bucomaxilofacial"
+  },
+  {
+    "code": "MED049",
+    "name": "CAMILA COAN DA SOLLER",
+    "crm": "CRM/SC 20668",
+    "specialty": "Pediatria",
+    "cns": "700805947061985",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED050",
+    "name": "LUIZ CARLOS CUSTODIO"
+  },
+  {
+    "code": "MED051",
+    "name": "FERNANDA SAVI DAMIANI"
+  },
+  {
+    "code": "MED052",
+    "name": "KATRINE CITTADIN BARDINI"
+  },
+  {
+    "code": "MED053",
+    "name": "BRUNA UGIONI GODOY",
+    "crm": "CRM/SC 22560",
+    "specialty": "Pediatria",
+    "cns": "700500358220157",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED054",
+    "name": "LEONARDO RIOS SANTANA"
+  },
+  {
+    "code": "MED055",
+    "name": "ERIKA LOPES RUY"
+  },
+  {
+    "code": "MED056",
+    "name": "LANNES LEAL CUNHA"
+  },
+  {
+    "code": "MED057",
+    "name": "GLAUBER CASSELLI BEZERRA SILVA"
+  },
+  {
+    "code": "MED058",
+    "name": "TAMIRES DE SOUZA GARCIA"
+  },
+  {
+    "code": "MED059",
+    "name": "LAURA FOLCHINI FELIPPE"
+  },
+  {
+    "code": "MED060",
+    "name": "PAMELA GOMES"
+  },
+  {
+    "code": "MED061",
+    "name": "MICHELLE KRAS ALVES MILETO"
+  },
+  {
+    "code": "MED062",
+    "name": "MATHEUS CURCIO LOCATELLI"
+  },
+  {
+    "code": "MED063",
+    "name": "PATRICIA ANCELMO MARTINS"
+  },
+  {
+    "code": "MED0631",
+    "name": "JULIA RONCHI",
+    "crm": "CRM/SC 22379",
+    "specialty": "Clínica Médica, Administração",
+    "cns": "704205299721981",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED0634",
+    "name": "ANDREIA RODRIGUES LUZ DOS SANTOS"
+  },
+  {
+    "code": "MED0635",
+    "name": "LUIGI AURELIO SARTOR"
+  },
+  {
+    "code": "MED064",
+    "name": "CLEO GAMA PINHEIRO"
+  },
+  {
+    "code": "MED0641",
+    "name": "LOURDES MARIA ROZENDO NUNES MENDES",
+    "crm": "CRM/SC 44028",
+    "specialty": "Clínica Médica",
+    "cns": "703003832296173",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED065",
+    "name": "CINTHIA REUS COELHO"
+  },
+  {
+    "code": "MED066",
+    "name": "GUSTAVO ZOMER JUNG"
+  },
+  {
+    "code": "MED0667",
+    "name": "ISABELA CORRÊA DE OLIVEIRA",
+    "crm": "CRM/SC 44073",
+    "specialty": "Clínica Médica",
+    "cns": "700409907094847",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED0668",
+    "name": "LAUREN MARFIL MARINS",
+    "crm": "CRM/SC 43915",
+    "specialty": "Clínica Médica, Pediatria",
+    "cns": "704806584313646",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED067",
+    "name": "ELBERT RICHARS JONES OLIVEIRA"
+  },
+  {
+    "code": "MED068",
+    "name": "EDUARDO ALI DOMINGUEZ",
+    "crm": "CRM/SC 21788",
+    "specialty": "Clínica Médica, Medicina de Emergência",
+    "cns": "704009821701067",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED069",
+    "name": "KAYANE FOLCHINI CESCA"
+  },
+  {
+    "code": "MED070",
+    "name": "GUSTAVO DALMORO"
+  },
+  {
+    "code": "MED071",
+    "name": "ANDRE CAZARRE TAVARES"
+  },
+  {
+    "code": "MED072",
+    "name": "MANUELA JUSTI DE FARIAS"
+  },
+  {
+    "code": "MED074",
+    "name": "ERIKA HILBERT SANDRINI PADAO"
+  },
+  {
+    "code": "MED075",
+    "name": "VINICIUS RENE GIOMBELLI"
+  },
+  {
+    "code": "MED076",
+    "name": "MARCELO CARDOSO"
+  },
+  {
+    "code": "MED077",
+    "name": "CAUE GEORGE AGARDI"
+  },
+  {
+    "code": "MED078",
+    "name": "FERNANDA MARQUES FERNANDES LIMA"
+  },
+  {
+    "code": "MED079",
+    "name": "UBIRATAN PINTO GONCALVES"
+  },
+  {
+    "code": "MED080",
+    "name": "EMERSON APARECIDO CRUZ"
+  },
+  {
+    "code": "MED081",
+    "name": "RENATO LUIZ MAFIOLETI"
+  },
+  {
+    "code": "MED082",
+    "name": "MATHEUS FELIPE REBELLO"
+  },
+  {
+    "code": "MED083",
+    "name": "GUSTAVO THOMAZ DE AQUINO"
+  },
+  {
+    "code": "MED084",
+    "name": "PEDRO MORENO DA SILVA"
+  },
+  {
+    "code": "MED085",
+    "name": "BRUNA ZAGO"
+  },
+  {
+    "code": "MED086",
+    "name": "FRANCISCA MARIA ARAUJO DA SILVA"
+  },
+  {
+    "code": "MED087",
+    "name": "JADER MICKAEL SOUZA"
+  },
+  {
+    "code": "MED088",
+    "name": "CARLOS EDUARDO MENEGHEL DE SOUZA"
+  },
+  {
+    "code": "MED089",
+    "name": "DANIEL DE PAULA SANTANA"
+  },
+  {
+    "code": "MED090",
+    "name": "SULLIVAN ARTHUR CITADIN"
+  },
+  {
+    "code": "MED091",
+    "name": "CRISTIANO RESINA INACIO DA SILVA"
+  },
+  {
+    "code": "MED092",
+    "name": "RICARDO PULEO SOUZA"
+  },
+  {
+    "code": "MED093",
+    "name": "CLIVER ARAUJO ALMEIDA SOUSA"
+  },
+  {
+    "code": "MED094",
+    "name": "LUIZ MARIO ENDERLE SIGNOR"
+  },
+  {
+    "code": "MED095",
+    "name": "ROSELAINE STURIAO"
+  },
+  {
+    "code": "MED096",
+    "name": "ADEMAR MILTON DE SOUZA FILHO"
+  },
+  {
+    "code": "MED097",
+    "name": "ARLENA FERNANDES PAIM",
+    "crm": "CRM/SC 25276",
+    "specialty": "Pediatria",
+    "cns": "706504384818695",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED098",
+    "name": "THIAGO MEDEIROS DOS SANTOS"
+  },
+  {
+    "code": "MED099",
+    "name": "CAROLINE SERAFIM DAGOSTIN"
+  },
+  {
+    "code": "MED100",
+    "name": "MARIA LUIZA DAL TOE POZZOBON"
+  },
+  {
+    "code": "MED101",
+    "name": "ANNETA MARCON MARTINS"
+  },
+  {
+    "code": "MED102",
+    "name": "JULIANE ZORZI DE ANDRADE"
+  },
+  {
+    "code": "MED103",
+    "name": "PAULA RIGHETO BEZ"
+  },
+  {
+    "code": "MED104",
+    "name": "MOISES ALVES FRANCO"
+  },
+  {
+    "code": "MED106",
+    "name": "RICARDO DE STEFANI DALPONTE"
+  },
+  {
+    "code": "MED107",
+    "name": "ANNIIKA PAULA CECAGNO"
+  },
+  {
+    "code": "MED108",
+    "name": "ESTEFANI MOLINAR"
+  },
+  {
+    "code": "MED109",
+    "name": "LAURA ALVES FREIRE"
+  },
+  {
+    "code": "MED110",
+    "name": "HERCILIO BRIGHENTE VOLPATO"
+  },
+  {
+    "code": "MED111",
+    "name": "BARBARA CALISTRO BORCHARDT"
+  },
+  {
+    "code": "MED112",
+    "name": "RODRIGO SOARES ALVES DA COSTA"
+  },
+  {
+    "code": "MED113",
+    "name": "ISABELLE MARTINS PESCADOR"
+  },
+  {
+    "code": "MED114",
+    "name": "PATRICIA BELUCO MORETI"
+  },
+  {
+    "code": "MED115",
+    "name": "MATEUS SCARABELOT MEDEIROS"
+  },
+  {
+    "code": "MED117",
+    "name": "GABRIEL WESTPHAL FERNANDES"
+  },
+  {
+    "code": "MED118",
+    "name": "ALEXIA JUVENCIO DE CARVALHO"
+  },
+  {
+    "code": "MED119",
+    "name": "BRUNA LUIZA CLAUDIANO VOSS"
+  },
+  {
+    "code": "MED120",
+    "name": "BRUNA BERVIAN CANDIDO"
+  },
+  {
+    "code": "MED121",
+    "name": "ANE TRENTO BURIGO PAVEI"
+  },
+  {
+    "code": "MED122",
+    "name": "DEMIAN KNABEN"
+  },
+  {
+    "code": "MED123",
+    "name": "GISLAINE BENEDET"
+  },
+  {
+    "code": "MED124",
+    "name": "LUANNA CORREA DE OLIVEIRA FREITAS BERETRE"
+  },
+  {
+    "code": "MED125",
+    "name": "LAIS CONSTANTE MACHADO"
+  },
+  {
+    "code": "MED126",
+    "name": "CICERA DOS SANTOS MOURA"
+  },
+  {
+    "code": "MED127",
+    "name": "ARTHUR DAJORI RONCHI"
+  },
+  {
+    "code": "MED128",
+    "name": "JULIA MICHELON TOMAZZONI"
+  },
+  {
+    "code": "MED129",
+    "name": "BRUNO AUGUSTO SOUZA DOS SANTOS"
+  },
+  {
+    "code": "MED130",
+    "name": "TUANI DA ROCHA UGGIONI"
+  },
+  {
+    "code": "MED131",
+    "name": "VINICIUS OLIVEIRA NITZ"
+  },
+  {
+    "code": "MED132",
+    "name": "JOAO LUIZ TAVARES MENDES"
+  },
+  {
+    "code": "MED133",
+    "name": "BRUNA WATERKEMPER MONDARDO"
+  },
+  {
+    "code": "MED134",
+    "name": "MAURICIO FAERMANN BARCELOS"
+  },
+  {
+    "code": "MED135",
+    "name": "ROBERTA CONSTANTINO DAGOSTIN"
+  },
+  {
+    "code": "MED136",
+    "name": "AMANDA DO LIVRAMENTO"
+  },
+  {
+    "code": "MED137",
+    "name": "PALOMA OLIVEIRA SCHUELTER"
+  },
+  {
+    "code": "MED138",
+    "name": "GIORDANA SPALDING PILLA"
+  },
+  {
+    "code": "MED139",
+    "name": "SUZANA KNIPHOFF DE OLIVEIRA",
+    "crm": "CRM/SC 29572",
+    "specialty": "Pediatria",
+    "cns": "704309558861191",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED140",
+    "name": "VILSON LUIZ MACIEL"
+  },
+  {
+    "code": "MED141",
+    "name": "MARIANNE ONGARATTO LUMI"
+  },
+  {
+    "code": "MED142",
+    "name": "LUCAS RIBEIRO KRASILCHIK",
+    "specialty": "Cirurgia Geral Pediátrica",
+    "crm": "CRM/SC 29909",
+    "cns": "700003495668203",
+    "teams": "BR SANITAS, TERRES"
+  },
+  {
+    "code": "MED143",
+    "name": "ANA PAULA BISPO STRASSI"
+  },
+  {
+    "code": "MED144",
+    "name": "HELENA HERTEL CORREA"
+  },
+  {
+    "code": "MED145",
+    "name": "MARINA FIGUEIREDO DE SA"
+  },
+  {
+    "code": "MED146",
+    "name": "DEBORA FORNASA BONETTI"
+  },
+  {
+    "code": "MED147",
+    "name": "ALINE JOCHEN DE OLIVEIRA"
+  },
+  {
+    "code": "MED148",
+    "name": "GEORGIA STOPASSOLI DE CARVALHO"
+  },
+  {
+    "code": "MED149",
+    "name": "JESSICA DA SILVA GOULART"
+  },
+  {
+    "code": "MED150",
+    "name": "DEBORA CAMPOS PULIDO"
+  },
+  {
+    "code": "MED151",
+    "name": "JULIA DAL BO CASSETTARI"
+  },
+  {
+    "code": "MED152",
+    "name": "NARAYANA IRMANI DA SILVA"
+  },
+  {
+    "code": "MED153",
+    "name": "CAMILA LEHMKUHL DE ARRUDA"
+  },
+  {
+    "code": "MED154",
+    "name": "VICTOR AFONSO PAVEI DAGOSTIM"
+  },
+  {
+    "code": "MED155",
+    "name": "JAQUELINE BERNARDI"
+  },
+  {
+    "code": "MED156",
+    "name": "SAMANDA TORQUATO"
+  },
+  {
+    "code": "MED157",
+    "name": "LAYNE HELLMANN AVILA SOUZA"
+  },
+  {
+    "code": "MED158",
+    "name": "CAROLINA MARQUES DE AVELLAR DAL BO"
+  },
+  {
+    "code": "MED159",
+    "name": "THUANY SILVESTRI GARCIA"
+  },
+  {
+    "code": "MED160",
+    "name": "MARIA TEREZA DANIEL JUSTO"
+  },
+  {
+    "code": "MED161",
+    "name": "TAMIRES MATEUS GOMES"
+  },
+  {
+    "code": "MED162",
+    "name": "ARTHUR GIORDANI ELIAS DE ALMEIDA"
+  },
+  {
+    "code": "MED163",
+    "name": "EDINARA DA SILVA SILVEIRA"
+  },
+  {
+    "code": "MED164",
+    "name": "GABRIELA BITTENCOURT DAMIANI"
+  },
+  {
+    "code": "MED165",
+    "name": "BRUNA FERNANDES SCARPARI",
+    "crm": "CRM/SC 31959",
+    "specialty": "Clínica Médica, Pediatria",
+    "cns": "705003699395656",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED166",
+    "name": "GISELI VIEIRA MACHADO MOLINA"
+  },
+  {
+    "code": "MED167",
+    "name": "RAMON COLOMBO PIROLA"
+  },
+  {
+    "code": "MED168",
+    "name": "GABRIELA NUERNBERG DOS SANTOS"
+  },
+  {
+    "code": "MED169",
+    "name": "LETICIA MAXIMIANO BRUSCATTO"
+  },
+  {
+    "code": "MED170",
+    "name": "MARIANA BENEDET SCHEIDT MULLER"
+  },
+  {
+    "code": "MED171",
+    "name": "NATALIA CUSTODIO UGGIONI"
+  },
+  {
+    "code": "MED172",
+    "name": "PAULA AGUIAR GRANDI"
+  },
+  {
+    "code": "MED173",
+    "name": "JULIANA GABRIELA BURGARDT WERNER"
+  },
+  {
+    "code": "MED174",
+    "name": "JOAO MANOEL LUMERTZ FRANCISCO"
+  },
+  {
+    "code": "MED175",
+    "name": "AMANDA LONGO PIZZOLATTI"
+  },
+  {
+    "code": "MED176",
+    "name": "MARIANA MANGILLI DE MENEZES"
+  },
+  {
+    "code": "MED177",
+    "name": "JAMILE CAMARGO CARDOSO OLIVEIRA",
+    "crm": "CRM/SC 31935",
+    "specialty": "Clínica Médica, Pediatria",
+    "cns": "708007353868821",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED178",
+    "name": "LUIZA CAROLINE NETTO ZANETTE",
+    "crm": "CRM/SC 32018",
+    "specialty": "Pediatria",
+    "cns": "708100810248610",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED179",
+    "name": "PAULO CESAR FIANI BACILA NETO"
+  },
+  {
+    "code": "MED180",
+    "name": "LARA XAVIER BAZOTTI"
+  },
+  {
+    "code": "MED181",
+    "name": "KELY CORREA BENEDET BAESSO"
+  },
+  {
+    "code": "MED182",
+    "name": "ANNANDA ELISE BRANDAO SGORLA"
+  },
+  {
+    "code": "MED183",
+    "name": "LUIZA MAZZUCCO ZANATTA"
+  },
+  {
+    "code": "MED184",
+    "name": "SAMUEL GHISLERI MINATTO"
+  },
+  {
+    "code": "MED185",
+    "name": "LETICIA MAFFIOLETTI TEIXEIRA",
+    "crm": "CRM/SC 33207",
+    "specialty": "Clínica Médica, Ginecologia e Obstetrícia",
+    "cns": "708000856195227",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED186",
+    "name": "DANIELE LIELL"
+  },
+  {
+    "code": "MED187",
+    "name": "ANTONIO COSTA DOS SANTOS"
+  },
+  {
+    "code": "MED188",
+    "name": "RIDOEL DE MORAES CUNHA"
+  },
+  {
+    "code": "MED189",
+    "name": "MARCELA SACHET NUERNBERG"
+  },
+  {
+    "code": "MED190",
+    "name": "LIAH FERREIRA FILIPPI"
+  },
+  {
+    "code": "MED191",
+    "name": "ANA CLAUDIA HORR GOMES",
+    "crm": "CRM/SC 34135",
+    "specialty": "Clínica Médica, Pediatria",
+    "cns": "700309943980437",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED192",
+    "name": "MARLON LUIZ PIRES BOLDORI",
+    "crm": "CRM/SC 34163",
+    "specialty": "Clínica Médica, Pediatria",
+    "cns": "706407134321487",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED193",
+    "name": "LIVIA D'AVILA PASKULIN"
+  },
+  {
+    "code": "MED194",
+    "name": "ANA PAULA NASPOLINI"
+  },
+  {
+    "code": "MED195",
+    "name": "CAROLINA BORGES SANTINONI",
+    "crm": "CRM/SC 34131",
+    "specialty": "Clínica Médica, Pediatria",
+    "cns": "705600439979218",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED196",
+    "name": "AMANDA SORATTO CITADIN"
+  },
+  {
+    "code": "MED197",
+    "name": "LARISSA BERNARDO"
+  },
+  {
+    "code": "MED198",
+    "name": "JOANA DE LUCCA PIZZOLO"
+  },
+  {
+    "code": "MED199",
+    "name": "FERNANDA FONTOURA LISSA"
+  },
+  {
+    "code": "MED200",
+    "name": "JULIA GATTO DE OLIVEIRA"
+  },
+  {
+    "code": "MED201",
+    "name": "KETHERYN STAHNKE CECHIN MINATTO"
+  },
+  {
+    "code": "MED202",
+    "name": "FLAVIO MACHADO PATEL"
+  },
+  {
+    "code": "MED203",
+    "name": "BRUNA MILIOLI ESMERALDINO"
+  },
+  {
+    "code": "MED204",
+    "name": "BARBARA CARDOSO VIRTUOSO",
+    "crm": "CRM/SC 28957",
+    "specialty": "Clínica Médica, Pediatria",
+    "cns": "706208068974662",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED205",
+    "name": "LUANA MARIA DE OLIVEIRA PRESADO",
+    "crm": "CRM/RS 60292",
+    "specialty": "Clínica Médica, Ginecologia e Obstetrícia",
+    "cns": "706706520895013",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED206",
+    "name": "JULIE CANDICE ERBS"
+  },
+  {
+    "code": "MED207",
+    "name": "MONIQUE DE SOUZA BETTIOL"
+  },
+  {
+    "code": "MED208",
+    "name": "LISANDRA ESTRADA RODRIGUEZ",
+    "crm": "CRM/SC 33468",
+    "specialty": "Cirurgia Pediátrica",
+    "cns": "704804025499649",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED209",
+    "name": "BRUNA JUNKLAUS BAGGIO"
+  },
+  {
+    "code": "MED210",
+    "name": "DANIELA SILVA KAMINSKI"
+  },
+  {
+    "code": "MED211",
+    "name": "ELIDE CRISTINA SUNTACK FRAGOSO"
+  },
+  {
+    "code": "MED212",
+    "name": "DAVI DIOMARIO DA ROSA"
+  },
+  {
+    "code": "MED213",
+    "name": "ALEXIA UGIONI GODOY",
+    "crm": "CRM/SC 33267",
+    "specialty": "Clínica Médica, Ginecologia e Obstetrícia",
+    "cns": "702505389230430",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED214",
+    "name": "GABRIELA MACHADO GOULART"
+  },
+  {
+    "code": "MED215",
+    "name": "LUIS AUGUSTO SERAFIM ROCHA"
+  },
+  {
+    "code": "MED216",
+    "name": "CAROLINA PHILIPPI SILVEIRA",
+    "crm": "CRM/SC 35317",
+    "specialty": "Clínica Médica, Pediatria",
+    "cns": "708606536916586",
+    "teams": "BR SANITAS, TERRES"
+  },
+  {
+    "code": "MED217",
+    "name": "RAFAEL TABELLI BORTOLUZZI SOUZA"
+  },
+  {
+    "code": "MED218",
+    "name": "LUIZA CARDOSO BARCELOS"
+  },
+  {
+    "code": "MED219",
+    "name": "GABRIEL OLIVEIRA COSTA",
+    "crm": "CRM/SC 35479",
+    "specialty": "Pediatria",
+    "cns": "700400465086641",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED220",
+    "name": "TAYNAN MANENTI BONFANTE"
+  },
+  {
+    "code": "MED221",
+    "name": "PAULA SZYMANSKI"
+  },
+  {
+    "code": "MED222",
+    "name": "BEATRIZ ZANELATO DE NONI",
+    "crm": "CRM/SC 35582",
+    "specialty": "Clínica Médica, Pediatria",
+    "cns": "705001036859156",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED223",
+    "name": "PAULO HENRIQUE TEIXEIRA MARTINS"
+  },
+  {
+    "code": "MED224",
+    "name": "DAVIS ROGERIO LUCIO"
+  },
+  {
+    "code": "MED225",
+    "name": "THAIS MARTINS DE OLIVEIRA"
+  },
+  {
+    "code": "MED226",
+    "name": "CARLOS ALBERTO DE MOURA ASCHOFF",
+    "specialty": "Genética",
+    "crm": "CRM/SC 36941",
+    "cns": "702003780303990",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED227",
+    "name": "MARIA FERNANDA LOCKS TOPANOTTI"
+  },
+  {
+    "code": "MED228",
+    "name": "PAULO JEFFERSON MENDES"
+  },
+  {
+    "code": "MED229",
+    "name": "ISABELA RIBEIRO SIQUEIRA"
+  },
+  {
+    "code": "MED230",
+    "name": "MAIKON LUCIAN MADEIRA QUARTI"
+  },
+  {
+    "code": "MED231",
+    "name": "JULIO CEZAR CECHINEL FILHO"
+  },
+  {
+    "code": "MED232",
+    "name": "RODRIGO DEMETRIO",
+    "specialty": "Cirurgia Geral Pediátrica; Urologia Pediátrica",
+    "crm": "CRM/SC 9910",
+    "cns": "709608670033073",
+    "teams": "BR SANITAS, TERRES"
+  },
+  {
+    "code": "MED233",
+    "name": "AIRTON JORGE DA SILVA VARELA JUNIOR"
+  },
+  {
+    "code": "MED234",
+    "name": "CHRISTIAN DE ESCOBAR PRADO",
+    "specialty": "Cirurgia Geral Pediátrica",
+    "crm": "CRM/SC 12407",
+    "cns": "707005836073831",
+    "teams": "BR SANITAS, TERRES"
+  },
+  {
+    "code": "MED235",
+    "name": "MARIANA DE MATTIA SARTORI"
+  },
+  {
+    "code": "MED236",
+    "name": "JEAN ABREU MACHADO"
+  },
+  {
+    "code": "MED237",
+    "name": "LUCAS ALEXANDRE PEDROLLO SOLIMAN",
+    "crm": "CRM/SC 19542",
+    "specialty": "Anestesiologia",
+    "cns": "704603695595126",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED238",
+    "name": "HELOISA DE CASSIA DOS SANTOS"
+  },
+  {
+    "code": "MED239",
+    "name": "RAQUEL SPILERE KAMMER"
+  },
+  {
+    "code": "MED240",
+    "name": "JOSELAINY STELA PIRES MACHIAVELLI"
+  },
+  {
+    "code": "MED241",
+    "name": "ERALDO BELARMINO JUNIOR",
+    "specialty": "Neurologia Pediátrica",
+    "crm": "CRM/SC 7837",
+    "cns": "704008820233360",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED242",
+    "name": "GIL BARDINI ALVES",
+    "specialty": "Alergia e Imunologia",
+    "crm": "CRM/SC 13382",
+    "cns": "700000138988506",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED243",
+    "name": "CAMILA BELLETTINI HIRSCH",
+    "specialty": "Infectologia Pediátrica",
+    "crm": "CRM/SC 21006",
+    "cns": "704603691793322",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED244",
+    "name": "FERNANDA OSORIO ALVES"
+  },
+  {
+    "code": "MED245",
+    "name": "RICARDO KADRI MONTEIRO"
+  },
+  {
+    "code": "MED246",
+    "name": "RHANARA CAROLINE DE ALMEIDA"
+  },
+  {
+    "code": "MED247",
+    "name": "DANIELA BURTET MACHADO",
+    "specialty": "Fonoaudiologia"
+  },
+  {
+    "code": "MED248",
+    "name": "MILTON GIL GERI JUNIOR",
+    "crm": "CRM/SC 4685",
+    "specialty": "Pediatria",
+    "cns": "706002387571545",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED249",
+    "name": "MARCELO SANTOS PEDROSO",
+    "crm": "CRM/SC 19925",
+    "specialty": "Pediatria",
+    "cns": "700503939336459",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED250",
+    "name": "MONICA ANSELMO JUNKES ANTERO"
+  },
+  {
+    "code": "MED251",
+    "name": "GUILHERME ZIMERMANN KUMMER"
+  },
+  {
+    "code": "MED252",
+    "name": "NATALIA ALBERTON CUNHA",
+    "crm": "CRM/SC 26064",
+    "specialty": "Clínica Médica, Ginecologia e Obstetrícia",
+    "cns": "703406277477914",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED253",
+    "name": "LUCIANA MULLER CARVALHO"
+  },
+  {
+    "code": "MED254",
+    "name": "SAMUEL DUTRA FERREIRA"
+  },
+  {
+    "code": "MED255",
+    "name": "YASMIN JAIME PRAZERES"
+  },
+  {
+    "code": "MED256",
+    "name": "MARINA DE CAMPOS BRANDAO"
+  },
+  {
+    "code": "MED257",
+    "name": "VERONICA BENDO DE SOUZA",
+    "crm": "CRM/SC 31877",
+    "specialty": "Ginecologia e Obstetrícia",
+    "cns": "706402189284880",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED258",
+    "name": "KERLY KESSLER CAMPOS"
+  },
+  {
+    "code": "MED259",
+    "name": "IOLANDA DE SOUZA HONORATO",
+    "specialty": "Ginecologia",
+    "crm": "CRM/SC 29501",
+    "cns": "702504343204932",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED260",
+    "name": "SUELEN CAPELARI"
+  },
+  {
+    "code": "MED261",
+    "name": "ANA RUTH DEVILLA DEBIASI"
+  },
+  {
+    "code": "MED262",
+    "name": "LUCAS DE SOUZA"
+  },
+  {
+    "code": "MED263",
+    "name": "BRUNA MARTINS MENDES"
+  },
+  {
+    "code": "MED264",
+    "name": "KETLINN DOS SANTOS MARCIANO",
+    "crm": "CRM/SC 36206",
+    "specialty": "Clínica Médica",
+    "cns": "706407134987787",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED265",
+    "name": "JOAO PAULO GAMEIRO DE AZEVEDO"
+  },
+  {
+    "code": "MED266",
+    "name": "KAMILLE FELTRIN RONSONI",
+    "crm": "CRM/SC 34014",
+    "specialty": "Clínica Médica, Pediatria",
+    "cns": "706906188500236",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED267",
+    "name": "MARIA LAURA GEREMIAS",
+    "crm": "CRM/SC 35252",
+    "specialty": "Clínica Médica, Pediatria",
+    "cns": "700101914562015",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED268",
+    "name": "EVELIM DE MEDEIROS SARTOR",
+    "specialty": "Cardiologia Pediátrica",
+    "crm": "CRM/SC 26125",
+    "cns": "704005339703565",
+    "teams": "BR SANITAS, TERRES"
+  },
+  {
+    "code": "MED269",
+    "name": "GIULIA FRAGA MEZARI"
+  },
+  {
+    "code": "MED270",
+    "name": "PRISCILA MARIOT DA ROSA",
+    "crm": "CRM/SC 28972",
+    "specialty": "Clínica Médica, Pediatria",
+    "cns": "708900702622011",
+    "teams": "BR SANITAS, TERRES"
+  },
+  {
+    "code": "MED271",
+    "name": "GUILHERME DE SOUZA SCHAUCOSKI"
+  },
+  {
+    "code": "MED272",
+    "name": "ANDRE RAMPINELLI MANGILI",
+    "specialty": "Pneumologia Pediátrica",
+    "crm": "CRM/SC 11122",
+    "cns": "700205955121725",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED273",
+    "name": "THAMY BENEDET TAUTZ",
+    "crm": "CRM/SC 22000",
+    "specialty": "Pediatria",
+    "cns": "702402382541730",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED274",
+    "name": "RAFAELA FUJII DE ABREU"
+  },
+  {
+    "code": "MED275",
+    "name": "GUSTAVO ALVES PROSDOCIMO"
+  },
+  {
+    "code": "MED276",
+    "name": "MARIA ELIZA BACK"
+  },
+  {
+    "code": "MED277",
+    "name": "ARTHUR MENDES LUCIANO",
+    "specialty": "Cirurgia Ginecológica",
+    "crm": "CRM/SC 28956",
+    "cns": "700001042697501",
+    "teams": "BR SANITAS, TERRES"
+  },
+  {
+    "code": "MED278",
+    "name": "LUISA TEIXEIRA MATTIELLO KÜLKAMP"
+  },
+  {
+    "code": "MED279",
+    "name": "GUILHERME RODRIGO DAL FARRA DA SILVA",
+    "crm": "CRM/SC 38985",
+    "specialty": "Clínica Médica, Pediatria",
+    "cns": "700003929955800",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED280",
+    "name": "JULIA STOPASSOLI BUSS",
+    "crm": "CRM/SC 39449",
+    "specialty": "Clínica Médica, Ginecologia e Obstetrícia",
+    "cns": "700007000113302",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED281",
+    "name": "JULIA LISBOA RAMOS DOS SANTOS"
+  },
+  {
+    "code": "MED282",
+    "name": "GABRIEL ZANETTE NASPOLINI"
+  },
+  {
+    "code": "MED283",
+    "name": "LARISSA SIQUEIRA"
+  },
+  {
+    "code": "MED284",
+    "name": "TAIRINI DAMIANI RODRIGUES",
+    "crm": "CRM/SC 36344",
+    "specialty": "Clínica Médica, Pediatria",
+    "cns": "700008013700601",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED285",
+    "name": "DANIEL VIANA BEZZI"
+  },
+  {
+    "code": "MED286",
+    "name": "PETERSON RECH HONORATO"
+  },
+  {
+    "code": "MED287",
+    "name": "THAISSA BROLESI DE SOUZA",
+    "crm": "CRM/SC 26510",
+    "specialty": "Ginecologia e Obstetrícia",
+    "cns": "702304159672114",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED288",
+    "name": "FERNANDA DA SILVA SCHMITZ",
+    "crm": "CRM/SC 29871",
+    "specialty": "Pediatria",
+    "cns": "702006323811287",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED289",
+    "name": "JOAO GABRIEL ALVES MOREIRA"
+  },
+  {
+    "code": "MED290",
+    "name": "MARIANA ZANETTE FERNANDES"
+  },
+  {
+    "code": "MED291",
+    "name": "ISADORA GONCALVES FIGUEREDO",
+    "crm": "CRM/SC 40881",
+    "specialty": "Clínica Médica, Pediatria",
+    "cns": "706507396299291",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED292",
+    "name": "MANOELA RITA INACIO",
+    "crm": "CRM/SC 40910",
+    "specialty": "Clínica Médica, Pediatria",
+    "cns": "708709108618791",
+    "teams": "BR SANITAS, TERRES"
+  },
+  {
+    "code": "MED293",
+    "name": "LIZ NETTO"
+  },
+  {
+    "code": "MED294",
+    "name": "LIANA BOFF CÉ",
+    "crm": "CRM/SC 42296",
+    "specialty": "Clínica Médica, Pediatria",
+    "cns": "700208977577627",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED295",
+    "name": "MARINA SPRICIGO MARAGNO",
+    "crm": "CRM/SC 17420",
+    "specialty": "Infectologia",
+    "cns": "702602251899540",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED296",
+    "name": "CRISTIANO DE OLIVEIRA BIZELLI"
+  },
+  {
+    "code": "MED297",
+    "name": "ISABEL DE MEDEIROS MAGALHAES DE SA",
+    "crm": "CRM/SC 41676",
+    "specialty": "Pediatria, Neonatologia",
+    "cns": "703000846884177",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED298",
+    "name": "MARINA BRUSCHI DOS SANTOS"
+  },
+  {
+    "code": "MED299",
+    "name": "HENRIQUE DA CUNHA GALVANI",
+    "specialty": "Gastroenterologia Pediátrica",
+    "crm": "CRM/SC 20575",
+    "cns": "706005863741442",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED330",
+    "name": "PAULA THIESEN SCHUELTER"
+  },
+  {
+    "code": "MED333",
+    "name": "ANDRE RODRIGUES DA SILVA"
+  },
+  {
+    "code": "MED340",
+    "name": "CHRISTINE LANNES SCHOELER"
+  },
+  {
+    "code": "MED341",
+    "name": "THIAGO MAMORU SAKAE"
+  },
+  {
+    "code": "MED342",
+    "name": "ANDRE SOUZA E SILVA"
+  },
+  {
+    "code": "MED343",
+    "name": "DIEGO GOTARDO"
+  },
+  {
+    "code": "MED344",
+    "name": "VINICIUS HEURICH"
+  },
+  {
+    "code": "MED345",
+    "name": "NADIA MUNHOZ PONCE"
+  },
+  {
+    "code": "MED346",
+    "name": "CAROLINA ALCOFORADO DE ABREU"
+  },
+  {
+    "code": "MED347",
+    "name": "SARA CHAMORRO PETERSEN"
+  },
+  {
+    "code": "MED348",
+    "name": "EDGARD VIANNA ROSSI CLAUSSEN"
+  },
+  {
+    "code": "MED349",
+    "name": "LESLEY CATHERINE HARUMI ENOMOTO"
+  },
+  {
+    "code": "MED350",
+    "name": "CARLOS ANDRE TONELLI",
+    "specialty": "Endocrinologia Pediátrica",
+    "crm": "CRM/SC 6702",
+    "cns": "708608550288084",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED351",
+    "name": "CAROLINE DE MORAES PENNO"
+  },
+  {
+    "code": "MED352",
+    "name": "DEBORA MARTINS ALIANO"
+  },
+  {
+    "code": "MED353",
+    "name": "JUANA NASPOLINI CORAL"
+  },
+  {
+    "code": "MED354",
+    "name": "ADELINO RODRIGO KOHATSU PADILHA"
+  },
+  {
+    "code": "MED355",
+    "name": "GIULIA MILANESI BROGNI",
+    "specialty": "Gestação de Alto Risco"
+  },
+  {
+    "code": "MED356",
+    "name": "ISABEL BIZ"
+  },
+  {
+    "code": "MED357",
+    "name": "ISABELLE DAMIAN PRUDENCIO"
+  },
+  {
+    "code": "MED358",
+    "name": "CRISTIANNE PACHECO BOHME ALVES"
+  },
+  {
+    "code": "MED359",
+    "name": "FLAVIO ANTONIO GIUGNO",
+    "crm": "CRM/SC 10228",
+    "specialty": "Clínica Médica, Ginecologia e Obstetrícia",
+    "cns": "704203716082584",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED360",
+    "name": "JOELSON CARMONO LEMOS",
+    "crm": "CRM/SC 8266",
+    "specialty": "Clínica Médica, Ginecologia e Obstetrícia",
+    "cns": "705006862349150",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED361",
+    "name": "JULIANA RODRIGUES DA ROSA"
+  },
+  {
+    "code": "MED362",
+    "name": "LUANA CREPALDI DE BRIDA"
+  },
+  {
+    "code": "MED363",
+    "name": "VANILLA CITADINI ZANETTE"
+  },
+  {
+    "code": "MED364",
+    "name": "CAMILA MARTINS BILESIMO"
+  },
+  {
+    "code": "MED365",
+    "name": "GEAN FERNANDES DE SA"
+  },
+  {
+    "code": "MED366",
+    "name": "ANNA CAROLINA SPILERE FURLAN"
+  },
+  {
+    "code": "MED367",
+    "name": "JOANA BARATA GOMES"
+  },
+  {
+    "code": "MED368",
+    "name": "ELAINE ALESSIO DE JESUS"
+  },
+  {
+    "code": "MED369",
+    "name": "GRAZIELA GONÇALVES PORTO"
+  },
+  {
+    "code": "MED370",
+    "name": "ANITA SILVA BRUNEL ALVES"
+  },
+  {
+    "code": "MED371",
+    "name": "LUIZ CARLOS KUMMER JUNIOR"
+  },
+  {
+    "code": "MED372",
+    "name": "FABIO RODRIGO BORGES"
+  },
+  {
+    "code": "MED373",
+    "name": "GIANCARLO BETTIN SANCHEZ"
+  },
+  {
+    "code": "MED374",
+    "name": "ANA PAULA CARDOSO PERTENCE NESI"
+  },
+  {
+    "code": "MED375",
+    "name": "CARLOS EDUARDO PASSOS"
+  },
+  {
+    "code": "MED376",
+    "name": "SCHAIANE NEOTTI CITADIN"
+  },
+  {
+    "code": "MED377",
+    "name": "ALINE BURIGO",
+    "crm": "CRM/SC 26061",
+    "specialty": "Clínica Médica, Ginecologia e Obstetrícia",
+    "cns": "702008889305283",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED378",
+    "name": "MONIQUE OSELAME POSSAMAI",
+    "crm": "CRM/SC 25501",
+    "specialty": "Clínica Médica, Ginecologia e Obstetrícia",
+    "cns": "700004540831709",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED379",
+    "name": "MUNIKI FERREIRA MARTINS",
+    "crm": "CRM/SC 24676",
+    "specialty": "Ginecologia e Obstetrícia, Infectologia",
+    "cns": "706807769781325",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED380",
+    "name": "MARIANA VIANA BEZZI BIANCHI"
+  },
+  {
+    "code": "MED381",
+    "name": "NADHINE FELTRIN RONSONI",
+    "specialty": "Ginecologia",
+    "crm": "CRM/SC 28435",
+    "cns": "704603661341822",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED382",
+    "name": "LAYS FIGUEREDO",
+    "crm": "CRM/SC 25278",
+    "specialty": "Clínica Médica, Ginecologia e Obstetrícia",
+    "cns": "700907995941397",
+    "teams": "BR SANITAS, TERRES"
+  },
+  {
+    "code": "MED383",
+    "name": "PATRICIA NUNES ALANO"
+  },
+  {
+    "code": "MED384",
+    "name": "GABRIELA EFFTING CREMA"
+  },
+  {
+    "code": "MED385",
+    "name": "RAFAEL DE SA FERNANDES"
+  },
+  {
+    "code": "MED386",
+    "name": "CARLOS ALBERTO SIMOES TREMOCO FILHO"
+  },
+  {
+    "code": "MED387",
+    "name": "BRUNO ROSSO BIANCHI"
+  },
+  {
+    "code": "MED388",
+    "name": "LUCAS CARGNIN HENRIQUE",
+    "crm": "CRM/SC 20581",
+    "specialty": "Ortopedia e Traumatologia",
+    "cns": "704205227408985",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED389",
+    "name": "ELEONOR JOSE SOLIGO JUNIOR"
+  },
+  {
+    "code": "MED390",
+    "name": "MARCELO ROMANCINI DALEFFE"
+  },
+  {
+    "code": "MED391",
+    "name": "JAIR PAULO SCHUH",
+    "specialty": "Ortopedia Pediátrica",
+    "crm": "CRM/SC 10202",
+    "cns": "700100968729219",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED392",
+    "name": "ALESSANDRO YOSHIZATO",
+    "specialty": "Ortopedia Pediátrica",
+    "crm": "CRM/SC 6724",
+    "cns": "708000587762330",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED393",
+    "name": "ROBSON LUIZ DOS SANTOS",
+    "specialty": "Ortopedia Pediátrica",
+    "crm": "CRM/SC 7237",
+    "cns": "700407909683147",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED394",
+    "name": "GENESIO HENRIQUE DE CAMPOS JUNIOR"
+  },
+  {
+    "code": "MED395",
+    "name": "MARIANE MARINHO DE SOUZA"
+  },
+  {
+    "code": "MED396",
+    "name": "THATYANE CARLA DA SILVA"
+  },
+  {
+    "code": "MED397",
+    "name": "PAULINE CUREAU MIECHUANSKI"
+  },
+  {
+    "code": "MED398",
+    "name": "CHARLANE ALESSIO DE JESUS"
+  },
+  {
+    "code": "MED399",
+    "name": "DILVANIA NICOLETTI"
+  },
+  {
+    "code": "MED400",
+    "name": "ELOA SACHET NUERNBERG"
+  },
+  {
+    "code": "MED401",
+    "name": "RICHARD COAN CARDOSO"
+  },
+  {
+    "code": "MED402",
+    "name": "MARIANA MAGALHAES"
+  },
+  {
+    "code": "MED403",
+    "name": "IANE MARIA TEIXEIRA DAGOSTIN"
+  },
+  {
+    "code": "MED404",
+    "name": "THAMYRIS FINGER TRAPANI"
+  },
+  {
+    "code": "MED405",
+    "name": "ANDRESSA CAROLINE CARDOSO DE CAMPOS"
+  },
+  {
+    "code": "MED406",
+    "name": "DANYELLA ARAUJO",
+    "crm": "CRM/SC 17787",
+    "specialty": "Ginecologia e Obstetrícia",
+    "cns": "700609433176668",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED407",
+    "name": "PAULO FERREIRA JUNIOR",
+    "specialty": "Gestação de Alto Risco",
+    "crm": "CRM/SC 22330",
+    "cns": "701804228786478",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED408",
+    "name": "MARIA EUGENIA SAMPAIO PERITO"
+  },
+  {
+    "code": "MED409",
+    "name": "FABIO AUGUSTO MORAES WIECZOREK",
+    "specialty": "Cirurgia Ginecológica",
+    "crm": "CRM/SC 27128",
+    "cns": "708009860649227",
+    "teams": "BR SANITAS, TERRES"
+  },
+  {
+    "code": "MED410",
+    "name": "KARINA ALESSIO DE JESUS",
+    "specialty": "Infertilidade",
+    "crm": "CRM/SC 24687",
+    "cns": "706804299784320",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED411",
+    "name": "ANNE ROSSO BIANCHI"
+  },
+  {
+    "code": "MED412",
+    "name": "MARIDIA FERRARI ESTEVAM"
+  },
+  {
+    "code": "MED413",
+    "name": "ISABELA NOLLA CONCER"
+  },
+  {
+    "code": "MED414",
+    "name": "MARIA EDUARDA SCHERER COSTI"
+  },
+  {
+    "code": "MED415",
+    "name": "LIGIA MARIA HADEMANN ESSER"
+  },
+  {
+    "code": "MED416",
+    "name": "TALINE REGINA DOS SANTOS MARQUES",
+    "crm": "CRM/SC 17810",
+    "specialty": "Pediatria",
+    "cns": "704102119794274",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED417",
+    "name": "LUIZ FERNANDO FARIAS TAVARES"
+  },
+  {
+    "code": "MED418",
+    "name": "MARCIA FAYAD KALED"
+  },
+  {
+    "code": "MED419",
+    "name": "JULIANA DAL PONTE BITENCOURT"
+  },
+  {
+    "code": "MED420",
+    "name": "ALINE CARVALHO SIMOES"
+  },
+  {
+    "code": "MED421",
+    "name": "EDUARDO ADRATT",
+    "crm": "CRM/PR 18026",
+    "specialty": "Pediatria, Neonatologia",
+    "cns": "702304124856014",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED422",
+    "name": "GILEADE FERNANDES DE SA"
+  },
+  {
+    "code": "MED423",
+    "name": "ANA CLAUDIA BORTOLOTTO MILANESI"
+  },
+  {
+    "code": "MED424",
+    "name": "AILTON GOMES DE MELO",
+    "crm": "CRM/SC 24016",
+    "specialty": "Clínica Médica, Pediatria",
+    "cns": "702401508418125",
+    "teams": "BR SANITAS, TERRES"
+  },
+  {
+    "code": "MED425",
+    "name": "BRUNA SILVA CESCONETTO",
+    "crm": "CRM/SC 16491",
+    "specialty": "Pediatria",
+    "cns": "700001473487506",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED426",
+    "name": "TUANY MARTINS NUNES"
+  },
+  {
+    "code": "MED427",
+    "name": "DEBORA MARIA CARDOSO CROCETTA",
+    "crm": "CRM/SC 23237",
+    "specialty": "Pediatria, Neonatologia",
+    "cns": "700805458250084",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED428",
+    "name": "PAULA DE SOUZA GOMES"
+  },
+  {
+    "code": "MED429",
+    "name": "RICARDO SOUZA MATIAS",
+    "crm": "CRM/SC 23598",
+    "specialty": "Pediatria, Neonatologia",
+    "cns": "700506535884457",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED430",
+    "name": "BARBARA APARECIDA FERNANDES"
+  },
+  {
+    "code": "MED431",
+    "name": "CLAUDIA DUARTE DOS SANTOS"
+  },
+  {
+    "code": "MED432",
+    "name": "MERIENE VIQUETTI DE SOUZA"
+  },
+  {
+    "code": "MED433",
+    "name": "ULLISSIS PIMENTA E SILVA VICENTINI"
+  },
+  {
+    "code": "MED434",
+    "name": "KAREN FAVARIN"
+  },
+  {
+    "code": "MED435",
+    "name": "VERA LUCIA MEISTER"
+  },
+  {
+    "code": "MED436",
+    "name": "JOSE ANTONIO SOUZA"
+  },
+  {
+    "code": "MED437",
+    "name": "GRAZIELA NASARIO DA ROSA"
+  },
+  {
+    "code": "MED438",
+    "name": "MARIA LETICIA SIMON"
+  },
+  {
+    "code": "MED439",
+    "name": "FERNANDO ZOMER VOLPATO"
+  },
+  {
+    "code": "MED440",
+    "name": "LEO GRACIOLLI FRANCO"
+  },
+  {
+    "code": "MED441",
+    "name": "VOLNEI SILVA"
+  },
+  {
+    "code": "MED442",
+    "name": "MARCIO LUIZ ANTONINI MELLO"
+  },
+  {
+    "code": "MED443",
+    "name": "MAITE FIEGENBAUM",
+    "crm": "CRM/SC 21310",
+    "specialty": "Clínica Médica, Pediatria",
+    "cns": "702306125845816",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED444",
+    "name": "CATARINE ANDREA ZARDO"
+  },
+  {
+    "code": "MED445",
+    "name": "LISANE BEATRIZ GIACOMOSSI"
+  },
+  {
+    "code": "MED446",
+    "name": "DULCE DESIRE BATISTA DE ALBUQUERQUE"
+  },
+  {
+    "code": "MED447",
+    "name": "MONICA NAYARA FRANCHETTI"
+  },
+  {
+    "code": "MED448",
+    "name": "HELOISA SILVA ABEL",
+    "crm": "CRM/SC 27517",
+    "specialty": "Clínica Médica, Pediatria",
+    "cns": "700004657907705",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED449",
+    "name": "CLAUDIA GUIMARAES DE OLIVEIRA PORTELA"
+  },
+  {
+    "code": "MED450",
+    "name": "ALEXANDRE DE SOUZA COELHO DE LIMA"
+  },
+  {
+    "code": "MED451",
+    "name": "FERNANDA NASPOLINI BASTOS"
+  },
+  {
+    "code": "MED452",
+    "name": "PAULA TRAJANO DA ROSA",
+    "crm": "CRM/SC 19626",
+    "specialty": "Pediatria",
+    "cns": "701706263851070",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED453",
+    "name": "CRISTINA MARTINS PEDROSA RAVAIANE",
+    "crm": "CRM/SC 19029",
+    "specialty": "Pediatria",
+    "cns": "706807778577425",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED454",
+    "name": "WILLIAN DE CARVALHO ESMERALDINO",
+    "crm": "CRM/SC 12180",
+    "specialty": "Pediatria, Neonatologia",
+    "cns": "708203651289247",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED455",
+    "name": "LUCIANO PEREIRA BENDER",
+    "specialty": "Cardiologia Pediátrica",
+    "crm": "CRM/SC 23077",
+    "cns": "703404269310516",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED456",
+    "name": "GABRIELA GROLLI BASSOTTO"
+  },
+  {
+    "code": "MED457",
+    "name": "LUCIANA SATIE BATISTA"
+  },
+  {
+    "code": "MED458",
+    "name": "FLAVIA POLICARPO SOARES"
+  },
+  {
+    "code": "MED459",
+    "name": "LAISSA MARA RODRIGUES TEIXEIRA"
+  },
+  {
+    "code": "MED460",
+    "name": "VIVIANE GONÇALVES MADEIRA"
+  },
+  {
+    "code": "MED461",
+    "name": "ISRAEL BARCELOS DE MELO"
+  },
+  {
+    "code": "MED462",
+    "name": "VITOR MACHADO BENINCA",
+    "crm": "CRM/SC 18421",
+    "specialty": "Pediatria",
+    "cns": "700004314213005",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED463",
+    "name": "VINICIUS FIGUEIREDO SOARES"
+  },
+  {
+    "code": "MED464",
+    "name": "JOANA CECILIA WARREN CAVALCANTI ORTH"
+  },
+  {
+    "code": "MED465",
+    "name": "GABRIELA RONCHI PITTIGLIANI",
+    "crm": "CRM/SC 26011",
+    "specialty": "Clínica Médica, Pediatria",
+    "cns": "704604161620324",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED466",
+    "name": "PAULA MENTA GARRIDO"
+  },
+  {
+    "code": "MED467",
+    "name": "PAOLA VIEIRA MANTA"
+  },
+  {
+    "code": "MED468",
+    "name": "CELESTE AIDA BRITTO MANSUR"
+  },
+  {
+    "code": "MED469",
+    "name": "ANDRE LUIZ DA SILVA MANGANELLI"
+  },
+  {
+    "code": "MED470",
+    "name": "PAOLA FIALHO PERONDI"
+  },
+  {
+    "code": "MED471",
+    "name": "KALEBI SLAVIERO DARONCHI",
+    "crm": "CRM/SC 23235",
+    "specialty": "Pediatria",
+    "cns": "702407558516622",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED472",
+    "name": "MARCELA SPILLERE ROVARIS"
+  },
+  {
+    "code": "MED473",
+    "name": "CAROLINA BARUEL ALCANTARA"
+  },
+  {
+    "code": "MED474",
+    "name": "RENATA DA SILVA LIMA",
+    "crm": "CRM/SC 21303",
+    "specialty": "Clínica Médica, Pediatria",
+    "cns": "700103966517217",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED475",
+    "name": "ANDRE NESI"
+  },
+  {
+    "code": "MED476",
+    "name": "LUIZ CEZAR TIBERIO",
+    "crm": "CRM/SC 22114",
+    "specialty": "Clínica Médica, Pediatria",
+    "cns": "701802203078672",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED477",
+    "name": "LEON IOTTI NETO"
+  },
+  {
+    "code": "MED478",
+    "name": "SUELY SATIYE TOMA",
+    "crm": "CRM/SC 21785",
+    "specialty": "Pediatria",
+    "cns": "705006484228456",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED479",
+    "name": "JACI MARA PEREIRA MARQUES"
+  },
+  {
+    "code": "MED480",
+    "name": "PATRICIA BACKES ARRUDA"
+  },
+  {
+    "code": "MED481",
+    "name": "LAILA ABDALA DE ARAUJO CHAVES"
+  },
+  {
+    "code": "MED482",
+    "name": "ADRIANE ZANIOLO"
+  },
+  {
+    "code": "MED483",
+    "name": "LUCIANA DA COSTA SANTOS PRADO"
+  },
+  {
+    "code": "MED484",
+    "name": "ANIE SAVI SERAFIM"
+  },
+  {
+    "code": "MED485",
+    "name": "MARCOS GUILHERME HORTA MASCI"
+  },
+  {
+    "code": "MED486",
+    "name": "GABRIEL CIPRIANO VIDAL HELUANY"
+  },
+  {
+    "code": "MED487",
+    "name": "ALEXANDRE RAMPINELLI MANGILI",
+    "crm": "CRM/SC 9440",
+    "specialty": "Pediatria",
+    "cns": "705203488141776",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED489",
+    "name": "CONRADO MENEGOLA"
+  },
+  {
+    "code": "MED490",
+    "name": "JOAO PAULO SVAISSER CARNEIRO"
+  },
+  {
+    "code": "MED491",
+    "name": "SASKIA REGINA FREITAS COPPENS",
+    "crm": "CRM/SP 196826",
+    "specialty": "Clínica Médica, Pediatria, Neonatologia",
+    "cns": "704608187678021",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED492",
+    "name": "ANTONIO AUGUSTO RIANI DE SOUZA",
+    "crm": "CRM/SC 29189",
+    "specialty": "Clínica Médica, Pediatria",
+    "cns": "700002494762906",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED495",
+    "name": "BRUNA CORREA DE ARAUJO CASTRO"
+  },
+  {
+    "code": "MED496",
+    "name": "PEDRO HENRIQUE BARP REUS"
+  },
+  {
+    "code": "MED499",
+    "name": "JAQUELINE FORESTIERI BOLONHEZ",
+    "crm": "CRM/SC 40357",
+    "specialty": "Infectologia",
+    "cns": "701802274973275",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED500",
+    "name": "MARIAH SALVAN"
+  },
+  {
+    "code": "MED501",
+    "name": "GABRIEL MARTINELLO MELLER"
+  },
+  {
+    "code": "MED502",
+    "name": "CAROLINE MARGARETH PELISSIER",
+    "crm": "CRM/SC 34925",
+    "specialty": "Pediatria",
+    "cns": "707006809068130",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED503",
+    "name": "MANOELA BAU DE OLIVEIRA",
+    "crm": "CRM/SC 33217",
+    "specialty": "Pediatria",
+    "cns": "704206202888283",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED504",
+    "name": "ISABELA PIAZZA ZANETTE"
+  },
+  {
+    "code": "MED505",
+    "name": "NATALIA PASETO PILATI"
+  },
+  {
+    "code": "MED506",
+    "name": "GABRIEL DE LELLIS NETO",
+    "crm": "CRM/SC 37225",
+    "specialty": "Neurologia Pediátrica",
+    "cns": "706406105207484",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED507",
+    "name": "CAROLINE LOZ DA ROSA"
+  },
+  {
+    "code": "MED509",
+    "name": "LARISSA DE SOUZA MAZZUCO",
+    "crm": "CRM/SC 36470",
+    "specialty": "Clínica Médica, Pediatria",
+    "cns": "702303117057011",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED510",
+    "name": "RAFAEL STANGE DA SILVA VALLE"
+  },
+  {
+    "code": "MED511",
+    "name": "GUILHERME SLIVA"
+  },
+  {
+    "code": "MED512",
+    "name": "SILVIA DE JESUS NICOLADELLI",
+    "crm": "CRM/SC 33195",
+    "specialty": "Clínica Médica, Pediatria",
+    "cns": "705009209752452",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED513",
+    "name": "GABRIEL DE FAVERI SACCON",
+    "crm": "CRM/SC 30591",
+    "specialty": "Pediatria",
+    "cns": "700009657910808",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED514",
+    "name": "JULIA PANATO DA ROSA",
+    "crm": "CRM/SC 36405",
+    "specialty": "Clínica Médica, Pediatria",
+    "cns": "706701523456717",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED515",
+    "name": "THEREZA JENNY GOMES TEIXEIRA"
+  },
+  {
+    "code": "MED516",
+    "name": "ANNA JÚLIA PIMENTEL E SILVA",
+    "crm": "CRM/SC 37754",
+    "specialty": "Pediatria, Pneumologia Pediátrica",
+    "cns": "705508465618810",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED517",
+    "name": "LENITA DUART DA SILVA DE CAMPOS"
+  },
+  {
+    "code": "MED518",
+    "name": "ANDRE MANNRICH ROVEDA"
+  },
+  {
+    "code": "MED520",
+    "name": "BIANCA KELEM MAZETTO"
+  },
+  {
+    "code": "MED521",
+    "name": "BEATRIZ BRIGIDO PEREIRA",
+    "specialty": "Gestação de Alto Risco",
+    "crm": "CRM/SC 27728",
+    "cns": "707005849496035",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED522",
+    "name": "MARILIA BARBIERI",
+    "crm": "CRM/SC 29537",
+    "specialty": "Pediatria",
+    "cns": "708205659065943",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED523",
+    "name": "GABRIELA THIESEN SCHUELTER"
+  },
+  {
+    "code": "MED524",
+    "name": "AMANDA FLORIANO ROVARIS"
+  },
+  {
+    "code": "MED530",
+    "name": "MARIANA AREIAS DA SILVA DE FREITAS CARVALHO",
+    "crm": "CRM/SC 36011",
+    "specialty": "Pediatria",
+    "cns": "709204244085234",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED531",
+    "name": "ANA PAULA DOMINGUES CAMPOS",
+    "crm": "CRM/SC 30953",
+    "specialty": "Pediatria",
+    "cns": "702306125522510",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED532",
+    "name": "CAMILA VIEIRA FERNANDES"
+  },
+  {
+    "code": "MED533",
+    "name": "BRUNA DE AGUIAR ARAUJO"
+  },
+  {
+    "code": "MED534",
+    "name": "STEFANI ZILLI MAFALDA",
+    "specialty": "Gestação de Alto Risco"
+  },
+  {
+    "code": "MED535",
+    "name": "ELIZANDRA ROSS MARTINS",
+    "crm": "CRM/SC 38958",
+    "specialty": "Clínica Médica, Pediatria",
+    "cns": "709201297884236",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED536",
+    "name": "VILSON RAMON BONETTI",
+    "specialty": "Dermatologia Pediátrica",
+    "crm": "CRM/SC 9203",
+    "cns": "704706768584732",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED537",
+    "name": "CAMILA SOUZA VILELA",
+    "specialty": "Oftalmologia Pediátrica",
+    "crm": "CRM/SP 177900",
+    "cns": "704200292006581",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED538",
+    "name": "NATHALY MACHIAVELLI GALEAZZI",
+    "crm": "CRM/SC 35370",
+    "specialty": "Clínica Médica",
+    "cns": "700004380501501",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED539",
+    "name": "MELISSA GAMA DE MESQUITA",
+    "crm": "CRM/SC 26341",
+    "specialty": "Mastologia",
+    "cns": "700608921299865",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED540",
+    "name": "SANDY BENEDET TAUTZ",
+    "crm": "CRM/SC 43924",
+    "specialty": "Clínica Médica",
+    "cns": "708601024952988",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED541",
+    "name": "NICOLE FIGUEREDO",
+    "crm": "CRM/SC 44080",
+    "specialty": "Clínica Médica",
+    "cns": "706208555293563",
+    "teams": "BR SANITAS, TERRES"
+  },
+  {
+    "code": "MED560",
+    "name": "FELIPE GUSTAVO CARCAMAN VALADARES"
+  },
+  {
+    "code": "MED561",
+    "name": "BEATRIZ GEREMIAS DOS SANTOS",
+    "crm": "CRM/SC 42163",
+    "specialty": "Clínica Médica, Pediatria",
+    "cns": "700008781685607",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED562",
+    "name": "GUSTAVO BELTRAME"
+  },
+  {
+    "code": "MED563",
+    "name": "DANIEL MAZZULA DE MELLO FERNANDES"
+  },
+  {
+    "code": "MED564",
+    "name": "DANIELLA CARDOSO CROCETTA",
+    "crm": "CRM/SC 31915",
+    "specialty": "Clínica Médica, Ginecologia e Obstetrícia",
+    "cns": "705605482594718",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED565",
+    "name": "ISABELA ALVES TEIXEIRA",
+    "crm": "CRM/SC 30865",
+    "specialty": "Clínica Médica, Ginecologia e Obstetrícia",
+    "cns": "706800224815225",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED566",
+    "name": "BEATRIZ BERNARDO PEREIRA",
+    "crm": "CRM/SC 41318",
+    "specialty": "Clínica Médica, Pediatria",
+    "cns": "704007852925461",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED567",
+    "name": "LUANA ALBERTON MEDEIROS",
+    "crm": "CRM/SC 33213",
+    "specialty": "Clínica Médica, Pediatria",
+    "cns": "704708705453438",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED568",
+    "name": "ANA PAULA CUCKER SORATTO",
+    "crm": "CRM/SC 37939",
+    "specialty": "Clínica Médica, Pediatria",
+    "cns": "708904707808516",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED569",
+    "name": "GABRIELLI DALMÉDICO"
+  },
+  {
+    "code": "MED570",
+    "name": "JÚLIA TURRA REICHERT"
+  },
+  {
+    "code": "MED571",
+    "name": "TAMARA SIMÃO BOSSE",
+    "crm": "CRM/SC 40303",
+    "specialty": "Pediatria",
+    "cns": "700505162748056",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED572",
+    "name": "AUGUSTO FELIPE DOS SANTOS DE BITENCOURT"
+  },
+  {
+    "code": "MED573",
+    "name": "GIOVANA MAFIOLETTI SORATTO",
+    "crm": "CRM/SC 37833",
+    "specialty": "Clínica Médica",
+    "cns": "706303707323677",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED574",
+    "name": "MARIA LAURA ZANETTE NASPOLINI"
+  },
+  {
+    "code": "MED575",
+    "name": "LAURA CEOLIN DE JESUS",
+    "crm": "CRM/SC 41895",
+    "specialty": "Clínica Médica",
+    "cns": "705008802028856",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED576",
+    "name": "LUANA GHISI UBIALI"
+  },
+  {
+    "code": "MED578",
+    "name": "BRUNA MARCOS SORATTO"
+  },
+  {
+    "code": "MED579",
+    "name": "LETÍCIA BEZ BATTI",
+    "crm": "CRM/SC 29759",
+    "specialty": "Clínica Médica, Ginecologia e Obstetrícia",
+    "cns": "700302904227239",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED580",
+    "name": "FERNANDA DE SOUZA LIMA ALVES",
+    "crm": "CRM/SC 27883",
+    "specialty": "Anestesiologia",
+    "cns": "704103897761250",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED581",
+    "name": "RODRIGO DE SOUSA ISOPPO",
+    "crm": "CRM/SC 18055",
+    "specialty": "Pediatria",
+    "cns": "700107933351720",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED582",
+    "name": "JESSICA ZILLI NUNES",
+    "crm": "CRM/SC 42140",
+    "specialty": "Clínica Médica, Pediatria",
+    "cns": "701108805199380",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED583",
+    "name": "ANA LAURA SPILLERE DAJORI",
+    "crm": "CRM/SC 36766",
+    "specialty": "Clínica Médica, Pediatria",
+    "cns": "700206915021127",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED584",
+    "name": "LIVIA SIMONI MACCARI",
+    "crm": "CRM/SC 42233",
+    "specialty": "Clínica Médica, Pediatria",
+    "cns": "705000051473556",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED585",
+    "name": "EMILLI FRAGA FERREIRA",
+    "crm": "CRM/SC 31921",
+    "specialty": "Otorrinolaringologia",
+    "cns": "707001826954238",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED586",
+    "name": "ANA PAULA AFFONSO GOMES",
+    "specialty": "Mastologia",
+    "crm": "CRM/SC 28612",
+    "cns": "705002865550252",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED587",
+    "name": "DAYANE DE PAULA SOUSA",
+    "crm": "CRM/SC 35902",
+    "specialty": "Clínica Médica, Medicina de Emergência, Otorrinolaringologia",
+    "cns": "702304152771516",
+    "teams": "BR SANITAS, TERRES"
+  },
+  {
+    "code": "MED588",
+    "name": "ALIK ANTUNES BESERRA",
+    "crm": "CRM/SC 43316",
+    "specialty": "Otorrinolaringologia",
+    "cns": "708508348448174",
+    "teams": "BR SANITAS, TERRES"
+  },
+  {
+    "code": "MED590",
+    "name": "RAFAELA AQUINO DE ALMEIDA BENITES"
+  },
+  {
+    "code": "MED600",
+    "name": "ANNE ROSSO EVANGELISTA",
+    "specialty": "Otorrinolaringologia Pediátrica",
+    "crm": "CRM/SC 21297",
+    "cns": "702802135145762",
+    "teams": "BR SANITAS, TERRES"
+  },
+  {
+    "code": "MED601",
+    "name": "MANOELLA CAETANO DOS SANTOS",
+    "crm": "CRM/SC 33934",
+    "specialty": "Ginecologia e Obstetrícia",
+    "cns": "706902179388530",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED603",
+    "name": "MARIA GIOVANNA MANENTI"
+  },
+  {
+    "code": "MED604",
+    "name": "HENRIQUE CARVALHO",
+    "specialty": "Otorrinolaringologia Pediátrica",
+    "crm": "CRM/SC 28975",
+    "cns": "706806725868629",
+    "teams": "BR SANITAS, TERRES"
+  },
+  {
+    "code": "MED607",
+    "name": "GIOVANNA DE BONA ZAVARISE",
+    "crm": "CRM/SC 42380",
+    "specialty": "Clínica Médica",
+    "cns": "704608665019520",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED608",
+    "name": "MICHELI CRISTIANE HINTZ",
+    "crm": "CRM/SC 28389",
+    "specialty": "Clínica Médica, Ginecologia e Obstetrícia",
+    "cns": "702005877530780",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED609",
+    "name": "MARILIA CIZESKI SALVAN",
+    "crm": "CRM/SC 29875",
+    "specialty": "Ginecologia e Obstetrícia",
+    "cns": "709207281846130",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED610",
+    "name": "PAMELA SOARES DE MELO",
+    "crm": "CRM/SC 44137",
+    "specialty": "Clínica Médica",
+    "cns": "703407109943300",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED611",
+    "name": "LETÍCIA SEHNEM BORTOLOTTO",
+    "crm": "CRM/SC 43962",
+    "specialty": "Clínica Médica",
+    "cns": "708505360818676",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED612",
+    "name": "CINTIA SILVESTRE"
+  },
+  {
+    "code": "MED613",
+    "name": "JHONATAN DE CAMPOS ROSA",
+    "crm": "CRM/SC 43893",
+    "specialty": "Clínica Médica, Pediatria",
+    "cns": "702406059244928",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED614",
+    "name": "MANOELLA CAETANO"
+  },
+  {
+    "code": "MED615",
+    "name": "LARA RONCONI"
+  },
+  {
+    "code": "MED616",
+    "name": "WENDELL DELLA GIUSTINA",
+    "crm": "CRM/SC 39421",
+    "specialty": "Clínica Médica",
+    "cns": "700200952635626",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED617",
+    "name": "CARLOS ALBERTO DE CARVALHO"
+  },
+  {
+    "code": "MED621",
+    "name": "CAMILE BEATRIZ FERNANDES DA SILVA"
+  },
+  {
+    "code": "MED630",
+    "name": "DANIELLE DA ROCHA CARRARO RIBEIRO LAURENTINO"
+  },
+  {
+    "code": "MED632",
+    "name": "MANOEL ROBSON DAMIN MONTEIRO"
+  },
+  {
+    "code": "MED633",
+    "name": "NICOLI SANTANA DA SILVA",
+    "crm": "CRM/SC 42334",
+    "specialty": "Clínica Médica, Pediatria",
+    "cns": "700209409633527",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED634",
+    "name": "VANESSA KNIHS DE MENEZES",
+    "specialty": "Neonatologia; Pediatria Geral",
+    "crm": "CRM/SC 11588",
+    "cns": "706405174841889",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED642",
+    "name": "BEATRIZ BATISTA MATOS",
+    "crm": "CRM/SC 43898",
+    "specialty": "Clínica Médica",
+    "cns": "700001957608409",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED643",
+    "name": "RAFAELA TEZZA MATIOLA",
+    "crm": "CRM/SC 42344",
+    "specialty": "Clínica Médica",
+    "cns": "700402448172340",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED644",
+    "name": "MARIA LUIZA CESA",
+    "crm": "CRM/SC 42096",
+    "specialty": "Clínica Médica, Pediatria",
+    "cns": "700002067381509",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED645",
+    "name": "ADRIANA MARIA DE MEDEIROS ANTUNES DA SILVA",
+    "crm": "CRM/SC 9652",
+    "specialty": "Pediatria, Pneumologia Pediátrica, Neonatologia",
+    "cns": "700005039093408",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED646",
+    "name": "JEAN RICARDO SILVESTRE",
+    "crm": "CRM/SC 11924",
+    "specialty": "Cirurgia Geral",
+    "cns": "704107013437650",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED647",
+    "name": "MARIA HELOÍSA PERDONÁ DA SILVEIRA",
+    "crm": "CRM/SC 40976",
+    "specialty": "Clínica Médica",
+    "cns": "706303703459973",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED648",
+    "name": "FERNANDA DAMINELLI EUGÊNIO",
+    "crm": "CRM/SC 43961",
+    "specialty": "Clínica Médica, Pediatria",
+    "cns": "705401429923697",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED649",
+    "name": "BRUNO RONCHI MELLO",
+    "crm": "CRM/SC 43832",
+    "specialty": "Clínica Médica, Pediatria",
+    "cns": "704203201076088",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED650",
+    "name": "MARINA DUARTE PAES",
+    "crm": "CRM/SC 44027",
+    "specialty": "Clínica Médica, Pediatria",
+    "cns": "708408774225460",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED651",
+    "name": "MARIA VITORIA CANDIOTTO BURIGO",
+    "crm": "CRM/SC 43796",
+    "specialty": "Clínica Médica",
+    "cns": "707007899398934",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED653",
+    "name": "LUIZ ANTONIO DE LUCCA",
+    "crm": "CRM/SC 23784",
+    "specialty": "Neurologia Pediátrica",
+    "cns": "706907172353531",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED658",
+    "name": "MADAY MILIAN GONZALEZ",
+    "crm": "CRM/SC 32856",
+    "specialty": "Clínica Médica, Pediatria",
+    "cns": "700405981267950",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED659",
+    "name": "MAYRA LATINI VIEIRA",
+    "crm": "CRM/SC 40998",
+    "specialty": "Clínica Médica, Pediatria",
+    "cns": "708100564214530",
+    "teams": "BR SANITAS, TERRES"
+  },
+  {
+    "code": "MED660",
+    "name": "DANIELA DADALT GUEDES",
+    "crm": "CRM/RS 52019",
+    "specialty": "Clínica Médica, Ginecologia e Obstetrícia",
+    "cns": "706400617121982",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED661",
+    "name": "FERNANDA VIEIRA DE SOUZA",
+    "crm": "CRM/SC 29885",
+    "specialty": "Clínica Médica, Ginecologia e Obstetrícia",
+    "cns": "700005130774404",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED662",
+    "name": "NEHAD JUSUF NIMER",
+    "crm": "CRM/SC 8480",
+    "specialty": "Cirurgia Geral",
+    "cns": "704009807254164",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED663",
+    "name": "ELIEL MACHADO ROVARIS",
+    "crm": "CRM/SC 21992",
+    "specialty": "Cirurgia Geral",
+    "cns": "700505789365051",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED664",
+    "name": "STEPHANIE DA CAZ XAVIER BURGARDT",
+    "crm": "CRM/SC 18340",
+    "specialty": "Pediatria, Neonatologia",
+    "cns": "706309102602580",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED665",
+    "name": "TAMIRES SILVA ALVES",
+    "specialty": "Genética",
+    "crm": "CRM/SC 44690",
+    "cns": "702805192145469",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED666",
+    "name": "SUANI CRISTINA DE SOUSA",
+    "crm": "CRM/RJ 521217836",
+    "specialty": "Clínica Médica, Pediatria, Ginecologia e Obstetrícia",
+    "cns": "705000247860358",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED667",
+    "name": "FABRISSIO PORTELINHA GRAFFUNDER",
+    "specialty": "Oftalmologia Pediátrica",
+    "crm": "CRM/SC 31760",
+    "cns": "702101714973298",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED668",
+    "name": "HENRIQUE GONCALVES DUCHINI",
+    "crm": "CRM/SC 29929",
+    "specialty": "Otorrinolaringologia",
+    "cns": "705400469724791",
+    "teams": "BR SANITAS, TERRES"
+  },
+  {
+    "code": "MED669",
+    "name": "BEATRIZ MIGUEL DE AGUIAR DA SILVA",
+    "crm": "CRM/SC 39029",
+    "specialty": "Pediatria",
+    "cns": "703205627921592",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED670",
+    "name": "IVAN NERES DA SILVA JÚNIOR",
+    "crm": "CRM/SC 43535",
+    "specialty": "Clínica Médica, Pediatria",
+    "cns": "708205615913043",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED671",
+    "name": "FLAVIA GHELLER SCHAIDHAUER",
+    "crm": "CRM/SC 11492",
+    "specialty": "Pediatria, Neonatologia",
+    "cns": "708205638437043",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED990",
+    "name": "FARMACIA CLINICA TESTE"
+  },
+  {
+    "code": "MED997",
+    "name": "MEDICO TESTE II"
+  },
+  {
+    "code": "MED998",
+    "name": "MEDICO TESTE I"
+  },
+  {
+    "code": "MED999",
+    "name": "FARMACIA CLINICA"
+  },
+  {
+    "code": "RES001",
+    "name": "RESIDENTE MARCELA ASSUNCAO CAMPOS"
+  },
+  {
+    "code": "RES002",
+    "name": "VITORIA MARMITT DE CAMPOS"
+  },
+  {
+    "code": "RES003",
+    "name": "RESIDENTE EMANUEL CARDOSO MAFRA"
+  },
+  {
+    "code": "RES004",
+    "name": "RESIDENTE MARINA RIBAS KNOTH"
+  },
+  {
+    "code": "RES005",
+    "name": "RESIDENTE ISADORA FACHIM"
+  },
+  {
+    "code": "RES006",
+    "name": "VIVIANE MEDEIROS SILVEIRA"
+  },
+  {
+    "code": "RES007",
+    "name": "RESIDENTE IOLANDA DE SOUZA HONORATO"
+  },
+  {
+    "code": "RES008",
+    "name": "RESIDENTE ARLENA FERNANDES PAIM"
+  },
+  {
+    "code": "RES009",
+    "name": "RESIDENTE SUZANA KNIPHOFF DE OLIVEIRA"
+  },
+  {
+    "code": "RES010",
+    "name": "RESIDENTE LUCAS GADENZ"
+  },
+  {
+    "code": "RES011",
+    "name": "JESSICA TELLI PALMA"
+  },
+  {
+    "code": "RES012",
+    "name": "BRUNA BIANCHIN",
+    "crm": "CRM/SC 29503",
+    "specialty": "Clínica Médica, Ginecologia e Obstetrícia",
+    "cns": "708004803550220",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "RES013",
+    "name": "MATEUS LEAL DAITX"
+  },
+  {
+    "code": "RES014",
+    "name": "RESIDENTE BRUNO PINHO ARAUJO"
+  },
+  {
+    "code": "RES015",
+    "name": "THIAGO BEZERRA G. C. DA SILVA"
+  },
+  {
+    "code": "RES016",
+    "name": "RESIDENTE BEATRIZ BRIGIDO PEREIRA"
+  },
+  {
+    "code": "RES017",
+    "name": "RESIDENTE THIAGO MEDEIROS DOS SANTOS"
+  },
+  {
+    "code": "RES018",
+    "name": "RESIDENTE BRUNA UGIONI GODOY"
+  },
+  {
+    "code": "RES019",
+    "name": "RESIDENTE THUANY SILVESTRI GARCIA"
+  },
+  {
+    "code": "RES020",
+    "name": "RESIDENTE MONICA BIZ"
+  },
+  {
+    "code": "RES021",
+    "name": "RESIDENTE MARIA HELENA ALVES"
+  },
+  {
+    "code": "RES022",
+    "name": "RESIDENTE ROGERIO MIGUEL KERBER JUNIOR"
+  },
+  {
+    "code": "RES023",
+    "name": "RESIDENTE GABRIEL DE FAVERI SACCON"
+  },
+  {
+    "code": "RES026",
+    "name": "YASMINE BARCELLOS"
+  },
+  {
+    "code": "RES24",
+    "name": "RESIDENTE SILVIA DE JESUS NICOLADELLI"
+  },
+  {
+    "code": "RES25",
+    "name": "RESIDENTE ALEXIA UGIONI GODOY"
+  },
+  {
+    "code": "MDE605",
+    "name": "AMANDA BOM NUERNBERG",
+    "crm": "CRM/SC 42440",
+    "specialty": "Clínica Médica",
+    "cns": "708407738864563",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MEFD0666",
+    "name": "FERNANDO HENRIQUE COLONETTE WESSLER",
+    "crm": "CRM/SC 44081",
+    "specialty": "Clínica Médica",
+    "cns": "708404216699762",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MULTI604",
+    "name": "BEATRIZ CAETANO COSTA",
+    "specialty": "Fisioterapia",
+    "crm": "",
+    "rqe": ""
+  },
+  {
+    "code": "MULTI605",
+    "name": "DIELE ANTUNES",
+    "specialty": "Nutrição",
+    "crm": "",
+    "rqe": ""
+  },
+  {
+    "code": "MULTI606",
+    "name": "DANIELA GAMA ARNS",
+    "specialty": "Psicologia",
+    "crm": "",
+    "rqe": ""
+  },
+  {
+    "code": "MULTI607",
+    "name": "AMANDA DOS SANTOS DE SOUZA",
+    "specialty": "Psicologia",
+    "crm": "",
+    "rqe": ""
+  },
+  {
+    "code": "MULTI608",
+    "name": "ROSE CRISPIM SOARES",
+    "specialty": "Serviço Social",
+    "crm": "",
+    "rqe": ""
+  },
+  {
+    "code": "MULTI609",
+    "name": "FERNANDA WELINTON",
+    "specialty": "Serviço Social",
+    "crm": "",
+    "rqe": ""
+  },
+  {
+    "code": "MED1000",
+    "name": "DANIELLE DA ROCHA CARARO RIBEIRO LAURENTINO",
+    "crm": "CRM/SC 12029",
+    "specialty": "Clínica Médica, Ginecologia e Obstetrícia",
+    "cns": "706401173054685",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED1001",
+    "name": "GIULIA MILANESI BROGNI FENILI",
+    "crm": "CRM/SC 26519",
+    "specialty": "Clínica Médica, Ginecologia e Obstetrícia",
+    "cns": "704605138535627",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED1002",
+    "name": "LARA GOMES RONCONI",
+    "crm": "CRM/SC 42372",
+    "specialty": "Clínica Médica",
+    "cns": "702408072844323",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED1003",
+    "name": "MARIA EDUARDA SCHERER COSTI NESI",
+    "crm": "CRM/SC 25299",
+    "specialty": "Clínica Médica, Ginecologia e Obstetrícia",
+    "cns": "701801267394574",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED1004",
+    "name": "MARIA GIOVANNA MANENTI DA SILVA",
+    "crm": "CRM/SC 31882",
+    "specialty": "Clínica Médica",
+    "cns": "708204124717545",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED1005",
+    "name": "MARIA HELENA ALVES",
+    "crm": "CRM/SC 31263",
+    "specialty": "Clínica Médica, Ginecologia e Obstetrícia",
+    "cns": "703407234467616",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED1006",
+    "name": "MARIANI LAURENTINO JESUINO",
+    "crm": "CRM/SC 36347",
+    "specialty": "Ginecologia e Obstetrícia",
+    "cns": "704000341384469",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED1007",
+    "name": "PERICLES BRASIL SPARTALIS JUNIOR",
+    "crm": "CRM/SC 11672",
+    "specialty": "Infectologia",
+    "cns": "705006065163851",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED1008",
+    "name": "ROGERIO MIGUEL KERBER JUNIOR",
+    "crm": "CRM/SC 34757",
+    "specialty": "Clínica Médica, Ginecologia e Obstetrícia",
+    "cns": "204431078360008",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED1009",
+    "name": "STEFANI ZILLI MAFALDA FONTANELLA",
+    "crm": "CRM/SC 21978",
+    "specialty": "Ginecologia e Obstetrícia",
+    "cns": "704808570603142",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED1010",
+    "name": "YASMINE PINTO BARCELLOS",
+    "crm": "CRM/SC 31161",
+    "specialty": "Clínica Médica, Ginecologia e Obstetrícia",
+    "cns": "700003926746410",
+    "teams": "BR SANITAS"
+  },
+  {
+    "code": "MED1011",
+    "name": "AMANDA ZAMPOLLI FELTRIN",
+    "crm": "CRM/SC 21311",
+    "specialty": "Cirurgia Geral",
+    "cns": "705004018072258",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED1012",
+    "name": "CATHARINA VOSS ANDRADE",
+    "crm": "CRM/SC 31947",
+    "specialty": "Clínica Médica, Cirurgia Geral, Infectologia",
+    "cns": "700006271805501",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED1013",
+    "name": "CINTHIA VALERIA OLIVEIRA MEDEIROS",
+    "crm": "CRM/SC 36980",
+    "specialty": "Clínica Médica, Pediatria",
+    "cns": "709806043411491",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED1014",
+    "name": "FERNANDA NOGUEIRA SILVA",
+    "crm": "CRM/SC 34964",
+    "specialty": "Pediatria",
+    "cns": "706600566298110",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED1015",
+    "name": "FLAVIA GOIS ABONIZIO SILVEIRA",
+    "crm": "CRM/SC 43418",
+    "specialty": "Pediatria, Neonatologia",
+    "cns": "708204136694340",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED1016",
+    "name": "JOAO DE BONA CASTELAN FILHO",
+    "crm": "CRM/SC 3607",
+    "specialty": "Cirurgia Geral",
+    "cns": "706004843160540",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED1017",
+    "name": "JULIO CESAR DE LUCA FILHO",
+    "crm": "CRM/SC 22271",
+    "specialty": "Cirurgia Geral, Gastroenterologia Pediátrica",
+    "cns": "709209202887930",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED1018",
+    "name": "LUCIANA SATIE BATISTA NEZZO",
+    "crm": "CRM/SC 30520",
+    "specialty": "Clínica Médica, Pediatria",
+    "cns": "700101957343412",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED1019",
+    "name": "MARIAH SALVAN ROSENSTENGEL",
+    "crm": "CRM/SC 36526",
+    "specialty": "Clínica Médica, Pediatria",
+    "cns": "700504335019653",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED1020",
+    "name": "MONICA BIZ DAL FARRA",
+    "crm": "CRM/SC 28431",
+    "specialty": "Pediatria",
+    "cns": "705008088395254",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED1021",
+    "name": "PAOLA FIALHO PERONDI ALAMINI",
+    "crm": "CRM/SC 22538",
+    "specialty": "Clínica Médica, Pediatria",
+    "cns": "708700177850195",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED1022",
+    "name": "PAULA ABATTI MORETTO",
+    "crm": "CRM/SC 44054",
+    "specialty": "Clínica Médica",
+    "cns": "706302712839871",
+    "teams": "TERRES"
+  },
+  {
+    "code": "MED1023",
+    "name": "THUANY SILVESTRI GARCIA TONIAL",
+    "crm": "CRM/SC 29711",
+    "specialty": "Pediatria",
+    "cns": "708409744661662",
+    "teams": "TERRES"
+  }
 ]
