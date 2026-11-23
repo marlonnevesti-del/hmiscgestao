@@ -28,7 +28,7 @@ export function MedicalQueue({ unit, ps }: { unit?: string; ps?: boolean } = {})
   const sadtNames = new Set(useStore((s) => s.ambSpecialties).filter((x) => x.group === 'sadt').map((x) => x.name));
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => { if (!ps) return; const t = setInterval(() => setNow(Date.now()), 30000); return () => clearInterval(t); }, [ps]);
-  const list = sortMedicalQueue(encounters.filter((e) => ['AGUARDANDO_MEDICO', 'EM_ATENDIMENTO_MEDICO', 'EM_OBSERVACAO_REAVALIACAO'].includes(e.status_fluxo) && (!unit || e.type === unit) && !(unit === 'Ambulatório' && sadtNames.has(e.specialty))) as PsEncounter[];
+  const list = sortMedicalQueue(encounters.filter((e) => ['AGUARDANDO_MEDICO', 'EM_ATENDIMENTO_MEDICO', 'EM_OBSERVACAO_REAVALIACAO'].includes(e.status_fluxo) && (!unit || e.type === unit) && !(unit === 'Ambulatório' && sadtNames.has(e.specialty)))) as PsEncounter[];
   return <div className="space-y-4">
     {!unit && <h1 className="text-xl font-semibold">Consultório médico</h1>}
     {!list.length && <p className="py-6 text-muted-foreground">Nenhum paciente aguardando atendimento ou reavaliação.</p>}
