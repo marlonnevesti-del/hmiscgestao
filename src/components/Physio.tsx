@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { can, type Patient } from '@/lib/hospital-data';
 import { cancelPhysio, recordPhysioSession, requestPhysio, useStore } from '@/lib/hospital-store';
-import { PHYSIO_MODALITIES, PHYSIO_SUPPORT, isPhysioOpen, sortPhysio, type PhysioModality, type PhysioPriority, type PhysioRequest } from '@/lib/physio';
+import { PHYSIO_MODALITIES, PHYSIO_SUPPORT, PHYSIO_FREQUENCIES, frequencyBadge, type PhysioFrequency, isPhysioOpen, sortPhysio, type PhysioModality, type PhysioPriority, type PhysioRequest } from '@/lib/physio';
 import { cn } from '@/lib/utils';
 
 const run = (fn: () => void) => { try { fn(); } catch (e) { toast.error(e instanceof Error ? e.message : 'Ação não concluída'); } };
@@ -16,7 +16,7 @@ const since = (iso: string) => { const m = Math.round((Date.now() - Date.parse(i
 export function PhysioRequestButton({ p }: { p: Patient }) {
   const profile = useStore((s) => s.profile);
   const [open, setOpen] = useState(false);
-  const [f, setF] = useState({ modality: 'Respiratória' as PhysioModality, priority: 'Rotina' as PhysioPriority, support: 'Ar ambiente', justification: '' });
+  const [f, setF] = useState({ modality: 'Respiratória' as PhysioModality, priority: 'Rotina' as PhysioPriority, frequency: '1X' as PhysioFrequency, support: 'Ar ambiente', justification: '' });
   const openReq = (p.physio ?? []).filter(isPhysioOpen);
   return <>
     <Button variant="outline" disabled={!can(profile, 'prescrever')} onClick={() => setOpen(true)}>Solicitar fisioterapia{openReq.length ? ` (${openReq.length} ativa)` : ''}</Button>
@@ -24,6 +24,7 @@ export function PhysioRequestButton({ p }: { p: Patient }) {
       <div className="grid gap-3 text-sm">
         <label className="grid gap-1">Modalidade<select className={field} value={f.modality} onChange={(e) => setF({ ...f, modality: e.target.value as PhysioModality })}>{PHYSIO_MODALITIES.map((m) => <option key={m}>{m}</option>)}</select></label>
         <label className="grid gap-1">Prioridade<select className={field} value={f.priority} onChange={(e) => setF({ ...f, priority: e.target.value as PhysioPriority })}><option>Rotina</option><option>Urgente</option></select></label>
+        <fieldset className="grid gap-1"><legend>Frequência / Quantidade</legend>{PHYSIO_FREQUENCIES.map((o) => <label key={o.id} className="flex items-center gap-2"><input type="radio" name="physio-freq" checked={f.frequency === o.id} onChange={() => setF({ ...f, frequency: o.id })} />{o.label}</label>)}</fieldset>
         <label className="grid gap-1">Suporte ventilatório atual<select className={field} value={f.support} onChange={(e) => setF({ ...f, support: e.target.value })}>{PHYSIO_SUPPORT.map((m) => <option key={m}>{m}</option>)}</select></label>
         <label className="grid gap-1">Indicação / justificativa<textarea className="min-h-20 rounded-md border bg-background p-2" value={f.justification} onChange={(e) => setF({ ...f, justification: e.target.value })} /></label>
         <Button onClick={() => { if (!window.confirm(`Confirmar envio do pedido de fisioterapia para ${p.name}?`)) return; run(() => { requestPhysio(p.id, f); setOpen(false); setF({ ...f, justification: '' }); toast.success('Pedido enviado para a Fisioterapia'); }); }}>Enviar solicitação</Button>
@@ -52,7 +53,7 @@ export function PhysioBoard() {
     {shown.map(({ p, req }) => <section key={req.id} className="rounded-xl border bg-card p-4">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div><b>{p.name}</b> <span className="text-sm text-muted-foreground">({p.age})</span><div className="text-sm text-muted-foreground">Leito: {p.bed || '—'} · Setor: {p.ward}</div></div>
-        <div className="flex gap-2 text-xs"><span className={cn('rounded px-2 py-1 font-semibold', req.priority === 'Urgente' ? 'bg-destructive/15 text-destructive' : 'bg-muted')}>{req.priority.toUpperCase()}</span><span className="rounded bg-muted px-2 py-1">{req.modality}</span><span className="rounded bg-muted px-2 py-1">{req.status}</span></div>
+        <div className="flex gap-2 text-xs"><span className={cn('rounded px-2 py-1 font-semibold', req.priority === 'Urgente' ? 'bg-destructive/15 text-destructive' : 'bg-muted')}>{req.priority.toUpperCase()}</span>{req.frequency && <span className={cn('rounded px-2 py-1 font-semibold', req.frequency === 'Agora' ? 'bg-destructive/15 text-destructive' : 'bg-primary/10 text-primary')}>{frequencyBadge(req)}</span>}<span className="rounded bg-muted px-2 py-1">{req.modality}</span><span className="rounded bg-muted px-2 py-1">{req.status}</span></div>
       </div>
       <div className="mt-2 border-t pt-2 text-sm">
         <div className="text-muted-foreground">Solicitante: {req.requestedBy} · {since(req.requestedAt)} · Suporte: {req.support}</div>

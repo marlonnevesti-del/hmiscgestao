@@ -734,7 +734,7 @@ export function setIntensiveSafety(patientId: string, safety: import('./uti-uci'
 }
 
 /** Médico solicita atendimento fisioterápico; aparece na área Fisioterapia. */
-export function requestPhysio(patientId: string, data: Pick<import('./physio').PhysioRequest, 'modality' | 'priority' | 'support' | 'justification'>) {
+export function requestPhysio(patientId: string, data: Pick<import('./physio').PhysioRequest, 'modality' | 'priority' | 'support' | 'justification'> & { frequency?: import('./physio').PhysioFrequency }) {
   requireAction('prescrever');
     const issues = physioRequestIssues(data); if (issues.length) throw new Error(issues.join(' '));
   const req: import('./physio').PhysioRequest = { ...data, justification: data.justification.trim(), id: crypto.randomUUID(), requestedAt: new Date().toISOString(), requestedBy: professionalName(state.profile), status: 'Aguardando', sessions: [] };
@@ -746,10 +746,10 @@ export function recordPhysioSession(patientId: string, reqId: string, s: { condu
   requireAction('evoluir');
   if (!s.conduct.trim()) throw new Error('Descreva a conduta realizada.');
   const by = professionalName(state.profile); const at = new Date().toISOString();
-  updatePatient(patientId, (p) => ({
+  updatePatient(patientId, (p) => { const cur = (p.physio ?? []).find((r) => r.id === reqId); const stamp = cur?.frequency ? (cur.frequency === 'Agora' ? 'Sessão única (Agora) · ' : `${cur.sessions.filter((x) => Date.now() - Date.parse(x.at) < 86400000).length + 1}ª sessão do dia (Prescrição: ${cur.frequency}/dia) · `) : ''; return {
     physio: (p.physio ?? []).map((r) => r.id === reqId ? { ...r, status: finish ? 'Concluída' : 'Em acompanhamento', sessions: [...r.sessions, { id: crypto.randomUUID(), at, by, ...s }] } : r),
-    evolutions: [...p.evolutions, { time: new Date(at).toLocaleString('pt-BR'), cat: 'Fisioterapia', author: by, text: `${s.conduct.trim()}${s.pre ? ` | Pré: ${s.pre}` : ''}${s.post ? ` | Pós: ${s.post}` : ''}${finish ? ' | Alta da fisioterapia' : ''}` }],
-  }));
+    evolutions: [...p.evolutions, { time: new Date(at).toLocaleString('pt-BR'), cat: 'Fisioterapia', author: by, text: `${stamp}${s.conduct.trim()}${s.pre ? ` | Pré: ${s.pre}` : ''}${s.post ? ` | Pós: ${s.post}` : ''}${finish ? ' | Alta da fisioterapia' : ''}` }],
+  }; });
 }
 export function cancelPhysio(patientId: string, reqId: string, note: string) {
   requireAction('prescrever');
