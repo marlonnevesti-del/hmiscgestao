@@ -85,6 +85,13 @@
       "when": 1795175927362,
       "tag": "0011_admins_full_access",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1795456557954,
+      "tag": "0012_clinical_realtime_counters",
+      "breakpoints": true
     }
   ]
 }

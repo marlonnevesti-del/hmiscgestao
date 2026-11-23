@@ -14,6 +14,21 @@ export type Database = {
   }
   public: {
     Tables: {
+      clinical_counters: {
+        Row: {
+          kind: string
+          value: number
+        }
+        Insert: {
+          kind: string
+          value?: number
+        }
+        Update: {
+          kind?: string
+          value?: number
+        }
+        Relationships: []
+      }
       clinical_state: {
         Row: {
           data: Json
@@ -130,6 +145,10 @@ export type Database = {
         Returns: boolean
       }
       is_approved_employee: { Args: { _user_id: string }; Returns: boolean }
+      next_clinical_number: {
+        Args: { _kind: string; _min?: number }
+        Returns: number
+      }
       remove_employee_access: {
         Args: { target_id: string }
         Returns: undefined

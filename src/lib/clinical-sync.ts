@@ -4,6 +4,8 @@ import { PHARMACY_CATALOG, WAREHOUSE_CATALOG, getState, setState, subscribeState
 import { DEFAULT_CID_AREAS, DEFAULT_CID_GROUPS } from "./cid-access";
 import { DEFAULT_ROOMS } from "./panel-calls";
 import { DEFAULT_SPECIALTIES } from "./ambulatorio";
+import { setSyncStatus } from "./sync-status";
+import { refillSequence } from "./sequence-pool";
 import { mergeCatalog, normalizeStock } from "./pharmacy-stock";
 
 // Shared clinical data persisted as one snapshot row; keys below are the durable part of the store.
@@ -33,17 +35,19 @@ async function pull() {
   if (dirty || saving) return;
   // Cheap version check first; only download the full snapshot when it changed.
   if (version >= 0) {
-    const { data: head } = await supabase.from("clinical_state").select("version").eq("id", "main").maybeSingle();
+    const { data: head, error } = await supabase.from("clinical_state").select("version").eq("id", "main").maybeSingle();
+    setSyncStatus(error ? "offline" : "synced");
     if (!head || head.version === version) return;
   }
-  const { data } = await supabase.from("clinical_state").select("data, version").eq("id", "main").maybeSingle();
+  const { data, error } = await supabase.from("clinical_state").select("data, version").eq("id", "main").maybeSingle();
+  setSyncStatus(error ? "offline" : dirty ? "saving" : "synced");
   if (data && data.version !== version) apply(data.data as Partial<Snapshot>, data.version);
   if (!data && version === -1) version = 0;
 }
 
 async function push() {
   if (saving || !dirty || version < 0) return;
-  saving = true; dirty = false;
+  saving = true; dirty = false; setSyncStatus("saving");
   try {
     const { data: u } = await supabase.auth.getUser();
     for (let attempt = 0; attempt < 5; attempt++) {
@@ -54,7 +58,7 @@ async function push() {
       const res = version === 0
         ? await supabase.from("clinical_state").insert({ id: "main", ...row }).select("version")
         : await supabase.from("clinical_state").update(row).eq("id", "main").eq("version", version).select("version");
-      if (!res.error && res.data?.length) { version = next; base = JSON.parse(JSON.stringify(local)); return; }
+      if (!res.error && res.data?.length) { version = next; base = JSON.parse(JSON.stringify(local)); setSyncStatus("synced"); return; }
       const { data: remote } = await supabase.from("clinical_state").select("data, version").eq("id", "main").maybeSingle();
       if (!remote) { dirty = true; return; }
       const merged = mergeSnapshots(base, local, remote.data as Partial<Snapshot>);
@@ -62,7 +66,7 @@ async function push() {
       base = JSON.parse(JSON.stringify(remote.data ?? {}));
     }
     dirty = true;
-  } catch { dirty = true; } finally { saving = false; }
+  } catch { dirty = true; setSyncStatus("offline"); } finally { saving = false; }
 }
 
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
@@ -96,10 +100,18 @@ export function useClinicalSync() {
   useEffect(() => {
     let alive = true;
     void pull();
+    void refillSequence("baa"); void refillSequence("fia");
+    // Aviso instantâneo quando outro computador salva; o intervalo fica como reserva.
+    const channel = supabase.channel(`clinical-${Math.random().toString(36).slice(2)}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "clinical_state" }, () => { if (dirty) void push(); else void pull(); })
+      .subscribe();
+    const onOff = () => setSyncStatus("offline");
+    const onOn = () => { void pull(); if (dirty) void push(); };
+    window.addEventListener("offline", onOff); window.addEventListener("online", onOn);
     const unsub = subscribeState(() => { if (!applying && version >= 0) { dirty = true; void push(); } });
     const t = setInterval(() => { if (!alive) return; if (dirty) void push(); else if (!document.hidden) void pull(); }, 3000);
     const onVis = () => { if (!document.hidden) void pull(); };
     document.addEventListener("visibilitychange", onVis);
-    return () => { alive = false; clearInterval(t); unsub(); document.removeEventListener("visibilitychange", onVis); };
+    return () => { alive = false; clearInterval(t); void supabase.removeChannel(channel); window.removeEventListener("offline", onOff); window.removeEventListener("online", onOn); unsub(); document.removeEventListener("visibilitychange", onVis); };
   }, []);
 }

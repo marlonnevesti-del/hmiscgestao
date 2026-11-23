@@ -11,7 +11,7 @@ import { RiskBadge, RiskStripe } from "./RiskBadge";
 import { SpecialConditionBadges } from "./SpecialConditions";
 import { can, MANCHESTER, type Manchester, type Patient } from "@/lib/hospital-data";
 import { CallPanelButton } from "./CallPanelButton";
-import { callPatient, completeTriage, useStore } from "@/lib/hospital-store";
+import { callPatient, completeTriage, inCareBy, useStore } from "@/lib/hospital-store";
 import { sortMedicalQueue, type Encounter } from "@/lib/care-flow";
 import { descritorPorId, FLUXOGRAMAS, fluxogramaPorId, PUBLICO_LABEL, sugerirCorPCACR, TEMPO_PCACR, type Publico } from "@/lib/pcacr";
 import { cn } from "@/lib/utils";
@@ -85,7 +85,7 @@ function QueueCard({ encounter, now, onSelect, position }: { encounter: Encounte
       <div className="flex shrink-0 flex-col gap-1">
         <ProcedurePrintButton patientId={encounter.patientId} sector="Triagem" />{encounter.status_fluxo === "AGUARDANDO_TRIAGEM" && <>{can(profile, "triagem") && <CallPanelButton patientId={encounter.patientId} fixedRoom="Triagem" />}<Button size="sm" disabled={!can(profile, "triagem")} onClick={() => onSelect(encounter)}>Classificar</Button></>}
         {encounter.status_fluxo === "AGUARDANDO_MEDICO" && <><Button size="sm" disabled={!can(profile, "prescrever")} onClick={call}>Chamar</Button><Button size="sm" variant="ghost" disabled={!can(profile, "triagem")} onClick={() => onSelect(encounter)}>Reclassificar</Button></>}
-        {encounter.status_fluxo === "EM_ATENDIMENTO_MEDICO" && <Button size="sm" variant="secondary" asChild><Link to="/pacientes/$id" params={{ id: encounter.patientId }}>Abrir</Link></Button>}
+        {encounter.status_fluxo === "EM_ATENDIMENTO_MEDICO" && <span className="max-w-40 truncate rounded bg-muted px-1.5 py-0.5 text-[11px] font-medium" title={`Em atendimento com ${inCareBy(encounter) ?? ""}`}>Com {inCareBy(encounter)}</span>}{encounter.status_fluxo === "EM_ATENDIMENTO_MEDICO" && <Button size="sm" variant="secondary" asChild><Link to="/pacientes/$id" params={{ id: encounter.patientId }}>Abrir</Link></Button>}
         {encounter.status_fluxo === "EM_OBSERVACAO_REAVALIACAO" && <Button size="sm" variant="secondary" disabled={!can(profile, "prescrever")} onClick={call}>Reavaliar</Button>}
       </div>
     </div>

@@ -43,6 +43,7 @@ export const updatePatient = (id: string, fn: (p: Patient) => Partial<Patient>) 
 export const professionalName = (_p: Profile) => state.employeeName || "Colaborador";
 export const nowHM = () => new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
 
+import { takeSequence } from './sequence-pool';
 import { examRequestIssues as examRequestIssuesFn, moveExam as moveExamFn } from './exam-requests';
 import type { PsDestination, PsEncounter, PsInfo, ScaleRecord, SepsisKind } from './ps-infantil';
 import { PS_BEDS } from './ps-infantil';
@@ -64,11 +65,12 @@ export function openEncounter(patient: Patient, type: string, specialty: string,
   requireAction('recepcao');
   if (state.encounters.some((e) => e.patientId === patient.id && e.status_fluxo !== 'ALTA_HOSPITALAR')) throw new Error('Paciente já possui um BAA ativo.');
   const at = new Date().toISOString();
-  const number = `BAA-${new Date().getFullYear()}-${String(state.beSequence + 1).padStart(6, '0')}`;
+  const beq = takeSequence('baa', state.beSequence + 1);
+  const number = `BAA-${new Date().getFullYear()}-${String(beq).padStart(6, '0')}`;
   const e: Encounter = { id: crypto.randomUUID(), patientId: patient.id, number, type, specialty, complaint, ...(nursingPreConsult && type === 'Ambulatório' ? { nursingPreConsult: true } : {}), status_fluxo: 'AGUARDANDO_TRIAGEM', openedAt: at, history: [{ status: 'AGUARDANDO_TRIAGEM', at, by: professionalName(state.profile), note: 'Recepção: abertura de BAA' }] };
   const direct = type === 'Ambulatório';
   const opened = direct ? transition(e, 'AGUARDANDO_MEDICO', professionalName(state.profile), 'Ambulatório: pré-consulta de enfermagem e atendimento', at) : e;
-  setState((s) => ({ beSequence: s.beSequence + 1, patients: [...s.patients.filter((p) => p.id !== patient.id), patient], encounters: [...s.encounters, opened], queue: direct ? s.queue : [...s.queue, { id: e.id, name: patient.name, group: patient.type === 'gestante' || patient.type === 'puerpera' ? 'obstetrica' : 'pediatria', complaint, arrivedMinAgo: 0, detail: patient.age }] }));
+  setState((s) => ({ beSequence: Math.max(s.beSequence, beq), patients: [...s.patients.filter((p) => p.id !== patient.id), patient], encounters: [...s.encounters, opened], queue: direct ? s.queue : [...s.queue, { id: e.id, name: patient.name, group: patient.type === 'gestante' || patient.type === 'puerpera' ? 'obstetrica' : 'pediatria', complaint, arrivedMinAgo: 0, detail: patient.age }] }));
   return opened;
 }
 export function savePatientRegistration(id: string, input: PatientRegistration) {
@@ -87,9 +89,16 @@ export function completeTriage(id: string, t: Triage) {
     : transition(e, 'AGUARDANDO_MEDICO', professionalName(state.profile), 'Triagem concluída');
   commitEncounter({ ...next, triage: t, complaint: t.complaint }, { patients: state.patients.map((x) => x.id === p.id ? { ...x, weight: t.weight, ...(Number(t.height) > 0 ? { height: Number(t.height) } : {}), guardian: t.guardian, ig: t.ig, dum: t.dum, allergies: t.allergies, risks: t.allergies.length ? [...new Set([...x.risks, 'Alergia' as const])] : x.risks.filter((r) => r !== 'Alergia'), vitals: [...x.vitals, t.vital] } : x) });
 }
+/** Profissional que está com o paciente em consulta agora (semáforo entre computadores). */
+export function inCareBy(e: Encounter): string | null {
+  if (e.status_fluxo !== 'EM_ATENDIMENTO_MEDICO') return null;
+  return [...e.history].reverse().find((h) => h.status === 'EM_ATENDIMENTO_MEDICO')?.by ?? null;
+}
 export function callPatient(id: string) {
   requireAction('prescrever');
   const { e } = getEncounter(id);
+  const owner = inCareBy(e);
+  if (owner && owner !== professionalName(state.profile)) throw new Error(`Paciente já está em atendimento médico com ${owner}.`);
   commitEncounter(transition(e, 'EM_ATENDIMENTO_MEDICO', professionalName(state.profile), 'Consulta / reavaliação iniciada'));
 }
 export function saveMedical(id: string, medical: NonNullable<Encounter['medical']>) {
@@ -328,7 +337,7 @@ export function requestAdmission(id: string, req: { ward: string; character: 'Ur
 // Admission closes the BAA and opens the FIA as the official inpatient document.
 function openFia(e: Encounter, ward: string, bed: string, at: string, by: string): { e: Encounter; seq: number } {
   if (e.fia) return { e: { ...e, fia: { ...e.fia, ward, bed } }, seq: state.fiaSequence ?? 0 };
-  const seq = (state.fiaSequence ?? 0) + 1;
+  const seq = takeSequence('fia', (state.fiaSequence ?? 0) + 1);
   const number = `FIA-${new Date(at).getFullYear()}-${String(seq).padStart(6, '0')}`;
   const doctor = e.admission?.requestedBy ?? e.signedBy ?? by;
   const fia = { number, openedAt: at, ward, bed, doctor, authorizedBy: by, cid: e.admission?.cid || e.medical?.cid || '', justification: e.admission?.justification ?? '', character: e.admission?.character ?? 'Urgência' };

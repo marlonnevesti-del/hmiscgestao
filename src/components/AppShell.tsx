@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { PharmacyCallAlert } from "./PharmacyCallAlert";
 import { pendingCounts } from "@/lib/dashboard";
 import { CommandPalette } from "./CommandPalette";
+import { SyncIndicator } from "./SyncIndicator";
 import logo from "@/assets/logo-hmisc-santa-casa.png.asset.json";
 
 const GROUPS = [
@@ -123,6 +124,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
           <CommandPalette />
           <div className="ml-auto flex items-center gap-3">
+            <SyncIndicator />
             <Popover>
               <PopoverTrigger className="relative flex items-center gap-1.5 rounded-full bg-maternal-soft px-3 py-1.5 text-xs font-medium text-maternal" aria-label="Alertas críticos">
                 <Bell className="h-4 w-4" /> {alerts.length}
