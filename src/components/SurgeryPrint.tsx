@@ -34,6 +34,9 @@ export function SurgeryPrint({ s, p }: { s?: Surgery | undefined; p?: Patient | 
     <div className="pre"><b>Achados:</b> {r?.findings || "—"}</div>
     <div className="sheet-row"><F l="Perda sanguínea" v={r?.bloodLoss} /><F l="Drenos/curativos" v={r?.drains} /><F l="Peça para anatomopatológico" v={r?.specimen} /></div>
     <div className="sheet-row"><F l="Intercorrências" v={r?.complications} /><F l="Encaminhamento" v={r?.destination} /></div>
+  </section><section className="sheet-page">
+    <Letterhead title="Checklist de Cirurgia Segura (OMS)" />
+    <div className="sheet-row"><F l="Paciente" v={s.patient} /><F l="Procedimento" v={s.type} /><F l="Data" v={s.date ? new Date(s.date + "T00:00").toLocaleDateString("pt-BR") : ""} /></div>
     <h3>Checklist de Cirurgia Segura (OMS)</h3>
     <div className="sheet-cols">{(["signIn", "timeOut", "signOut"] as const).map((ph) => <div key={ph}><b>{PH[ph]}</b>{CHECKLIST[ph].map((i) => <div key={i}>{s.checks[`${ph}:${i}`] ? "[X]" : "[  ]"} {i}</div>)}</div>)}</div>
     <div className="sheet-signs"><div><div className="line" />Cirurgião(ã) – carimbo e CRM</div><div><div className="line" />Anestesiologista – carimbo e CRM</div></div>

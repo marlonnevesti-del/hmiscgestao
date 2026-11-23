@@ -53,7 +53,7 @@ export function Body({ doc, p, e, companion }: { doc: Doc; p: Patient; e?: Encou
         <tr><td><b>FIA:</b> {e?.fia?.number || '—'} · <b>Leito:</b> {bed}</td><td><b>Internação:</b> {dt(e?.fia?.openedAt)}</td></tr>
       </tbody></table>
       <h3>DECLARO QUE:</h3>
-      <ol>{CLAUSES.map((c) => <li key={c}>{c}</li>)}</ol>
+      <ol style={{ fontSize: '10pt', lineHeight: 1.35, textAlign: 'justify' }}>{CLAUSES.map((c) => <li key={c}>{c}</li>)}</ol>
     </section>
     <section className="doc-page">
       <Letterhead title="ORIENTAÇÕES PARA SEGURANÇA DO PACIENTE" />
@@ -85,8 +85,8 @@ export function Body({ doc, p, e, companion }: { doc: Doc; p: Patient; e?: Encou
     <p style={{ textAlign: 'justify' }}>Declaro que entreguei os pertences acima para guarda e que os retirei em perfeitas condições na data abaixo. O hospital não se responsabiliza por objetos não relacionados neste termo.</p>
     <p><b>Entregue em:</b> ____/____/______ às ____:____ &nbsp;&nbsp; <b>Retirado em:</b> ____/____/______ às ____:____</p>
     <p style={{ textAlign: 'right', marginTop: '2em' }}>Criciúma - SC, {today()}.</p>
-    <div className="doc-sign"><div className="line" />Paciente / Responsável</div>
-    <div className="doc-sign"><div className="line" />Colaborador do hospital</div>
+    <div className="doc-signs"><div className="doc-sign"><div className="line" />Paciente / Responsável</div>
+    <div className="doc-sign"><div className="line" />Colaborador do hospital</div></div>
   </section>;
   if (doc === 'recusa') return <section className="doc-page">
     <Letterhead title="TERMO DE RECUSA / DESISTÊNCIA DE ATENDIMENTO" />
@@ -94,9 +94,9 @@ export function Body({ doc, p, e, companion }: { doc: Doc; p: Patient; e?: Encou
     <p style={{ textAlign: 'justify', lineHeight: 1.8 }}>Ainda assim, por livre e espontânea vontade, RECUSO / DESISTO do atendimento ou tratamento indicado, assumindo inteira responsabilidade pelas consequências desta decisão e isentando o hospital e sua equipe.</p>
     <p><b>Motivo:</b> {line()}{line()}</p>
     <p style={{ textAlign: 'right', marginTop: '2em' }}>Criciúma - SC, {today()}.</p>
-    <div className="doc-sign"><div className="line" />Paciente / Responsável</div>
+    <div className="doc-signs"><div className="doc-sign"><div className="line" />Paciente / Responsável</div>
     <div className="doc-sign"><div className="line" />Testemunha</div>
-    <div className="doc-sign"><div className="line" />Profissional responsável</div>
+    <div className="doc-sign"><div className="line" />Profissional responsável</div></div>
   </section>;
   if (doc === 'acompanhante') return <section className="doc-page">
     <Letterhead title="DECLARAÇÃO DE ACOMPANHANTE" />

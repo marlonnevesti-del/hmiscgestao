@@ -52,7 +52,7 @@ function RxSheet({ p, rx, name, council }: { p: Patient; rx: ControlledRx; name:
     <ol>{rx.items.filter((x) => x.drug.trim()).map((x, i) => <li key={i}><b>{x.drug}</b> — {x.qty}<br />{x.dose}</li>)}</ol>
     <p style={{ textAlign: "right", marginTop: "1.5em" }}>Criciúma - SC, {today()}.</p>
     <Sign name={name} council={council} />
-    <table className="doc-id" style={{ marginTop: "1.5em" }}><tbody>
+    <table className="doc-id" style={{ marginTop: "1em" }}><tbody>
       <tr><td><b>IDENTIFICAÇÃO DO COMPRADOR</b><br />Nome: {rx.buyer || "____________________"}<br />Ident.: {rx.buyerDoc || "__________"}<br />Endereço: {rx.buyerAddress || "____________________"}</td>
         <td><b>IDENTIFICAÇÃO DO FORNECEDOR</b><br /><br />______________________<br />Assinatura do farmacêutico · Data</td></tr>
     </tbody></table>

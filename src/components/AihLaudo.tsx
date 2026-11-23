@@ -73,7 +73,7 @@ function AihFooter() {
     <div style={{ textAlign: 'right', fontSize: '6.5pt' }}><b>UNIDADE CRICIÚMA | HMISC</b><br />Rua Wenceslau Braz, 115, Operária Nova, Criciúma – SC. CEP 88.809-020</div>
   </div>;
 }
-const pageS: CSSProperties = { position: 'relative', minHeight: '270mm', paddingBottom: 40, fontFamily: 'Arial, sans-serif', color: '#000', background: '#fff' };
+const pageS: CSSProperties = { position: 'relative', minHeight: '268mm', boxSizing: 'border-box', paddingBottom: 40, fontFamily: 'Arial, sans-serif', color: '#000', background: '#fff' };
 
 export function PrintLaudo({ f }: { f: ReturnType<typeof aihDefaults> }) {
   const sx = f.sexo.toLowerCase(); const doc = f.docTipo.toUpperCase(); const ce = f.causaExt.toLowerCase(); const vi = f.vinculo.toLowerCase();
@@ -100,9 +100,9 @@ export function PrintLaudo({ f }: { f: ReturnType<typeof aihDefaults> }) {
       </tbody></table>
       <Title t="JUSTIFICATIVA DA INTERNAÇÃO" />
       <table style={T}><tbody>
-        <tr><C l="20 – Principais Sinais e Sintomas Clínicos" v={f.sintomas} h={70} /></tr>
-        <tr><C l="21 – Condições que Justificam a Internação" v={f.condicoes} h={70} /></tr>
-        <tr><C l="22 – Principais Resultados de Provas Diagnosticas (Resultados de Exames Realizados)" v={f.exames} h={70} /></tr>
+        <tr><C l="20 – Principais Sinais e Sintomas Clínicos" v={f.sintomas} h={62} /></tr>
+        <tr><C l="21 – Condições que Justificam a Internação" v={f.condicoes} h={62} /></tr>
+        <tr><C l="22 – Principais Resultados de Provas Diagnosticas (Resultados de Exames Realizados)" v={f.exames} h={62} /></tr>
       </tbody></table>
       <AihFooter />
     </section>
