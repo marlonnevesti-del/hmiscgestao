@@ -33,11 +33,29 @@ const wasAdmitted = (e: Encounter) => e.status_fluxo === "ENCAMINHADO_INTERNACAO
 
 export const SIGTAP_DEFAULT = { BPA: "0301060061", AIH: "0303010037" };
 
+/** Códigos SIGTAP usados pelo faturamento ambulatorial do HMISC (atalho de 1 clique). */
+export const HMISC_BPA_CODES: { code: string; label: string }[] = [
+  { code: "0301010072", label: "Consulta médica em atenção especializada" },
+  { code: "0301010048", label: "Consulta de profissional de nível superior (não médico)" },
+  { code: "0301060061", label: "Atendimento materno até 4 horas" },
+  { code: "0301060029", label: "Atendimento materno acima de 4 horas (observação)" },
+  { code: "0301060118", label: "Acolhimento com classificação de risco" },
+];
+const endOf = (e: Encounter) => e.discharge?.at || e.baaClosedAt || e.history.at(-1)?.at || "";
+/** Maternidade: até 4h → 0301060061; acima de 4h → 0301060029. Sem horário de saída, mantém até 4h. */
+export function maternalCodeByDuration(e: Pick<Encounter, "openedAt" | "discharge" | "baaClosedAt" | "history">): string {
+  const end = Date.parse(endOf(e as Encounter)), start = Date.parse(e.openedAt);
+  return Number.isFinite(end) && Number.isFinite(start) && end - start > 4 * 3600000 ? "0301060029" : "0301060061";
+}
+/** Exames realizados que ainda não têm laudo. */
+export const examsWithoutReport = (e: Encounter) => (e.examRequests ?? []).filter((x) => x.status === "Realizado" && !x.report?.trim());
+
 /** Código real do atendimento (laudo AIH ou procedimento registrado); padrão só se nada foi informado. */
 export function pickProcedure(e: Encounter, kind: "BPA" | "AIH"): string {
   const aih = digits(e.aihLaudo?.['codigo']), proc = digits(e.sigtapCode);
   const ok = (c: string) => c.length === 10 ? c : "";
-  return (kind === "AIH" ? ok(aih) || ok(proc) : ok(proc)) || SIGTAP_DEFAULT[kind];
+  const fallback = kind === "BPA" && e.type === "Maternidade" ? maternalCodeByDuration(e) : SIGTAP_DEFAULT[kind];
+  return (kind === "AIH" ? ok(aih) || ok(proc) : ok(proc)) || fallback;
 }
 
 /** RNs vinculados à mãe, com DNV informado no laudo AIH (chave dnv_<id>). */
@@ -63,6 +81,7 @@ export function buildSusRows(encounters: Encounter[], patients: Patient[], compe
       births: kind === "AIH" ? birthsOf(e, p, patients) : [],
     };
     row.issues = susIssues(row, prof);
+    examsWithoutReport(e).forEach((x) => row.issues.push(`Exame realizado sem laudo: ${x.exams}`));
     return row;
   });
 }

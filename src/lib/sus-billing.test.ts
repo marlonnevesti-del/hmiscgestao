@@ -51,3 +51,11 @@ describe("campos oficiais da AIH", () => {
   it("motivo de parto exige RN", () => expect(aihIssues({ ...base, exitReason: "61" })).toContain("Motivo de parto sem RN vinculado"));
   it("RN vivo exige DNV", () => expect(aihIssues({ ...base, exitReason: "61", births: [{ rnId: "r", name: "RN", dnv: "", weight: 3100, weeks: "39", alive: true }] })).toContain("RN: sem nº da DNV"));
 });
+
+import { maternalCodeByDuration, examsWithoutReport } from "./sus-billing";
+describe("regras HMISC BPA", () => {
+  const base = { openedAt: "2026-11-01T10:00:00Z", history: [] } as never as Parameters<typeof maternalCodeByDuration>[0];
+  it("materno até 4h usa 0301060061", () => expect(maternalCodeByDuration({ ...base, baaClosedAt: "2026-11-01T14:00:00Z" })).toBe("0301060061"));
+  it("materno acima de 4h usa 0301060029", () => expect(maternalCodeByDuration({ ...base, baaClosedAt: "2026-11-01T14:01:00Z" })).toBe("0301060029"));
+  it("exame realizado sem laudo é pendência", () => expect(examsWithoutReport({ examRequests: [{ status: "Realizado", exams: "Hemograma" }, { status: "Laudado", exams: "RX", report: "ok" }] } as never)).toHaveLength(1));
+});

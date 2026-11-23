@@ -7,7 +7,7 @@ import { NoPermission } from "@/components/AppShell";
 import { Letterhead, LetterFooter } from "@/components/DischargePrint";
 import { printProcedure } from "@/components/ProcedurePrint";
 import { can } from "@/lib/hospital-data";
-import { saveAihAuthorization, useStore } from "@/lib/hospital-store";
+import { saveAihAuthorization, saveSigtapCode, useStore } from "@/lib/hospital-store";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { AmendDocumentButton, DocumentGapsPanel } from "@/components/DocumentAmend";
@@ -15,7 +15,7 @@ import { documentGaps } from "@/lib/document-amend";
 import { semaphoreOf, semaphoreSummary } from "@/lib/billing-semaphore";
 import { loadSigtap, type SigtapProc } from "@/lib/sigtap";
 import { loadSigtapRules, sigtapGlosas, type SigtapRules } from "@/lib/sigtap-compat";
-import { aihFile, bpaFile, cihaFile, cihaFileName, buildSusRows, EXIT_REASONS, isObstetricExit, CNES, competenceOf, SIGTAP_DEFAULT, type Professional, type SusRow } from "@/lib/sus-billing";
+import { aihFile, bpaFile, cihaFile, cihaFileName, buildSusRows, EXIT_REASONS, isObstetricExit, CNES, competenceOf, SIGTAP_DEFAULT, HMISC_BPA_CODES, type Professional, type SusRow } from "@/lib/sus-billing";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/faturamento-sus")({
@@ -103,7 +103,7 @@ function SusBilling() {
             <thead className="text-left text-xs uppercase text-muted-foreground"><tr><th><span className="sr-only">Semáforo</span></th><th>Data</th><th>Nº</th><th>Paciente</th><th>CNS</th><th>CID</th><th>SIGTAP</th><th>Situação</th><th></th></tr></thead>
             <tbody>{list.map((r) => <tr key={r.encounter.id} className="border-t align-top"><td className="py-1 pr-2"><span role="img" aria-label={r.level === "green" ? "Pronto" : r.level === "yellow" ? "Risco de glosa" : "Bloqueado"} className={cn("inline-block size-2.5 rounded-full", r.level === "green" ? "bg-clinical" : r.level === "yellow" ? "bg-mt-yellow" : "bg-maternal")} /></td>
               <td className="py-1">{fmt(r.date)}</td><td className="font-mono text-xs">{r.encounter.number}</td><td>{r.name}</td>
-              <td className="font-mono text-xs">{r.cns || "—"}</td><td>{r.cid || "—"}</td><td className="font-mono text-xs">{r.procedure}</td>
+              <td className="font-mono text-xs">{r.cns || "—"}</td><td>{r.cid || "—"}</td><td className="font-mono text-xs">{tab === "BPA" && allowed ? <select aria-label="Código SIGTAP HMISC" className="rounded border bg-background px-1 py-0.5 font-mono text-xs" value={r.procedure} onChange={(ev) => { saveSigtapCode(r.encounter.id, ev.target.value); toast.success("Código SIGTAP atualizado"); }}>{!HMISC_BPA_CODES.some((c) => c.code === r.procedure) && <option value={r.procedure}>{r.procedure}</option>}{HMISC_BPA_CODES.map((c) => <option key={c.code} value={c.code}>{c.code} · {c.label}</option>)}</select> : r.procedure}</td>
               <td className={cn("text-xs", r.issues.length ? "text-destructive" : "text-clinical")}>{r.issues.length ? r.issues.map((i) => <div key={i}>• {i}</div>) : "OK"}</td>
               <td className="flex gap-1">{(() => { const pt = patients.find((x) => x.id === r.encounter.patientId); return pt ? <AmendDocumentButton p={pt} e={r.encounter} size="sm" label="Trocar código" /> : null; })()}{tab === "AIH" && allowed && <Button size="sm" variant="outline" onClick={() => setEdit(r)}>Dados AIH</Button>}{tab === "AIH" && <Button size="sm" variant="outline" onClick={() => print({ title: "LAUDO PARA SOLICITAÇÃO DE AUTORIZAÇÃO DE INTERNAÇÃO HOSPITALAR (AIH)", laudo: r })}>Imprimir laudo</Button>}</td>
             </tr>)}
