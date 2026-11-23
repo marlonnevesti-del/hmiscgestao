@@ -10,16 +10,55 @@ import { EncounterTimeline } from './EncounterTimeline';
 import { CidPicker } from './CidPicker';
 import { FLOW_LABELS, sortMedicalQueue, type Encounter } from '@/lib/care-flow';
 import { BASE_BEDS, can, MANCHESTER, WARDS, type Patient } from '@/lib/hospital-data';
-import { callPatient, finishEncounter, reopenEncounter, requestAdmission, saveMedical, signPrescription, useStore } from '@/lib/hospital-store';
+import { callPatient, finishEncounter, psSetDestination, reopenEncounter, requestAdmission, saveMedical, signPrescription, useStore } from '@/lib/hospital-store';
 import { cn } from '@/lib/utils';
 import { CallPanelButton } from './CallPanelButton';
 import { DischargePrint, printDischarge } from './DischargePrint';
 import { PhysioRequestButton } from './Physio';
+import { EvasionButton } from './PsInfantil';
+import { PCACR_MAX_MIN, PS_DESTINATIONS, fmtMin, minutes, triagedAt, type PsDestination, type PsEncounter } from '@/lib/ps-infantil';
 function action(fn:()=>void) { try { fn(); } catch(err) { toast.error(err instanceof Error?err.message:'Ação não concluída'); } }
-export function MedicalQueue({ unit }: { unit?: string } = {}) {
-  const encounters=useStore((s)=>s.encounters); const patients=useStore((s)=>s.patients); const profile=useStore((s)=>s.profile); const navigate=useNavigate(); const sadtNames=new Set(useStore((s)=>s.ambSpecialties).filter((x)=>x.group==='sadt').map((x)=>x.name));
-  const list=sortMedicalQueue(encounters.filter((e)=>['AGUARDANDO_MEDICO','EM_ATENDIMENTO_MEDICO','EM_OBSERVACAO_REAVALIACAO'].includes(e.status_fluxo)&&(!unit||e.type===unit)&&!(unit==='Ambulatório'&&sadtNames.has(e.specialty))));
-  return <div className="space-y-4">{!unit&&<h1 className="text-xl font-semibold">Consultório médico</h1>}{!list.length&&<p className="py-6 text-muted-foreground">Nenhum paciente aguardando atendimento ou reavaliação.</p>}{list.map((e)=>{const p=patients.find((x)=>x.id===e.patientId);return <section key={e.id} className="border-b py-3"><div className="flex flex-wrap items-center justify-between gap-3"><div><b>{p?.name}</b>{e.type==='Ambulatório'&&<span className="ml-2 rounded bg-muted px-2 py-1 text-xs">{e.specialty}</span>}<span className={cn('ml-2 rounded px-2 py-1 text-xs',MANCHESTER[e.triage?.risk??'azul'].cls)}>{e.triage?.risk}</span><p className="text-sm text-muted-foreground">{e.complaint} · {p?.weight} kg · {FLOW_LABELS[e.status_fluxo]}</p>{e.triage&&<div className="text-xs">PA {e.triage.vital.pas}/{e.triage.vital.pad} · FC {e.triage.vital.fc} · FR {e.triage.vital.fr} · Tax {e.triage.vital.tax} · SatO2 {e.triage.vital.sat}% · Dor {e.triage.vital.dor}</div>}</div><div className="flex flex-wrap items-center gap-2"><CallPanelButton patientId={e.patientId}/><ProcedurePrintButton patientId={e.patientId} sector="Consultório médico"/>{e.status_fluxo==='EM_ATENDIMENTO_MEDICO'?<Button asChild><Link to="/pacientes/$id" params={{id:e.patientId}}>Retomar atendimento</Link></Button>:<Button disabled={!can(profile,'prescrever')} onClick={()=>action(()=>{callPatient(e.id);void navigate({to:'/pacientes/$id',params:{id:e.patientId}});})}>{e.status_fluxo==='EM_OBSERVACAO_REAVALIACAO'?'Reavaliar paciente':'Iniciar atendimento'}</Button>}</div></div><EncounterTimeline patientId={e.patientId}/></section>;})}</div>;
+const fmtHM = (iso?: string) => (iso ? new Date(iso).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : "—");
+
+export function MedicalQueue({ unit, ps }: { unit?: string; ps?: boolean } = {}) {
+  const encounters = useStore((s) => s.encounters) as PsEncounter[];
+  const patients = useStore((s) => s.patients);
+  const profile = useStore((s) => s.profile);
+  const navigate = useNavigate();
+  const sadtNames = new Set(useStore((s) => s.ambSpecialties).filter((x) => x.group === 'sadt').map((x) => x.name));
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => { if (!ps) return; const t = setInterval(() => setNow(Date.now()), 30000); return () => clearInterval(t); }, [ps]);
+  const list = sortMedicalQueue(encounters.filter((e) => ['AGUARDANDO_MEDICO', 'EM_ATENDIMENTO_MEDICO', 'EM_OBSERVACAO_REAVALIACAO'].includes(e.status_fluxo) && (!unit || e.type === unit) && !(unit === 'Ambulatório' && sadtNames.has(e.specialty))) as PsEncounter[];
+  return <div className="space-y-4">
+    {!unit && <h1 className="text-xl font-semibold">Consultório médico</h1>}
+    {!list.length && <p className="py-6 text-muted-foreground">Nenhum paciente aguardando atendimento ou reavaliação.</p>}
+    {list.map((e) => {
+      const p = patients.find((x) => x.id === e.patientId);
+      const wait = ps ? (minutes(triagedAt(e), new Date(now).toISOString()) ?? 0) : 0;
+      const late = !!ps && !!e.triage && wait > PCACR_MAX_MIN[e.triage.risk];
+      const inConsultation = e.status_fluxo === 'EM_ATENDIMENTO_MEDICO';
+      return <section key={e.id} className={cn('border-b py-3', late && 'rounded-lg bg-destructive/5')}>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <b>{p?.name}</b>
+            {e.type === 'Ambulatório' && <span className="ml-2 rounded bg-muted px-2 py-1 text-xs">{e.specialty}</span>}
+            <span className={cn('ml-2 rounded px-2 py-1 text-xs', MANCHESTER[e.triage?.risk ?? 'azul'].cls)}>{e.triage?.risk}</span>
+            <p className="text-sm text-muted-foreground">{e.complaint} · {p?.weight} kg · {FLOW_LABELS[e.status_fluxo]}</p>
+            {e.triage && <div className="text-xs">PA {e.triage.vital.pas}/{e.triage.vital.pad} · FC {e.triage.vital.fc} · FR {e.triage.vital.fr} · Tax {e.triage.vital.tax} · SatO2 {e.triage.vital.sat}% · Dor {e.triage.vital.dor}</div>}
+            {ps && <div className="text-xs text-muted-foreground">Classificado {fmtHM(triagedAt(e))} · Espera <span className={late ? 'font-semibold text-destructive' : ''}>{fmtMin(wait)}{late ? ' (acima do PCACR)' : ''}</span>{e.ps?.returnRequestedAt ? ' · retorno médico' : ''}{e.ps?.bed ? ` · leito ${e.ps.bed}` : ''}</div>}
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            {ps && !inConsultation && <select aria-label="Consultório de destino" className="h-8 rounded-md border bg-background px-2 text-xs" value={e.ps?.destination ?? 'Consultório pediátrico'} disabled={!can(profile, 'triagem') && !can(profile, 'prescrever')} onChange={(ev) => action(() => psSetDestination(e.id, ev.target.value as PsDestination))}>{PS_DESTINATIONS.map((d) => <option key={d}>{d}</option>)}</select>}
+            <CallPanelButton patientId={e.patientId} />
+            <ProcedurePrintButton patientId={e.patientId} sector="Consultório médico" />
+            {inConsultation ? <Button asChild><Link to="/pacientes/$id" params={{ id: e.patientId }}>Retomar atendimento</Link></Button> : <Button disabled={!can(profile, 'prescrever')} onClick={() => action(() => { callPatient(e.id); void navigate({ to: '/pacientes/$id', params: { id: e.patientId } }); })}>{e.status_fluxo === 'EM_OBSERVACAO_REAVALIACAO' ? 'Reavaliar paciente' : 'Iniciar atendimento'}</Button>}
+            {ps && <EvasionButton e={e} />}
+          </div>
+        </div>
+        <EncounterTimeline patientId={e.patientId} />
+      </section>;
+    })}
+  </div>;
 }
 export function MedicalAssessment({ p }: { p:Patient }) {
   const e=useStore((s)=>s.encounters.slice().reverse().find((x)=>x.patientId===p.id)); const profile=useStore((s)=>s.profile);

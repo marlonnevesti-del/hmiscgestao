@@ -5,12 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { RiskBadge } from "./RiskBadge";
-import { CallPanelButton } from "./CallPanelButton";
 import { can, type Patient } from "@/lib/hospital-data";
 import { FLOW_LABELS } from "@/lib/care-flow";
 import { ageBand } from "@/lib/amb-reports";
-import { psAddScale, psAwaitDischarge, psEvasion, psOpenSepsis, psReleaseBed, psRequestReturn, psSetBed, psSetDestination, psUpdateSepsis, useStore } from "@/lib/hospital-store";
-import { PCACR_MAX_MIN, PS_BED_GROUPS, PS_DESTINATIONS, PS_UNIT, SCALES, SEPSIS_BUNDLE, fmtMin, minutes, outcomeStatus, psReport, scaleTotal, toCsvRows, triagedAt, type PsDestination, type PsEncounter, type SepsisKind } from "@/lib/ps-infantil";
+import { psAddScale, psAwaitDischarge, psEvasion, psOpenSepsis, psReleaseBed, psRequestReturn, psSetBed, psUpdateSepsis, useStore } from "@/lib/hospital-store";
+import { PS_BED_GROUPS, PS_UNIT, SCALES, SEPSIS_BUNDLE, fmtMin, minutes, outcomeStatus, psReport, scaleTotal, toCsvRows, type PsEncounter, type SepsisKind } from "@/lib/ps-infantil";
 import { cn } from "@/lib/utils";
 
 const box = "rounded-lg border bg-card p-3";
@@ -26,31 +25,10 @@ function usePs() {
 }
 const STATUS_CLS = { ok: "", perto: "border-mt-yellow bg-mt-yellow/10", estourado: "border-destructive bg-destructive/10" };
 
-function EvasionButton({ e }: { e: PsEncounter }) {
+export function EvasionButton({ e }: { e: PsEncounter }) {
   const profile = useStore((s) => s.profile);
   if (!can(profile, "prescrever")) return null;
   return <Button size="sm" variant="outline" className="text-destructive" onClick={() => { const n = window.prompt("Alta por evasão – descreva o ocorrido (obrigatório):"); if (n == null) return; if (!window.confirm("Confirmar ALTA POR EVASÃO? O atendimento será encerrado.")) return; run(() => psEvasion(e.id, n), "Alta por evasão registrada"); }}>Alta por evasão</Button>;
-}
-
-/** 3.1 Pacientes aguardando consulta. */
-export function PsWaiting() {
-  const { active, name } = usePs(); const now = useNow(); const profile = useStore((s) => s.profile);
-  const list = active.filter((e) => ["AGUARDANDO_MEDICO", "EM_OBSERVACAO_REAVALIACAO"].includes(e.status_fluxo) && !e.ps?.bed);
-  const order = ["vermelho", "laranja", "amarelo", "verde", "azul"];
-  list.sort((a, b) => order.indexOf(a.triage?.risk ?? "azul") - order.indexOf(b.triage?.risk ?? "azul") || (triagedAt(a) ?? a.openedAt).localeCompare(triagedAt(b) ?? b.openedAt));
-  return <div className="space-y-2">
-    {!list.length && <p className="py-6 text-sm text-muted-foreground">Nenhum paciente aguardando consulta.</p>}
-    {list.map((e) => { const wait = minutes(triagedAt(e), new Date(now).toISOString()) ?? 0; const late = e.triage && wait > PCACR_MAX_MIN[e.triage.risk];
-      return <div key={e.id} className={cn(box, "flex flex-wrap items-center justify-between gap-2", late && "border-destructive")}>
-        <div className="space-y-1"><div className="flex flex-wrap items-center gap-2"><b>{name(e.patientId)}</b><RiskBadge risk={e.triage?.risk} /><span className="text-xs text-muted-foreground">{e.number}</span></div>
-          <div className="text-xs text-muted-foreground">Classificado {fmt(triagedAt(e))} · Espera <span className={late ? "font-semibold text-destructive" : ""}>{fmtMin(wait)}{late ? " (acima do PCACR)" : ""}</span> · {FLOW_LABELS[e.status_fluxo]}{e.ps?.returnRequestedAt ? " · retorno médico" : ""}</div></div>
-        <div className="flex flex-wrap items-center gap-2">
-          <select aria-label="Consultório de destino" className={sel} value={e.ps?.destination ?? "Consultório pediátrico"} disabled={!can(profile, "triagem") && !can(profile, "prescrever")} onChange={(ev) => run(() => psSetDestination(e.id, ev.target.value as PsDestination))}>{PS_DESTINATIONS.map((d) => <option key={d}>{d}</option>)}</select>
-          <CallPanelButton patientId={e.patientId} />
-          <Button size="sm" asChild><Link to="/pacientes/$id" params={{ id: e.patientId }}>Abrir prontuário</Link></Button>
-          <EvasionButton e={e} />
-        </div></div>; })}
-  </div>;
 }
 
 /** 3.2 Observação + 3.3 mapa dos leitos. */

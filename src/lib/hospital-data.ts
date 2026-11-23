@@ -42,11 +42,11 @@ export const ACCESS_AREAS = [
   { id: "farmacia", label: "Farmácia" }, { id: "almoxarifado", label: "Almoxarifado" }, { id: "faturamento", label: "Faturamento (TISS e SUS)" }, { id: "nir", label: "NIR – Regulação de Leitos" }, { id: "sciras", label: "SCIRAS / CCIH" },
 ] as const;
 export type UnitArea = "ambulatorio" | "pronto-socorro" | "maternidade";
-export type UnitTab = "agenda" | "recepcao" | "acolhimento" | "atendimento" | "sadt" | "especialidades" | "internados" | "relatorios" | "aguardando" | "observacao" | "assistencia" | "coordenacao";
+export type UnitTab = "agenda" | "recepcao" | "acolhimento" | "atendimento" | "sadt" | "especialidades" | "internados" | "relatorios" | "observacao" | "assistencia" | "coordenacao";
 /** Care-unit entries with their selectable sub-levels (stored as "unit:tab"). */
 export const UNIT_AREAS: { id: UnitArea; label: string; tabs: { id: UnitTab; label: string }[] }[] = [
   { id: "ambulatorio", label: "Ambulatório", tabs: [{ id: "agenda", label: "Agenda" }, { id: "recepcao", label: "Recepção / Chegada" }, { id: "acolhimento", label: "Pré-consulta de enfermagem" }, { id: "atendimento", label: "Atendimento Médico" }, { id: "sadt", label: "SADT · Laudos" }, { id: "especialidades", label: "Especialidades" }, { id: "relatorios", label: "Relatórios" }, { id: "coordenacao", label: "Coordenação / Indicadores" }] },
-  { id: "pronto-socorro", label: "Pronto Socorro", tabs: [{ id: "recepcao", label: "Recepção / Cadastro" }, { id: "acolhimento", label: "Triagem" }, { id: "aguardando", label: "Aguardando consulta" }, { id: "atendimento", label: "Atendimento Médico" }, { id: "observacao", label: "Observação e leitos" }, { id: "assistencia", label: "Escalas e sepse" }, { id: "internados", label: "Pacientes internados" }, { id: "coordenacao", label: "Coordenação / Indicadores" }] },
+  { id: "pronto-socorro", label: "Pronto Socorro", tabs: [{ id: "recepcao", label: "Recepção / Cadastro" }, { id: "acolhimento", label: "Triagem" }, { id: "atendimento", label: "Atendimento Médico" }, { id: "observacao", label: "Observação e leitos" }, { id: "assistencia", label: "Escalas e sepse" }, { id: "internados", label: "Pacientes internados" }, { id: "coordenacao", label: "Coordenação / Indicadores" }] },
   { id: "maternidade", label: "Maternidade", tabs: [{ id: "recepcao", label: "Recepção / Cadastro" }, { id: "acolhimento", label: "Triagem" }, { id: "atendimento", label: "Atendimento Médico" }, { id: "internados", label: "Pacientes internados" }, { id: "coordenacao", label: "Coordenação / Indicadores" }] },
 ];
 /** Pharmacy sections shown as sidebar sub-items (/farmacia?aba=id). */
@@ -72,23 +72,26 @@ export const WAREHOUSE_TABS = [
 ] as const;
 const UNIT_IDS: string[] = UNIT_AREAS.map((u) => u.id);
 /** Default (function-derived) permission for one tab of a care unit. */
-function tabByFunction(profile: Profile, tab: UnitTab) {
-  if (tab === "atendimento") return can(profile, "prescrever");
+function tabByFunction(profile: Profile, unit: UnitArea, tab: UnitTab) {
+  // PS: a antiga fila "Aguardando consulta" foi fundida em "Atendimento Médico", então a aba também serve a enfermagem da porta.
+  if (tab === "atendimento") return can(profile, "prescrever") || (unit === "pronto-socorro" && (can(profile, "triagem") || can(profile, "checar")));
   if (tab === "acolhimento") return can(profile, "triagem");
   if (tab === "sadt") return can(profile, "prescrever");
   if (tab === "relatorios" || tab === "coordenacao") return profile === "Administrador";
-  if (tab === "aguardando" || tab === "observacao" || tab === "assistencia") return can(profile, "triagem") || can(profile, "checar") || can(profile, "prescrever");
+  if (tab === "observacao" || tab === "assistencia") return can(profile, "triagem") || can(profile, "checar") || can(profile, "prescrever");
   if (tab === "internados") return can(profile, "prescrever") || can(profile, "evoluir") || can(profile, "checar") || can(profile, "recepcao");
   return can(profile, "recepcao");
 }
 export function canAccessUnitTab(profile: Profile, unit: UnitArea, tab: UnitTab, areas?: readonly string[] | null) {
   if (profile === "Administrador") return true;
-  if (!areas) return tabByFunction(profile, tab);
+  // Quem tinha a liberação antiga "pronto-socorro:aguardando" mantém a aba única "Atendimento Médico".
+  if (unit === "pronto-socorro" && tab === "atendimento" && areas?.includes("pronto-socorro:aguardando")) return true;
+  if (!areas) return tabByFunction(profile, unit, tab);
   return areas.includes(unit) || areas.includes(`${unit}:${tab}`);
 }
 export const defaultAreas = (profile: Profile): string[] => [
   ...ACCESS_AREAS.map((a) => a.id as string).filter((id) => canAccessPage(profile, `/${id}`)),
-  ...UNIT_AREAS.flatMap((u) => u.tabs.filter((t) => tabByFunction(profile, t.id)).map((t) => `${u.id}:${t.id}`)),
+  ...UNIT_AREAS.flatMap((u) => u.tabs.filter((t) => tabByFunction(profile, u.id, t.id)).map((t) => `${u.id}:${t.id}`)),
 ];
 /** Areas chosen by the admin override the function defaults; null means "use the function". */
 export function canAccessPage(profile: Profile, path: string, areas?: readonly string[] | null) {
