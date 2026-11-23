@@ -74,7 +74,7 @@ export const UNITS: Record<IcuUnit, UnitConfig> = {
       'Lactário / Nutrição': 'Tipo de dieta (LMO pasteurizado / fórmula): \nVolume prescrito: \nVolume aceito: \nVia (seio/copinho/gavagem): \nResíduo gástrico (volume/aspecto): \nIntervalo: ',
       'Fonoaudiologia': 'Sucção nutritiva / não nutritiva: \nCoordenação S-D-R: \nTransição sonda → via oral: ',
     } },
-  UTIN: { id: 'UTIN', ward: 'UTIN', name: 'UTI Neonatal', profile: 'Recém-nascidos até 28 dias em estado crítico (prematuros e termos)', balance: 'horario', almoxSectors: ['UTI Neo', 'Lactário'],
+  UTIN: { id: 'UTIN', ward: 'UTIN', name: 'UTI Neonatal', profile: 'Recém-nascidos até 28 dias em estado crítico (prematuros e termos)', balance: 'horario', almoxSectors: ['UTI Neo'],
     scales: [NIPS, SILVERMAN, SEPSE_NEO, ps('humpty'), ps('bradenq'), ps('dor')].filter(Boolean),
     bundles: {
       'PAV neonatal': ['Cabeceira 15–30°', 'Higiene oral com colostro/água destilada', 'Aspiração apenas se necessário', 'Circuito sem condensado', 'Avaliação diária de extubação'],
