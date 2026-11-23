@@ -250,7 +250,8 @@
   },
   {
     "code": "MED047",
-    "name": "MAURICIO CESAR KAMINSKI"
+    "name": "MAURICIO CESAR KAMINSKI",
+    "specialty": "USG Geral e Doppler"
   },
   {
     "code": "MED048",
@@ -339,7 +340,8 @@
   },
   {
     "code": "MED0635",
-    "name": "LUIGI AURELIO SARTOR"
+    "name": "LUIGI AURELIO SARTOR",
+    "specialty": "USG Geral e Doppler"
   },
   {
     "code": "MED064",
@@ -487,7 +489,8 @@
   },
   {
     "code": "MED094",
-    "name": "LUIZ MARIO ENDERLE SIGNOR"
+    "name": "LUIZ MARIO ENDERLE SIGNOR",
+    "specialty": "USG Geral e Doppler"
   },
   {
     "code": "MED095",
@@ -1305,7 +1308,7 @@
   {
     "code": "MED268",
     "name": "EVELIM DE MEDEIROS SARTOR",
-    "specialty": "Cardiologia Pediátrica",
+    "specialty": "Cardiologia Pediátrica, Ecocardiografia Fetal",
     "crm": "CRM/SC 26125",
     "cns": "704005339703565",
     "teams": "BR SANITAS, TERRES"
@@ -1472,7 +1475,8 @@
   },
   {
     "code": "MED296",
-    "name": "CRISTIANO DE OLIVEIRA BIZELLI"
+    "name": "CRISTIANO DE OLIVEIRA BIZELLI",
+    "specialty": "USG Geral e Doppler"
   },
   {
     "code": "MED297",
@@ -1826,7 +1830,7 @@
   {
     "code": "MED407",
     "name": "PAULO FERREIRA JUNIOR",
-    "specialty": "Gestação de Alto Risco",
+    "specialty": "Gestação de Alto Risco, USG Morfológico",
     "crm": "CRM/SC 22330",
     "cns": "701804228786478",
     "teams": "BR SANITAS"
@@ -2074,7 +2078,7 @@
   {
     "code": "MED455",
     "name": "LUCIANO PEREIRA BENDER",
-    "specialty": "Cardiologia Pediátrica",
+    "specialty": "Cardiologia Pediátrica, Ecocardiografia Fetal",
     "crm": "CRM/SC 23077",
     "cns": "703404269310516",
     "teams": "BR SANITAS"
@@ -2472,7 +2476,7 @@
     "code": "MED539",
     "name": "MELISSA GAMA DE MESQUITA",
     "crm": "CRM/SC 26341",
-    "specialty": "Mastologia",
+    "specialty": "Mastologia, Triagem Punção de Mama",
     "cns": "700608921299865",
     "teams": "BR SANITAS"
   },
