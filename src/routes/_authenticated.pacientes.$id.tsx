@@ -139,7 +139,7 @@ function Evolucao({ p }: { p: Patient }) {
   const [physioType, setPhysioType] = useState("");
   const save = (finish = false) => { if (cat === "Fisioterapia" && openPhysio) { try { if (finish && !window.confirm(`Confirmar alta da fisioterapia de ${p.name}?`)) return; recordPhysioSession(p.id, openPhysio.id, { conduct: text, pre: "", post: "" }, finish); setText(""); setFocus(false); toast.success(finish ? "Sessão registrada e alta da fisioterapia" : "Sessão de fisioterapia registrada"); } catch (e) { toast.error(e instanceof Error ? e.message : "Ação não concluída"); } return; } updatePatient(p.id, (x) => ({ evolutions: [{ time: new Date().toLocaleString("pt-BR"), cat, author: professionalName(profile), text }, ...x.evolutions] })); setText(""); setFocus(false); toast.success("Evolução registrada"); };
   const list = p.evolutions.filter((e) => f === "Todos" || e.cat === f);
-  const color = (c: EvoCat) => ({ Médica: "bg-primary", Enfermagem: "bg-clinical", Fisioterapia: "bg-bed-isolation", "Serviço Social": "bg-mt-orange", SCIRAS: "bg-destructive" })[c];
+  const color = (c: EvoCat) => ({ Médica: "bg-primary", Enfermagem: "bg-clinical", Fisioterapia: "bg-bed-isolation", "Serviço Social": "bg-mt-orange", SCIRAS: "bg-destructive", "Raio-X": "bg-muted-foreground", Gesso: "bg-muted-foreground" } as Record<EvoCat, string>)[c];
   return (
     <div className="grid gap-4 lg:grid-cols-[1fr_minmax(420px,44%)]">
       <Card title="Linha do tempo">
