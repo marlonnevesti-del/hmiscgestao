@@ -12,12 +12,15 @@ type Snapshot = Record<(typeof KEYS)[number], unknown>;
 const pick = () => Object.fromEntries(KEYS.map((k) => [k, getState()[k]])) as Snapshot;
 
 let version = -1;
+/** Último snapshot confirmado com o servidor: base para a mesclagem em conflito. */
+let base: Partial<Snapshot> = {};
 let applying = false;
 let dirty = false;
 let saving = false;
 
 function apply(data: Partial<Snapshot>, v: number) {
   version = v;
+  base = JSON.parse(JSON.stringify(data ?? {}));
   if (!data || !Object.keys(data).length) return;
   const removed = Array.isArray(data.removedStock) ? (data.removedStock as string[]) : [];
   applying = true;
@@ -41,11 +44,52 @@ async function pull() {
 async function push() {
   if (saving || !dirty || version < 0) return;
   saving = true; dirty = false;
-  const next = version + 1;
-  const { data: u } = await supabase.auth.getUser();
-  const { error } = await supabase.from("clinical_state").upsert({ id: "main", data: pick() as never, version: next, updated_by: u.user?.id ?? null, updated_at: new Date().toISOString() });
-  if (error) dirty = true; else version = next;
-  saving = false;
+  try {
+    const { data: u } = await supabase.auth.getUser();
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const local = pick();
+      const next = version + 1;
+      const row = { data: local as never, version: next, updated_by: u.user?.id ?? null, updated_at: new Date().toISOString() };
+      // Grava só se ninguém salvou desde a última leitura; senão mescla e tenta de novo.
+      const res = version === 0
+        ? await supabase.from("clinical_state").insert({ id: "main", ...row }).select("version")
+        : await supabase.from("clinical_state").update(row).eq("id", "main").eq("version", version).select("version");
+      if (!res.error && res.data?.length) { version = next; base = JSON.parse(JSON.stringify(local)); return; }
+      const { data: remote } = await supabase.from("clinical_state").select("data, version").eq("id", "main").maybeSingle();
+      if (!remote) { dirty = true; return; }
+      const merged = mergeSnapshots(base, local, remote.data as Partial<Snapshot>);
+      apply(merged, remote.version);
+      base = JSON.parse(JSON.stringify(remote.data ?? {}));
+    }
+    dirty = true;
+  } catch { dirty = true; } finally { saving = false; }
+}
+
+const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
+const idOf = (x: unknown) => (x && typeof x === "object" && "id" in x ? String((x as { id: unknown }).id) : null);
+/** Mescla de três vias: mantém o que este computador alterou e o que os outros salvaram. */
+export function mergeSnapshots(baseS: Partial<Snapshot>, local: Partial<Snapshot>, remote: Partial<Snapshot>): Partial<Snapshot> {
+  const out: Record<string, unknown> = { ...remote };
+  for (const key of KEYS) {
+    const b = baseS[key], l = local[key], r = remote[key];
+    if (same(l, b)) { out[key] = r; continue; }
+    if (same(r, b)) { out[key] = l; continue; }
+    if (Array.isArray(l) && Array.isArray(r) && [...l, ...r].every((x) => idOf(x) !== null)) {
+      const bm = new Map((Array.isArray(b) ? b : []).map((x) => [idOf(x)!, x]));
+      const lm = new Map(l.map((x) => [idOf(x)!, x]));
+      const rm = new Map(r.map((x) => [idOf(x)!, x]));
+      const result: unknown[] = [];
+      for (const [id, rv] of rm) {
+        const lv = lm.get(id), bv = bm.get(id);
+        if (lv === undefined) { if (bv === undefined || !same(rv, bv)) result.push(rv); continue; } // apagado aqui e intacto lá
+        result.push(bv !== undefined && same(lv, bv) ? rv : lv);
+      }
+      for (const [id, lv] of lm) if (!rm.has(id) && !bm.has(id)) result.unshift(lv); // novo neste computador
+      out[key] = result;
+    } else if (typeof l === "number" && typeof r === "number") out[key] = Math.max(l, r); // sequências BAA/FIA
+    else out[key] = l;
+  }
+  return out as Partial<Snapshot>;
 }
 
 export function useClinicalSync() {
