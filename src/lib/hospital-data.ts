@@ -100,7 +100,7 @@ export function canAccessPage(profile: Profile, path: string, areas?: readonly s
   if (path === "/" || path === "/solicitacao-almoxarifado") return true;
   const seg = path.split("/")[1] ?? "";
   if (UNIT_IDS.includes(seg)) { const u = UNIT_AREAS.find((x) => x.id === seg)!; return u.tabs.some((t) => canAccessUnitTab(profile, u.id, t.id, areas)); }
-  if (areas) return areas.includes(seg === "faturamento-sus" || seg === "prestacao-contas" || seg === "centro-de-custos" ? "faturamento" : seg === "internacoes" ? "nir" : seg === "documentos-recepcao" || seg === "painel-tv" ? "recepcao" : seg === "uti-uci" ? "enfermagem" : seg === "fisioterapia" ? "pacientes" : seg === "banco-de-leite" ? "enfermagem" : seg);
+  if (areas) return areas.includes(seg === "faturamento-sus" || seg === "prestacao-contas" || seg === "centro-de-custos" ? "faturamento" : seg === "internacoes" ? "nir" : seg === "documentos-recepcao" || seg === "painel-tv" ? "recepcao" : seg === "uti-uci" ? "enfermagem" : seg === "fisioterapia" || seg === "raio-x" || seg === "gesso" ? "pacientes" : seg === "banco-de-leite" ? "enfermagem" : seg);
   if (path === "/painel-tv") return can(profile, "recepcao");
   if (path === "/recepcao" || path === "/documentos-recepcao") return can(profile, "recepcao") || can(profile, "checar");
   if (path === "/acolhimento") return can(profile, "triagem");
@@ -112,6 +112,7 @@ export function canAccessPage(profile: Profile, path: string, areas?: readonly s
   if (path === "/nir" || path === "/internacoes") return can(profile, "nir");
   if (path === "/sciras") return can(profile, "sciras");
   if (path === "/fisioterapia") return profile === "Fisioterapeuta" || can(profile, "prescrever");
+  if (path === "/raio-x" || path === "/gesso") return can(profile, "prescrever") || can(profile, "evoluir") || can(profile, "checar");
   if (path === "/banco-de-leite") return can(profile, "evoluir") || can(profile, "checar");
   if (path === "/uti-uci") return can(profile, "evoluir") || can(profile, "checar");
   if (path === "/enfermagem") return can(profile, "checar");
@@ -141,6 +142,7 @@ export interface Patient {
   sciras?: ScirasRecord; partograma?: PartoPoint[]; newborn?: Newborn; babyIds?: string[];
   intensive?: import("./uti-uci").IntensiveRecord;
   physio?: import("./physio").PhysioRequest[];
+  services?: import("./service-orders").ServiceRequest[];
 }
 
 export const PATIENTS: Patient[] = [];

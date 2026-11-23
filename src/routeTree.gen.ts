@@ -30,6 +30,7 @@ import { Route as AuthenticatedFarmaciaRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedFaturamentoRouteImport } from './routes/_authenticated.faturamento'
 import { Route as AuthenticatedFaturamentoSusRouteImport } from './routes/_authenticated.faturamento-sus'
 import { Route as AuthenticatedFisioterapiaRouteImport } from './routes/_authenticated.fisioterapia'
+import { Route as AuthenticatedGessoRouteImport } from './routes/_authenticated.gesso'
 import { Route as AuthenticatedGestaoAtendimentosRouteImport } from './routes/_authenticated.gestao-atendimentos'
 import { Route as AuthenticatedGestaoCirurgicaRouteImport } from './routes/_authenticated.gestao-cirurgica'
 import { Route as AuthenticatedInternacoesRouteImport } from './routes/_authenticated.internacoes'
@@ -38,6 +39,7 @@ import { Route as AuthenticatedNirRouteImport } from './routes/_authenticated.ni
 import { Route as AuthenticatedPainelTvRouteImport } from './routes/_authenticated.painel-tv'
 import { Route as AuthenticatedPrestacaoContasRouteImport } from './routes/_authenticated.prestacao-contas'
 import { Route as AuthenticatedProntoSocorroRouteImport } from './routes/_authenticated.pronto-socorro'
+import { Route as AuthenticatedRaioXRouteImport } from './routes/_authenticated.raio-x'
 import { Route as AuthenticatedRecepcaoRouteImport } from './routes/_authenticated.recepcao'
 import { Route as AuthenticatedScirasRouteImport } from './routes/_authenticated.sciras'
 import { Route as AuthenticatedSolicitacaoAlmoxarifadoRouteImport } from './routes/_authenticated.solicitacao-almoxarifado'
@@ -161,6 +163,11 @@ const AuthenticatedFisioterapiaRoute =
     path: '/fisioterapia',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedGessoRoute = AuthenticatedGessoRouteImport.update({
+  id: '/gesso',
+  path: '/gesso',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedGestaoAtendimentosRoute =
   AuthenticatedGestaoAtendimentosRouteImport.update({
     id: '/gestao-atendimentos',
@@ -207,6 +214,11 @@ const AuthenticatedProntoSocorroRoute =
     path: '/pronto-socorro',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedRaioXRoute = AuthenticatedRaioXRouteImport.update({
+  id: '/raio-x',
+  path: '/raio-x',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedRecepcaoRoute = AuthenticatedRecepcaoRouteImport.update({
   id: '/recepcao',
   path: '/recepcao',
@@ -262,6 +274,7 @@ export interface FileRoutesByFullPath {
   '/faturamento': typeof AuthenticatedFaturamentoRoute
   '/faturamento-sus': typeof AuthenticatedFaturamentoSusRoute
   '/fisioterapia': typeof AuthenticatedFisioterapiaRoute
+  '/gesso': typeof AuthenticatedGessoRoute
   '/gestao-atendimentos': typeof AuthenticatedGestaoAtendimentosRoute
   '/gestao-cirurgica': typeof AuthenticatedGestaoCirurgicaRoute
   '/internacoes': typeof AuthenticatedInternacoesRoute
@@ -270,6 +283,7 @@ export interface FileRoutesByFullPath {
   '/painel-tv': typeof AuthenticatedPainelTvRoute
   '/prestacao-contas': typeof AuthenticatedPrestacaoContasRoute
   '/pronto-socorro': typeof AuthenticatedProntoSocorroRoute
+  '/raio-x': typeof AuthenticatedRaioXRoute
   '/recepcao': typeof AuthenticatedRecepcaoRoute
   '/sciras': typeof AuthenticatedScirasRoute
   '/solicitacao-almoxarifado': typeof AuthenticatedSolicitacaoAlmoxarifadoRoute
@@ -297,6 +311,7 @@ export interface FileRoutesByTo {
   '/faturamento': typeof AuthenticatedFaturamentoRoute
   '/faturamento-sus': typeof AuthenticatedFaturamentoSusRoute
   '/fisioterapia': typeof AuthenticatedFisioterapiaRoute
+  '/gesso': typeof AuthenticatedGessoRoute
   '/gestao-atendimentos': typeof AuthenticatedGestaoAtendimentosRoute
   '/gestao-cirurgica': typeof AuthenticatedGestaoCirurgicaRoute
   '/internacoes': typeof AuthenticatedInternacoesRoute
@@ -305,6 +320,7 @@ export interface FileRoutesByTo {
   '/painel-tv': typeof AuthenticatedPainelTvRoute
   '/prestacao-contas': typeof AuthenticatedPrestacaoContasRoute
   '/pronto-socorro': typeof AuthenticatedProntoSocorroRoute
+  '/raio-x': typeof AuthenticatedRaioXRoute
   '/recepcao': typeof AuthenticatedRecepcaoRoute
   '/sciras': typeof AuthenticatedScirasRoute
   '/solicitacao-almoxarifado': typeof AuthenticatedSolicitacaoAlmoxarifadoRoute
@@ -335,6 +351,7 @@ export interface FileRoutesById {
   '/_authenticated/faturamento': typeof AuthenticatedFaturamentoRoute
   '/_authenticated/faturamento-sus': typeof AuthenticatedFaturamentoSusRoute
   '/_authenticated/fisioterapia': typeof AuthenticatedFisioterapiaRoute
+  '/_authenticated/gesso': typeof AuthenticatedGessoRoute
   '/_authenticated/gestao-atendimentos': typeof AuthenticatedGestaoAtendimentosRoute
   '/_authenticated/gestao-cirurgica': typeof AuthenticatedGestaoCirurgicaRoute
   '/_authenticated/internacoes': typeof AuthenticatedInternacoesRoute
@@ -343,6 +360,7 @@ export interface FileRoutesById {
   '/_authenticated/painel-tv': typeof AuthenticatedPainelTvRoute
   '/_authenticated/prestacao-contas': typeof AuthenticatedPrestacaoContasRoute
   '/_authenticated/pronto-socorro': typeof AuthenticatedProntoSocorroRoute
+  '/_authenticated/raio-x': typeof AuthenticatedRaioXRoute
   '/_authenticated/recepcao': typeof AuthenticatedRecepcaoRoute
   '/_authenticated/sciras': typeof AuthenticatedScirasRoute
   '/_authenticated/solicitacao-almoxarifado': typeof AuthenticatedSolicitacaoAlmoxarifadoRoute
@@ -374,6 +392,7 @@ export interface FileRouteTypes {
     | '/faturamento'
     | '/faturamento-sus'
     | '/fisioterapia'
+    | '/gesso'
     | '/gestao-atendimentos'
     | '/gestao-cirurgica'
     | '/internacoes'
@@ -382,6 +401,7 @@ export interface FileRouteTypes {
     | '/painel-tv'
     | '/prestacao-contas'
     | '/pronto-socorro'
+    | '/raio-x'
     | '/recepcao'
     | '/sciras'
     | '/solicitacao-almoxarifado'
@@ -409,6 +429,7 @@ export interface FileRouteTypes {
     | '/faturamento'
     | '/faturamento-sus'
     | '/fisioterapia'
+    | '/gesso'
     | '/gestao-atendimentos'
     | '/gestao-cirurgica'
     | '/internacoes'
@@ -417,6 +438,7 @@ export interface FileRouteTypes {
     | '/painel-tv'
     | '/prestacao-contas'
     | '/pronto-socorro'
+    | '/raio-x'
     | '/recepcao'
     | '/sciras'
     | '/solicitacao-almoxarifado'
@@ -446,6 +468,7 @@ export interface FileRouteTypes {
     | '/_authenticated/faturamento'
     | '/_authenticated/faturamento-sus'
     | '/_authenticated/fisioterapia'
+    | '/_authenticated/gesso'
     | '/_authenticated/gestao-atendimentos'
     | '/_authenticated/gestao-cirurgica'
     | '/_authenticated/internacoes'
@@ -454,6 +477,7 @@ export interface FileRouteTypes {
     | '/_authenticated/painel-tv'
     | '/_authenticated/prestacao-contas'
     | '/_authenticated/pronto-socorro'
+    | '/_authenticated/raio-x'
     | '/_authenticated/recepcao'
     | '/_authenticated/sciras'
     | '/_authenticated/solicitacao-almoxarifado'
@@ -620,6 +644,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedFisioterapiaRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/gesso': {
+      id: '/_authenticated/gesso'
+      path: '/gesso'
+      fullPath: '/gesso'
+      preLoaderRoute: typeof AuthenticatedGessoRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/gestao-atendimentos': {
       id: '/_authenticated/gestao-atendimentos'
       path: '/gestao-atendimentos'
@@ -674,6 +705,13 @@ declare module '@tanstack/react-router' {
       path: '/pronto-socorro'
       fullPath: '/pronto-socorro'
       preLoaderRoute: typeof AuthenticatedProntoSocorroRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/raio-x': {
+      id: '/_authenticated/raio-x'
+      path: '/raio-x'
+      fullPath: '/raio-x'
+      preLoaderRoute: typeof AuthenticatedRaioXRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/recepcao': {
@@ -737,6 +775,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedFaturamentoRoute: typeof AuthenticatedFaturamentoRoute
   AuthenticatedFaturamentoSusRoute: typeof AuthenticatedFaturamentoSusRoute
   AuthenticatedFisioterapiaRoute: typeof AuthenticatedFisioterapiaRoute
+  AuthenticatedGessoRoute: typeof AuthenticatedGessoRoute
   AuthenticatedGestaoAtendimentosRoute: typeof AuthenticatedGestaoAtendimentosRoute
   AuthenticatedGestaoCirurgicaRoute: typeof AuthenticatedGestaoCirurgicaRoute
   AuthenticatedInternacoesRoute: typeof AuthenticatedInternacoesRoute
@@ -745,6 +784,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedPainelTvRoute: typeof AuthenticatedPainelTvRoute
   AuthenticatedPrestacaoContasRoute: typeof AuthenticatedPrestacaoContasRoute
   AuthenticatedProntoSocorroRoute: typeof AuthenticatedProntoSocorroRoute
+  AuthenticatedRaioXRoute: typeof AuthenticatedRaioXRoute
   AuthenticatedRecepcaoRoute: typeof AuthenticatedRecepcaoRoute
   AuthenticatedScirasRoute: typeof AuthenticatedScirasRoute
   AuthenticatedSolicitacaoAlmoxarifadoRoute: typeof AuthenticatedSolicitacaoAlmoxarifadoRoute
@@ -770,6 +810,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedFaturamentoRoute: AuthenticatedFaturamentoRoute,
   AuthenticatedFaturamentoSusRoute: AuthenticatedFaturamentoSusRoute,
   AuthenticatedFisioterapiaRoute: AuthenticatedFisioterapiaRoute,
+  AuthenticatedGessoRoute: AuthenticatedGessoRoute,
   AuthenticatedGestaoAtendimentosRoute: AuthenticatedGestaoAtendimentosRoute,
   AuthenticatedGestaoCirurgicaRoute: AuthenticatedGestaoCirurgicaRoute,
   AuthenticatedInternacoesRoute: AuthenticatedInternacoesRoute,
@@ -778,6 +819,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedPainelTvRoute: AuthenticatedPainelTvRoute,
   AuthenticatedPrestacaoContasRoute: AuthenticatedPrestacaoContasRoute,
   AuthenticatedProntoSocorroRoute: AuthenticatedProntoSocorroRoute,
+  AuthenticatedRaioXRoute: AuthenticatedRaioXRoute,
   AuthenticatedRecepcaoRoute: AuthenticatedRecepcaoRoute,
   AuthenticatedScirasRoute: AuthenticatedScirasRoute,
   AuthenticatedSolicitacaoAlmoxarifadoRoute:

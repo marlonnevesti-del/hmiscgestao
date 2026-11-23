@@ -1,5 +1,6 @@
 import { EMPTY_MILK_BANK, LHP_VALIDITY_DAYS, batchApproved, kcalFromCrematocrit, type MilkBank } from './milk-bank';
 import { physioRequestIssues } from './physio';
+import { serviceRequestIssues } from './service-orders';
 import { AMEND_FIELDS, amendIssue, readField, type AmendField } from './document-amend';
 import { DEFAULT_KITS, checkKitUse, findKit, setBio, startCycle, type BioResult, type CmeCycle, type CmeKit, type KitStatus } from './cme';
 import { useSyncExternalStore } from "react";
@@ -759,6 +760,24 @@ export function recordPhysioSession(patientId: string, reqId: string, s: { condu
     physio: (p.physio ?? []).map((r) => r.id === reqId ? { ...r, status: finish ? 'Concluída' : 'Em acompanhamento', sessions: [...r.sessions, { id: crypto.randomUUID(), at, by, ...s }] } : r),
     evolutions: [...p.evolutions, { time: new Date(at).toLocaleString('pt-BR'), cat: 'Fisioterapia', author: by, text: `${stamp}${s.conduct.trim()}${s.pre ? ` | Pré: ${s.pre}` : ''}${s.post ? ` | Pós: ${s.post}` : ''}${finish ? ' | Alta da fisioterapia' : ''}` }],
   }; });
+}
+export function requestService(patientId: string, data: Pick<import('./service-orders').ServiceRequest, 'kind' | 'region' | 'detail' | 'priority' | 'justification'>) {
+  if (!can(state.profile, 'prescrever')) throw new Error('Somente o médico pode solicitar.');
+  const issues = serviceRequestIssues(data); if (issues.length) throw new Error(issues.join(' '));
+  const req: import('./service-orders').ServiceRequest = { ...data, region: data.region.trim(), justification: data.justification.trim(), id: crypto.randomUUID(), requestedAt: new Date().toISOString(), requestedBy: professionalName(state.profile), status: 'Aguardando' };
+  updatePatient(patientId, (p) => ({ services: [...(p.services ?? []), req] }));
+}
+export function completeService(patientId: string, reqId: string, report: string) {
+  if (!report.trim()) throw new Error('Descreva o atendimento realizado.');
+  const at = new Date().toISOString(); const by = professionalName(state.profile);
+  updatePatient(patientId, (p) => { const cur = (p.services ?? []).find((r) => r.id === reqId); if (!cur || cur.status !== 'Aguardando') throw new Error('Pedido não está aguardando.'); const label = cur.kind === 'raio-x' ? 'Raio-X' : 'Gesso'; return {
+    services: (p.services ?? []).map((r) => r.id === reqId ? { ...r, status: 'Concluído', report: report.trim(), doneAt: at, doneBy: by } : r),
+    evolutions: [{ time: new Date(at).toLocaleString('pt-BR'), cat: label, author: by, text: `${label} · ${cur.region}${cur.detail ? ` (${cur.detail})` : ''} · ${report.trim()}` }, ...p.evolutions],
+  }; });
+}
+export function cancelService(patientId: string, reqId: string, note: string) {
+  if (!note.trim()) throw new Error('Informe o motivo do cancelamento.');
+  updatePatient(patientId, (p) => ({ services: (p.services ?? []).map((r) => r.id === reqId ? { ...r, status: 'Cancelado', closedNote: note.trim() } : r) }));
 }
 export function cancelPhysio(patientId: string, reqId: string, note: string) {
   requireAction('prescrever');
