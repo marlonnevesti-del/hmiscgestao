@@ -58,7 +58,7 @@ async function push() {
       const res = version === 0
         ? await supabase.from("clinical_state").insert({ id: "main", ...row }).select("version")
         : await supabase.from("clinical_state").update(row).eq("id", "main").eq("version", version).select("version");
-      if (!res.error && res.data?.length) { version = next; base = JSON.parse(JSON.stringify(local)); setSyncStatus("synced"); return; }
+      if (!res.error && res.data?.length) { version = next; base = JSON.parse(JSON.stringify(local)); if (!dirty) clearPending(); setSyncStatus("synced"); tabs?.postMessage("saved"); return; }
       const { data: remote } = await supabase.from("clinical_state").select("data, version").eq("id", "main").maybeSingle();
       if (!remote) { dirty = true; return; }
       const merged = mergeSnapshots(base, local, remote.data as Partial<Snapshot>);
@@ -71,35 +71,80 @@ async function push() {
 
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
 const idOf = (x: unknown) => (x && typeof x === "object" && "id" in x ? String((x as { id: unknown }).id) : null);
+const keyOf = (x: unknown) => idOf(x) ?? JSON.stringify(x);
+const isObj = (x: unknown): x is Record<string, unknown> => !!x && typeof x === "object" && !Array.isArray(x);
+
+/** Mescla de três vias recursiva: campos e listas internas (evoluções, sinais, prescrições) se somam. */
+export function merge3(b: unknown, l: unknown, r: unknown): unknown {
+  if (same(l, b)) return r;
+  if (same(r, b) || same(l, r)) return l;
+  if (typeof l === "number" && typeof r === "number" && typeof b === "number") return l + r - b; // saldos: soma as duas baixas
+  if (Array.isArray(l) && Array.isArray(r)) {
+    const bm = new Map((Array.isArray(b) ? b : []).map((x) => [keyOf(x), x]));
+    const lm = new Map(l.map((x) => [keyOf(x), x]));
+    const result: unknown[] = [];
+    const seen = new Set<string>();
+    for (const rv of r) {
+      const k = keyOf(rv); seen.add(k);
+      const lv = lm.get(k), bv = bm.get(k);
+      if (lv === undefined) { if (bv === undefined || !same(rv, bv)) result.push(rv); continue; } // apagado aqui e intacto lá
+      result.push(bv === undefined ? lv : merge3(bv, lv, rv));
+    }
+    // novos neste computador, mantendo a posição relativa (início ou fim da lista)
+    l.forEach((lv, i) => { const k = keyOf(lv); if (seen.has(k) || bm.has(k)) return; if (i < l.length / 2) result.unshift(lv); else result.push(lv); });
+    return result;
+  }
+  if (isObj(l) && isObj(r)) {
+    const bo = isObj(b) ? b : {};
+    const out: Record<string, unknown> = {};
+    for (const k of new Set([...Object.keys(l), ...Object.keys(r)])) {
+      if (!(k in l) && k in bo) continue; // removido aqui
+      if (!(k in r) && k in bo && same(l[k], bo[k])) continue; // removido lá
+      out[k] = k in l && k in r ? merge3(bo[k], l[k], r[k]) : k in l ? l[k] : r[k];
+    }
+    return out;
+  }
+  return l;
+}
+
 /** Mescla de três vias: mantém o que este computador alterou e o que os outros salvaram. */
 export function mergeSnapshots(baseS: Partial<Snapshot>, local: Partial<Snapshot>, remote: Partial<Snapshot>): Partial<Snapshot> {
   const out: Record<string, unknown> = { ...remote };
   for (const key of KEYS) {
-    const b = baseS[key], l = local[key], r = remote[key];
-    if (same(l, b)) { out[key] = r; continue; }
-    if (same(r, b)) { out[key] = l; continue; }
-    if (Array.isArray(l) && Array.isArray(r) && [...l, ...r].every((x) => idOf(x) !== null)) {
-      const bm = new Map((Array.isArray(b) ? b : []).map((x) => [idOf(x)!, x]));
-      const lm = new Map(l.map((x) => [idOf(x)!, x]));
-      const rm = new Map(r.map((x) => [idOf(x)!, x]));
-      const result: unknown[] = [];
-      for (const [id, rv] of rm) {
-        const lv = lm.get(id), bv = bm.get(id);
-        if (lv === undefined) { if (bv === undefined || !same(rv, bv)) result.push(rv); continue; } // apagado aqui e intacto lá
-        result.push(bv !== undefined && same(lv, bv) ? rv : lv);
-      }
-      for (const [id, lv] of lm) if (!rm.has(id) && !bm.has(id)) result.unshift(lv); // novo neste computador
-      out[key] = result;
-    } else if (typeof l === "number" && typeof r === "number") out[key] = Math.max(l, r); // sequências BAA/FIA
-    else out[key] = l;
+    const l = local[key], r = remote[key];
+    out[key] = typeof l === "number" && typeof r === "number" ? Math.max(l, r) : merge3(baseS[key], l, r); // sequências BAA/FIA
   }
   return out as Partial<Snapshot>;
 }
 
+// Rascunho local: alterações ainda não confirmadas pelo servidor sobrevivem a F5, queda de rede ou fechar a aba.
+const PENDING = "hmisc-clinical-pending";
+function savePending() {
+  try { localStorage.setItem(PENDING, JSON.stringify({ base, local: pick(), at: Date.now() })); } catch { /* cota cheia: segue só em memória */ }
+}
+function clearPending() { try { localStorage.removeItem(PENDING); } catch { /* ignore */ } }
+function restorePending() {
+  try {
+    const raw = localStorage.getItem(PENDING); if (!raw) return;
+    const p = JSON.parse(raw) as { base: Partial<Snapshot>; local: Partial<Snapshot> };
+    const merged = mergeSnapshots(p.base ?? {}, p.local ?? {}, base);
+    const remoteBase = base;
+    apply(merged, version);
+    base = remoteBase;
+    dirty = true; void push();
+  } catch { clearPending(); }
+}
+let tabs: BroadcastChannel | null = null;
+
 export function useClinicalSync() {
   useEffect(() => {
     let alive = true;
-    void pull();
+    void pull().then(() => { if (alive) restorePending(); });
+    // Outras abas do mesmo computador recarregam na hora em vez de disputar a versão.
+    tabs = typeof BroadcastChannel !== "undefined" ? new BroadcastChannel("hmisc-clinical") : null;
+    if (tabs) tabs.onmessage = () => { if (dirty) void push(); else void pull(); };
+    const onUnload = () => { if (dirty || saving) savePending(); };
+    window.addEventListener("beforeunload", onUnload);
     void refillSequence("baa"); void refillSequence("fia");
     // Aviso instantâneo quando outro computador salva; o intervalo fica como reserva.
     const channel = supabase.channel(`clinical-${Math.random().toString(36).slice(2)}`)
@@ -114,11 +159,11 @@ export function useClinicalSync() {
       const now = pick();
       const changed = KEYS.some((k) => now[k] !== last[k]);
       last = now;
-      if (changed && !applying && version >= 0) { dirty = true; void push(); }
+      if (changed && !applying && version >= 0) { dirty = true; savePending(); void push(); }
     });
     const t = setInterval(() => { if (!alive) return; if (dirty) void push(); else if (!document.hidden) void pull(); }, 3000);
     const onVis = () => { if (!document.hidden) void pull(); };
     document.addEventListener("visibilitychange", onVis);
-    return () => { alive = false; clearInterval(t); void supabase.removeChannel(channel); window.removeEventListener("offline", onOff); window.removeEventListener("online", onOn); unsub(); document.removeEventListener("visibilitychange", onVis); };
+    return () => { alive = false; window.removeEventListener("beforeunload", onUnload); tabs?.close(); tabs = null; clearInterval(t); void supabase.removeChannel(channel); window.removeEventListener("offline", onOff); window.removeEventListener("online", onOn); unsub(); document.removeEventListener("visibilitychange", onVis); };
   }, []);
 }

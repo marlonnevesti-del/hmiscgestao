@@ -17,3 +17,23 @@ describe("mesclagem entre computadores", () => {
     expect((m.patients as { id: string }[]).length).toBe(2);
   });
 });
+
+describe("merge3 entre computadores", () => {
+  it("mantém evolução do médico e sinais da enfermagem no mesmo paciente", async () => {
+    const { mergeSnapshots } = await import("./clinical-sync");
+    const p = { id: "p1", evolutions: [] as unknown[], vitals: [] as unknown[] };
+    const out = mergeSnapshots({ patients: [p] }, { patients: [{ ...p, evolutions: [{ text: "medico" }] }] }, { patients: [{ ...p, vitals: [{ pa: "12x8" }] }] }) as { patients: typeof p[] };
+    expect(out.patients[0]?.evolutions).toHaveLength(1);
+    expect(out.patients[0]?.vitals).toHaveLength(1);
+  });
+  it("soma baixas simultâneas de estoque (100 - 5 - 10 = 85)", async () => {
+    const { mergeSnapshots } = await import("./clinical-sync");
+    const out = mergeSnapshots({ stock: [{ id: "d", qty: 100 }] }, { stock: [{ id: "d", qty: 95 }] }, { stock: [{ id: "d", qty: 90 }] }) as { stock: { qty: number }[] };
+    expect(out.stock[0]?.qty).toBe(85);
+  });
+  it("sequência BAA nunca volta", async () => {
+    const { mergeSnapshots } = await import("./clinical-sync");
+    const out = mergeSnapshots({ beSequence: 10 }, { beSequence: 12 }, { beSequence: 11 }) as { beSequence: number };
+    expect(out.beSequence).toBe(12);
+  });
+});
