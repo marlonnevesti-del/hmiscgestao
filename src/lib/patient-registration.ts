@@ -81,5 +81,30 @@ export function newbornBirthIssue(birthDate: string, today = new Date()): string
   if (days > 28) return "Data incompatível com Recém-Nascido (limite de 28 dias). Corrija a data ou altere para Pediátrico.";
   return null;
 }
+export const PEDIATRIC_MAX_AGE = 14;
+export const PEDIATRIC_EXCEPTION_REASONS = [
+  "Seguimento de doença crônica / acompanhamento no HMISC",
+  "Deficiência neuropsicomotora grave / paralisia cerebral",
+  "Determinação judicial / liminar",
+  "Autorizado pela Direção Técnica / Coordenação Médica",
+  "Outro motivo clínico",
+] as const;
+/** Idade em anos completos na data de referência. */
+export function ageYears(birthDate: string, today = new Date()): number | null {
+  if (!birthDate) return null;
+  const b = new Date(`${birthDate}T12:00:00`); if (Number.isNaN(b.getTime())) return null;
+  let y = today.getFullYear() - b.getFullYear();
+  if (today.getMonth() < b.getMonth() || (today.getMonth() === b.getMonth() && today.getDate() < b.getDate())) y--;
+  return y;
+}
+/** Pediatria aceita até 14 anos, 11 meses e 29 dias; acima exige exceção justificada. */
+export function pediatricAgeIssue(birthDate: string, exception: { reason: string; note: string } | null, today = new Date()): string | null {
+  const y = ageYears(birthDate, today);
+  if (y === null || y <= PEDIATRIC_MAX_AGE) return null;
+  if (!exception) return `Paciente com ${y} anos excede o limite padrão da Pediatria (14 anos). Marque "Admissão pediátrica excepcional" e informe o motivo.`;
+  if (!exception.reason) return "Selecione o motivo da admissão pediátrica excepcional.";
+  if (exception.reason === "Outro motivo clínico" && !exception.note.trim()) return "Descreva a justificativa do outro motivo clínico.";
+  return null;
+}
 /** Name used for unidentified emergency patients. */
 export const unknownPatientName = (n: string) => `DESCONHECIDO Nº ${n || "S/N"}`;

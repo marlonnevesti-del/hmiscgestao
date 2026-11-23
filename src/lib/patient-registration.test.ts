@@ -34,3 +34,13 @@ describe("RN até 28 dias", () => {
   it("bloqueia 29 dias", () => expect(newbornBirthIssue("2026-10-19", today)).toMatch(/28 dias/));
   it("bloqueia data futura", () => expect(newbornBirthIssue("2026-11-18", today)).toMatch(/futuro/));
 });
+
+import { pediatricAgeIssue } from "./patient-registration";
+describe("Pediatria até 14 anos", () => {
+  const ref = new Date("2026-11-23T12:00:00");
+  it("aceita 14 anos sem exceção", () => expect(pediatricAgeIssue("2012-01-01", null, ref)).toBeNull());
+  it("bloqueia 15 anos sem exceção", () => expect(pediatricAgeIssue("2011-01-01", null, ref)).toContain("15 anos"));
+  it("bloqueia adulto de 28 anos sem exceção", () => expect(pediatricAgeIssue("1998-01-01", null, ref)).not.toBeNull());
+  it("libera com motivo", () => expect(pediatricAgeIssue("2010-01-01", { reason: "Determinação judicial / liminar", note: "" }, ref)).toBeNull());
+  it("outro motivo exige texto", () => expect(pediatricAgeIssue("2010-01-01", { reason: "Outro motivo clínico", note: "" }, ref)).not.toBeNull());
+});

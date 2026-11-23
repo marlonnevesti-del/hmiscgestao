@@ -13,7 +13,7 @@ import { InpatientDocsButtons } from "./InpatientDocsPrint";
 import { SpecialConditionBadges } from "./SpecialConditions";
 import { PatientRegistrationFields } from "./PatientRegistrationFields";
 import { registrationFor, registrationPatch } from "@/lib/patient-registration-mapping";
-import { newbornBirthIssue, registrationIssues, registrationSchema, unknownPatientName, type RegistrationMode } from "@/lib/patient-registration";
+import { PEDIATRIC_EXCEPTION_REASONS, ageYears, pediatricAgeIssue, newbornBirthIssue, registrationIssues, registrationSchema, unknownPatientName, type RegistrationMode } from "@/lib/patient-registration";
 import { ATTENDANCE_TYPES, type Encounter } from "@/lib/care-flow";
 import { can, canAct, type Patient } from "@/lib/hospital-data";
 import { deleteEncounter, openEncounter, professionalName, savePatientRegistration, useStore } from "@/lib/hospital-store";
@@ -44,6 +44,7 @@ export function CareReception({ unit }: { unit?: CareUnit } = {}) {
   const [f, setF] = useState(() => unit ? { ...INITIAL_FORM, type: unit, specialty: unit === "Ambulatório" ? "" : unit === "Maternidade" ? "Obstetrícia" : "Pediatria", patientType: (unit === "Pronto socorro" ? "pediatria" : "gestante") as Patient["type"] } : INITIAL_FORM);
   const [registration, setRegistration] = useState(() => registrationFor());
   const [mode, setMode] = useState<RegistrationMode>("completo");
+  const [pedEx, setPedEx] = useState<{ on: boolean; reason: string; note: string }>({ on: false, reason: "", note: "" });
   const set = (key: keyof Omit<typeof f, "conditions" | "nursingPreConsult">, value: string) => setF((current) => ({ ...current, [key]: value }));
 
   const choose = (patient: Patient) => {
@@ -64,9 +65,14 @@ export function CareReception({ unit }: { unit?: CareUnit } = {}) {
   };
 
   const birthError = f.patientType === "neonato" && !registration.estimatedAge ? newbornBirthIssue(registration.birthDate) : null;
+  const isPediatric = f.patientType === "pediatria" || /pediatr/i.test(f.specialty);
+  const pedAge = isPediatric && !registration.estimatedAge ? ageYears(registration.birthDate) : null;
+  const overPedAge = pedAge !== null && pedAge > 14;
+  const pedError = isPediatric && !registration.estimatedAge ? pediatricAgeIssue(registration.birthDate, pedEx.on ? pedEx : null) : null;
   const submit = () => {
     try {
       if (birthError) throw new Error(birthError);
+      if (pedError) throw new Error(pedError);
       const reg = registration.unknownIdentity && !registration.civilName.trim() ? { ...registration, civilName: unknownPatientName(registration.unknownNumber) } : registration;
       const missing = registrationIssues(reg, mode);
       if (missing.length) throw new Error(missing[0]);
@@ -91,13 +97,15 @@ export function CareReception({ unit }: { unit?: CareUnit } = {}) {
         ward: f.patientType === "gestante" || f.patientType === "puerpera" ? "PSO" : "PSP", bed: "",
         admission: new Date().toLocaleString("pt-BR"), prescriptions: [], vitals: old?.vitals ?? [],
         specialConditions: f.conditions, otherSpecialCondition: f.otherCondition.trim(),
+        ...(overPedAge && pedEx.on ? { pediatricException: { reason: pedEx.reason, note: pedEx.note.trim(), age: pedAge ?? 0, at: new Date().toISOString(), by: professionalName(profile) } } : {}),
       };
       if (!window.confirm(`Confirmar o cadastro e a abertura do atendimento de ${patient.name}?\nNascimento: ${reg.birthDate || "não informado"} · Sexo: ${reg.sex || "—"} · CNS/CPF: ${reg.cns || reg.cpf || "—"}`)) return;
-      const encounter = openEncounter(patient, f.type, f.specialty, f.complaint, f.nursingPreConsult);
+      const encounter = openEncounter(patient, f.type, f.specialty, overPedAge && pedEx.on ? `${f.complaint} [Exceção pediátrica ${pedAge} anos: ${pedEx.reason}${pedEx.note.trim() ? ` – ${pedEx.note.trim()}` : ""}]` : f.complaint, f.nursingPreConsult);
       setCreated(encounter);
       toast.success(`${encounter.number} gerado e enviado para ${encounter.status_fluxo === "AGUARDANDO_TRIAGEM" ? "triagem" : "atendimento"}`);
       clearIdentity();
       setF((current) => ({ ...current, complaint: "", nursingPreConsult: false }));
+      setPedEx({ on: false, reason: "", note: "" });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Não foi possível abrir o atendimento");
     }
@@ -127,6 +135,12 @@ export function CareReception({ unit }: { unit?: CareUnit } = {}) {
         {unit === "Ambulatório" && <label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={f.nursingPreConsult || isObstetricSpecialty(f.specialty)} disabled={isObstetricSpecialty(f.specialty)} onChange={(event) => setF((c) => ({ ...c, nursingPreConsult: event.target.checked }))} />Encaminhar para pré-consulta de enfermagem{isObstetricSpecialty(f.specialty) ? " (obrigatória: obstétrico)" : ""}</label>}
         {textFields.map(([key, label]) => <label key={key} className="grid gap-1 text-xs">{label}<Input value={f[key]} onChange={(event) => set(key, event.target.value)} required={["name", "specialty", "complaint"].includes(key)} /></label>)}
         <label className="grid gap-1 text-xs">Tipo de paciente<select aria-label="Tipo de paciente" value={f.patientType} onChange={(event) => set("patientType", event.target.value)} className="h-9 rounded-md border bg-background px-2">{[["gestante", "Gestante"], ["puerpera", "Puérpera"], ["pediatria", "Criança"], ["neonato", "Recém-nascido"]].map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label>
+        {overPedAge && <div role="alert" className={`grid gap-2 rounded-lg border-2 p-3 text-xs md:col-span-3 ${pedError ? "border-destructive bg-destructive/10" : "border-clinical bg-clinical-soft"}`}>
+          <div className="font-semibold text-destructive">Paciente com {pedAge} anos excede o limite padrão da Pediatria (14 anos).</div>
+          <label className="flex items-center gap-2 font-medium"><input type="checkbox" checked={pedEx.on} onChange={(e) => setPedEx((c) => ({ ...c, on: e.target.checked }))} />Admissão pediátrica excepcional (acima de 14 anos)</label>
+          {pedEx.on && <><label className="grid gap-1">Motivo da exceção<select aria-label="Motivo da exceção pediátrica" value={pedEx.reason} onChange={(e) => setPedEx((c) => ({ ...c, reason: e.target.value }))} className="h-9 rounded-md border bg-background px-2"><option value="">Selecione…</option>{PEDIATRIC_EXCEPTION_REASONS.map((r) => <option key={r}>{r}</option>)}</select></label>
+          <label className="grid gap-1">Justificativa {pedEx.reason === "Outro motivo clínico" ? "(obrigatória)" : "(opcional)"}<Input value={pedEx.note} onChange={(e) => setPedEx((c) => ({ ...c, note: e.target.value }))} /></label></>}
+        </div>}
         {!unit && <label className="grid gap-1 text-xs">Tipo de atendimento<select value={f.type} onChange={(event) => set("type", event.target.value)} className="h-9 rounded-md border bg-background px-2">{ATTENDANCE_TYPES.map((type) => <option key={type}>{type}</option>)}</select></label>}
 
         <fieldset className="rounded-lg border bg-card p-4 md:col-span-3">

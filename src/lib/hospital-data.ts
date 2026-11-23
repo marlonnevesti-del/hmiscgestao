@@ -131,7 +131,7 @@ export interface Patient {
   registration?: PatientRegistration;
   id: string; prontuario: string; name: string; cpf: string; motherName?: string; guardian?: string;
   type: PatientType; age: string; ig?: string; dum?: string; weight: number; height?: number;
-  allergies: string[]; risks: Risk[]; specialConditions?: string[]; otherSpecialCondition?: string;
+  allergies: string[]; risks: Risk[]; specialConditions?: string[]; otherSpecialCondition?: string; pediatricException?: { reason: string; note: string; age: number; at: string; by: string };
   ward: Ward; bed: string; insurance: string; guia?: string; authorized: boolean;
   diagnosis: string; admission: string; days: number; dischargeForecast?: string;
   evolutions: Evolution[]; vitals: Vital[]; prescriptions: Prescription[]; previousPrescriptions?: Prescription[];
