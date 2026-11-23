@@ -240,7 +240,8 @@
 },
 {
 "code": "MED048",
-"name": "THIAGO SERAFIM CESA"
+"name": "THIAGO SERAFIM CESA",
+"specialty": "Bucomaxilofacial"
 },
 {
 "code": "MED049",
@@ -628,7 +629,8 @@
 },
 {
 "code": "MED142",
-"name": "LUCAS RIBEIRO KRASILCHIK"
+"name": "LUCAS RIBEIRO KRASILCHIK",
+"specialty": "Cirurgia Geral Pediátrica"
 },
 {
 "code": "MED143",
@@ -964,7 +966,8 @@
 },
 {
 "code": "MED226",
-"name": "CARLOS ALBERTO DE MOURA ASCHOFF"
+"name": "CARLOS ALBERTO DE MOURA ASCHOFF",
+"specialty": "Genética"
 },
 {
 "code": "MED227",
@@ -988,7 +991,8 @@
 },
 {
 "code": "MED232",
-"name": "RODRIGO DEMETRIO"
+"name": "RODRIGO DEMETRIO",
+"specialty": "Cirurgia Geral Pediátrica; Urologia Pediátrica"
 },
 {
 "code": "MED233",
@@ -996,7 +1000,8 @@
 },
 {
 "code": "MED234",
-"name": "CHRISTIAN DE ESCOBAR PRADO"
+"name": "CHRISTIAN DE ESCOBAR PRADO",
+"specialty": "Cirurgia Geral Pediátrica"
 },
 {
 "code": "MED235",
@@ -1024,11 +1029,13 @@
 },
 {
 "code": "MED241",
-"name": "ERALDO BELARMINO JUNIOR"
+"name": "ERALDO BELARMINO JUNIOR",
+"specialty": "Neurologia Pediátrica"
 },
 {
 "code": "MED242",
-"name": "GIL BARDINI ALVES"
+"name": "GIL BARDINI ALVES",
+"specialty": "Alergia e Imunologia"
 },
 {
 "code": "MED243",
@@ -1048,7 +1055,8 @@
 },
 {
 "code": "MED247",
-"name": "DANIELA BURTET MACHADO"
+"name": "DANIELA BURTET MACHADO",
+"specialty": "Fonoaudiologia"
 },
 {
 "code": "MED248",
@@ -1096,7 +1104,8 @@
 },
 {
 "code": "MED259",
-"name": "IOLANDA DE SOUZA HONORATO"
+"name": "IOLANDA DE SOUZA HONORATO",
+"specialty": "Ginecologia"
 },
 {
 "code": "MED260",
@@ -1132,7 +1141,8 @@
 },
 {
 "code": "MED268",
-"name": "EVELIM DE MEDEIROS SARTOR"
+"name": "EVELIM DE MEDEIROS SARTOR",
+"specialty": "Cardiologia Pediátrica"
 },
 {
 "code": "MED269",
@@ -1148,7 +1158,8 @@
 },
 {
 "code": "MED272",
-"name": "ANDRE RAMPINELLI MANGILI"
+"name": "ANDRE RAMPINELLI MANGILI",
+"specialty": "Pneumologia Pediátrica"
 },
 {
 "code": "MED273",
@@ -1168,7 +1179,8 @@
 },
 {
 "code": "MED277",
-"name": "ARTHUR MENDES LUCIANO"
+"name": "ARTHUR MENDES LUCIANO",
+"specialty": "Cirurgia Ginecológica"
 },
 {
 "code": "MED278",
@@ -1256,7 +1268,8 @@
 },
 {
 "code": "MED299",
-"name": "HENRIQUE DA CUNHA GALVANI"
+"name": "HENRIQUE DA CUNHA GALVANI",
+"specialty": "Gastroenterologia Pediátrica"
 },
 {
 "code": "MED330",
@@ -1308,7 +1321,8 @@
 },
 {
 "code": "MED350",
-"name": "CARLOS ANDRE TONELLI"
+"name": "CARLOS ANDRE TONELLI",
+"specialty": "Endocrinologia Pediátrica"
 },
 {
 "code": "MED351",
@@ -1328,7 +1342,8 @@
 },
 {
 "code": "MED355",
-"name": "GIULIA MILANESI BROGNI"
+"name": "GIULIA MILANESI BROGNI",
+"specialty": "Gestação de Alto Risco"
 },
 {
 "code": "MED356",
@@ -1432,7 +1447,8 @@
 },
 {
 "code": "MED381",
-"name": "NADHINE FELTRIN RONSONI"
+"name": "NADHINE FELTRIN RONSONI",
+"specialty": "Ginecologia"
 },
 {
 "code": "MED382",
@@ -1472,15 +1488,18 @@
 },
 {
 "code": "MED391",
-"name": "JAIR PAULO SCHUH"
+"name": "JAIR PAULO SCHUH",
+"specialty": "Ortopedia Pediátrica"
 },
 {
 "code": "MED392",
-"name": "ALESSANDRO YOSHIZATO"
+"name": "ALESSANDRO YOSHIZATO",
+"specialty": "Ortopedia Pediátrica"
 },
 {
 "code": "MED393",
-"name": "ROBSON LUIZ DOS SANTOS"
+"name": "ROBSON LUIZ DOS SANTOS",
+"specialty": "Ortopedia Pediátrica"
 },
 {
 "code": "MED394",
@@ -1536,7 +1555,8 @@
 },
 {
 "code": "MED407",
-"name": "PAULO FERREIRA JUNIOR"
+"name": "PAULO FERREIRA JUNIOR",
+"specialty": "Gestação de Alto Risco"
 },
 {
 "code": "MED408",
@@ -1544,11 +1564,13 @@
 },
 {
 "code": "MED409",
-"name": "FABIO AUGUSTO MORAES WIECZOREK"
+"name": "FABIO AUGUSTO MORAES WIECZOREK",
+"specialty": "Cirurgia Ginecológica"
 },
 {
 "code": "MED410",
-"name": "KARINA ALESSIO DE JESUS"
+"name": "KARINA ALESSIO DE JESUS",
+"specialty": "Infertilidade"
 },
 {
 "code": "MED411",
@@ -1728,7 +1750,8 @@
 },
 {
 "code": "MED455",
-"name": "LUCIANO PEREIRA BENDER"
+"name": "LUCIANO PEREIRA BENDER",
+"specialty": "Cardiologia Pediátrica"
 },
 {
 "code": "MED456",
@@ -1964,7 +1987,8 @@
 },
 {
 "code": "MED521",
-"name": "BEATRIZ BRIGIDO PEREIRA"
+"name": "BEATRIZ BRIGIDO PEREIRA",
+"specialty": "Gestação de Alto Risco"
 },
 {
 "code": "MED522",
@@ -1996,7 +2020,8 @@
 },
 {
 "code": "MED534",
-"name": "STEFANI ZILLI MAFALDA"
+"name": "STEFANI ZILLI MAFALDA",
+"specialty": "Gestação de Alto Risco"
 },
 {
 "code": "MED535",
@@ -2004,11 +2029,13 @@
 },
 {
 "code": "MED536",
-"name": "VILSON RAMON BONETTI"
+"name": "VILSON RAMON BONETTI",
+"specialty": "Dermatologia Pediátrica"
 },
 {
 "code": "MED537",
-"name": "CAMILA SOUZA VILELA"
+"name": "CAMILA SOUZA VILELA",
+"specialty": "Oftalmologia Pediátrica"
 },
 {
 "code": "MED538",
@@ -2128,7 +2155,8 @@
 },
 {
 "code": "MED586",
-"name": "ANA PAULA AFFONSO GOMES"
+"name": "ANA PAULA AFFONSO GOMES",
+"specialty": "Mastologia"
 },
 {
 "code": "MED587",
@@ -2144,7 +2172,8 @@
 },
 {
 "code": "MED600",
-"name": "ANNE ROSSO EVANGELISTA"
+"name": "ANNE ROSSO EVANGELISTA",
+"specialty": "Otorrinolaringologia Pediátrica"
 },
 {
 "code": "MED601",
@@ -2156,7 +2185,8 @@
 },
 {
 "code": "MED604",
-"name": "HENRIQUE CARVALHO"
+"name": "HENRIQUE CARVALHO",
+"specialty": "Otorrinolaringologia Pediátrica"
 },
 {
 "code": "MED607",
@@ -2220,7 +2250,8 @@
 },
 {
 "code": "MED634",
-"name": "VANESSA KNIHS DE MENEZES"
+"name": "VANESSA KNIHS DE MENEZES",
+"specialty": "Neonatologia; Pediatria Geral"
 },
 {
 "code": "MED642",
@@ -2296,7 +2327,8 @@
 },
 {
 "code": "MED665",
-"name": "TAMIRES SILVA ALVES"
+"name": "TAMIRES SILVA ALVES",
+"specialty": "Genética"
 },
 {
 "code": "MED666",
@@ -2304,7 +2336,8 @@
 },
 {
 "code": "MED667",
-"name": "FABRISSIO PORTELINHA GRAFFUNDER"
+"name": "FABRISSIO PORTELINHA GRAFFUNDER",
+"specialty": "Oftalmologia Pediátrica"
 },
 {
 "code": "MED668",
@@ -2449,5 +2482,47 @@
 {
 "code": "MEFD0666",
 "name": "FERNANDO HENRIQUE COLONETTE WESSLER"
+},
+{
+"code": "MULTI604",
+"name": "BEATRIZ CAETANO COSTA",
+"specialty": "Fisioterapia",
+"crm": "",
+"rqe": ""
+},
+{
+"code": "MULTI605",
+"name": "DIELE ANTUNES",
+"specialty": "Nutrição",
+"crm": "",
+"rqe": ""
+},
+{
+"code": "MULTI606",
+"name": "DANIELA GAMA ARNS",
+"specialty": "Psicologia",
+"crm": "",
+"rqe": ""
+},
+{
+"code": "MULTI607",
+"name": "AMANDA DOS SANTOS DE SOUZA",
+"specialty": "Psicologia",
+"crm": "",
+"rqe": ""
+},
+{
+"code": "MULTI608",
+"name": "ROSE CRISPIM SOARES",
+"specialty": "Serviço Social",
+"crm": "",
+"rqe": ""
+},
+{
+"code": "MULTI609",
+"name": "FERNANDA WELINTON",
+"specialty": "Serviço Social",
+"crm": "",
+"rqe": ""
 }
 ]
