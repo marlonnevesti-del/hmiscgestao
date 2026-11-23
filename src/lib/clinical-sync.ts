@@ -108,7 +108,14 @@ export function useClinicalSync() {
     const onOff = () => setSyncStatus("offline");
     const onOn = () => { void pull(); if (dirty) void push(); };
     window.addEventListener("offline", onOff); window.addEventListener("online", onOn);
-    const unsub = subscribeState(() => { if (!applying && version >= 0) { dirty = true; void push(); } });
+    // Só grava quando um dado clínico mudou de fato (login/perfil não disparam gravação).
+    let last = pick();
+    const unsub = subscribeState(() => {
+      const now = pick();
+      const changed = KEYS.some((k) => now[k] !== last[k]);
+      last = now;
+      if (changed && !applying && version >= 0) { dirty = true; void push(); }
+    });
     const t = setInterval(() => { if (!alive) return; if (dirty) void push(); else if (!document.hidden) void pull(); }, 3000);
     const onVis = () => { if (!document.hidden) void pull(); };
     document.addEventListener("visibilitychange", onVis);
