@@ -1,0 +1,11 @@
+# Obstetric assessment references
+
+These are clinical decision-support records, not automatic diagnoses, medication orders or admission/discharge authorizations. Institutional clinical leadership must approve local escalation, frequency and blood-bank workflows before care use.
+
+- MEOWS: CEMACH-style color-trigger table, Singh validation (2012), reproduced in Friedman et al., Table 1: https://pmc.ncbi.nlm.nih.gov/articles/PMC5910060/ . One red or two yellow parameters trigger clinical evaluation; colors are not summed. Pain is the original chart's 0–3 categorical grade, not an EVA/NRS 0–10 conversion. The reproduced source does not describe grade 3; its local descriptor requires institutional confirmation.
+- Bishop: full score (0–13), Table 2: https://www.aafp.org/afp/2022/0200/p177 . Discrete examination categories; no automatic rounding of measurements.
+- Silverman–Andersen: five 0–2 items, Table 14.2: https://www.newbornwhocc.org/pdf/Approach-to-Respiratory-Distress-in-the-Newborn.pdf . Report total/trend without unsupported universal severity or respiratory-support thresholds.
+- HPP: CMQCC v3.0 (2022), Appendix K: https://www.cmqcc.org/resource/ob-hemorrhage-toolkit-v30-appendix-k-obstetric-hemorrhage-risk-factor-assessment-screen . Anemia/Ht and platelet categories are represented once per severity, and a high-risk finding supersedes medium. This screen records antepartum/intrapartum risk, not the separate postpartum surveillance factors or an active-hemorrhage treatment algorithm.
+- WHO Safe Childbirth Checklist (2015): https://iris.who.int/server/api/core/bitstreams/d62be89f-c690-4c54-8a92-fbe175e5506e/content . This application uses an adaptation across the four pause points, including before cesarean; non-indicated interventions are not universally required. A non-applicable item requires a justification. Do not represent the adaptation as the full verbatim official checklist.
+
+Missing answers never default to a reassuring total/risk. Assessments are append-only, preserving the author, date, individual answers, notes and assessed patient. Neonatal assessments are linked to the RN identity rather than recorded as a maternal score.

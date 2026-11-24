@@ -1,6 +1,7 @@
 import { ActionGroup } from "@/components/ActionGroup";
 import { FileText, Stethoscope, FlaskConical } from "lucide-react";
 import { EncounterTimeline } from "@/components/EncounterTimeline";
+import { MaternityCare } from "@/components/MaternityCare";
 import { ProcedurePrintButton } from "@/components/ProcedurePrint";
 import { MedicalAssessment, PrescriptionRelease } from "@/components/CareMedical";
 import { Button } from "@/components/ui/button";
@@ -87,12 +88,14 @@ function PEP() {
           <TabsTrigger value="prescricao">Prescrição</TabsTrigger>
           <TabsTrigger value="sinais">Sinais vitais & BH</TabsTrigger>
           {obst && <TabsTrigger value="partograma">Obstetrícia & Partograma</TabsTrigger>}
+          {(obst || p.type === 'puerpera' || p.type === 'neonato') && <TabsTrigger value="maternidade">Parto seguro e escalas</TabsTrigger>}
           {showNB && <TabsTrigger value="rn">Recém-nascido & Vínculo</TabsTrigger>}
         </TabsList>
         <TabsContent value="resumo"><MedicalAssessment p={p} /><Evolucao p={p} /></TabsContent>
         <TabsContent value="prescricao"><PrescriptionRelease patientId={p.id} /><Prescricao p={p} /></TabsContent>
         <TabsContent value="sinais"><Sinais p={p} /></TabsContent>
         <TabsContent value="cadastro"><PatientRegistrationFields key={p.id} readOnly value={registrationFor(p)} onChange={() => {}} recordNumber={p.prontuario} /></TabsContent>
+        {(obst || p.type === 'puerpera' || p.type === 'neonato') && <TabsContent value="maternidade"><MaternityCare patientId={p.id} /></TabsContent>}
         {obst && <TabsContent value="partograma"><Partograma p={p} /></TabsContent>}
         {showNB && <TabsContent value="rn"><RN p={p} /></TabsContent>}
       </Tabs>

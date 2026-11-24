@@ -1,6 +1,8 @@
 import { EMPTY_MILK_BANK, LHP_VALIDITY_DAYS, batchApproved, kcalFromCrematocrit, type MilkBank } from './milk-bank';
 import { physioRequestIssues } from './physio';
 import { serviceRequestIssues } from './service-orders';
+import { maternityResult, type MaternityKind, type MaternityRecord } from './maternity';
+import { canAccessUnitTab } from './hospital-data';
 import { AMEND_FIELDS, amendIssue, readField, type AmendField } from './document-amend';
 import { DEFAULT_KITS, checkKitUse, findKit, setBio, startCycle, type BioResult, type CmeCycle, type CmeKit, type KitStatus } from './cme';
 import { useSyncExternalStore } from "react";
@@ -728,6 +730,25 @@ export function saveClinicalDoc(encounterId: string, kind: import('./inpatient-d
   const docs = { ...(e.clinicalDocs ?? {}), [kind]: [...(e.clinicalDocs?.[kind] ?? []), doc] };
   commitEncounter({ ...e, clinicalDocs: docs });
   return doc;
+}
+
+/** Append-only maternal/perinatal assessments, shared by the sector and PEP. */
+export function saveMaternityRecord(encounterId: string, patientId: string, kind: MaternityKind, values: Record<string, string>, notes: string) {
+  if (!canAccessUnitTab(state.profile, 'maternidade', 'assistencia', state.accessAreas) ||
+      (!canAct(state.profile, 'triagem', state.accessAreas) && !canAct(state.profile, 'prescrever', state.accessAreas))) throw new Error('Seu perfil permite apenas visualizar estas avaliações.');
+  const { e, p } = getEncounter(encounterId);
+  if (e.type !== 'Maternidade' || e.status_fluxo === 'ALTA_HOSPITALAR') throw new Error('Selecione um atendimento ativo da Maternidade.');
+  const target = state.patients.find((x) => x.id === patientId);
+  if (!target) throw new Error('Paciente não encontrado.');
+  if (kind === 'silverman') {
+    if (target.type !== 'neonato' || !(target.id === p.id || p.babyIds?.includes(target.id) || target.newborn?.motherId === p.id)) throw new Error('Selecione um RN vinculado a este atendimento.');
+  } else if (target.id !== p.id || !['gestante', 'puerpera'].includes(target.type)) throw new Error('Esta avaliação é exclusiva da gestante ou puérpera deste atendimento.');
+  const result = maternityResult(kind, values);
+  if (kind === 'checklist' && Object.values(values).includes('na') && !notes.trim()) throw new Error('Justifique os itens não aplicáveis.');
+  const rec: MaternityRecord = { id: crypto.randomUUID(), patientId, kind, values: { ...values }, result, notes: notes.trim(), at: new Date().toISOString(), by: professionalName(state.profile) };
+  const updated = { ...e, maternity: [...(e.maternity ?? []), rec], history: [...e.history, { status: e.status_fluxo, at: rec.at, by: rec.by, note: `${kind}: ${target.name} — ${result}${rec.notes ? ` — ${rec.notes}` : ''}` }] };
+  setState((s) => ({ encounters: s.encounters.map((x) => x.id === e.id ? updated : x) }));
+  return rec;
 }
 
 /** Registro intensivo (UTI Pediátrica / UCI): escalas, balanço hídrico, bundles, SBAR, SAE e evoluções padronizadas no paciente. */

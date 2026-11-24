@@ -30,6 +30,7 @@ use the editor.
 <!-- LOVABLE:END -->
 
 ## Project rules
+- Maternity assessments use versioned pure rules in `src/lib/maternity.ts` and append-only encounter.maternity entries via saveMaternityRecord; the sector and PEP share them, MEOWS uses color triggers rather than a summed score, and the bed view reads existing CO/FIA assignments without changing NIR reservations.
 - Physiotherapy evolution identification is composed by `identifiedPhysioEvolution` from the current patient when a template is selected; this keeps all three models consistent without changing saved evolutions or clinical text.
 - Imported physician identifiers stay only in the approved-user clinical snapshot; deduplicate by CRM/UF, match login by council or exact unique name, and never autofill missing, invalid or shared CNS to avoid billing misidentification.
 - Clinical/billing catalogs live in `src/lib/hospital-data.ts`, BE transition rules in `src/lib/care-flow.ts`, and the single reactive in-memory clinical state in `src/lib/hospital-store.ts`; screens use `useStore` and centralized actions to prevent sector queues from diverging. Clinical state is persisted as one snapshot row (clinical_state, approved employees only) synced by src/lib/clinical-sync.ts every 3s, last write wins; keeps schema portable to a self-hosted Postgres.

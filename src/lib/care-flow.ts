@@ -16,6 +16,7 @@ export interface AdmissionRequest {
 }
 export interface FiaRecord { number: string; openedAt: string; ward: string; bed: string; doctor: string; authorizedBy: string; cid: string; justification: string; character: string }
 export interface Encounter {
+  maternity?: import('./maternity').MaternityRecord[];
   id: string; number: string; patientId: string; status_fluxo: FlowStatus; openedAt: string; type: string; specialty: string; complaint: string; nursingPreConsult?: boolean;
   history: { status: FlowStatus; at: string; by: string; note: string }[];
   triage?: Triage; medical?: { anamnesis: string; exam: string; cid: string; diagnosis: string };

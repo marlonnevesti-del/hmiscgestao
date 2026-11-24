@@ -1,4 +1,6 @@
 # Roadmap
+- [x] Incluir checklist de parto seguro e MEOWS, Bishop, Silverman-Andersen e risco de HPP na Maternidade e no PEP, com histórico compartilhado e testes; leitura confirmada em sessão independente.
+- [x] Mostrar observação e leitos obstétricos existentes sem copiar leitos pediátricos nem mudar reservas do NIR; disponibilidade real continua dependente do NIR/Hotelaria.
 - [x] Consolidar as duas planilhas do corpo clínico sem duplicar médicos; guardar CNS somente no estado clínico protegido e completar seleção nos documentos (199 médicos importados; 49 CNS aguardam correção da fonte).
 - [x] Preparar leitura segura dos leitos da Hotelaria no NIR e documentar ativação e servidor interno.
 - [ ] Ativar sincronização real e reservas bidirecionais — depende de endpoint e reserva transacional publicados no aplicativo Hotelaria e credenciais de integração.
