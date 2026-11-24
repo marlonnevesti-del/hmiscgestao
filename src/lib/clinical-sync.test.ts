@@ -77,3 +77,22 @@ describe("proteção contra abas antigas e ressuscitação de testes", () => {
     expect(isPendingStale(now - 60 * 1000, 98, 100, now)).toBe(false);
   });
 });
+
+describe("barreira contra sumiço de pacientes", () => {
+  it("detecta paciente recém-cadastrado no servidor que a gravação apagaria", async () => {
+    const { findLostRecords } = await import("./clinical-sync");
+    const server = { patients: [{ id: "queli" }, { id: "a" }], encounters: [{ id: "e1", patientId: "queli" }] };
+    const local = { patients: [{ id: "a" }], encounters: [] };
+    expect(findLostRecords(server as never, local as never, []).sort()).toEqual(["e1", "queli"]);
+  });
+  it("não bloqueia exclusão definitiva registrada nos excluídos", async () => {
+    const { findLostRecords } = await import("./clinical-sync");
+    const server = { patients: [{ id: "rn-3" }], encounters: [{ id: "e9", patientId: "rn-3" }] };
+    expect(findLostRecords(server as never, { patients: [], encounters: [] } as never, ["rn-3"])).toEqual([]);
+  });
+  it("remove da fila o atendimento de paciente excluído", () => {
+    const m = mergeSnapshots({} as never, { queue: [{ id: "e9" }, { id: "e1" }] } as never,
+      { encounters: [{ id: "e9", patientId: "rn-3" }, { id: "e1", patientId: "x" }], queue: [{ id: "e9" }, { id: "e1" }] } as never);
+    expect((m.queue as { id: string }[]).map((q) => q.id)).toEqual(["e1"]);
+  });
+});

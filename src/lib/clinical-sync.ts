@@ -7,6 +7,7 @@ import { DEFAULT_SPECIALTIES } from "./ambulatorio";
 import { registerSyncRetry, setSyncStatus } from "./sync-status";
 import { refillSequence } from "./sequence-pool";
 import { mergeCatalog, normalizeStock } from "./pharmacy-stock";
+import { toast } from "sonner";
 
 // Shared clinical data persisted as one snapshot row; keys below are the durable part of the store.
 const KEYS = ["encounters", "beSequence", "fiaSequence", "stock", "patients", "queue", "surgeries", "admins", "rooms", "calls", "warehouse", "cidGroups", "cidAreas", "removedStock", "movements", "requests", "ambSpecialties", "appointments", "cmeKits", "cmeCycles", "doctors", "milkBank"] as const;
@@ -29,6 +30,24 @@ let base: Partial<Snapshot> = {};
 let applying = false;
 let dirty = false;
 let saving = false;
+/** Trava "pull first": nenhuma gravação antes do primeiro download completo do servidor nesta aba. */
+let initialPulled = false;
+/** Último contato bem-sucedido com o servidor; acima do TTL a aba precisa baixar antes de gravar. */
+let lastServerAt = 0;
+
+/** Pacientes/atendimentos que o servidor tem e esta gravação apagaria sem estarem na lista de excluídos. */
+export function findLostRecords(server: Partial<Snapshot>, local: Partial<Snapshot>, deleted: string[]): string[] {
+  const del = new Set(deleted.map(String));
+  const ids = (list: unknown) => new Set((Array.isArray(list) ? list : []).map((x) => idOf(x)).filter((x): x is string => !!x));
+  const lp = ids(local.patients), le = ids(local.encounters);
+  const lost: string[] = [];
+  for (const p of Array.isArray(server.patients) ? server.patients : []) { const id = idOf(p); if (id && !lp.has(id) && !del.has(id)) lost.push(id); }
+  for (const e of Array.isArray(server.encounters) ? server.encounters : []) {
+    const id = idOf(e); const pid = String((e as { patientId?: unknown })?.patientId ?? "");
+    if (id && !le.has(id) && !del.has(pid)) lost.push(id);
+  }
+  return lost;
+}
 
 function apply(data: Partial<Snapshot>, v: number) {
   version = v;
@@ -44,7 +63,11 @@ function apply(data: Partial<Snapshot>, v: number) {
     const del = new Set(deletedPatientIds);
     if (Array.isArray(clinical["patients"])) clinical["patients"] = clinical["patients"].filter((p) => !del.has(String(idOf(p) ?? "")));
     if (Array.isArray(clinical["queue"])) clinical["queue"] = clinical["queue"].filter((q) => !del.has(String((q as { patientId?: unknown })?.patientId ?? "")));
-    if (Array.isArray(clinical["encounters"])) clinical["encounters"] = clinical["encounters"].filter((e) => !del.has(String((e as { patientId?: unknown })?.patientId ?? "")));
+    if (Array.isArray(clinical["encounters"])) {
+      const gone = new Set(clinical["encounters"].filter((e) => del.has(String((e as { patientId?: unknown })?.patientId ?? ""))).map((e) => String(idOf(e))));
+      clinical["encounters"] = clinical["encounters"].filter((e) => !gone.has(String(idOf(e))));
+      if (Array.isArray(clinical["queue"])) clinical["queue"] = clinical["queue"].filter((q) => !gone.has(String(idOf(q))));
+    }
   }
   setState(() => ({ ...clinical, stock: mergeCatalog(normalizeStock(data.stock), PHARMACY_CATALOG, removed), warehouse: mergeCatalog(normalizeStock(data.warehouse), WAREHOUSE_CATALOG, removed), ...(Array.isArray(data.rooms) && data.rooms.length ? {} : { rooms: DEFAULT_ROOMS }), ...(Array.isArray(data.calls) ? {} : { calls: [] }), ...(Array.isArray(data.movements) ? {} : { movements: [] }), ...(Array.isArray(data.requests) ? {} : { requests: [] }), ...(Array.isArray(data.ambSpecialties) && data.ambSpecialties.length ? {} : { ambSpecialties: DEFAULT_SPECIALTIES }), ...(Array.isArray(data.appointments) ? {} : { appointments: [] }), ...(Array.isArray(data.doctors) ? {} : { doctors: [] }), ...(Array.isArray(data.cidGroups) && data.cidGroups.length ? {} : { cidGroups: DEFAULT_CID_GROUPS }), ...(Array.isArray(data.cidAreas) ? {} : { cidAreas: DEFAULT_CID_AREAS }) }) as never);
   applying = false;
@@ -56,10 +79,13 @@ async function pull() {
   if (version >= 0) {
     const { data: head, error } = await supabase.from("clinical_state").select("version").eq("id", "main").maybeSingle();
     setSyncStatus(error ? "offline" : dirty ? "pending" : "synced");
+    if (!error) lastServerAt = Date.now();
     if (!head || head.version === version) return;
   }
   const { data, error } = await supabase.from("clinical_state").select("data, version").eq("id", "main").maybeSingle();
   setSyncStatus(error ? "offline" : dirty ? "pending" : "synced");
+  if (error) return; // sem download completo, sem liberação de gravação
+  lastServerAt = Date.now();
   if (data && data.version !== version) {
     const remote = (data.data ?? {}) as Partial<Snapshot>;
     if (dirty) {
@@ -73,17 +99,34 @@ async function pull() {
     }
   }
   if (!data && version === -1) version = 0;
+  initialPulled = true;
   if (dirty && version >= 0) void push();
 }
 
+/** Descarta o estado desta aba e recarrega o do servidor (usado quando a barreira bloqueia uma gravação). */
+async function resetFromServer() {
+  dirty = false; clearPending();
+  const { data } = await supabase.from("clinical_state").select("data, version").eq("id", "main").maybeSingle();
+  if (data) { apply((data.data ?? {}) as Partial<Snapshot>, data.version); lastServerAt = Date.now(); }
+  setSyncStatus("synced");
+}
+
 async function push() {
-  if (saving || !dirty || version < 0) return;
+  if (saving || !dirty || version < 0 || !initialPulled) return;
+  // Aba parada há muito tempo: baixa e mescla antes de qualquer gravação.
+  if (Date.now() - lastServerAt > PENDING_TTL_MS) { void pull(); return; }
   saving = true; dirty = false; setSyncStatus("saving");
   try {
     const { data: u } = await supabase.auth.getUser();
     let lastError = false;
     for (let attempt = 0; attempt < 5; attempt++) {
       const local = pick();
+      const lost = findLostRecords(base, local, deletedPatientIds);
+      if (lost.length) {
+        // Barreira: esta aba apagaria cadastros que existem no servidor. Bloqueia e recarrega.
+        toast.error("Gravação bloqueada: esta tela estava desatualizada e apagaria cadastros recentes. Os dados foram recarregados do servidor; refaça a última ação.");
+        saving = false; await resetFromServer(); return;
+      }
       const next = version + 1;
       const row = { data: local as never, version: next, updated_by: u.user?.id ?? null, updated_at: new Date().toISOString() };
       // Grava só se ninguém salvou desde a última leitura; senão mescla e tenta de novo.
@@ -165,7 +208,11 @@ export function mergeSnapshots(baseS: Partial<Snapshot>, local: Partial<Snapshot
     out["deletedPatientIds"] = Array.from(deleted);
     if (Array.isArray(out["patients"])) out["patients"] = out["patients"].filter((p) => !deleted.has(String(idOf(p) ?? "")));
     if (Array.isArray(out["queue"])) out["queue"] = out["queue"].filter((q) => !deleted.has(String((q as { patientId?: unknown })?.patientId ?? "")));
-    if (Array.isArray(out["encounters"])) out["encounters"] = out["encounters"].filter((e) => !deleted.has(String((e as { patientId?: unknown })?.patientId ?? "")));
+    if (Array.isArray(out["encounters"])) {
+      const gone = new Set(out["encounters"].filter((e) => deleted.has(String((e as { patientId?: unknown })?.patientId ?? ""))).map((e) => String(idOf(e))));
+      out["encounters"] = out["encounters"].filter((e) => !gone.has(String(idOf(e))));
+      if (Array.isArray(out["queue"])) out["queue"] = out["queue"].filter((q) => !gone.has(String(idOf(q))));
+    }
   }
   return out as Partial<Snapshot>;
 }
@@ -230,7 +277,13 @@ export function useClinicalSync() {
       }
     });
     const t = setInterval(() => { if (!alive) return; if (dirty) void push(); else if (!document.hidden) void pull(); }, 3000);
-    const onVis = () => { if (!document.hidden) void pull(); };
+    let hiddenAt = 0;
+    const onVis = () => {
+      if (document.hidden) { hiddenAt = Date.now(); return; }
+      // Aba que ficou escondida além do TTL descarta rascunho local e volta ao estado do servidor.
+      if (hiddenAt && Date.now() - hiddenAt > PENDING_TTL_MS && !saving) { void resetFromServer(); hiddenAt = 0; return; }
+      void pull();
+    };
     document.addEventListener("visibilitychange", onVis);
     return () => { alive = false; registerSyncRetry(null); window.removeEventListener("beforeunload", onUnload); tabs?.close(); tabs = null; clearInterval(t); void supabase.removeChannel(channel); window.removeEventListener("offline", onOff); window.removeEventListener("online", onOn); unsub(); document.removeEventListener("visibilitychange", onVis); };
   }, []);
