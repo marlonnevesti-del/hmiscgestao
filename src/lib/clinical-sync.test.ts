@@ -95,4 +95,11 @@ describe("barreira contra sumiço de pacientes", () => {
       { encounters: [{ id: "e9", patientId: "rn-3" }, { id: "e1", patientId: "x" }], queue: [{ id: "e9" }, { id: "e1" }] } as never);
     expect((m.queue as { id: string }[]).map((q) => q.id)).toEqual(["e1"]);
   });
+  it("recarrega automaticamente apenas quando ocioso há 30+ min sem pendências", async () => {
+    const { shouldAutoReload } = await import("./clinical-sync");
+    expect(shouldAutoReload(31 * 60 * 1000, false, false)).toBe(true);
+    expect(shouldAutoReload(10 * 60 * 1000, false, false)).toBe(false);
+    expect(shouldAutoReload(31 * 60 * 1000, true, false)).toBe(false);
+    expect(shouldAutoReload(31 * 60 * 1000, false, true)).toBe(false);
+  });
 });

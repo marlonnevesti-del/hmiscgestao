@@ -221,12 +221,18 @@ export function mergeSnapshots(baseS: Partial<Snapshot>, local: Partial<Snapshot
 const PENDING = "hmisc-clinical-pending";
 const PENDING_TTL_MS = 10 * 60 * 1000;
 const PENDING_MAX_VERSION_LAG = 3;
+const IDLE_RELOAD_MS = 30 * 60 * 1000;
 
 /** Descarta rascunho local antigo (>10 min) ou defasado (>3 versões) para impedir sobrescrita por aba velha. */
 export function isPendingStale(savedAt: number, savedVersion: number | undefined, serverVersion: number, now = Date.now()): boolean {
   if (!Number.isFinite(savedAt) || now - savedAt > PENDING_TTL_MS) return true;
   if (typeof savedVersion !== "number" || serverVersion - savedVersion > PENDING_MAX_VERSION_LAG) return true;
   return false;
+}
+
+/** Recarrega automaticamente telas paradas há mais de 30 min (sem alterações pendentes) para manter código e dados sempre atuais. */
+export function shouldAutoReload(idleMs: number, isDirty: boolean, isSaving: boolean): boolean {
+  return !isDirty && !isSaving && Number.isFinite(idleMs) && idleMs >= IDLE_RELOAD_MS;
 }
 
 function savePending() {
@@ -277,6 +283,14 @@ export function useClinicalSync() {
       }
     });
     const t = setInterval(() => { if (!alive) return; if (dirty) void push(); else if (!document.hidden) void pull(); }, 3000);
+    let lastActivityAt = Date.now();
+    const markActivity = () => { lastActivityAt = Date.now(); };
+    window.addEventListener("pointerdown", markActivity, { passive: true });
+    window.addEventListener("keydown", markActivity, { passive: true });
+    const reloadTimer = setInterval(() => {
+      if (!alive || document.hidden) return;
+      if (shouldAutoReload(Date.now() - lastActivityAt, dirty, saving)) window.location.reload();
+    }, 5 * 60 * 1000);
     let hiddenAt = 0;
     const onVis = () => {
       if (document.hidden) { hiddenAt = Date.now(); return; }
@@ -284,7 +298,9 @@ export function useClinicalSync() {
       if (hiddenAt && Date.now() - hiddenAt > PENDING_TTL_MS && !saving) { void resetFromServer(); hiddenAt = 0; return; }
       void pull();
     };
+    const onFocus = () => { void pull(); };
     document.addEventListener("visibilitychange", onVis);
-    return () => { alive = false; registerSyncRetry(null); window.removeEventListener("beforeunload", onUnload); tabs?.close(); tabs = null; clearInterval(t); void supabase.removeChannel(channel); window.removeEventListener("offline", onOff); window.removeEventListener("online", onOn); unsub(); document.removeEventListener("visibilitychange", onVis); };
+    window.addEventListener("focus", onFocus);
+    return () => { alive = false; registerSyncRetry(null); window.removeEventListener("beforeunload", onUnload); tabs?.close(); tabs = null; clearInterval(t); clearInterval(reloadTimer); window.removeEventListener("pointerdown", markActivity); window.removeEventListener("keydown", markActivity); window.removeEventListener("focus", onFocus); void supabase.removeChannel(channel); window.removeEventListener("offline", onOff); window.removeEventListener("online", onOn); unsub(); document.removeEventListener("visibilitychange", onVis); };
   }, []);
 }
