@@ -96,12 +96,20 @@ export function AppShell({ children }: { children: ReactNode }) {
           ))}
           {profile === "Administrador" && <Link to="/gestao-atendimentos" title="BAAs e FIAs abertas" className="flex items-center gap-3 rounded-md px-3 py-2 text-sm hover:bg-sidebar-accent"><ClipboardList className="h-4 w-4 shrink-0" />{!collapsed && "BAAs e FIAs abertas"}</Link>}
           {canApproveEmployees(access?.roles ?? [], access?.profile.status ?? "") && <Link to="/colaboradores" title="Colaboradores" className="flex items-center gap-3 rounded-md px-3 py-2 text-sm hover:bg-sidebar-accent"><UserCog className="h-4 w-4 shrink-0" />{!collapsed && "Colaboradores"}</Link>}
-          {!collapsed && <div className="px-3 pt-2 text-[10px] uppercase tracking-wider opacity-60">Acesso rápido</div>}
-          {!collapsed && canAccessPage(profile, "/pacientes", accessAreas) && patients.slice(0, 5).map((p) => (
-            <Link key={p.id} to="/pacientes/$id" params={{ id: p.id }} className="flex items-center gap-2 rounded-md px-3 py-1.5 text-xs hover:bg-sidebar-accent">
-              <BedDouble className="h-3.5 w-3.5 opacity-70" /><span className="truncate">{p.bed} · {p.name.split(" ").slice(0, 2).join(" ")}</span>
-            </Link>
-          ))}
+          {!collapsed && canAccessPage(profile, "/pacientes", accessAreas) && (() => {
+            const admitted = patients.filter((p) => p.bed.trim() !== "").slice(0, 5);
+            if (!admitted.length) return null;
+            return (
+              <>
+                <div className="px-3 pt-2 text-[10px] uppercase tracking-wider opacity-60">Acesso rápido</div>
+                {admitted.map((p) => (
+                  <Link key={p.id} to="/pacientes/$id" params={{ id: p.id }} className="flex items-center gap-2 rounded-md px-3 py-1.5 text-xs hover:bg-sidebar-accent">
+                    <BedDouble className="h-3.5 w-3.5 opacity-70" /><span className="truncate">{p.bed} · {p.name.split(" ").slice(0, 2).join(" ")}</span>
+                  </Link>
+                ))}
+              </>
+            );
+          })()}
         </nav>
         {canAccessPage(profile, "/painel-tv", accessAreas) && <a href="/painel-tv" target="_blank" rel="noopener" title="Painel de Chamadas (TV) – abre em nova aba" className="mx-2 mt-2 flex items-center gap-3 rounded-md border border-sidebar-border px-3 py-2 text-xs hover:bg-sidebar-accent"><Tv className="h-4 w-4 shrink-0" />{!collapsed && "Painel de Chamadas (TV) ↗"}</a>}
         <button onClick={() => setCollapsed(!collapsed)} className="m-2 flex items-center justify-center gap-2 rounded-md p-2 text-xs hover:bg-sidebar-accent" aria-label="Recolher menu">
