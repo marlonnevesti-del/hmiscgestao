@@ -10,8 +10,18 @@ import { mergeCatalog, normalizeStock } from "./pharmacy-stock";
 
 // Shared clinical data persisted as one snapshot row; keys below are the durable part of the store.
 const KEYS = ["encounters", "beSequence", "fiaSequence", "stock", "patients", "queue", "surgeries", "admins", "rooms", "calls", "warehouse", "cidGroups", "cidAreas", "removedStock", "movements", "requests", "ambSpecialties", "appointments", "cmeKits", "cmeCycles", "doctors", "milkBank"] as const;
-type Snapshot = Record<(typeof KEYS)[number], unknown>;
-const pick = () => Object.fromEntries(KEYS.map((k) => [k, getState()[k]])) as Snapshot;
+type Snapshot = Record<(typeof KEYS)[number], unknown> & { deletedPatientIds?: string[] };
+// IDs de pacientes de teste já excluídos definitivamente; impede ressuscitação por abas antigas em cache.
+const PURGED_TEST_PATIENT_IDS = [
+  "eda2accb-d038-4a19-bf54-cb3c1aa81f2a",
+  "rn-3",
+  "4e46f929-ca00-4a6c-b968-451b6e1af973",
+];
+let deletedPatientIds: string[] = [...PURGED_TEST_PATIENT_IDS];
+const pick = (): Snapshot => ({
+  ...(Object.fromEntries(KEYS.map((k) => [k, getState()[k]])) as Record<(typeof KEYS)[number], unknown>),
+  ...(deletedPatientIds.length ? { deletedPatientIds } : {}),
+});
 
 let version = -1;
 /** Último snapshot confirmado com o servidor: base para a mesclagem em conflito. */
@@ -22,11 +32,20 @@ let saving = false;
 
 function apply(data: Partial<Snapshot>, v: number) {
   version = v;
+  if (Array.isArray(data?.deletedPatientIds)) {
+    deletedPatientIds = Array.from(new Set([...deletedPatientIds, ...data.deletedPatientIds.map(String)]));
+  }
   base = JSON.parse(JSON.stringify(data ?? {}));
   if (!data || !Object.keys(data).length) return;
   const removed = Array.isArray(data.removedStock) ? (data.removedStock as string[]) : [];
   applying = true;
   const clinical = Object.fromEntries(KEYS.filter((key) => key in data).map((key) => [key, data[key]]));
+  if (deletedPatientIds.length) {
+    const del = new Set(deletedPatientIds);
+    if (Array.isArray(clinical["patients"])) clinical["patients"] = clinical["patients"].filter((p) => !del.has(String(idOf(p) ?? "")));
+    if (Array.isArray(clinical["queue"])) clinical["queue"] = clinical["queue"].filter((q) => !del.has(String((q as { patientId?: unknown })?.patientId ?? "")));
+    if (Array.isArray(clinical["encounters"])) clinical["encounters"] = clinical["encounters"].filter((e) => !del.has(String((e as { patientId?: unknown })?.patientId ?? "")));
+  }
   setState(() => ({ ...clinical, stock: mergeCatalog(normalizeStock(data.stock), PHARMACY_CATALOG, removed), warehouse: mergeCatalog(normalizeStock(data.warehouse), WAREHOUSE_CATALOG, removed), ...(Array.isArray(data.rooms) && data.rooms.length ? {} : { rooms: DEFAULT_ROOMS }), ...(Array.isArray(data.calls) ? {} : { calls: [] }), ...(Array.isArray(data.movements) ? {} : { movements: [] }), ...(Array.isArray(data.requests) ? {} : { requests: [] }), ...(Array.isArray(data.ambSpecialties) && data.ambSpecialties.length ? {} : { ambSpecialties: DEFAULT_SPECIALTIES }), ...(Array.isArray(data.appointments) ? {} : { appointments: [] }), ...(Array.isArray(data.doctors) ? {} : { doctors: [] }), ...(Array.isArray(data.cidGroups) && data.cidGroups.length ? {} : { cidGroups: DEFAULT_CID_GROUPS }), ...(Array.isArray(data.cidAreas) ? {} : { cidAreas: DEFAULT_CID_AREAS }) }) as never);
   applying = false;
 }
@@ -136,19 +155,42 @@ export function mergeSnapshots(baseS: Partial<Snapshot>, local: Partial<Snapshot
     const l = local[key], r = remote[key];
     out[key] = typeof l === "number" && typeof r === "number" ? Math.max(l, r) : merge3(baseS[key], l, r, key === "stock" || key === "warehouse" || key === "milkBank"); // sequências BAA/FIA; só saldos somam baixas
   }
+  const deleted = new Set<string>([
+    ...PURGED_TEST_PATIENT_IDS,
+    ...(Array.isArray(baseS.deletedPatientIds) ? baseS.deletedPatientIds.map(String) : []),
+    ...(Array.isArray(local.deletedPatientIds) ? local.deletedPatientIds.map(String) : []),
+    ...(Array.isArray(remote.deletedPatientIds) ? remote.deletedPatientIds.map(String) : []),
+  ]);
+  if (deleted.size) {
+    out["deletedPatientIds"] = Array.from(deleted);
+    if (Array.isArray(out["patients"])) out["patients"] = out["patients"].filter((p) => !deleted.has(String(idOf(p) ?? "")));
+    if (Array.isArray(out["queue"])) out["queue"] = out["queue"].filter((q) => !deleted.has(String((q as { patientId?: unknown })?.patientId ?? "")));
+    if (Array.isArray(out["encounters"])) out["encounters"] = out["encounters"].filter((e) => !deleted.has(String((e as { patientId?: unknown })?.patientId ?? "")));
+  }
   return out as Partial<Snapshot>;
 }
 
 // Rascunho local: alterações ainda não confirmadas pelo servidor sobrevivem a F5, queda de rede ou fechar a aba.
 const PENDING = "hmisc-clinical-pending";
+const PENDING_TTL_MS = 10 * 60 * 1000;
+const PENDING_MAX_VERSION_LAG = 3;
+
+/** Descarta rascunho local antigo (>10 min) ou defasado (>3 versões) para impedir sobrescrita por aba velha. */
+export function isPendingStale(savedAt: number, savedVersion: number | undefined, serverVersion: number, now = Date.now()): boolean {
+  if (!Number.isFinite(savedAt) || now - savedAt > PENDING_TTL_MS) return true;
+  if (typeof savedVersion !== "number" || serverVersion - savedVersion > PENDING_MAX_VERSION_LAG) return true;
+  return false;
+}
+
 function savePending() {
-  try { localStorage.setItem(PENDING, JSON.stringify({ base, local: pick(), at: Date.now() })); } catch { /* cota cheia: segue só em memória */ }
+  try { localStorage.setItem(PENDING, JSON.stringify({ base, local: pick(), at: Date.now(), version })); } catch { /* cota cheia: segue só em memória */ }
 }
 function clearPending() { try { localStorage.removeItem(PENDING); } catch { /* ignore */ } }
 function restorePending() {
   try {
     const raw = localStorage.getItem(PENDING); if (!raw) return;
-    const p = JSON.parse(raw) as { base: Partial<Snapshot>; local: Partial<Snapshot> };
+    const p = JSON.parse(raw) as { base: Partial<Snapshot>; local: Partial<Snapshot>; at?: number; version?: number };
+    if (version < 0 || isPendingStale(p.at ?? 0, p.version, version)) { clearPending(); return; }
     const merged = mergeSnapshots(p.base ?? {}, p.local ?? {}, base);
     const remoteBase = base;
     apply(merged, version);

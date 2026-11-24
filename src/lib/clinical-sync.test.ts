@@ -57,3 +57,23 @@ describe("indicador e reenvio manual", () => {
     registerSyncRetry(null);
   });
 });
+
+describe("proteção contra abas antigas e ressuscitação de testes", () => {
+  it("bloqueia ressuscitação de paciente presente em deletedPatientIds", () => {
+    const m = mergeSnapshots(
+      { patients: [] } as never,
+      { patients: [{ id: "rn-3", name: "RN de teste" }, { id: "novo", name: "Queli" }] } as never,
+      { patients: [{ id: "novo", name: "Queli" }], deletedPatientIds: ["rn-3"] } as never,
+    );
+    expect((m.patients as { id: string }[]).map((p) => p.id)).toEqual(["novo"]);
+    expect(m.deletedPatientIds).toContain("rn-3");
+  });
+  it("descarta rascunho local com mais de 10 minutos ou mais de 3 versões de defasagem", async () => {
+    const { isPendingStale } = await import("./clinical-sync");
+    const now = 1_700_000_000_000;
+    expect(isPendingStale(now - 11 * 60 * 1000, 100, 100, now)).toBe(true);
+    expect(isPendingStale(now - 60 * 1000, 96, 100, now)).toBe(true);
+    expect(isPendingStale(now - 60 * 1000, undefined, 100, now)).toBe(true);
+    expect(isPendingStale(now - 60 * 1000, 98, 100, now)).toBe(false);
+  });
+});
