@@ -68,10 +68,11 @@ export function SpecialtyManager() {
 
 export function AmbulatoryAgenda() {
   const list = useStore((s) => s.appointments); const specs = useStore((s) => s.ambSpecialties); const patients = useStore((s) => s.patients); const profile = useStore((s) => s.profile); const accessAreas = useStore((s) => s.accessAreas);
-  const [date, setDate] = useState(today()); const [filter, setFilter] = useState("");
+  const [date, setDate] = useState(today()); const [filter, setFilter] = useState(""); const [docFilter, setDocFilter] = useState("");
   const [f, setF] = useState({ time: "", specialtyId: "", professional: "", patientId: "", note: "", nursingPreConsult: false }); const [q, setQ] = useState("");
   const found = q.length > 1 ? patients.filter((p) => [p.name, p.cpf, p.prontuario, p.registration?.cns ?? ""].some((v) => v.toLowerCase().includes(q.toLowerCase()))).slice(0, 6) : [];
-  const day = useMemo(() => list.filter((a) => a.date === date && (!filter || a.specialtyId === filter)).sort((a, b) => a.time.localeCompare(b.time)), [list, date, filter]);
+  const agendaDoctors = useMemo(() => Array.from(new Set(list.map((a) => a.professional.trim()).filter(Boolean))).sort((a, b) => a.localeCompare(b, "pt-BR")), [list]);
+  const day = useMemo(() => list.filter((a) => a.date === date && (!filter || a.specialtyId === filter) && (!docFilter || a.professional.trim() === docFilter)).sort((a, b) => a.time.localeCompare(b.time)), [list, date, filter, docFilter]);
   const editable = canAct(profile, "recepcao", accessAreas);
   const chosen = patients.find((p) => p.id === f.patientId);
   const learned = useStore((s) => s.doctors);
@@ -79,15 +80,16 @@ export function AmbulatoryAgenda() {
   const docs = useMemo(() => doctorsForSpecialty(mergeDoctors(learned ?? []), specName), [learned, specName]);
   const [find, setFind] = useState("");
   const [created, setCreated] = useState<Encounter | null>(null);
-  const findHits = find.trim().length > 1 ? list.filter((a) => { const p = patients.find((x) => x.id === a.patientId); return p && [p.name, p.cpf, p.prontuario, p.registration?.cns ?? ""].some((v) => v.toLowerCase().includes(find.trim().toLowerCase())); }).sort((a, b) => (b.date + b.time).localeCompare(a.date + a.time)).slice(0, 15) : [];
+  const findHits = find.trim().length > 1 ? list.filter((a) => { const qTerm = find.trim().toLowerCase(); const p = patients.find((x) => x.id === a.patientId); const sp = specs.find((s) => s.id === a.specialtyId)?.name ?? ""; return [p?.name ?? "", p?.cpf ?? "", p?.prontuario ?? "", p?.registration?.cns ?? "", a.professional, sp].some((v) => v.toLowerCase().includes(qTerm)); }).sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time)).slice(0, 25) : [];
   return <div className="space-y-4">
     <div className="rounded-lg border bg-card p-3">
-      <label className="grid gap-1 text-xs">Procurar agendamento (qualquer data)<Input placeholder="Nome, CPF, CNS ou prontuário do paciente" value={find} onChange={(e) => setFind(e.target.value)} /></label>
-      {find.trim().length > 1 && <ul className="mt-2 space-y-1 text-sm">{findHits.map((a) => <li key={a.id}><button type="button" className="text-left hover:underline" onClick={() => { setDate(a.date); setFilter(""); setFind(""); }}>{new Date(`${a.date}T12:00`).toLocaleDateString("pt-BR")} {a.time} · <b>{patients.find((x) => x.id === a.patientId)?.name}</b> · {specs.find((s) => s.id === a.specialtyId)?.name} · {a.professional || "—"} · {STATUS[a.status]}</button></li>)}{!findHits.length && <li className="text-muted-foreground">Nenhum agendamento encontrado.</li>}</ul>}
+      <label className="grid gap-1 text-xs">Procurar agendamento (qualquer data)<Input placeholder="Nome do paciente, médico, especialidade, CPF, CNS ou prontuário" value={find} onChange={(e) => setFind(e.target.value)} /></label>
+      {find.trim().length > 1 && <ul className="mt-2 space-y-1 text-sm">{findHits.map((a) => <li key={a.id}><button type="button" className="text-left hover:underline" onClick={() => { setDate(a.date); setFilter(""); setDocFilter(""); setFind(""); }}>{new Date(`${a.date}T12:00`).toLocaleDateString("pt-BR")} {a.time} · <b>{patients.find((x) => x.id === a.patientId)?.name}</b> · {specs.find((s) => s.id === a.specialtyId)?.name} · {a.professional || "—"} · {STATUS[a.status]}</button></li>)}{!findHits.length && <li className="text-muted-foreground">Nenhum agendamento encontrado.</li>}</ul>}
     </div>
     <div className="flex flex-wrap items-end gap-2">
       <label className="grid gap-1 text-xs">Data<Input type="date" value={date} onChange={(e) => setDate(e.target.value)} /></label>
       <label className="grid gap-1 text-xs">Especialidade<select className={sel} value={filter} onChange={(e) => setFilter(e.target.value)}><option value="">Todas</option>{specs.filter((s) => s.active).map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></label>
+      <label className="grid gap-1 text-xs">Médico / Profissional<select className={sel} value={docFilter} onChange={(e) => setDocFilter(e.target.value)}><option value="">Todos</option>{agendaDoctors.map((d) => <option key={d} value={d}>{d}</option>)}</select></label>
     </div>
     {editable && <form className="grid gap-2 rounded-lg border bg-card p-3 md:grid-cols-3" onSubmit={(e) => { e.preventDefault(); act(() => { scheduleAppointment({ ...f, date }); setF({ ...f, time: "", patientId: "", note: "", nursingPreConsult: false }); }, "Consulta agendada"); }}>
       <h3 className="text-sm font-semibold md:col-span-3">Agendar consulta em {new Date(`${date}T12:00`).toLocaleDateString("pt-BR")}</h3>

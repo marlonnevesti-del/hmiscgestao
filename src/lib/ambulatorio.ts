@@ -12,7 +12,7 @@ export type CareUnit = typeof UNITS[number];
 
 export const GROUP_LABELS: Record<SpecialtyGroup, string> = { medica: 'Especialidades médicas', nao_medica: 'Especialidades não médicas', sadt: 'SADT' };
 
-const MEDICAS = ['Alergia e Imunologia', 'Cardiologia Pediátrica', 'Cirurgia Geral Pediátrica', 'Dermatologia Pediátrica', 'Endocrinologia Pediátrica', 'Gastroenterologia Pediátrica', 'Genética', 'Gestação de Alto Risco', 'Ginecologia', 'Infectologia Pediátrica', 'Infertilidade', 'Mastologia', 'Neonatologia/Pediatria Geral', 'Neurologia Pediátrica', 'Oftalmologia Pediátrica', 'Ortopedia Pediátrica', 'Otorrinolaringologia Pediátrica', 'Pneumologia Pediátrica', 'Urologia Pediátrica'];
+const MEDICAS = ['Alergia e Imunologia', 'Anestesiologia', 'Cardiologia Pediátrica', 'Cirurgia Geral Pediátrica', 'Dermatologia Pediátrica', 'Endocrinologia Pediátrica', 'Gastroenterologia Pediátrica', 'Genética', 'Gestação de Alto Risco', 'Ginecologia', 'Infectologia Pediátrica', 'Infertilidade', 'Mastologia', 'Neonatologia/Pediatria Geral', 'Neurologia Pediátrica', 'Oftalmologia Pediátrica', 'Ortopedia Pediátrica', 'Otorrinolaringologia Pediátrica', 'Pneumologia Pediátrica', 'Urologia Pediátrica'];
 const NAO_MEDICAS = ['Bucomaxilofacial', 'Fisioterapia', 'Fonoaudiologia', 'Nutrição', 'Psicologia', 'Serviço Social'];
 const SADT = ['Biópsia de Colo Uterino', 'Cardiotocografia', 'Colposcopia', 'Ecocardiografia Fetal', 'Mamografia Bilateral', 'Histeroscopia Diagnóstica', 'Triagem Punção de Mama', 'USG (Geral, transvaginal, mamas, pélvico, etc)', 'USG Doppler Obstétrico', 'USG Morfológico'];
 
