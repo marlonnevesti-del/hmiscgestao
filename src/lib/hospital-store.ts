@@ -459,7 +459,7 @@ export function revertAdmission(id: string, reason: string): string {
 export function registerBirth(motherId: string, nb: Omit<Newborn, "motherId">, mode: "Parto Normal" | "Cesárea", sex: "F" | "M"): string {
   const m = state.patients.find((p) => p.id === motherId);
   if (!m) throw new Error("Mãe não encontrada");
-  const id = `rn-${state.patients.length + 1}`;
+  const id = `rn-${crypto.randomUUID()}`;
   const uti = nb.apgar5 < 7 || nb.pesoNascer < 2000;
   const rn: Patient = {
     id, prontuario: `${new Date().getFullYear()}-${String(4900 + state.patients.length)}`, name: `RN de ${m.name}`, cpf: "—", motherName: m.name, type: "neonato", age: "0 dia",
