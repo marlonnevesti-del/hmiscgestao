@@ -3,6 +3,7 @@ import { physioRequestIssues } from './physio';
 import { serviceRequestIssues } from './service-orders';
 import { maternityResult, type MaternityKind, type MaternityRecord } from './maternity';
 import { canAccessUnitTab } from './hospital-data';
+import { bedAgeIssue } from './nir-rules';
 import { AMEND_FIELDS, amendIssue, readField, type AmendField } from './document-amend';
 import { DEFAULT_KITS, checkKitUse, findKit, setBio, startCycle, type BioResult, type CmeCycle, type CmeKit, type KitStatus } from './cme';
 import { useSyncExternalStore } from "react";
@@ -330,10 +331,11 @@ export function recordMedication(id: string, rxId: string, time: string, status:
   commitEncounter(allDone && e.status_fluxo === 'AGUARDANDO_MEDICACAO' ? transition(e, 'EM_OBSERVACAO_REAVALIACAO', professionalName(state.profile), 'Medicação concluída - pronto para reavaliação', at) : e, { admins });
 }
 export function requestAdmission(id: string, req: { ward: string; character: 'Urgência' | 'Eletiva'; cid: string; justification: string; isolation: boolean; oxygen: boolean }) {
-  requireAction('prescrever'); const { e } = getEncounter(id);
+  requireAction('prescrever'); const { e, p } = getEncounter(id);
   if (!['EM_ATENDIMENTO_MEDICO', 'EM_OBSERVACAO_REAVALIACAO'].includes(e.status_fluxo)) throw new Error('Solicitação disponível durante a avaliação médica.');
   if (e.admission?.status === 'pendente') throw new Error('Já existe uma solicitação aguardando o NIR.');
   if (!req.justification.trim()) throw new Error('Informe a justificativa clínica.');
+  if (req.ward) { const ageErr = bedAgeIssue({ birthDate: p.registration?.birthDate, age: p.age, type: p.type }, req.ward, req.ward); if (ageErr) throw new Error(ageErr); }
   const at = new Date().toISOString(); const by = professionalName(state.profile);
   commitEncounter({ ...e, admission: { ...req, cid: req.cid || e.medical?.cid || '', status: 'pendente', requestedAt: at, requestedBy: by }, history: [...e.history, { status: e.status_fluxo, at, by, note: 'Internação solicitada ao NIR' }] });
 }
@@ -351,6 +353,8 @@ export function authorizeAdmission(id: string, bedId: string) {
   if (e.admission?.status !== 'pendente') throw new Error('Solicitação não está pendente.');
   const bed = BASE_BEDS.find((b) => b.id === bedId && ['AC', 'UTIN', 'ENFP', 'UTIP', 'UCI'].includes(b.ward));
   if (!bed || bed.status !== 'livre' || state.patients.some((x) => x.bed === bed.id)) throw new Error('Selecione um leito livre.');
+  const ageErr = bedAgeIssue({ birthDate: p.registration?.birthDate, age: p.age, type: p.type }, bed.id, bed.ward);
+  if (ageErr) throw new Error(ageErr);
   const at = new Date().toISOString(); const by = professionalName(state.profile);
   const moved = transition(e, 'ENCAMINHADO_INTERNACAO', by, `NIR: leito ${bed.id}`, at);
   const f = openFia({ ...moved, admission: { ...e.admission, status: 'autorizada', bed: bed.id, decidedAt: at, decidedBy: by } }, bed.ward, bed.id, at, by);
@@ -361,10 +365,36 @@ export function authorizeAdmissionExternal(id: string, bedCode: string, sector: 
   requireAction('nir'); const { e, p } = getEncounter(id);
   if (e.admission?.status !== 'pendente') throw new Error('Solicitação não está pendente.');
   if (!bedCode.trim()) throw new Error('Selecione um leito.');
+  const ageErr = bedAgeIssue({ birthDate: p.registration?.birthDate, age: p.age, type: p.type }, bedCode, sector);
+  if (ageErr) throw new Error(ageErr);
   const at = new Date().toISOString(); const by = professionalName(state.profile);
   const moved = transition(e, 'ENCAMINHADO_INTERNACAO', by, `NIR: leito ${bedCode} (${sector}) reservado na Hotelaria`, at);
   const f = openFia({ ...moved, admission: { ...e.admission, status: 'autorizada', bed: bedCode, decidedAt: at, decidedBy: by } }, sector || e.admission.ward, bedCode, at, by);
   commitEncounter(f.e, { fiaSequence: f.seq, patients: state.patients.map((x) => x.id === p.id ? { ...x, ward: (e.admission!.ward || p.ward) as Patient["ward"], bed: bedCode } : x) });
+}
+/** Troca o leito de um paciente já internado no NIR, atualizando a FIA e o histórico. Retorna o leito anterior. */
+export function transferBed(id: string, bedCode: string, sector: string, reason: string): string {
+  requireAction('nir'); const { e, p } = getEncounter(id);
+  if (!e.fia || e.status_fluxo !== 'ENCAMINHADO_INTERNACAO') throw new Error('Atendimento não está internado com FIA aberta.');
+  const nextBed = bedCode.trim();
+  if (!nextBed) throw new Error('Selecione o novo leito.');
+  if (!reason.trim()) throw new Error('Informe o motivo da troca de leito.');
+  const oldBed = p.bed || e.fia.bed;
+  if (nextBed === oldBed) throw new Error('Selecione um leito diferente do atual.');
+  if (state.patients.some((x) => x.id !== p.id && x.bed === nextBed)) throw new Error('O leito selecionado já está ocupado.');
+  const ageErr = bedAgeIssue({ birthDate: p.registration?.birthDate, age: p.age, type: p.type }, nextBed, sector);
+  if (ageErr) throw new Error(ageErr);
+  const at = new Date().toISOString(); const by = professionalName(state.profile);
+  const nextWard = sector.trim() || e.fia.ward;
+  const localWard = BASE_BEDS.find((b) => b.id === nextBed)?.ward;
+  const updated: Encounter = {
+    ...e,
+    fia: { ...e.fia, bed: nextBed, ward: nextWard },
+    ...(e.admission ? { admission: { ...e.admission, bed: nextBed } } : {}),
+    history: [...e.history, { status: e.status_fluxo, at, by, note: `NIR: troca de leito ${oldBed} → ${nextBed}${sector ? ` (${sector})` : ''}: ${reason.trim()}` }],
+  };
+  commitEncounter(updated, { patients: state.patients.map((x) => x.id === p.id ? { ...x, bed: nextBed, ...(localWard ? { ward: localWard } : {}) } : x) });
+  return oldBed;
 }
 export function rejectAdmission(id: string, note: string) {
   requireAction('nir'); const { e } = getEncounter(id);
@@ -385,6 +415,8 @@ export function finishEncounter(id: string, outcome: 'internacao' | 'co' | 'exam
   if (outcome === 'internacao') {
     const bed = BASE_BEDS.find((b) => b.id === details.bed && ['AC', 'UTIN', 'ENFP', 'UTIP', 'UCI'].includes(b.ward));
     if (!bed || bed.status !== 'livre' || state.patients.some((x) => x.bed === bed.id)) throw new Error('Selecione um leito livre.');
+    const ageErr = bedAgeIssue({ birthDate: p.registration?.birthDate, age: p.age, type: p.type }, bed.id, bed.ward);
+    if (ageErr) throw new Error(ageErr);
     const f = openFia(transition(e, 'ENCAMINHADO_INTERNACAO', by, `Leito ${bed.id}`, at), bed.ward, bed.id, at, by);
     commitEncounter(f.e, { fiaSequence: f.seq, patients: state.patients.map((x) => x.id === p.id ? { ...x, ward: bed.ward, bed: bed.id } : x) }); return;
   }
@@ -403,16 +435,17 @@ export function reopenEncounter(id: string, reason: string) {
   const { discharge: _d, ...rest } = e;
   commitEncounter({ ...rest, status_fluxo: prev, history: [...e.history, { status: prev, at, by: professionalName(state.profile), note: `Alta desfeita pelo administrador: ${reason.trim()}${prev === 'ENCAMINHADO_INTERNACAO' ? ' (redefinir leito)' : ''}` }] });
 }
-/** Administrador desfaz uma internação: cancela a FIA, reabre a BAA e libera o leito. Retorna o leito liberado. */
+/** Administrador ou NIR desfaz uma internação: cancela a FIA, reabre a BAA e libera o leito. Retorna o leito liberado. */
 export function revertAdmission(id: string, reason: string): string {
-  if (state.profile !== 'Administrador') throw new Error('Apenas administradores podem desfazer internações.');
+  if (state.profile !== 'Administrador' && !canAct(state.profile, 'nir', state.accessAreas)) throw new Error('Apenas administradores ou equipe do NIR podem cancelar internações.');
   if (!reason.trim()) throw new Error('Informe a justificativa.');
   const { e, p } = getEncounter(id);
   if (!e.fia || e.status_fluxo !== 'ENCAMINHADO_INTERNACAO') throw new Error('Atendimento não está internado com FIA aberta.');
   const at = new Date().toISOString(); const by = professionalName(state.profile);
   const { fia, baaClosedAt: _b, admission, ...rest } = e;
   const bed = p.bed;
-  commitEncounter({ ...rest, ...(admission ? { admission: { ...admission, status: 'recusada' as const, note: `Internação desfeita pelo administrador: ${reason.trim()}` } } : {}), status_fluxo: 'EM_OBSERVACAO_REAVALIACAO', history: [...e.history, { status: 'EM_OBSERVACAO_REAVALIACAO', at, by, note: `${fia.number} cancelada · ${e.number} reaberta pelo administrador: ${reason.trim()}` }] }, { patients: state.patients.map((x) => x.id === p.id ? { ...x, bed: '' } : x) });
+  const actor = state.profile === 'Administrador' ? 'administrador' : 'NIR';
+  commitEncounter({ ...rest, ...(admission ? { admission: { ...admission, status: 'recusada' as const, note: `Internação cancelada pelo ${actor}: ${reason.trim()}` } } : {}), status_fluxo: 'EM_OBSERVACAO_REAVALIACAO', history: [...e.history, { status: 'EM_OBSERVACAO_REAVALIACAO', at, by, note: `${fia.number} cancelada · ${e.number} reaberta pelo ${actor}: ${reason.trim()}` }] }, { patients: state.patients.map((x) => x.id === p.id ? { ...x, bed: '' } : x) });
   return bed;
 }
 /** Registra o parto: cria prontuário "RN de <mãe>" vinculado e converte a mãe em puérpera. */

@@ -3,15 +3,18 @@ import { useState } from "react";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { HotelariaBedMap } from "@/components/HotelariaBedMap";
 import { hotelariaBedsQuery } from "@/lib/hotelaria-beds-query";
-import { reserveHotelariaBed } from "@/lib/hotelaria-beds.functions";
+import { releaseHotelariaBed, reserveHotelariaBed } from "@/lib/hotelaria-beds.functions";
 import { hotelariaBedAvailable, hotelariaOccupancy, hotelariaOccupancyRate, isHotelariaFresh } from "@/lib/hotelaria-beds";
 import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { NoPermission } from "@/components/AppShell";
-import { BASE_BEDS, can, MANCHESTER, WARDS } from "@/lib/hospital-data";
-import { authorizeAdmission, authorizeAdmissionExternal, rejectAdmission, useStore } from "@/lib/hospital-store";
+import { BASE_BEDS, canAct, MANCHESTER, WARDS } from "@/lib/hospital-data";
+import { authorizeAdmission, authorizeAdmissionExternal, rejectAdmission, revertAdmission, transferBed, useStore } from "@/lib/hospital-store";
+import { bedAgeIssue } from "@/lib/nir-rules";
+import type { Encounter } from "@/lib/care-flow";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/nir")({
@@ -33,14 +36,21 @@ const RISK_ORDER = ["vermelho", "laranja", "amarelo", "verde", "azul"];
 function NirPage() {
   const { data: hotelaria } = useSuspenseQuery(hotelariaBedsQuery);
   const profile = useStore((s) => s.profile);
+  const accessAreas = useStore((s) => s.accessAreas);
   const encounters = useStore((s) => s.encounters);
   const patients = useStore((s) => s.patients);
   const [beds, setBeds] = useState<Record<string, string>>({});
   const reserve = useServerFn(reserveHotelariaBed);
+  const release = useServerFn(releaseHotelariaBed);
   const qc = useQueryClient();
   const [busy, setBusy] = useState<string | null>(null);
   const [notes, setNotes] = useState<Record<string, string>>({});
-  if (!can(profile, "nir")) return <NoPermission action="acessar o NIR" />;
+  const [transferEnc, setTransferEnc] = useState<Encounter | null>(null);
+  const [transferBedId, setTransferBedId] = useState("");
+  const [transferReason, setTransferReason] = useState("");
+  const [cancelEnc, setCancelEnc] = useState<Encounter | null>(null);
+  const [cancelReason, setCancelReason] = useState("");
+  if (!canAct(profile, "nir", accessAreas)) return <NoPermission action="acessar o NIR" />;
   const occupied = (id: string) => patients.find((p) => p.bed === id);
   const external = hotelaria.status !== "not_configured";
   const connected = hotelaria.status === "connected" && !!hotelaria.snapshot && isHotelariaFresh(hotelaria.snapshot.generatedAt);
@@ -50,10 +60,15 @@ function NirPage() {
   const total = BASE_BEDS.filter((b) => ADM_WARDS.includes(b.ward)).length;
   const pending = encounters.filter((e) => e.admission?.status === "pendente")
     .sort((a, b) => RISK_ORDER.indexOf(a.triage?.risk ?? "azul") - RISK_ORDER.indexOf(b.triage?.risk ?? "azul") || Date.parse(a.admission!.requestedAt) - Date.parse(b.admission!.requestedAt));
+  const inpatients = encounters.filter((e) => e.fia && !e.discharge && e.status_fluxo === "ENCAMINHADO_INTERNACAO").slice().reverse();
   const recent = encounters.filter((e) => e.admission && e.admission.status !== "pendente").slice(-10).reverse();
+  const agePatient = (patientId: string) => { const p = patients.find((x) => x.id === patientId); return p ? { birthDate: p.registration?.birthDate, age: p.age, type: p.type } : undefined; };
   const run = (fn: () => void, msg: string) => { try { fn(); toast.success(msg); } catch (err) { toast.error(err instanceof Error ? err.message : "Ação não concluída"); } };
   const authorizeExt = async (encId: string) => {
-    const bed = extFree.find((b) => b.id === beds[encId]); if (!bed) return;
+    const enc = pending.find((e) => e.id === encId);
+    const bed = extFree.find((b) => b.id === beds[encId]); if (!bed || !enc) return;
+    const ageErr = bedAgeIssue(agePatient(enc.patientId), bed.codigo, bed.setor);
+    if (ageErr) { toast.error(ageErr); return; }
     setBusy(encId);
     try {
       const r = await reserve({ data: { leitoId: bed.id } });
@@ -62,6 +77,53 @@ function NirPage() {
       toast.success(`Internação autorizada · leito ${r.codigo ?? bed.codigo} ocupado na Hotelaria`);
       setBeds((x) => ({ ...x, [encId]: "" }));
     } catch (err) { toast.error(err instanceof Error ? err.message : "Ação não concluída"); }
+    finally { setBusy(null); void qc.invalidateQueries({ queryKey: hotelariaBedsQuery.queryKey }); }
+  };
+  const releaseBedIfExternal = async (oldBed: string) => {
+    if (!oldBed || (!external && BASE_BEDS.some((b) => b.id === oldBed))) return;
+    try {
+      const r = await release({ data: { codigo: oldBed } });
+      if (r.ok) toast.success(r.message); else toast.warning(r.message);
+    } catch { toast.warning(`Leito ${oldBed} liberado no sistema, mas sem comunicação com a Hotelaria.`); }
+  };
+  const confirmTransfer = async () => {
+    if (!transferEnc) return;
+    const reason = transferReason.trim();
+    if (!reason) { toast.error("Informe o motivo da troca de leito."); return; }
+    if (external) {
+      const bed = extFree.find((b) => b.id === transferBedId); if (!bed) { toast.error("Selecione o novo leito."); return; }
+      const ageErr = bedAgeIssue(agePatient(transferEnc.patientId), bed.codigo, bed.setor);
+      if (ageErr) { toast.error(ageErr); return; }
+      setBusy(transferEnc.id);
+      try {
+        const r = await reserve({ data: { leitoId: bed.id } });
+        if (!r.ok) { toast.error(r.message); return; }
+        const oldBed = transferBed(transferEnc.id, r.codigo ?? bed.codigo, bed.setor, reason);
+        toast.success(`Leito trocado: ${oldBed} → ${r.codigo ?? bed.codigo}`);
+        setTransferEnc(null); setTransferBedId(""); setTransferReason("");
+        await releaseBedIfExternal(oldBed);
+      } catch (err) { toast.error(err instanceof Error ? err.message : "Não foi possível trocar o leito"); }
+      finally { setBusy(null); void qc.invalidateQueries({ queryKey: hotelariaBedsQuery.queryKey }); }
+    } else {
+      const bed = free.find((b) => b.id === transferBedId); if (!bed) { toast.error("Selecione o novo leito."); return; }
+      run(() => {
+        const oldBed = transferBed(transferEnc.id, bed.id, bed.ward, reason);
+        setTransferEnc(null); setTransferBedId(""); setTransferReason("");
+        void releaseBedIfExternal(oldBed);
+      }, `Leito trocado para ${bed.id}`);
+    }
+  };
+  const confirmCancel = async () => {
+    if (!cancelEnc) return;
+    const reason = cancelReason.trim();
+    if (!reason) { toast.error("Informe a justificativa do cancelamento."); return; }
+    setBusy(cancelEnc.id);
+    try {
+      const oldBed = revertAdmission(cancelEnc.id, reason);
+      toast.success(`Internação cancelada · ${cancelEnc.number} reaberta`);
+      setCancelEnc(null); setCancelReason("");
+      await releaseBedIfExternal(oldBed);
+    } catch (err) { toast.error(err instanceof Error ? err.message : "Não foi possível cancelar a internação"); }
     finally { setBusy(null); void qc.invalidateQueries({ queryKey: hotelariaBedsQuery.queryKey }); }
   };
   const wait = (iso: string) => { const m = Math.round((Date.now() - Date.parse(iso)) / 60000); return m < 60 ? `${m} min` : `${Math.floor(m / 60)}h${String(m % 60).padStart(2, "0")}`; };
@@ -79,9 +141,10 @@ function NirPage() {
         const p = patients.find((x) => x.id === e.patientId); const a = e.admission!;
         const risk = e.triage ? MANCHESTER[e.triage.risk] : undefined;
         const options = free.slice().sort((x, y) => Number(y.ward === a.ward) - Number(x.ward === a.ward));
+        const ap = agePatient(e.patientId);
         return <article key={e.id} className="space-y-3 rounded-md border bg-card p-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <div><div className="font-semibold">{p?.name ?? "Paciente"}</div><div className="text-xs text-muted-foreground">{e.number} · solicitado por {a.requestedBy} · espera {wait(a.requestedAt)}</div></div>
+            <div><div className="font-semibold">{p?.name ?? "Paciente"}{p?.age ? <span className="ml-2 text-xs font-normal text-muted-foreground">({p.age})</span> : null}</div><div className="text-xs text-muted-foreground">{e.number} · solicitado por {a.requestedBy} · espera {wait(a.requestedAt)}</div></div>
             <div className="flex flex-wrap gap-2 text-xs">
               {risk && <span className="rounded border px-2 py-0.5">{risk.label}</span>}
               <span className={cn("rounded border px-2 py-0.5", a.character === "Urgência" && "border-destructive text-destructive")}>{a.character}</span>
@@ -95,19 +158,40 @@ function NirPage() {
             {external ? <>
               <select disabled={!connected} aria-label="Leito" className="h-9 rounded-md border bg-background px-2 text-sm" value={beds[e.id] ?? ""} onChange={(ev) => setBeds((x) => ({ ...x, [e.id]: ev.target.value }))}>
                 <option value="">Selecionar leito disponível (Hotelaria)</option>
-                {extFree.map((b) => <option key={b.id} value={b.id}>{b.codigo} · {b.setor}</option>)}
+                {extFree.map((b) => { const err = bedAgeIssue(ap, b.codigo, b.setor); return <option key={b.id} value={b.id} disabled={!!err}>{b.codigo} · {b.setor}{err ? " (incompatível por idade)" : ""}</option>; })}
               </select>
               <Button disabled={!connected || !beds[e.id] || busy === e.id} onClick={() => void authorizeExt(e.id)}>{busy === e.id ? "Reservando…" : "Autorizar internação"}</Button>
               {!connected && <span className="text-sm text-destructive">Sem atualização da Hotelaria — reserva bloqueada.</span>}
             </> : <>
               <select aria-label="Leito" className="h-9 rounded-md border bg-background px-2 text-sm" value={beds[e.id] ?? ""} onChange={(ev) => setBeds((x) => ({ ...x, [e.id]: ev.target.value }))}>
                 <option value="">Selecionar leito livre</option>
-                {options.map((b) => <option key={b.id} value={b.id}>{b.id} · {WARDS.find((w) => w.id === b.ward)?.name}</option>)}
+                {options.map((b) => { const err = bedAgeIssue(ap, b.id, b.ward); return <option key={b.id} value={b.id} disabled={!!err}>{b.id} · {WARDS.find((w) => w.id === b.ward)?.name}{err ? " (incompatível por idade)" : ""}</option>; })}
               </select>
               <Button disabled={!beds[e.id]} onClick={() => run(() => authorizeAdmission(e.id, beds[e.id] ?? ""), "Internação autorizada e leito reservado")}>Autorizar internação</Button>
             </>}
             <input aria-label="Motivo da devolução" placeholder="Motivo da devolução ao médico" className="h-9 min-w-52 flex-1 rounded-md border bg-background px-2 text-sm" value={notes[e.id] ?? ""} onChange={(ev) => setNotes((x) => ({ ...x, [e.id]: ev.target.value }))} />
             <Button variant="outline" onClick={() => run(() => rejectAdmission(e.id, notes[e.id] ?? ""), "Solicitação devolvida ao médico")}>Devolver</Button>
+          </div>
+        </article>;
+      })}
+    </section>
+
+    <section className="space-y-3">
+      <h2 className="font-semibold">Pacientes internados ({inpatients.length})</h2>
+      {!inpatients.length && <p className="rounded-md border bg-card p-6 text-center text-sm text-muted-foreground">Nenhum paciente internado com FIA ativa.</p>}
+      {inpatients.map((e) => {
+        const p = patients.find((x) => x.id === e.patientId);
+        const currentBed = p?.bed || e.fia!.bed;
+        const ageAlert = bedAgeIssue(agePatient(e.patientId), currentBed, e.fia!.ward);
+        return <article key={e.id} className={cn("flex flex-wrap items-center justify-between gap-3 rounded-md border bg-card p-4", ageAlert && "border-destructive")}>
+          <div className="space-y-1">
+            <div className="font-semibold">{p?.name ?? "Paciente"}{p?.age ? <span className="ml-2 text-xs font-normal text-muted-foreground">({p.age})</span> : null}</div>
+            <div className="text-xs text-muted-foreground">Leito <b>{currentBed}</b> · {e.fia!.ward} · {e.fia!.number} · {e.number}</div>
+            {ageAlert && <div className="text-xs font-medium text-destructive">{ageAlert}</div>}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button size="sm" variant="outline" disabled={busy === e.id} onClick={() => { setTransferEnc(e); setTransferBedId(""); setTransferReason(""); }}>Trocar leito</Button>
+            <Button size="sm" variant="destructive" disabled={busy === e.id} onClick={() => { setCancelEnc(e); setCancelReason(""); }}>Cancelar internação</Button>
           </div>
         </article>;
       })}
@@ -126,5 +210,47 @@ function NirPage() {
     </section>}
 
     {!!recent.length && <section className="space-y-2"><h2 className="font-semibold">Últimas decisões</h2><ul className="space-y-1 text-sm">{recent.map((e) => <li key={e.id}>{patients.find((x) => x.id === e.patientId)?.name} · {e.admission!.status === "autorizada" ? `autorizada – leito ${e.admission!.bed}` : `devolvida – ${e.admission!.note}`} · {e.admission!.decidedBy}</li>)}</ul></section>}
+
+    <Dialog open={!!transferEnc} onOpenChange={(o) => !o && setTransferEnc(null)}>
+      <DialogContent>
+        <DialogHeader><DialogTitle>Trocar leito</DialogTitle></DialogHeader>
+        {transferEnc && (() => {
+          const p = patients.find((x) => x.id === transferEnc.patientId);
+          const ap = agePatient(transferEnc.patientId);
+          return <div className="space-y-3 text-sm">
+            <p><b>{p?.name ?? "Paciente"}</b>{p?.age ? ` (${p.age})` : ""} · Leito atual: <b>{p?.bed || transferEnc.fia?.bed}</b> ({transferEnc.fia?.ward})</p>
+            <select aria-label="Novo leito" disabled={external && !connected} className="h-9 w-full rounded-md border bg-background px-2 text-sm" value={transferBedId} onChange={(ev) => setTransferBedId(ev.target.value)}>
+              <option value="">{external ? "Selecionar novo leito disponível (Hotelaria)" : "Selecionar novo leito livre"}</option>
+              {external
+                ? extFree.map((b) => { const err = bedAgeIssue(ap, b.codigo, b.setor); return <option key={b.id} value={b.id} disabled={!!err}>{b.codigo} · {b.setor}{err ? " (incompatível por idade)" : ""}</option>; })
+                : free.map((b) => { const err = bedAgeIssue(ap, b.id, b.ward); return <option key={b.id} value={b.id} disabled={!!err}>{b.id} · {WARDS.find((w) => w.id === b.ward)?.name}{err ? " (incompatível por idade)" : ""}</option>; })}
+            </select>
+            {external && !connected && <p className="text-xs text-destructive">Sem atualização da Hotelaria — troca bloqueada.</p>}
+            <input aria-label="Motivo da troca de leito" placeholder="Motivo da troca de leito (obrigatório)" className="h-9 w-full rounded-md border bg-background px-2 text-sm" value={transferReason} onChange={(ev) => setTransferReason(ev.target.value)} />
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setTransferEnc(null)}>Fechar</Button>
+              <Button disabled={(external && !connected) || !transferBedId || !transferReason.trim() || busy === transferEnc.id} onClick={() => void confirmTransfer()}>{busy === transferEnc.id ? "Transferindo…" : "Confirmar troca"}</Button>
+            </div>
+          </div>;
+        })()}
+      </DialogContent>
+    </Dialog>
+
+    <Dialog open={!!cancelEnc} onOpenChange={(o) => !o && setCancelEnc(null)}>
+      <DialogContent>
+        <DialogHeader><DialogTitle>Cancelar internação</DialogTitle></DialogHeader>
+        {cancelEnc && (() => {
+          const p = patients.find((x) => x.id === cancelEnc.patientId);
+          return <div className="space-y-3 text-sm">
+            <p>A <b>{cancelEnc.fia?.number}</b> de <b>{p?.name ?? "Paciente"}</b> será cancelada, a <b>{cancelEnc.number}</b> será reaberta e o leito <b>{p?.bed || cancelEnc.fia?.bed}</b> será liberado.</p>
+            <input aria-label="Justificativa do cancelamento" placeholder="Justificativa do cancelamento (obrigatória)" className="h-9 w-full rounded-md border bg-background px-2 text-sm" value={cancelReason} onChange={(ev) => setCancelReason(ev.target.value)} />
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setCancelEnc(null)}>Fechar</Button>
+              <Button variant="destructive" disabled={!cancelReason.trim() || busy === cancelEnc.id} onClick={() => void confirmCancel()}>{busy === cancelEnc.id ? "Cancelando…" : "Confirmar cancelamento"}</Button>
+            </div>
+          </div>;
+        })()}
+      </DialogContent>
+    </Dialog>
   </div>;
 }
