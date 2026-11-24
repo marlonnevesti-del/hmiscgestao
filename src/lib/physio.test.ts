@@ -38,4 +38,13 @@ describe('fisioterapia', () => {
     expect(p.physio?.[0]?.status).toBe('Em acompanhamento');
     expect(p.evolutions.at(-1)?.cat).toBe('Fisioterapia');
   });
+  it('concluir sessão dá alta da fisioterapia e registra pré/pós na evolução', () => {
+    const r = requestPhysio('p1', req); setState(() => ({ profile: 'Fisioterapeuta' }));
+    recordPhysioSession('p1', r.id, { conduct: 'Manobra de reexpansão', pre: 'SpO2 93%', post: 'SpO2 98%' }, true);
+    const p = getState().patients[0]!;
+    expect(p.physio?.[0]?.status).toBe('Concluída');
+    expect(p.evolutions.at(-1)?.text).toContain('Alta da fisioterapia');
+    expect(p.evolutions.at(-1)?.text).toContain('Pré: SpO2 93%');
+    expect(p.evolutions.at(-1)?.text).toContain('Pós: SpO2 98%');
+  });
 });

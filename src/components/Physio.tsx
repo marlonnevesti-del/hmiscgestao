@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { Link, useNavigate } from '@tanstack/react-router';
+import { Link } from '@tanstack/react-router';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { can, type Patient } from '@/lib/hospital-data';
-import { cancelPhysio, requestPhysio, useStore } from '@/lib/hospital-store';
+import { cancelPhysio, recordPhysioSession, requestPhysio, useStore } from '@/lib/hospital-store';
 import { PHYSIO_MODALITIES, PHYSIO_SUPPORT, PHYSIO_FREQUENCIES, frequencyBadge, type PhysioFrequency, isPhysioOpen, sortPhysio, type PhysioModality, type PhysioPriority, type PhysioRequest } from '@/lib/physio';
 import { cn } from '@/lib/utils';
 
@@ -39,11 +39,22 @@ export function PhysioBoard() {
   const patients = useStore((s) => s.patients); const profile = useStore((s) => s.profile);
   const [tab, setTab] = useState<'Aguardando' | 'Em acompanhamento' | 'hist'>('Aguardando');
   const [sector, setSector] = useState('');
-  const navigate = useNavigate();
+  const [active, setActive] = useState<Row | null>(null);
+  const [session, setSession] = useState({ conduct: '', pre: '', post: '' });
   const rows: Row[] = patients.flatMap((p) => (p.physio ?? []).map((req) => ({ p, req })));
   const sectors = [...new Set(rows.map((r) => r.p.ward))];
   const shown = sortPhysio(rows.filter((r) => (tab === 'hist' ? !isPhysioOpen(r.req) || r.req.sessions.length : r.req.status === tab) && (!sector || r.p.ward === sector)));
   const count = (s: string) => rows.filter((r) => r.req.status === s).length;
+  const submitSession = (finish: boolean) => {
+    if (!active) return;
+    if (finish && !window.confirm(`Confirmar conclusão e alta da fisioterapia para ${active.p.name}?`)) return;
+    run(() => {
+      recordPhysioSession(active.p.id, active.req.id, session, finish);
+      setActive(null);
+      setSession({ conduct: '', pre: '', post: '' });
+      toast.success(finish ? 'Atendimento finalizado e alta da fisioterapia registrada' : 'Sessão registrada — paciente em acompanhamento');
+    });
+  };
   return <div className="space-y-4">
     <div className="flex flex-wrap items-center gap-2">
       {([['Aguardando', `Aguardando atendimento (${count('Aguardando')})`], ['Em acompanhamento', `Em acompanhamento (${count('Em acompanhamento')})`], ['hist', 'Histórico de sessões']] as const).map(([id, l]) => <Button key={id} variant={tab === id ? 'default' : 'outline'} onClick={() => setTab(id)}>{l}</Button>)}
@@ -62,11 +73,28 @@ export function PhysioBoard() {
         {req.sessions.map((s) => <div key={s.id} className="mt-2 rounded-md bg-muted/50 p-2 text-xs"><b>{new Date(s.at).toLocaleString('pt-BR')} · {s.by}</b><div>{s.conduct}</div>{(s.pre || s.post) && <div className="text-muted-foreground">Pré: {s.pre || '—'} · Pós: {s.post || '—'}</div>}</div>)}
       </div>
       <div className="mt-3 flex flex-wrap gap-2">
-        {isPhysioOpen(req) && <Button disabled={!can(profile, 'evoluir')} onClick={() => navigate({ to: '/pacientes/$id', params: { id: p.id } })}>{req.status === 'Aguardando' ? 'Iniciar atendimento' : 'Evoluir fisioterapia'}</Button>}
+        {isPhysioOpen(req) && <Button disabled={!can(profile, 'evoluir')} onClick={() => { setSession({ conduct: '', pre: '', post: '' }); setActive({ p, req }); }}>Registrar sessão / Finalizar</Button>}
         <Button variant="outline" asChild><Link to="/pacientes/$id" params={{ id: p.id }}>Ver prontuário</Link></Button>
         {isPhysioOpen(req) && can(profile, 'prescrever') && <Button variant="ghost" onClick={() => { const why = window.prompt('Motivo do cancelamento:'); if (why == null) return; run(() => { cancelPhysio(p.id, req.id, why); toast.success('Solicitação cancelada'); }); }}>Cancelar pedido</Button>}
       </div>
     </section>)}
+    <Dialog open={!!active} onOpenChange={(o) => !o && setActive(null)}>
+      <DialogContent>
+        <DialogHeader><DialogTitle>Atendimento de fisioterapia · {active?.p.name}</DialogTitle></DialogHeader>
+        {active && <div className="grid gap-3 text-sm">
+          <div className="text-xs text-muted-foreground">Leito: {active.p.bed || '—'} · Setor: {active.p.ward} · {active.req.modality}</div>
+          <label className="grid gap-1">Conduta realizada<textarea className="min-h-24 rounded-md border bg-background p-2" placeholder="Descreva a conduta realizada na sessão…" value={session.conduct} onChange={(e) => setSession({ ...session, conduct: e.target.value })} /></label>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="grid gap-1">Parâmetros pré-atendimento<input className={field} placeholder="Ex.: SpO2 94%, FR 28 irpm" value={session.pre} onChange={(e) => setSession({ ...session, pre: e.target.value })} /></label>
+            <label className="grid gap-1">Parâmetros pós-atendimento<input className={field} placeholder="Ex.: SpO2 98%, FR 22 irpm" value={session.post} onChange={(e) => setSession({ ...session, post: e.target.value })} /></label>
+          </div>
+          <div className="flex flex-wrap justify-end gap-2 pt-1">
+            <Button variant="outline" disabled={!session.conduct.trim()} onClick={() => submitSession(false)}>Manter em acompanhamento</Button>
+            <Button disabled={!session.conduct.trim()} onClick={() => submitSession(true)}>Concluir e dar alta</Button>
+          </div>
+        </div>}
+      </DialogContent>
+    </Dialog>
   </div>;
 }
 
