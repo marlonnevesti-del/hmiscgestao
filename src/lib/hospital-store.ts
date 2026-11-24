@@ -84,6 +84,13 @@ export function savePatientRegistration(id: string, input: PatientRegistration) 
   const patch = registrationPatch(input, professionalName(state.profile), patient);
   setState(s => ({ patients: s.patients.map(p => p.id === id ? { ...p, ...patch } : p), queue: s.queue.map(q => s.encounters.some(e => e.id === q.id && e.patientId === id) ? { ...q, name: patch.name ?? q.name, detail: patch.age ?? q.detail } : q) }));
 }
+export function registerPatientOnly(patient: Patient) {
+  requireAction('recepcao');
+  setState((s) => ({
+    patients: [...s.patients.filter((p) => p.id !== patient.id), patient],
+  }));
+  return patient;
+}
 export function completeTriage(id: string, t: Triage) {
   requireAction('triagem');
   const { e, p } = getEncounter(id);

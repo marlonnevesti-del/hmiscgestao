@@ -1,12 +1,14 @@
 import { DoctorNameInput } from "./DoctorNameInput";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
+import { Printer } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Letterhead } from "./DischargePrint";
+import { PatientSheetPrint, printSheet } from "./PatientSheetPrint";
 import { printProcedure } from "./ProcedurePrint";
 import { NoPermission } from "./AppShell";
 import { can, canAct } from "@/lib/hospital-data";
@@ -20,6 +22,27 @@ const act = (fn: () => void, ok?: string) => { try { fn(); if (ok) toast.success
 const today = () => new Date().toLocaleDateString("sv-SE");
 const sel = "h-9 rounded-md border bg-background px-2 text-sm";
 const STATUS: Record<string, string> = { agendado: "Agendado", chegou: "Chegou", faltou: "Faltou", cancelado: "Cancelado" };
+
+function BaaArrivalDialog({ created, onClose }: { created: Encounter | null; onClose: () => void }) {
+  const patients = useStore((s) => s.patients);
+  const profile = useStore((s) => s.profile);
+  useEffect(() => {
+    if (!created) return;
+    const t = setTimeout(() => printSheet("BAA"), 400);
+    return () => clearTimeout(t);
+  }, [created]);
+  const cp = created ? patients.find((patient) => patient.id === created.patientId) : null;
+  return <>
+    <Dialog open={!!created} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent><DialogHeader><DialogTitle>Etiqueta / Pulseira · {created?.number}</DialogTitle></DialogHeader>
+        <div className="border-2 border-primary p-4"><b>{cp?.name}</b><div>{created?.number} · {cp?.prontuario}</div><div>Mãe: {cp?.motherName}</div><div>Responsável: {cp?.guardian}</div></div>
+        <Button onClick={() => printSheet("BAA")}><Printer className="h-4 w-4" />Imprimir BAA novamente</Button>
+        <Button variant="outline" onClick={() => window.print()}>Imprimir etiqueta / pulseira</Button>
+      </DialogContent>
+    </Dialog>
+    {created && cp && <PatientSheetPrint p={cp} e={created} user={professionalName(profile)} />}
+  </>;
+}
 
 export function SpecialtyManager() {
   const list = useStore((s) => s.ambSpecialties); const profile = useStore((s) => s.profile); const accessAreas = useStore((s) => s.accessAreas);
@@ -55,6 +78,7 @@ export function AmbulatoryAgenda() {
   const specName = specs.find((s) => s.id === f.specialtyId)?.name ?? "";
   const docs = useMemo(() => doctorsForSpecialty(mergeDoctors(learned ?? []), specName), [learned, specName]);
   const [find, setFind] = useState("");
+  const [created, setCreated] = useState<Encounter | null>(null);
   const findHits = find.trim().length > 1 ? list.filter((a) => { const p = patients.find((x) => x.id === a.patientId); return p && [p.name, p.cpf, p.prontuario, p.registration?.cns ?? ""].some((v) => v.toLowerCase().includes(find.trim().toLowerCase())); }).sort((a, b) => (b.date + b.time).localeCompare(a.date + a.time)).slice(0, 15) : [];
   return <div className="space-y-4">
     <div className="rounded-lg border bg-card p-3">
@@ -80,21 +104,24 @@ export function AmbulatoryAgenda() {
     <table className="w-full text-sm"><thead><tr className="border-b text-left text-xs text-muted-foreground"><th className="py-2">Hora</th><th>Paciente</th><th>Especialidade</th><th>Profissional</th><th>Situação</th><th /></tr></thead>
       <tbody>{day.map((a) => { const p = patients.find((x) => x.id === a.patientId); return <tr key={a.id} className="border-b">
         <td className="py-2 font-mono">{a.time}</td><td>{p?.name ?? "—"}{a.note && <div className="text-xs text-muted-foreground">{a.note}</div>}{a.nursingPreConsult && <div className="text-xs text-primary">Pré-consulta de enfermagem</div>}</td><td>{specs.find((s) => s.id === a.specialtyId)?.name}</td><td>{a.professional}</td><td>{STATUS[a.status]}</td>
-        <td className="space-x-1 text-right">{editable && a.status === "agendado" && <><Button size="sm" onClick={() => act(() => { checkInAppointment(a.id); }, "Chegada registrada · BAA gerado")}>Registrar chegada</Button><Button size="sm" variant="ghost" onClick={() => act(() => setAppointmentStatus(a.id, "faltou"))}>Faltou</Button><Button size="sm" variant="ghost" className="text-destructive" onClick={() => act(() => setAppointmentStatus(a.id, "cancelado"))}>Cancelar</Button></>}</td>
+        <td className="space-x-1 text-right">{editable && a.status === "agendado" && <><Button size="sm" onClick={() => act(() => { setCreated(checkInAppointment(a.id)); }, "Chegada registrada · BAA gerado")}>Registrar chegada</Button><Button size="sm" variant="ghost" onClick={() => act(() => setAppointmentStatus(a.id, "faltou"))}>Faltou</Button><Button size="sm" variant="ghost" className="text-destructive" onClick={() => act(() => setAppointmentStatus(a.id, "cancelado"))}>Cancelar</Button></>}</td>
       </tr>; })}</tbody></table>
     {!day.length && <p className="py-4 text-sm text-muted-foreground">Nenhuma consulta agendada nesta data.</p>}
+    <BaaArrivalDialog created={created} onClose={() => setCreated(null)} />
   </div>;
 }
 
 /** Agendados de hoje na recepção: entrada com um clique. */
 export function TodayAppointments() {
   const list = useStore((s) => s.appointments); const specs = useStore((s) => s.ambSpecialties); const patients = useStore((s) => s.patients); const profile = useStore((s) => s.profile); const accessAreas = useStore((s) => s.accessAreas);
+  const [created, setCreated] = useState<Encounter | null>(null);
   const t = today(); const day = list.filter((a) => a.date === t && a.status === "agendado").sort((a, b) => a.time.localeCompare(b.time));
   const editable = canAct(profile, "recepcao", accessAreas);
   return <section className="rounded-lg border bg-card p-3">
     <h3 className="mb-2 text-sm font-semibold">Agendados de hoje aguardando chegada ({day.length})</h3>
-    {day.map((a) => <div key={a.id} className="flex flex-wrap items-center justify-between gap-2 border-b py-1.5 text-sm"><span><span className="font-mono">{a.time}</span> · <b>{patients.find((p) => p.id === a.patientId)?.name}</b> · {specs.find((s) => s.id === a.specialtyId)?.name} · {a.professional || "—"}</span>{editable && <Button size="sm" onClick={() => act(() => { checkInAppointment(a.id); }, "Chegada registrada · BAA gerado")}>Registrar chegada</Button>}</div>)}
+    {day.map((a) => <div key={a.id} className="flex flex-wrap items-center justify-between gap-2 border-b py-1.5 text-sm"><span><span className="font-mono">{a.time}</span> · <b>{patients.find((p) => p.id === a.patientId)?.name}</b> · {specs.find((s) => s.id === a.specialtyId)?.name} · {a.professional || "—"}</span>{editable && <Button size="sm" onClick={() => act(() => { setCreated(checkInAppointment(a.id)); }, "Chegada registrada · BAA gerado")}>Registrar chegada</Button>}</div>)}
     {!day.length && <p className="text-sm text-muted-foreground">Nenhum paciente agendado pendente hoje.</p>}
+    <BaaArrivalDialog created={created} onClose={() => setCreated(null)} />
   </section>;
 }
 

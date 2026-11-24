@@ -16,7 +16,7 @@ import { registrationFor, registrationPatch } from "@/lib/patient-registration-m
 import { PEDIATRIC_EXCEPTION_REASONS, ageYears, pediatricAgeIssue, newbornBirthIssue, registrationIssues, registrationSchema, unknownPatientName, type RegistrationMode } from "@/lib/patient-registration";
 import { ATTENDANCE_TYPES, type Encounter } from "@/lib/care-flow";
 import { can, canAct, type Patient } from "@/lib/hospital-data";
-import { deleteEncounter, openEncounter, professionalName, savePatientRegistration, useStore } from "@/lib/hospital-store";
+import { deleteEncounter, openEncounter, professionalName, registerPatientOnly, savePatientRegistration, useStore } from "@/lib/hospital-store";
 import { SPECIAL_CONDITIONS } from "@/lib/special-conditions";
 import { GROUP_LABELS, isObstetricSpecialty, type CareUnit } from "@/lib/ambulatorio";
 
@@ -69,38 +69,56 @@ export function CareReception({ unit }: { unit?: CareUnit } = {}) {
   const pedAge = isPediatric && !registration.estimatedAge ? ageYears(registration.birthDate) : null;
   const overPedAge = pedAge !== null && pedAge > 14;
   const pedError = isPediatric && !registration.estimatedAge ? pediatricAgeIssue(registration.birthDate, pedEx.on ? pedEx : null) : null;
-  const submit = () => {
-    try {
-      if (birthError) throw new Error(birthError);
-      if (pedError) throw new Error(pedError);
-      const reg = registration.unknownIdentity && !registration.civilName.trim() ? { ...registration, civilName: unknownPatientName(registration.unknownNumber) } : registration;
-      const missing = registrationIssues(reg, mode);
-      if (missing.length) throw new Error(missing[0]);
-      const parsed = registrationSchema.safeParse(reg);
-      if (!parsed.success) throw new Error(parsed.error.issues[0]?.message || "Confira os dados do cadastro.");
+  const buildPatient = (requireEncounterFields: boolean) => {
+    if (birthError) throw new Error(birthError);
+    if (requireEncounterFields && pedError) throw new Error(pedError);
+    const reg = registration.unknownIdentity && !registration.civilName.trim() ? { ...registration, civilName: unknownPatientName(registration.unknownNumber) } : registration;
+    const missing = registrationIssues(reg, mode);
+    if (missing.length) throw new Error(missing[0]);
+    const parsed = registrationSchema.safeParse(reg);
+    if (!parsed.success) throw new Error(parsed.error.issues[0]?.message || "Confira os dados do cadastro.");
+    if (requireEncounterFields) {
       if (!f.specialty.trim()) throw new Error("Preencha a especialidade em Abertura de atendimento.");
       if (!f.complaint.trim()) throw new Error("Preencha a queixa principal em Abertura de atendimento.");
-      if (mode === "completo" && ["pediatria", "neonato"].includes(f.patientType) && !registration.guardian.trim() && !registration.parent1.trim()) {
-        throw new Error("Para criança ou recém-nascido, preencha o nome do responsável ou da mãe (filiação 1).");
-      }
-      if (f.conditions.includes("Outra") && !f.otherCondition.trim()) throw new Error("Descreva a outra condição especial.");
-      const old = patients.find((patient) => patient.id === existing || (registration.cpf.replace(/\D/g, "").length === 11 && patient.cpf.replace(/\D/g, "") === registration.cpf.replace(/\D/g, "")));
-      const id = old?.id ?? crypto.randomUUID();
-      const patient: Patient = {
-        ...(old ?? {
-          id, prontuario: `PR-${new Date().getFullYear()}-${String(patients.length + 1).padStart(6, "0")}`,
-          weight: 0, allergies: [], risks: [], diagnosis: "Em avaliação", days: 1, evolutions: [], vitals: [], prescriptions: [],
-        }),
-        name: f.name.trim() || reg.civilName, cpf: f.cpf || "—", age: f.birth || "—", motherName: f.mother, guardian: f.guardian || registration.parent1,
-        ...registrationPatch(reg, professionalName(profile), old),
-        type: f.patientType, insurance: registration.insurance, authorized: registration.insurance === "SUS" || registration.insurance === "Particular",
-        ward: f.patientType === "gestante" || f.patientType === "puerpera" ? "PSO" : "PSP", bed: "",
-        admission: new Date().toLocaleString("pt-BR"), prescriptions: [], vitals: old?.vitals ?? [],
-        specialConditions: f.conditions, otherSpecialCondition: f.otherCondition.trim(),
-        ...(overPedAge && pedEx.on ? { pediatricException: { reason: pedEx.reason, note: pedEx.note.trim(), age: pedAge ?? 0, at: new Date().toISOString(), by: professionalName(profile) } } : {}),
-      };
+    }
+    if (mode === "completo" && ["pediatria", "neonato"].includes(f.patientType) && !registration.guardian.trim() && !registration.parent1.trim()) {
+      throw new Error("Para criança ou recém-nascido, preencha o nome do responsável ou da mãe (filiação 1).");
+    }
+    if (f.conditions.includes("Outra") && !f.otherCondition.trim()) throw new Error("Descreva a outra condição especial.");
+    const old = patients.find((patient) => patient.id === existing || (registration.cpf.replace(/\D/g, "").length === 11 && patient.cpf.replace(/\D/g, "") === registration.cpf.replace(/\D/g, "")));
+    const id = old?.id ?? crypto.randomUUID();
+    const patient: Patient = {
+      ...(old ?? {
+        id, prontuario: `PR-${new Date().getFullYear()}-${String(patients.length + 1).padStart(6, "0")}`,
+        weight: 0, allergies: [], risks: [], diagnosis: "Em avaliação", days: 1, evolutions: [], vitals: [], prescriptions: [],
+      }),
+      name: f.name.trim() || reg.civilName, cpf: f.cpf || "—", age: f.birth || "—", motherName: f.mother, guardian: f.guardian || registration.parent1,
+      ...registrationPatch(reg, professionalName(profile), old),
+      type: f.patientType, insurance: registration.insurance, authorized: registration.insurance === "SUS" || registration.insurance === "Particular",
+      ward: f.patientType === "gestante" || f.patientType === "puerpera" ? "PSO" : "PSP", bed: "",
+      admission: old?.admission ?? new Date().toLocaleString("pt-BR"), prescriptions: old?.prescriptions ?? [], vitals: old?.vitals ?? [],
+      specialConditions: f.conditions, otherSpecialCondition: f.otherCondition.trim(),
+      ...(overPedAge && pedEx.on ? { pediatricException: { reason: pedEx.reason, note: pedEx.note.trim(), age: pedAge ?? 0, at: new Date().toISOString(), by: professionalName(profile) } } : {}),
+    };
+    return { patient, reg };
+  };
+  const saveOnly = () => {
+    try {
+      const { patient } = buildPatient(false);
+      registerPatientOnly(patient);
+      toast.success(`Paciente ${patient.name} cadastrado com sucesso (sem gerar atendimento)`);
+      clearIdentity();
+      setF((current) => ({ ...current, complaint: "", nursingPreConsult: false }));
+      setPedEx({ on: false, reason: "", note: "" });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Não foi possível salvar o cadastro");
+    }
+  };
+  const submit = () => {
+    try {
+      const { patient, reg } = buildPatient(true);
       if (!window.confirm(`Confirmar o cadastro e a abertura do atendimento de ${patient.name}?\nNascimento: ${reg.birthDate || "não informado"} · Sexo: ${reg.sex || "—"} · CNS/CPF: ${reg.cns || reg.cpf || "—"}`)) return;
-      const encounter = openEncounter(patient, f.type, f.specialty, overPedAge && pedEx.on ? `${f.complaint} [Exceção pediátrica ${pedAge} anos: ${pedEx.reason}${pedEx.note.trim() ? ` – ${pedEx.note.trim()}` : ""}]` : f.complaint, f.nursingPreConsult);
+      const encounter = openEncounter({ ...patient, admission: new Date().toLocaleString("pt-BR"), prescriptions: [] }, f.type, f.specialty, overPedAge && pedEx.on ? `${f.complaint} [Exceção pediátrica ${pedAge} anos: ${pedEx.reason}${pedEx.note.trim() ? ` – ${pedEx.note.trim()}` : ""}]` : f.complaint, f.nursingPreConsult);
       setCreated(encounter);
       toast.success(`${encounter.number} gerado e enviado para ${encounter.status_fluxo === "AGUARDANDO_TRIAGEM" ? "triagem" : "atendimento"}`);
       clearIdentity();
@@ -153,7 +171,7 @@ export function CareReception({ unit }: { unit?: CareUnit } = {}) {
           </div>
           {f.conditions.includes("Outra") && <label className="mt-3 grid max-w-xl gap-1 text-xs">Descreva a outra condição<Input aria-label="Descreva a outra condição" value={f.otherCondition} onChange={(event) => set("otherCondition", event.target.value)} required /></label>}
         </fieldset>
-        <div className="flex items-end md:col-span-3"><Button type="submit" disabled={!!birthError}>Gerar Atendimento (BAA)</Button>{birthError && <Button type="button" variant="outline" className="ml-2" onClick={() => setF((x) => ({ ...x, patientType: "pediatria" }))}>Mudar para Pediátrico</Button>}</div>
+        <div className="flex flex-wrap items-end gap-2 md:col-span-3"><Button type="submit" disabled={!!birthError}>Gerar Atendimento (BAA)</Button><Button type="button" variant="outline" disabled={!!birthError} onClick={saveOnly}>Cadastrar Paciente</Button>{birthError && <Button type="button" variant="outline" onClick={() => setF((x) => ({ ...x, patientType: "pediatria" }))}>Mudar para Pediátrico</Button>}</div>
       </form>
     </>}
 
