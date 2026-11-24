@@ -4,7 +4,7 @@ import { PHARMACY_CATALOG, WAREHOUSE_CATALOG, getState, setState, subscribeState
 import { DEFAULT_CID_AREAS, DEFAULT_CID_GROUPS } from "./cid-access";
 import { DEFAULT_ROOMS } from "./panel-calls";
 import { DEFAULT_SPECIALTIES } from "./ambulatorio";
-import { setSyncStatus } from "./sync-status";
+import { registerSyncRetry, setSyncStatus } from "./sync-status";
 import { refillSequence } from "./sequence-pool";
 import { mergeCatalog, normalizeStock } from "./pharmacy-stock";
 
@@ -32,17 +32,29 @@ function apply(data: Partial<Snapshot>, v: number) {
 }
 
 async function pull() {
-  if (dirty || saving) return;
+  if (saving) return;
   // Cheap version check first; only download the full snapshot when it changed.
   if (version >= 0) {
     const { data: head, error } = await supabase.from("clinical_state").select("version").eq("id", "main").maybeSingle();
-    setSyncStatus(error ? "offline" : "synced");
+    setSyncStatus(error ? "offline" : dirty ? "pending" : "synced");
     if (!head || head.version === version) return;
   }
   const { data, error } = await supabase.from("clinical_state").select("data, version").eq("id", "main").maybeSingle();
-  setSyncStatus(error ? "offline" : dirty ? "saving" : "synced");
-  if (data && data.version !== version) apply(data.data as Partial<Snapshot>, data.version);
+  setSyncStatus(error ? "offline" : dirty ? "pending" : "synced");
+  if (data && data.version !== version) {
+    const remote = (data.data ?? {}) as Partial<Snapshot>;
+    if (dirty) {
+      // Mantém alterações locais pendentes e incorpora o que outros computadores salvaram.
+      const merged = mergeSnapshots(base, pick(), remote);
+      apply(merged, data.version);
+      base = JSON.parse(JSON.stringify(remote));
+      void push();
+    } else {
+      apply(remote, data.version);
+    }
+  }
   if (!data && version === -1) version = 0;
+  if (dirty && version >= 0) void push();
 }
 
 async function push() {
@@ -50,6 +62,7 @@ async function push() {
   saving = true; dirty = false; setSyncStatus("saving");
   try {
     const { data: u } = await supabase.auth.getUser();
+    let lastError = false;
     for (let attempt = 0; attempt < 5; attempt++) {
       const local = pick();
       const next = version + 1;
@@ -59,14 +72,23 @@ async function push() {
         ? await supabase.from("clinical_state").insert({ id: "main", ...row }).select("version")
         : await supabase.from("clinical_state").update(row).eq("id", "main").eq("version", version).select("version");
       if (!res.error && res.data?.length) { version = next; base = JSON.parse(JSON.stringify(local)); if (!dirty) clearPending(); setSyncStatus("synced"); tabs?.postMessage("saved"); return; }
+      if (res.error) lastError = true;
       const { data: remote } = await supabase.from("clinical_state").select("data, version").eq("id", "main").maybeSingle();
-      if (!remote) { dirty = true; return; }
+      if (!remote) { dirty = true; savePending(); setSyncStatus("offline"); return; }
       const merged = mergeSnapshots(base, local, remote.data as Partial<Snapshot>);
       apply(merged, remote.version);
       base = JSON.parse(JSON.stringify(remote.data ?? {}));
     }
-    dirty = true;
-  } catch { dirty = true; setSyncStatus("offline"); } finally { saving = false; }
+    dirty = true; savePending(); setSyncStatus(lastError ? "offline" : "pending");
+  } catch { dirty = true; savePending(); setSyncStatus("offline"); } finally {
+    saving = false;
+    if (dirty && version >= 0) void push();
+  }
+}
+
+export async function forceSync() {
+  await pull();
+  if (dirty && version >= 0) await push();
 }
 
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
@@ -139,6 +161,7 @@ let tabs: BroadcastChannel | null = null;
 export function useClinicalSync() {
   useEffect(() => {
     let alive = true;
+    registerSyncRetry(() => { void forceSync(); });
     void pull().then(() => { if (alive) restorePending(); });
     // Outras abas do mesmo computador recarregam na hora em vez de disputar a versão.
     tabs = typeof BroadcastChannel !== "undefined" ? new BroadcastChannel("hmisc-clinical") : null;
@@ -159,11 +182,14 @@ export function useClinicalSync() {
       const now = pick();
       const changed = KEYS.some((k) => now[k] !== last[k]);
       last = now;
-      if (changed && !applying && version >= 0) { dirty = true; savePending(); void push(); }
+      if (changed && !applying) {
+        dirty = true; savePending(); setSyncStatus("pending");
+        if (version >= 0) void push();
+      }
     });
     const t = setInterval(() => { if (!alive) return; if (dirty) void push(); else if (!document.hidden) void pull(); }, 3000);
     const onVis = () => { if (!document.hidden) void pull(); };
     document.addEventListener("visibilitychange", onVis);
-    return () => { alive = false; window.removeEventListener("beforeunload", onUnload); tabs?.close(); tabs = null; clearInterval(t); void supabase.removeChannel(channel); window.removeEventListener("offline", onOff); window.removeEventListener("online", onOn); unsub(); document.removeEventListener("visibilitychange", onVis); };
+    return () => { alive = false; registerSyncRetry(null); window.removeEventListener("beforeunload", onUnload); tabs?.close(); tabs = null; clearInterval(t); void supabase.removeChannel(channel); window.removeEventListener("offline", onOff); window.removeEventListener("online", onOn); unsub(); document.removeEventListener("visibilitychange", onVis); };
   }, []);
 }

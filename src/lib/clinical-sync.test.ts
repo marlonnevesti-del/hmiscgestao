@@ -45,3 +45,15 @@ describe("campos clínicos não somam", () => {
     expect(out.patients[0]?.weight).toBe(11);
   });
 });
+
+describe("indicador e reenvio manual", () => {
+  it("dispara o callback registrado ao acionar reenvio", async () => {
+    const { registerSyncRetry, triggerSyncRetry, setSyncStatus } = await import("./sync-status");
+    const fn = vi.fn();
+    registerSyncRetry(fn);
+    setSyncStatus("pending");
+    triggerSyncRetry();
+    expect(fn).toHaveBeenCalledTimes(1);
+    registerSyncRetry(null);
+  });
+});
