@@ -29,6 +29,7 @@ import { registrationPatch } from "./patient-registration-mapping";
 import type { PatientRegistration } from "./patient-registration";
 import { doctorKey, validDoctorCns, documentCns, learnDoctor, mergeDoctors, mergeImportedDoctors, resolveDoctor, type Doctor } from "./doctors";
 import { addSpecialty, canEditOrCancelEncounter, DEFAULT_SPECIALTIES, isObstetricSpecialty, type AmbSpecialty, type Appointment, type SadtReport, type SpecialtyGroup } from "./ambulatorio";
+import { normText, type AgendaImportItem } from "./agenda-import";
 
 interface State { encounters: Encounter[]; beSequence: number; fiaSequence: number; stock: StockMedication[]; warehouse: StockMedication[]; profile: Profile; employeeName: string; patients: Patient[]; queue: QueueItem[]; surgeries: Surgery[]; admins: Record<string, Admin>; rooms: string[]; calls: PanelCall[]; cidGroups: CidGroup[]; cidAreas: CidArea[]; employeeArea: string; accessAreas: string[] | null; removedStock: string[]; movements: Movement[]; requests: SupplyRequest[]; ambSpecialties: AmbSpecialty[]; appointments: Appointment[]; cmeKits: CmeKit[]; cmeCycles: CmeCycle[]; doctors: Doctor[]; milkBank: import('./milk-bank').MilkBank }
 let state: State = { profile: "Outro", employeeName: "", patients: [], queue: [], surgeries: [], admins: {}, encounters: [], beSequence: 0, fiaSequence: 0, stock: PHARMACY_CATALOG, warehouse: WAREHOUSE_CATALOG, rooms: DEFAULT_ROOMS, calls: [], cidGroups: DEFAULT_CID_GROUPS, cidAreas: DEFAULT_CID_AREAS, employeeArea: "", accessAreas: null, removedStock: [], movements: [], requests: [], ambSpecialties: DEFAULT_SPECIALTIES, appointments: [], cmeKits: DEFAULT_KITS, cmeCycles: [], doctors: [], milkBank: EMPTY_MILK_BANK };
@@ -818,6 +819,81 @@ export function scheduleAppointment(input: Omit<Appointment, 'id' | 'status' | '
   if (!state.ambSpecialties.some((x) => x.id === input.specialtyId)) throw new Error('Selecione a especialidade.');
   if (state.appointments.some((a) => a.status === 'agendado' && a.date === input.date && a.time === input.time && a.specialtyId === input.specialtyId && a.professional.trim().toLowerCase() === input.professional.trim().toLowerCase())) throw new Error('Horário já ocupado para este profissional.');
   setState((s) => ({ appointments: [...s.appointments, { ...input, id: crypto.randomUUID(), status: 'agendado', createdBy: professionalName(s.profile) }] }));
+}
+export function importAppointments(items: AgendaImportItem[]) {
+  requireAction('recepcao');
+  if (!items.length) throw new Error('Nenhum agendamento válido para importar.');
+  let patients = [...state.patients];
+  let ambSpecialties = [...state.ambSpecialties];
+  const appointments = [...state.appointments];
+  const by = professionalName(state.profile);
+  let imported = 0; let skippedDuplicates = 0; let createdPatients = 0; let createdSpecialties = 0;
+
+  for (const item of items) {
+    if (!item.date || !item.time || !item.patientName.trim() || !item.specialty.trim()) continue;
+    let spec = ambSpecialties.find((s) => normText(s.name) === normText(item.specialty));
+    if (!spec) {
+      ambSpecialties = addSpecialty(ambSpecialties, item.specialty.trim(), 'medica');
+      spec = ambSpecialties[ambSpecialties.length - 1]!;
+      createdSpecialties++;
+    }
+    const cleanCpf = item.cpf.replace(/\D/g, '');
+    const cleanCns = item.cns.replace(/\D/g, '');
+    const nameKey = normText(item.patientName);
+    let pat: Patient | undefined = patients.find((p) =>
+      (cleanCpf && p.cpf.replace(/\D/g, '') === cleanCpf) ||
+      (cleanCns && (p.registration?.cns ?? '').replace(/\D/g, '') === cleanCns) ||
+      (item.prontuario && p.prontuario === item.prontuario) ||
+      normText(p.name) === nameKey
+    );
+    const resolvedPat: Patient = pat ?? (() => {
+      const id = `pat-amb-${crypto.randomUUID().slice(0, 8)}`;
+      const created: Patient = {
+        id,
+        prontuario: item.prontuario || `AMB-${String(patients.length + 1).padStart(5, '0')}`,
+        name: item.patientName.trim().toUpperCase(),
+        cpf: cleanCpf,
+        type: 'pediatria',
+        age: '—',
+        weight: 0,
+        allergies: [],
+        risks: [],
+        ward: 'ENFP',
+        bed: '',
+        insurance: 'SUS',
+        authorized: false,
+        diagnosis: '',
+        admission: item.date,
+        days: 0,
+        evolutions: [],
+        vitals: [],
+        prescriptions: [],
+        ...(cleanCns ? { registration: { cns: cleanCns } as NonNullable<Patient['registration']> } : {}),
+      };
+      patients.push(created);
+      createdPatients++;
+      return created;
+    })();
+    const dup = appointments.some((a) =>
+      a.status !== 'cancelado' && a.date === item.date && a.time === item.time && a.patientId === resolvedPat.id && a.specialtyId === spec!.id
+    );
+    if (dup) { skippedDuplicates++; continue; }
+    appointments.push({
+      id: crypto.randomUUID(),
+      date: item.date,
+      time: item.time,
+      specialtyId: spec.id,
+      professional: item.professional.trim(),
+      patientId: resolvedPat.id,
+      note: item.note.trim(),
+      nursingPreConsult: isObstetricSpecialty(spec.name),
+      status: 'agendado',
+      createdBy: by,
+    });
+    imported++;
+  }
+  setState(() => ({ patients, ambSpecialties, appointments }));
+  return { imported, skippedDuplicates, createdPatients, createdSpecialties };
 }
 export function setAppointmentStatus(id: string, status: 'faltou' | 'cancelado') { requireAction('recepcao'); setState((s) => ({ appointments: s.appointments.map((a) => a.id === id && a.status === 'agendado' ? { ...a, status } : a) })); }
 export function checkInAppointment(id: string) {

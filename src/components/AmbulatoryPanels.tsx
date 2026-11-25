@@ -1,4 +1,5 @@
 import { DoctorNameInput } from "./DoctorNameInput";
+import { AgendaImport } from "./AgendaImport";
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { Printer } from "lucide-react";
@@ -90,6 +91,7 @@ export function AmbulatoryAgenda() {
       <label className="grid gap-1 text-xs">Data<Input type="date" value={date} onChange={(e) => setDate(e.target.value)} /></label>
       <label className="grid gap-1 text-xs">Especialidade<select className={sel} value={filter} onChange={(e) => setFilter(e.target.value)}><option value="">Todas</option>{specs.filter((s) => s.active).map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></label>
       <label className="grid gap-1 text-xs">Médico / Profissional<select className={sel} value={docFilter} onChange={(e) => setDocFilter(e.target.value)}><option value="">Todos</option>{agendaDoctors.map((d) => <option key={d} value={d}>{d}</option>)}</select></label>
+      {editable && <AgendaImport />}
     </div>
     {editable && <form className="grid gap-2 rounded-lg border bg-card p-3 md:grid-cols-3" onSubmit={(e) => { e.preventDefault(); act(() => { scheduleAppointment({ ...f, date }); setF({ ...f, time: "", patientId: "", note: "", nursingPreConsult: false }); }, "Consulta agendada"); }}>
       <h3 className="text-sm font-semibold md:col-span-3">Agendar consulta em {new Date(`${date}T12:00`).toLocaleDateString("pt-BR")}</h3>
