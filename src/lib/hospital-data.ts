@@ -248,6 +248,18 @@ export function interactionsWith(drug: Drug, current: Prescription[]) {
 export const DAILY_RATE: Record<Ward, number> = { PSO: 380, PSP: 350, CO: 690, AC: 420, UTIN: 2100, ENFP: 460, UTIP: 2100, UCI: 1200 };
 export const MED_PRICE = 18.5;
 export interface Admin { status: "checado" | "nao" | "adiado" | "cancelado"; by: string; at: string; reason?: string | undefined }
+const TISS_ATTENDED_FLOW = new Set<string>(["EM_ATENDIMENTO_MEDICO", "AGUARDANDO_FARMACIA", "AGUARDANDO_MEDICACAO", "EM_OBSERVACAO_REAVALIACAO", "ENCAMINHADO_INTERNACAO", "ENCAMINHADO_CO", "ALTA_HOSPITALAR"]);
+export function isEligibleForTiss(
+  p: Pick<Patient, "id" | "bed" | "days">,
+  encounters: { patientId: string; status_fluxo: string; medical?: unknown; discharge?: unknown; sadtReport?: unknown; fia?: unknown }[],
+  surgeries: Pick<Surgery, "patientId">[],
+  admins: Record<string, Admin>,
+): boolean {
+  if (p.bed.trim() !== "" || p.days > 0) return true;
+  if (surgeries.some((s) => s.patientId === p.id)) return true;
+  if (Object.entries(admins).some(([k, a]) => k.startsWith(p.id + "|") && a.status === "checado")) return true;
+  return encounters.some((e) => e.patientId === p.id && (TISS_ATTENDED_FLOW.has(e.status_fluxo) || Boolean(e.medical) || Boolean(e.discharge) || Boolean(e.sadtReport) || Boolean(e.fia)));
+}
 export function buildBill(p: Patient, surgeries: Surgery[], admins: Record<string, Admin>) {
   const lines: { group: string; tuss: string; desc: string; qty: number; unit: number }[] = [];
   lines.push({ group: "Diárias", tuss: "60000775", desc: `Diária ${WARDS.find((w) => w.id === p.ward)?.name}`, qty: p.days, unit: DAILY_RATE[p.ward] });

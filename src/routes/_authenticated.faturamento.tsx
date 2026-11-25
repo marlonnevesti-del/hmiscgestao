@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { NoPermission } from "@/components/AppShell";
-import { buildBill, can } from "@/lib/hospital-data";
+import { buildBill, can, isEligibleForTiss } from "@/lib/hospital-data";
 import { useStore } from "@/lib/hospital-store";
 import { cn } from "@/lib/utils";
 
@@ -23,12 +23,13 @@ const brl = (n: number) => n.toLocaleString("pt-BR", { style: "currency", curren
 
 function Fat() {
   const patients = useStore((s) => s.patients);
+  const encounters = useStore((s) => s.encounters);
   const surgeries = useStore((s) => s.surgeries);
   const admins = useStore((s) => s.admins);
   const profile = useStore((s) => s.profile);
   const [selId, setSelId] = useState<string | undefined>();
   const [guide, setGuide] = useState<"SP/SADT" | "Resumo de Internação" | null>(null);
-  const bills = patients.map((p) => ({ p, ...buildBill(p, surgeries, admins) }));
+  const bills = patients.filter((p) => isEligibleForTiss(p, encounters, surgeries, admins)).map((p) => ({ p, ...buildBill(p, surgeries, admins) }));
   const sel = bills.find((b) => b.p.id === selId) ?? bills[0];
   if (!sel) {
     return (
