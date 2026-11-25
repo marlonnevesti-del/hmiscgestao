@@ -1,4 +1,5 @@
 import { EMPTY_MILK_BANK, LHP_VALIDITY_DAYS, batchApproved, kcalFromCrematocrit, type MilkBank } from './milk-bank';
+import { canDispenseNow, isImmediatePrescription, remainingDoses } from './pharmacy-schedule';
 import { physioRequestIssues } from './physio';
 import { DEFAULT_TRIAGE_SIGTAP, detectTriageProcedures, medicalSigtapCode, requireMedicalSigtap } from './medical-sigtap';
 import { serviceRequestIssues } from './service-orders';
@@ -155,30 +156,132 @@ export function adjustPrescription(id: string, rxId: string, item: string, posol
   if (!item.trim()) throw new Error('Informe a dose do item.');
   updatePatient(p.id, (x) => ({ prescriptions: x.prescriptions.map((r) => r.id === rxId ? { ...r, item: item.trim().replace(/ · ajuste farmácia$/, '') + ' · ajuste farmácia', posologia: posologia.trim() || r.posologia } : r) }));
 }
-export function dispenseKit(id: string, intervention: string, lots: Record<string, string> = {}) {
+export function dispenseKit(
+  id: string,
+  intervention: string,
+  lots: Record<string, string> = {},
+  opts?: { now?: Date; specialCaseReason?: string; retainRemaining?: boolean },
+) {
   requireAction('farmacia'); const { e, p } = getEncounter(id);
   const meds = p.prescriptions.filter((r) => r.batchId === e.prescriptionBatchId && r.pharmacy);
   if (!meds.length || meds.some((r) => r.pharmacy !== 'Validada')) throw new Error('Valide todos os itens do kit antes de dispensar.');
+  const gate = canDispenseNow(meds, opts);
+  if (!gate.ok) throw new Error(gate.reason);
   const missingLot = meds.find((r) => !(lots[r.id] ?? '').trim());
   if (missingLot) throw new Error(`Informe o lote de ${missingLot.item}.`);
+  const specialReason = (opts?.specialCaseReason ?? '').trim();
+  const dosePlan = new Map<string, string[]>();
+  meds.forEach((r) => {
+    const pending = remainingDoses(r);
+    const onlyFirst = Boolean(opts?.retainRemaining) && pending.length >= 2;
+    const onlyImmediateBefore16 = gate.isBeforeStart && !specialReason;
+    if (onlyImmediateBefore16 && !isImmediatePrescription(r)) {
+      dosePlan.set(r.id, []);
+    } else if (onlyFirst || (onlyImmediateBefore16 && pending.length >= 2)) {
+      dosePlan.set(r.id, pending.slice(0, 1));
+    } else {
+      dosePlan.set(r.id, pending.length ? pending : ['']);
+    }
+  });
   const required = new Map<string, number>();
   meds.forEach((r) => {
+    const count = (dosePlan.get(r.id) ?? []).length;
+    if (!count) return;
     const medication = findStockMedication(state.stock, r.item);
     if (!medication) throw new Error(`Estoque insuficiente: ${medicationKey(r.item)}. Cadastre o medicamento e registre a entrada.`);
-    required.set(medication.id, (required.get(medication.id) ?? 0) + (r.times?.length ?? 1));
+    required.set(medication.id, (required.get(medication.id) ?? 0) + count);
   });
   for (const [medicationId, qty] of required) {
     const medication = state.stock.find((item) => item.id === medicationId);
     if (!medication || medication.quantity < qty) throw new Error(`Estoque insuficiente: ${medication?.name ?? medicationId}. Disponível: ${medication?.quantity ?? 0}; necessário: ${qty}.`);
   }
   let stock = state.stock;
-  meds.forEach((r) => { const m = findStockMedication(stock, r.item)!; stock = changeQty(stock, m.id, -(r.times?.length ?? 1), (lots[r.id] ?? '').trim()); });
+  meds.forEach((r) => {
+    const count = (dosePlan.get(r.id) ?? []).length;
+    if (!count) return;
+    const m = findStockMedication(stock, r.item)!;
+    stock = changeQty(stock, m.id, -count, (lots[r.id] ?? '').trim());
+  });
   const at = new Date().toISOString(); const by = professionalName(state.profile);
-  const consumo = meds.map((r) => { const m = findStockMedication(state.stock, r.item)!; return { ...{ id: crypto.randomUUID(), at: new Date().toISOString(), by: professionalName(state.profile) }, kind: 'consumo' as const, from: m.location ?? 'Farmácia', to: p.name, item: m.name, code: m.code, qty: r.times?.length ?? 1, lot: (lots[r.id] ?? '').trim(), reason: 'Dispensação', patient: p.name, patientId: p.id, baa: e.number, ...(e.fia ? { fia: e.fia.number } : {}) }; });
+  const consumo = meds
+    .filter((r) => (dosePlan.get(r.id) ?? []).length > 0)
+    .map((r) => {
+      const m = findStockMedication(state.stock, r.item)!;
+      const dosesNow = dosePlan.get(r.id) ?? [];
+      const reason = specialReason ? `Dispensação (caso especial: ${specialReason})` : 'Dispensação';
+      return { id: crypto.randomUUID(), at, by, kind: 'consumo' as const, from: m.location ?? 'Farmácia', to: p.name, item: m.name, code: m.code, qty: dosesNow.length, lot: (lots[r.id] ?? '').trim(), reason, patient: p.name, patientId: p.id, baa: e.number, ...(e.fia ? { fia: e.fia.number } : {}) };
+    });
   const requisition = `${String(state.movements.length + state.encounters.indexOf(e) * 7 + 230000).slice(-6)}/${new Date().getFullYear()}`;
   const dispensed = transition(e, 'AGUARDANDO_MEDICACAO', by, 'Medicamentos prescritos dispensados', at);
   const next = allBatchDosesDone(dispensed, p, state.admins) ? transition(dispensed, 'EM_OBSERVACAO_REAVALIACAO', by, 'Doses já concluídas - pronto para reavaliação', at) : dispensed;
-  commitEncounter({ ...next, intervention, dispensedAt: at, dispensedBy: by, requisition }, { stock, movements: [...consumo, ...state.movements], patients: state.patients.map((x) => x.id === p.id ? { ...x, prescriptions: x.prescriptions.map((r) => r.batchId === e.prescriptionBatchId && r.pharmacy ? { ...r, pharmacy: 'Dispensada', lot: (lots[r.id] ?? '').trim() } : r) } : x) });
+  commitEncounter(
+    { ...next, intervention, dispensedAt: at, dispensedBy: by, requisition },
+    {
+      stock,
+      movements: [...consumo, ...state.movements],
+      patients: state.patients.map((x) =>
+        x.id === p.id
+          ? {
+              ...x,
+              prescriptions: x.prescriptions.map((r) => {
+                if (r.batchId !== e.prescriptionBatchId || !r.pharmacy) return r;
+                const dosesNow = (dosePlan.get(r.id) ?? []).filter(Boolean);
+                const nextDispensed = Array.from(new Set([...(r.dispensedTimes ?? []), ...dosesNow]));
+                const allTimes = r.times ?? [];
+                const allDone = !allTimes.length || allTimes.every((t) => nextDispensed.includes(t));
+                return {
+                  ...r,
+                  pharmacy: allDone ? 'Dispensada' : 'Parcial',
+                  lot: (lots[r.id] ?? r.lot ?? '').trim(),
+                  ...(allTimes.length ? { dispensedTimes: nextDispensed } : {}),
+                  ...(specialReason ? { specialCaseReason: specialReason } : {}),
+                };
+              }),
+            }
+          : x,
+      ),
+    },
+  );
+}
+/** Entrega uma dose programada que ficou retida na farmácia no respectivo horário. */
+export function dispenseScheduledDose(
+  encounterId: string,
+  rxId: string,
+  time: string,
+  lot: string,
+  opts?: { now?: Date; specialCaseReason?: string },
+) {
+  requireAction('farmacia'); const { e, p } = getEncounter(encounterId);
+  const rx = p.prescriptions.find((r) => r.id === rxId);
+  if (!rx || !rx.times?.includes(time)) throw new Error('Horário de dose não encontrado.');
+  if (rx.dispensedTimes?.includes(time)) throw new Error('Esta dose já foi entregue.');
+  const gate = canDispenseNow([rx], opts);
+  if (!gate.ok) throw new Error(gate.reason);
+  const cleanLot = (lot || rx.lot || '').trim();
+  if (!cleanLot) throw new Error(`Informe o lote de ${rx.item}.`);
+  const medication = findStockMedication(state.stock, rx.item);
+  if (!medication || medication.quantity < 1) throw new Error(`Estoque insuficiente: ${medication?.name ?? medicationKey(rx.item)}.`);
+  const stock = changeQty(state.stock, medication.id, -1, cleanLot);
+  const at = new Date().toISOString(); const by = professionalName(state.profile);
+  const specialReason = (opts?.specialCaseReason ?? '').trim();
+  const reason = specialReason ? `Dispensação programada ${time} (caso especial: ${specialReason})` : `Dispensação programada ${time}`;
+  const movement = { id: crypto.randomUUID(), at, by, kind: 'consumo' as const, from: medication.location ?? 'Farmácia', to: p.name, item: medication.name, code: medication.code, qty: 1, lot: cleanLot, reason, patient: p.name, patientId: p.id, baa: e.number, ...(e.fia ? { fia: e.fia.number } : {}) };
+  const nextDispensed = Array.from(new Set([...(rx.dispensedTimes ?? []), time]));
+  const allDone = rx.times.every((t) => nextDispensed.includes(t));
+  setState((s) => ({
+    stock,
+    movements: [movement, ...s.movements],
+    patients: s.patients.map((x) =>
+      x.id === p.id
+        ? {
+            ...x,
+            prescriptions: x.prescriptions.map((r) =>
+              r.id === rxId ? { ...r, lot: cleanLot, dispensedTimes: nextDispensed, pharmacy: allDone ? 'Dispensada' : 'Parcial' } : r,
+            ),
+          }
+        : x,
+    ),
+  }));
 }
 const depotKey = (d: Depot) => (d === 'farmacia' ? 'stock' : 'warehouse') as 'stock' | 'warehouse';
 const depotAction = (d: Depot): 'farmacia' | 'almoxarifado' => (d === 'farmacia' ? 'farmacia' : 'almoxarifado');
@@ -356,7 +459,10 @@ export function advanceCompletedMedication(id: string) {
 export function recordMedication(id: string, rxId: string, time: string, status: Admin['status'], reason = '') {
   requireAction(status === 'cancelado' ? 'prescrever' : 'checar'); const { e, p } = getEncounter(id);
   const rx = p.prescriptions.find((r) => r.id === rxId);
-  if (!rx || !rx.times?.includes(time) || (rx.pharmacy && rx.pharmacy !== 'Dispensada') || !['AGUARDANDO_MEDICACAO', 'EM_OBSERVACAO_REAVALIACAO'].includes(e.status_fluxo)) throw new Error('Medicação ainda não liberada para administração.');
+  const doseReleased = rx?.pharmacy === 'Dispensada' || (rx?.pharmacy === 'Parcial' && Boolean(rx.dispensedTimes?.includes(time)));
+  if (!rx || !rx.times?.includes(time) || (rx.pharmacy && !doseReleased) || !['AGUARDANDO_MEDICACAO', 'EM_OBSERVACAO_REAVALIACAO'].includes(e.status_fluxo)) {
+    throw new Error(rx?.pharmacy === 'Parcial' ? 'Dose ainda retida na farmácia para o horário programado.' : 'Medicação ainda não liberada para administração.');
+  }
   const key = `${p.id}|${rxId}|${time}`;
   if (state.admins[key]?.status === 'checado' || state.admins[key]?.status === 'cancelado') throw new Error('Dose já checada ou cancelada.');
   if (status !== 'checado' && !reason.trim()) throw new Error('Informe a justificativa.');

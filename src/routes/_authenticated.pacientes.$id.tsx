@@ -16,6 +16,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { NoPermission } from "@/components/AppShell";
 import { PatientIcon } from "@/components/PatientIcon";
 import { SpecialConditionsBanner } from "@/components/SpecialConditions";
+import { ADMIN_ROUTES, buildScheduleTimes, formatPosologia, POSOLOGY_OPTIONS, type AdminRoute, type PosologyOption } from "@/lib/pharmacy-schedule";
 import { PatientSheetPrint, printSheet } from "@/components/PatientSheetPrint";
 import { InpatientDocsButtons } from "@/components/InpatientDocsPrint";
 import { MedicalDocsButtons } from "@/components/MedicalDocs";
@@ -183,7 +184,7 @@ function Prescricao({ p }: { p: Patient }) {
   const ped = p.type === "pediatria" || p.type === "neonato";
   const [cat, setCat] = useState<PrescCat>("Medicamento");
   const [drugName, setDrugName] = useState(DRUGS[0]?.name ?? "");
-  const [free, setFree] = useState(""); const [pos, setPos] = useState(""); const [typed, setTyped] = useState(false); const [typedDrug, setTypedDrug] = useState("");
+  const [free, setFree] = useState(""); const [pos, setPos] = useState(""); const [route, setRoute] = useState<AdminRoute>("VO"); const [frequency, setFrequency] = useState<PosologyOption>("8x8"); const [immediate, setImmediate] = useState(false); const [typed, setTyped] = useState(false); const [typedDrug, setTypedDrug] = useState("");
   const drug = DRUGS.find((d) => d.name === drugName);
   const [calc, setCalc] = useState(() => initCalc(DRUGS[0]!));
   const [atbF, setAtbF] = useState({ weight: "", vitals: "", dose: "", interval: "", focus: "", days: "", justification: "" });
@@ -201,6 +202,9 @@ function Prescricao({ p }: { p: Patient }) {
   const add = () => {
     const isMed = cat === "Medicamento";
     let atb: AtbInfo | undefined;
+    const isImmediate = frequency === "Agora" || immediate;
+    const medTimes = isMed ? buildScheduleTimes(frequency, isImmediate) : undefined;
+    const medPosologia = isMed ? formatPosologia(route, frequency, isImmediate) : pos || "—";
     if (isAtb) {
       const f = atbForm(); const miss = atbMissing(f);
       if (miss.length) { toast.error(`Campos obrigatórios do antimicrobiano: ${miss.join(", ")}`); return; }
@@ -209,24 +213,20 @@ function Prescricao({ p }: { p: Patient }) {
     }
     if (isMed && typed) {
       if (!editable) { toast.error("Inicie ou retome o atendimento médico para editar a prescrição."); return; }
-      if (!typedDrug.trim() || !pos.trim()) { toast.error("Digite o medicamento e a posologia."); return; }
+      if (!typedDrug.trim()) { toast.error("Digite o medicamento."); return; }
       const hit = p.allergies.find((a) => typedDrug.toLowerCase().includes(a.toLowerCase()));
       if (hit) { toast.error(`Conflito de alergia: ${hit}`); return; }
-      updatePatient(p.id, (x) => ({ prescriptions: [...x.prescriptions, { id: `rx-${Date.now()}`, cat, item: `${typedDrug.trim()} ${free.trim()}`.trim(), posologia: pos.trim(), pharmacy: "Pendente" as const, ...(atb ? { atb } : {}) }] }));
-      setTypedDrug(""); setFree(""); setPos(""); toast.success("Item digitado adicionado – segue para a farmácia ao salvar a prescrição"); return;
+      updatePatient(p.id, (x) => ({ prescriptions: [...x.prescriptions, { id: `rx-${Date.now()}`, cat, item: `${typedDrug.trim()} ${free.trim()}`.trim(), posologia: medPosologia, route, frequency, immediate: isImmediate, ...(medTimes ? { times: medTimes } : {}), pharmacy: "Pendente" as const, ...(atb ? { atb } : {}) }] }));
+      setTypedDrug(""); setFree(""); setPos(""); setImmediate(false); toast.success("Item digitado adicionado – segue para a farmácia ao salvar a prescrição"); return;
     }
     if (!editable) { toast.error("Inicie ou retome o atendimento médico para editar a prescrição."); return; }
     if (isMed && (ped && !(p.weight > 0))) { toast.error("Peso obrigatório para dose pediátrica"); return; }
     if (isMed && allergy) { toast.error(`Conflito de alergia: ${allergy}`); return; }
-    const nDoses = Math.max(1, Math.round(parseFloat(calc.doses.replace(",", ".")) || 1)); const every = Math.round((24 / nDoses) * 10) / 10;
-    const startHour = new Date().getHours();
-    const minute = new Date().getMinutes();
-    const times = isMed ? Array.from({ length: nDoses }, (_, i) => `${String(Math.floor(startHour + i * every) % 24).padStart(2, "0")}:${String(minute).padStart(2, "0")}`) : undefined;
     const item = isMed ? (ped || calc.perDose || p.weight > 0 ? doseText(drug.name, dose, parseFloat(calc.mgKgDay.replace(",", ".")) || 0, drug.presentations?.[calc.presentation]) : `${drug.name} ${free || ""}`.trim()) : free;
     if (!item) return;
-    updatePatient(p.id, (x) => ({ prescriptions: [...x.prescriptions, { id: `rx-${Date.now()}`, cat, item, posologia: isMed ? (pos || `${every}/${every}h`) : pos || "—", ...(times ? { times, pharmacy: "Pendente" as const } : {}), ...(atb ? { atb } : {}) }] }));
+    updatePatient(p.id, (x) => ({ prescriptions: [...x.prescriptions, { id: `rx-${Date.now()}`, cat, item, posologia: medPosologia, ...(isMed ? { route, frequency, immediate: isImmediate } : {}), ...(medTimes ? { times: medTimes, pharmacy: "Pendente" as const } : {}), ...(atb ? { atb } : {}) }] }));
     if (atb) { setAtbF({ weight: "", vitals: "", dose: "", interval: "", focus: "", days: "", justification: "" }); if (atb.restricted) toast.warning("Antimicrobiano restrito: aguardando autorização da SCIRAS"); }
-    setFree(""); setPos(""); toast.success("Item adicionado à prescrição");
+    setFree(""); setPos(""); setImmediate(false); toast.success("Item adicionado à prescrição");
   };
   return (
     <div className="grid gap-4 lg:grid-cols-[1fr_360px]">
@@ -234,7 +234,7 @@ function Prescricao({ p }: { p: Patient }) {
         {cats.map((c) => { const it = p.prescriptions.filter((x) => x.cat === c); return (
           <div key={c} className="mb-3"><div className="mb-1 text-xs font-semibold uppercase text-primary">{c === "Hidratação" ? "Hidratação / Venóclise" : c === "Exames" ? "Solicitação de exames" : c === "Cuidados" ? "Cuidados de enfermagem" : c}</div>
             {it.length === 0 ? <div className="text-xs text-muted-foreground">—</div> : it.map((x) => (
-              <div key={x.id} className="flex items-center justify-between gap-2 border-b py-1.5 text-sm"><div><span className="font-medium">{x.item}</span> <span className="text-muted-foreground">· {x.posologia}</span>{x.times && <span className="ml-1 font-mono text-[10px] text-muted-foreground">[{x.times.join(" ")}]</span>}</div>
+              <div key={x.id} className="flex items-center justify-between gap-2 border-b py-1.5 text-sm"><div><span className="font-medium">{x.item}</span> <span className="text-muted-foreground">· {x.posologia}</span>{x.immediate && <span className="ml-1.5 rounded bg-clinical-soft px-1.5 py-0.5 text-[10px] font-semibold text-clinical">Dose imediata</span>}{x.times && <span className="ml-1 font-mono text-[10px] text-muted-foreground">[{x.times.join(" ")}]</span>}</div>
                 <div className="flex items-center gap-2">{x.atb && x.atb.status !== "Livre" && <span className={cn("rounded px-2 py-0.5 text-[10px] font-semibold", x.atb.status === "Autorizado" ? "bg-clinical-soft text-clinical" : "bg-destructive text-destructive-foreground")}>SCIRAS: {x.atb.status}{x.atb.authorizedDays ? ` (${x.atb.authorizedDays}d)` : ""}</span>}{x.pharmacy && <span className={cn("rounded px-2 py-0.5 text-[10px] font-semibold", x.pharmacy === "Pendente" ? "bg-mt-yellow text-foreground" : "bg-clinical-soft text-clinical")}>{x.pharmacy}</span>}
                   {editable && <button onClick={() => updatePatient(p.id, (y) => ({ prescriptions: y.prescriptions.filter((r) => r.id !== x.id) }))} aria-label="Suspender" className="text-muted-foreground hover:text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>}</div></div>
             ))}</div>); })}
@@ -261,7 +261,31 @@ function Prescricao({ p }: { p: Patient }) {
             ))}
             <textarea aria-label="Justificativa da antibioticoterapia" value={atbF.justification} onChange={(e) => setAtbF({ ...atbF, justification: e.target.value })} placeholder="Justificativa da antibioticoterapia" className={cn("min-h-16 w-full rounded-md border bg-background p-2 text-xs", atbF.justification.trim().length < 10 && "border-destructive")} />
           </div>}
-          <input value={pos} onChange={(e) => setPos(e.target.value)} placeholder="Via / posologia (opcional)" className="h-8 w-full rounded-md border bg-background px-2 text-xs" />
+          {cat === "Medicamento" ? (
+            <div className="space-y-2 rounded-md border bg-muted/30 p-2">
+              <div className="grid grid-cols-2 gap-2">
+                <label className="grid gap-1 text-[11px] text-muted-foreground">Via
+                  <select aria-label="Via de administração" value={route} onChange={(e) => setRoute(e.target.value as AdminRoute)} className="h-8 w-full rounded-md border bg-background px-2 text-xs text-foreground">
+                    {ADMIN_ROUTES.map((r) => <option key={r} value={r}>{r}</option>)}
+                  </select>
+                </label>
+                <label className="grid gap-1 text-[11px] text-muted-foreground">Posologia
+                  <select aria-label="Posologia" value={frequency} onChange={(e) => { const v = e.target.value as PosologyOption; setFrequency(v); if (v === "Agora") setImmediate(true); }} className="h-8 w-full rounded-md border bg-background px-2 text-xs text-foreground">
+                    {POSOLOGY_OPTIONS.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
+                  </select>
+                </label>
+              </div>
+              <label className="flex items-center gap-2 text-xs">
+                <input type="checkbox" checked={frequency === "Agora" || immediate} disabled={frequency === "Agora"} onChange={(e) => setImmediate(e.target.checked)} />
+                <span>Dose imediata (libera 1ª dose agora)</span>
+              </label>
+              <div className="font-mono text-[10px] text-muted-foreground">
+                Horários: {buildScheduleTimes(frequency, frequency === "Agora" || immediate).join(" · ")}
+              </div>
+            </div>
+          ) : (
+            <input value={pos} onChange={(e) => setPos(e.target.value)} placeholder="Observação / frequência (opcional)" className="h-8 w-full rounded-md border bg-background px-2 text-xs" />
+          )}
           <button onClick={add} className="w-full rounded-md bg-clinical py-2 text-sm font-medium text-accent-foreground">Adicionar à prescrição</button>
         </div>}
       </Card>
