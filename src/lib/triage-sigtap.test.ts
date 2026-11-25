@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { completeTriage, getState, openEncounter, setState } from "./hospital-store";
-import { DEFAULT_TRIAGE_SIGTAP } from "./medical-sigtap";
+import { DEFAULT_TRIAGE_SIGTAP, TRIAGE_ANTHRO_SIGTAP, TRIAGE_PA_SIGTAP, TRIAGE_TEMP_SIGTAP } from "./medical-sigtap";
 import { bpaFile, buildSusRows } from "./sus-billing";
 import type { Encounter, Triage } from "./care-flow";
 import type { Patient } from "./hospital-data";
@@ -11,14 +11,18 @@ const triagePayload: Triage = {
   complaint: "Febre baixa", allergies: [], ig: "", dum: "", bcf: "", contractions: "", fluid: "Não", bleeding: "Ausente", height: "105", head: "", guardian: "Maria Silva",
 };
 
-describe("triagem com SIGTAP automático (0301060118)", () => {
-  it("grava automaticamente 0301060118 ao concluir a triagem", () => {
+describe("triagem com SIGTAP automático (0301060118 e sinais vitais)", () => {
+  it("grava automaticamente 0301060118, PA, temperatura e avaliação antropométrica ao concluir a triagem", () => {
     setState(() => ({ profile: "Administrador", employeeName: "Enf. Ana", accessAreas: null, patients: [], encounters: [], queue: [], surgeries: [], beSequence: 0 }));
     const p = { id: "p-tri-1", name: "Lucas Teste", age: "5 anos", type: "pediatria", risk: "verde", bed: "", weight: 18, allergies: [], risks: [], vitals: [], prescriptions: [], evolutions: [], exams: [] } as unknown as Patient;
     const enc = openEncounter(p, "Pronto socorro", "Pediatria", "Febre baixa");
     completeTriage(enc.id, triagePayload);
     const saved = getState().encounters.find((e) => e.id === enc.id);
     expect(saved?.triage?.sigtapCode).toBe(DEFAULT_TRIAGE_SIGTAP);
+    expect(saved?.extraProcedures?.map((x) => x.code)).toEqual([TRIAGE_PA_SIGTAP, TRIAGE_TEMP_SIGTAP, TRIAGE_ANTHRO_SIGTAP]);
+    const prof = { name: "Enf. Ana", cns: "700000000000009", cbo: "223505" };
+    const rows = buildSusRows([{ ...saved!, status_fluxo: "ALTA_HOSPITALAR", openedAt: "2026-11-25T10:00:00.000Z", sigtapCode: "0301010072" }], [p], "202611", prof);
+    expect(rows.map((r) => r.procedure)).toEqual(["0301010072", DEFAULT_TRIAGE_SIGTAP, TRIAGE_PA_SIGTAP, TRIAGE_TEMP_SIGTAP, TRIAGE_ANTHRO_SIGTAP]);
   });
 
   it("gera linha BPA de triagem (0301060118) junto com a consulta e exporta no arquivo BPA-I", () => {

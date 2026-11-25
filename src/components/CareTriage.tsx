@@ -13,6 +13,7 @@ import { can, MANCHESTER, type Manchester, type Patient } from "@/lib/hospital-d
 import { CallPanelButton } from "./CallPanelButton";
 import { callPatient, completeTriage, inCareBy, useStore } from "@/lib/hospital-store";
 import { sortMedicalQueue, type Encounter } from "@/lib/care-flow";
+import { DEFAULT_TRIAGE_SIGTAP, detectTriageProcedures } from "@/lib/medical-sigtap";
 import { descritorPorId, FLUXOGRAMAS, fluxogramaPorId, PUBLICO_LABEL, sugerirCorPCACR, TEMPO_PCACR, type Publico } from "@/lib/pcacr";
 import { cn } from "@/lib/utils";
 
@@ -133,6 +134,7 @@ function TriageForm({ encounter, onDone }: { encounter: Encounter; onDone: () =>
     ["weight", obstetric ? "Peso (kg)" : "Peso atual (kg) *"], ["allergies", "Alergias (separar por vírgulas)"], ["complaint", "Queixa principal"],
     ...(obstetric ? [["ig", "Idade gestacional"], ["dum", "DUM"], ["bcf", "BCF"], ["contractions", "Dinâmica uterina"], ["fluid", "Perda de líquido"], ["bleeding", "Sangramento"]] as [keyof typeof f, string][] : [["height", "Estatura (cm)"], ["head", "Perímetro cefálico"], ["guardian", "Responsável legal"]] as [keyof typeof f, string][]),
   ];
+  const detectedProcs = detectTriageProcedures({ pas: f.pas, pad: f.pad, tax: f.tax, weight: f.weight, height: f.height, head: f.head });
 
   return <form onSubmit={(event) => { event.preventDefault(); save(); }} className="space-y-5">
     <section><h2 className="mb-2 font-semibold">Sinais vitais e dados assistenciais</h2><div className="grid grid-cols-2 gap-3 sm:grid-cols-3">{fields.map(([key, label]) => <label key={key} className="grid gap-1 text-xs">{label}<Input value={f[key]} onChange={(event) => setF((current) => ({ ...current, [key]: event.target.value }))} required={["pas", "pad", "fc", "fr", "tax", "sat", "dor", "complaint"].includes(key) || (!obstetric && ["weight", "guardian"].includes(key))} /></label>)}</div></section>
@@ -142,7 +144,13 @@ function TriageForm({ encounter, onDone }: { encounter: Encounter; onDone: () =>
       {suggestion && <div className="mt-4 flex flex-wrap items-center gap-3 rounded-lg border bg-muted/40 p-3 text-sm"><RiskBadge risk={suggestion.cor} /><span>Classificação calculada pelo PCACR · espera máxima: <b>{suggestion.tempoMax === 0 ? "imediata" : `${suggestion.tempoMax} min`}</b></span></div>}
     </section>
     <section><h2 className="mb-2 font-semibold">Classificação de risco</h2><div className="grid gap-2 sm:grid-cols-3 md:grid-cols-5">{RISKS.map((item) => <Button type="button" variant="outline" key={item} onClick={() => { setRisk(item); setFlowchartId(""); setDescriptors([]); }} className={cn("h-auto flex-col items-start px-3 py-3 whitespace-normal", MANCHESTER[item].cls, effectiveRisk === item && "ring-2 ring-ring ring-offset-2")}><b className="uppercase">{item}</b><span className="text-xs">{MANCHESTER[item].label}</span></Button>)}</div>{suggestion && <p className="mt-2 text-xs text-muted-foreground">Para escolher outra cor manualmente, clique nela; os descritores serão limpos.</p>}</section>
-    <p className="rounded-md border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">Procedimento SUS vinculado automaticamente: <strong className="font-mono text-foreground">0301060118</strong> · Acolhimento com classificação de risco.</p>
+    <div className="space-y-1.5 rounded-md border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+      <p className="font-medium text-foreground">Procedimentos SUS vinculados automaticamente:</p>
+      <div className="flex flex-wrap gap-1.5">
+        <span className="inline-flex items-center gap-1 rounded border bg-background px-2 py-0.5"><strong className="font-mono text-foreground">{DEFAULT_TRIAGE_SIGTAP}</strong> · Acolhimento com classificação de risco</span>
+        {detectedProcs.map((proc) => <span key={proc.code} className="inline-flex items-center gap-1 rounded border bg-background px-2 py-0.5"><strong className="font-mono text-foreground">{proc.code}</strong> · {proc.name}</span>)}
+      </div>
+    </div>
     <Button type="submit">{previous ? "Salvar reclassificação" : "Salvar triagem e liberar para médico"}</Button>
   </form>;
 }
