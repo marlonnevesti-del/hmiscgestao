@@ -16,3 +16,4 @@
 - SIGTAP glosa rules (CID list per procedure, sex, age in months, permanence) come from the official DATASUS table in sigtap-rules.json via sigtap-compat.ts, lazy-loaded and applied in Laudo AIH and Faturamento SUS so both flag the same issues.
 - Cost centers: src/lib/cost-centers.ts allocates movements (patient dispensing via patient ward), dailies and surgery rooms at report time, so no stored fields; /centro-de-custos shares faturamento area.
 - Raio-X and Gesso requests ride on patient.services (src/lib/service-orders.ts); boards /raio-x and /gesso share the pacientes area and completion appends an evolution, so no new snapshot keys.
+- Employee sector catalog and default sector-to-area grants live in employee-sectors.ts; custom grants use employee_sectors, and loadEmployeeAccess merges sector grants with function/admin areas without granting administration.

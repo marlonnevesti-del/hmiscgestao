@@ -113,6 +113,20 @@
       "when": 1795605966891,
       "tag": "0015_create_clinical_state_history",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1795607859590,
+      "tag": "0016_add_employee_sectors",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1795607907096,
+      "tag": "0017_add_employee_sector_access",
+      "breakpoints": true
     }
   ]
 }

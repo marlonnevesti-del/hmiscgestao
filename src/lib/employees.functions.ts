@@ -3,6 +3,47 @@ import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { employeeRegistrationInputSchema, employeeFunctionSchema } from "./employee-rules";
+import { hasOnlyKnownAreas, isKnownSector, mergeEmployeeSectors } from "./employee-sectors";
+
+const sectorNameSchema = z.string().trim().min(2, "Informe o nome do setor").max(80);
+const sectorAreasSchema = z.array(z.string()).max(80).refine(hasOnlyKnownAreas, "Área de acesso inválida");
+
+export const listEmployeeSectors = createServerFn({ method: "GET" }).handler(async () => {
+  const url = process.env["SUPABASE_URL"];
+  const key = process.env["SUPABASE_PUBLISHABLE_KEY"];
+  if (!url || !key) throw new Error("Não foi possível consultar os setores");
+  const client = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: (input, init) => {
+    const headers = new Headers(init?.headers);
+    if (key.startsWith("sb_") && headers.get("Authorization") === `Bearer ${key}`) headers.delete("Authorization");
+    headers.set("apikey", key); return fetch(input, { ...init, headers });
+  } } });
+  const { data, error } = await client.from("employee_sectors").select("name").eq("is_active", true).order("name").limit(500);
+  if (error) throw new Error("Não foi possível consultar os setores");
+  return mergeEmployeeSectors((data ?? []).map((sector) => sector.name));
+});
+
+export const listEmployeeSectorDefinitions = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
+  const { data: admin } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
+  const { data: principal } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "super_admin" });
+  if (!admin && !principal) throw new Error("Somente administradores podem gerenciar setores");
+  const { data, error } = await context.supabase.from("employee_sectors").select("name,access_areas").eq("is_active", true).order("name").limit(500);
+  if (error) throw new Error("Não foi possível consultar os setores");
+  return data ?? [];
+});
+
+export const addEmployeeSector = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ name: sectorNameSchema, areas: sectorAreasSchema }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { data: admin } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
+    const { data: principal } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "super_admin" });
+    if (!admin && !principal) return { ok: false, message: "Somente administradores podem cadastrar setores" };
+    const { data: existing, error: readError } = await context.supabase.from("employee_sectors").select("name").eq("is_active", true).limit(500);
+    if (readError) return { ok: false, message: "Não foi possível conferir os setores" };
+    if (isKnownSector(data.name, (existing ?? []).map((sector) => sector.name))) return { ok: false, message: "Este setor já está cadastrado" };
+    const { error } = await context.supabase.from("employee_sectors").insert({ name: data.name, access_areas: data.areas });
+    if (error) return { ok: false, message: error.code === "23505" ? "Este setor já está cadastrado" : "Não foi possível cadastrar o setor" };
+    return { ok: true, message: "Setor cadastrado com os acessos escolhidos" };
+  });
 
 export const registerEmployee = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => employeeRegistrationInputSchema.parse(input))
@@ -18,6 +59,9 @@ export const registerEmployee = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: taken } = await supabaseAdmin.from("profiles").select("id").ilike("username", data.username.trim().replace(/[%_\\]/g, "\\$&")).limit(1);
     if (taken?.length) return { ok: false, message: "Este nome de usuário já está em uso. Escolha outro." };
+    const { data: sectorRows, error: sectorError } = await supabaseAdmin.from("employee_sectors").select("name").eq("is_active", true).limit(500);
+    if (sectorError) return { ok: false, message: "Não foi possível validar o setor. Tente novamente." };
+    if (!isKnownSector(data.sector, (sectorRows ?? []).map((sector) => sector.name))) return { ok: false, message: "Selecione um setor válido." };
     const { password, other_function, origin, ...fields } = data;
     const { error } = await client.auth.signUp({ email: data.email, password, options: { data: { ...fields, job_function: data.job_function === "Outro" ? other_function : data.job_function }, emailRedirectTo: origin } });
     if (error) return { ok: false, message: error.code === "weak_password" ? "Escolha uma senha mais segura, com letras, números e símbolos." : "Não foi possível cadastrar. Verifique os dados ou tente novamente mais tarde." };
@@ -67,12 +111,14 @@ export const removeEmployee = createServerFn({ method: 'POST' }).middleware([req
   });
 
 export const createAdministrator = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ full_name: z.string().trim().min(3).max(150), email: z.string().email().max(200), username: z.string().min(3).max(50), password: z.string().min(8).max(128) }).parse(input))
+  .inputValidator((input: unknown) => z.object({ full_name: z.string().trim().min(3).max(150), email: z.string().email().max(200), username: z.string().min(3).max(50), password: z.string().min(8).max(128), sector: sectorNameSchema }).parse(input))
   .handler(async ({ data, context }) => {
     const { data: allowed } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "super_admin" });
     if (!allowed) throw new Error("Somente o administrador principal pode cadastrar administradores");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: created, error } = await supabaseAdmin.auth.admin.createUser({ email: data.email, password: data.password, email_confirm: true, user_metadata: { full_name: data.full_name, username: data.username, job_function: "Administrador" } });
+    const { data: sectorRows, error: sectorError } = await supabaseAdmin.from("employee_sectors").select("name").eq("is_active", true).limit(500);
+    if (sectorError || !isKnownSector(data.sector, (sectorRows ?? []).map((sector) => sector.name))) return { ok: false, message: "Selecione um setor válido" };
+    const { data: created, error } = await supabaseAdmin.auth.admin.createUser({ email: data.email, password: data.password, email_confirm: true, user_metadata: { full_name: data.full_name, username: data.username, job_function: "Administrador", sector: data.sector } });
     if (error || !created.user) return { ok: false, message: "Não foi possível criar a conta. Verifique se o e-mail já está cadastrado e escolha uma senha segura." };
     const { error: grantError } = await context.supabase.rpc("grant_administrator", { target_id: created.user.id });
     if (grantError) { await supabaseAdmin.auth.admin.deleteUser(created.user.id); throw new Error("Não foi possível conceder o acesso administrativo"); }
@@ -115,6 +161,7 @@ export const adminEmployeeEditSchema = z.object({
   phone: z.string().trim().max(30),
   birth_date: z.string().trim().max(20),
   address: z.string().trim().max(200),
+  sector: sectorNameSchema,
   council_type: z.string().trim().max(20),
   council_number: z.string().trim().max(30),
   council_state: z.string().trim().max(4),
@@ -133,6 +180,9 @@ export const adminUpdateEmployee = createServerFn({ method: "POST" }).middleware
     if (!principal && (targetRoles ?? []).some((r) => r.role === "super_admin")) return { ok: false, message: "Somente o administrador principal pode alterar este cadastro" };
     const { data: taken } = await supabaseAdmin.from("profiles").select("id").ilike("username", data.username.replace(/[%_\\]/g, "\\$&")).neq("id", data.id).limit(1);
     if (taken?.length) return { ok: false, message: "Este nome de usuário já está em uso" };
+    const { data: sectorRows, error: sectorError } = await supabaseAdmin.from("employee_sectors").select("name").eq("is_active", true).limit(500);
+    if (sectorError) return { ok: false, message: "Não foi possível validar o setor" };
+    if (!isKnownSector(data.sector, (sectorRows ?? []).map((sector) => sector.name))) return { ok: false, message: "Selecione um setor válido" };
     const { data: current } = await supabaseAdmin.auth.admin.getUserById(data.id);
     if (!current?.user) return { ok: false, message: "Colaborador não encontrado" };
     const emailChanged = (current.user.email ?? "").toLowerCase() !== data.email;

@@ -3,7 +3,7 @@ import { canApproveEmployees, canCreateAdmins, canRemoveEmployee, clinicalProfil
 import { can, canAccessPage } from "./hospital-data";
 import { ATTENDANCE_TYPES } from "./care-flow";
 describe("acesso de colaboradores", () => {
-  const registration = { full_name: "Colaborador Teste", username: "colaborador", email: "teste@example.com", password: "Example-test!42", cpf: "12345678901", phone: "11999999999", birth_date: "1990-01-01", address: "Rua de Teste 10", job_function: "Recepcionista", council_type: "", council_number: "", council_state: "" };
+  const registration = { full_name: "Colaborador Teste", username: "colaborador", email: "teste@example.com", password: "Example-test!42", cpf: "12345678901", phone: "11999999999", birth_date: "1990-01-01", address: "Rua de Teste 10", job_function: "Recepcionista", sector: "Recep Mat", council_type: "", council_number: "", council_state: "" };
   it.each([
     "https://hmiscgestao.lovable.app",
     "https://id-preview--99c05fd0-634e-424c-a006-6c577d58a502.lovable.app",
@@ -32,8 +32,8 @@ describe("acesso de colaboradores", () => {
     expect(filterEmployees([pending], "pending", "  PENDENTE  ")).toEqual([pending]);
   });
   it("recepcionista não exige conselho", () => expect(needsCouncil("Recepcionista")).toBe(false));
-  it("recepcionista pode se cadastrar sem conselho", () => expect(employeeSchema.safeParse({ full_name: "Colaborador Teste", username: "colaborador", email: "teste@example.com", password: "Example-test!42", cpf: "12345678901", phone: "11999999999", birth_date: "1990-01-01", address: "Rua de Teste 10", job_function: "Recepcionista", council_type: "", council_number: "", council_state: "" }).success).toBe(true));
-  it("profissional de saúde precisa de conselho", () => expect(employeeSchema.safeParse({ full_name: "Colaborador Teste", username: "colaborador", email: "teste@example.com", password: "Example-test!42", cpf: "12345678901", phone: "11999999999", birth_date: "1990-01-01", address: "Rua de Teste 10", job_function: "Médico", council_type: "", council_number: "", council_state: "" }).success).toBe(false));
+  it("recepcionista pode se cadastrar sem conselho", () => expect(employeeSchema.safeParse({ full_name: "Colaborador Teste", username: "colaborador", email: "teste@example.com", password: "Example-test!42", cpf: "12345678901", phone: "11999999999", birth_date: "1990-01-01", address: "Rua de Teste 10", job_function: "Recepcionista", sector: "Recep Mat", council_type: "", council_number: "", council_state: "" }).success).toBe(true));
+  it("profissional de saúde precisa de conselho", () => expect(employeeSchema.safeParse({ full_name: "Colaborador Teste", username: "colaborador", email: "teste@example.com", password: "Example-test!42", cpf: "12345678901", phone: "11999999999", birth_date: "1990-01-01", address: "Rua de Teste 10", job_function: "Médico", sector: "Ambulatório", council_type: "", council_number: "", council_state: "" }).success).toBe(false));
   it("apenas administradores liberam colaboradores", () => { expect(canApproveEmployees(["employee"], "approved")).toBe(false); expect(canApproveEmployees(["admin"], "approved")).toBe(true); });
   it("administrador pendente não pode liberar", () => expect(canApproveEmployees(["admin"], "pending")).toBe(false));
   it("só o administrador principal cadastra outros adms", () => { expect(canCreateAdmins(["admin"], "approved")).toBe(false); expect(canCreateAdmins(["super_admin"], "approved")).toBe(true); });

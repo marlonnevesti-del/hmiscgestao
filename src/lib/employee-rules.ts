@@ -13,6 +13,7 @@ export const employeeSchema = z.object({
   birth_date: z.string().min(1, "Informe a data de nascimento").max(10),
   address: z.string().trim().min(5, "Informe o endereço").max(300),
   job_function: z.enum(JOBS),
+  sector: z.string().trim().min(2, "Selecione o setor").max(80),
   other_function: z.string().trim().max(100).default(""),
   council_type: z.string().trim().max(30), council_number: z.string().trim().max(30), council_state: z.string().trim().max(2),
 }).superRefine((v, ctx) => {
@@ -35,9 +36,9 @@ export const employeeRegistrationInputSchema = employeeSchema.and(z.object({
 export const canApproveEmployees = (roles: readonly string[], status: string) => status === "approved" && roles.some((r) => r === "admin" || r === "super_admin");
 export const canCreateAdmins = (roles: readonly string[], status: string) => status === "approved" && roles.includes("super_admin");
 export const canRemoveEmployee = (callerRoles: readonly string[], callerStatus: string, callerId: string, targetId: string, targetRoles: readonly string[]) => canApproveEmployees(callerRoles, callerStatus) && callerId !== targetId && !targetRoles.includes('super_admin') && (!targetRoles.includes('admin') || callerRoles.includes('super_admin'));
-export function filterEmployees<T extends { status: string; full_name: string; username: string; email: string; job_function: string }>(employees: T[], status: string, query: string) {
+export function filterEmployees<T extends { status: string; full_name: string; username: string; email: string; job_function: string; sector?: string }>(employees: T[], status: string, query: string) {
   const term = query.trim().toLocaleLowerCase("pt-BR");
-  return employees.filter((employee) => (status === "all" || employee.status === status) && [employee.full_name, employee.username, employee.email, employee.job_function].some((value) => value.toLocaleLowerCase("pt-BR").includes(term)));
+  return employees.filter((employee) => (status === "all" || employee.status === status) && [employee.full_name, employee.username, employee.email, employee.job_function, employee.sector ?? ""].some((value) => value.toLocaleLowerCase("pt-BR").includes(term)));
 }
 export function clinicalProfile(job: string, roles: readonly string[]): Profile {
   if (roles.includes("super_admin") || roles.includes("admin")) return "Administrador";

@@ -92,6 +92,30 @@ export type Database = {
         }
         Relationships: []
       }
+      employee_sectors: {
+        Row: {
+          access_areas: string[]
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+        }
+        Insert: {
+          access_areas?: string[]
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+        }
+        Update: {
+          access_areas?: string[]
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           access_areas: string[] | null
@@ -109,6 +133,7 @@ export type Database = {
           id: string
           job_function: string
           phone: string
+          sector: string
           status: string
           username: string
         }
@@ -128,6 +153,7 @@ export type Database = {
           id: string
           job_function?: string
           phone?: string
+          sector?: string
           status?: string
           username?: string
         }
@@ -147,6 +173,7 @@ export type Database = {
           id?: string
           job_function?: string
           phone?: string
+          sector?: string
           status?: string
           username?: string
         }
