@@ -87,6 +87,10 @@ describe("Retenção de doses restantes na farmácia (2+ administrações)", () 
       bcf: "",
       contractions: "",
       bleeding: "",
+      fluid: "",
+      height: "",
+      head: "",
+      guardian: "",
       maxWait: 120,
       vital: { time: "14:00", pas: 120, pad: 80, fc: 80, fr: 16, tax: 36.5, sat: 98, dor: 4, ingesta: 0, diurese: 0, vomitos: 0 },
     });
