@@ -40,3 +40,18 @@ export function exampleBillingChecks(example: IcuExample) {
     { item: 'Arquivo CAIH/SISAIH01 e conferência no programa oficial', status: 'Não gerado / não homologado' },
   ];
 }
+
+// Virtual chart IDs deliberately never become clinical patient/encounter IDs.
+export function exampleChartId(unit: IcuUnit) { return `treinamento-uti-${unit}`; }
+
+export function exampleForChart(id: string) {
+  return ICU_EXAMPLES.find((example) => exampleChartId(example.unit) === id);
+}
+
+export function trainingSearch(search: Record<string, unknown>): { treinamento: boolean; caso: IcuUnit } {
+  const caso = search['caso'];
+  return {
+    treinamento: search['treinamento'] === true || search['treinamento'] === 'true',
+    caso: caso === 'UTIP' || caso === 'UCI' ? caso : 'UTIN',
+  };
+}

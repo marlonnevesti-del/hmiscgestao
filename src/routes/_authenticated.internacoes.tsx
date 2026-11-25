@@ -12,8 +12,12 @@ import { hotelariaBedsQuery } from '@/lib/hotelaria-beds-query';
 import { Link } from '@tanstack/react-router';
 import { HandoverButton } from '@/components/HandoverPrint';
 import { bedBadges, stayDays, stayTone } from '@/lib/bed-board';
+import { trainingSearch } from '@/lib/icu-examples';
+import { IcuTrainingPatients } from '@/components/IcuTrainingPanel';
+import { IcuExamples } from '@/components/IcuExamples';
 
 export const Route = createFileRoute('/_authenticated/internacoes')({
+  validateSearch: trainingSearch,
   head: () => ({ meta: [
     { title: 'Censo Hospitalar e Internações – HMI Gestão' },
     { name: 'description', content: 'Ocupação dos leitos em tempo real e relatório de internações e reinternações.' },
@@ -27,11 +31,12 @@ export const Route = createFileRoute('/_authenticated/internacoes')({
 const Kpi = ({ l, v }: { l: string; v: string | number }) => <div className="rounded-lg border bg-card p-3"><div className="text-xs text-muted-foreground">{l}</div><div className="text-2xl font-bold">{v}</div></div>;
 
 function Page() {
+  const { treinamento, caso } = Route.useSearch();
   const profile = useStore((s) => s.profile); const areas = useStore((s) => s.accessAreas);
   if (!canAccessPage(profile, '/internacoes', areas)) return <NoPermission action="acessar o censo e internações" />;
   return <div className="space-y-4 p-4"><h1 className="text-2xl font-bold">Censo Hospitalar · Internações</h1>
-    <Tabs defaultValue="censo"><TabsList><TabsTrigger value="censo">Ocupação dos leitos</TabsTrigger><TabsTrigger value="rel">Internações e reinternações</TabsTrigger></TabsList>
-      <TabsContent value="censo"><Census /></TabsContent><TabsContent value="rel"><Report /></TabsContent></Tabs></div>;
+    <Tabs key={`${treinamento}-${caso}`} defaultValue={treinamento ? 'treinamento' : 'censo'}><TabsList className="flex h-auto flex-wrap"><TabsTrigger value="censo">Ocupação dos leitos</TabsTrigger><TabsTrigger value="rel">Internações e reinternações</TabsTrigger><TabsTrigger value="treinamento">TESTE / Treinamento (3)</TabsTrigger></TabsList>
+      <TabsContent value="censo"><Census /></TabsContent><TabsContent value="rel"><Report /></TabsContent><TabsContent value="treinamento"><IcuTrainingPatients /><div className="mt-6"><IcuExamples initialUnit={caso} /></div></TabsContent></Tabs></div>;
 }
 
 function Census() {

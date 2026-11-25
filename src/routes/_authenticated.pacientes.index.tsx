@@ -5,8 +5,12 @@ import { PatientIcon, TYPE_LABEL } from "@/components/PatientIcon";
 import { WARDS, type PatientType } from "@/lib/hospital-data";
 import { useStore } from "@/lib/hospital-store";
 import { cn } from "@/lib/utils";
+import { Button } from '@/components/ui/button';
+import { IcuTrainingPatients } from '@/components/IcuTrainingPanel';
+import { trainingSearch } from '@/lib/icu-examples';
 
 export const Route = createFileRoute("/_authenticated/pacientes/")({
+  validateSearch: trainingSearch,
   head: () => ({ meta: [
     { title: "Pacientes e Boletins de Atendimento – HMISC" },
     { name: "description", content: "Pacientes cadastrados, atendimentos ativos e prontuários do HMISC." },
@@ -19,6 +23,8 @@ export const Route = createFileRoute("/_authenticated/pacientes/")({
 });
 
 function List() {
+  const { treinamento } = Route.useSearch();
+  const navigate = Route.useNavigate();
   const patients = useStore((s) => s.patients);
   const [f, setF] = useState<PatientType | "todos">("todos");
   const [scope, setScope] = useState<"internados" | "todos">("internados");
@@ -42,7 +48,9 @@ function List() {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h1 className="text-xl font-semibold">Pacientes / PEP ({filtered.length})</h1>
+        <h1 className="text-xl font-semibold">Pacientes / PEP ({treinamento ? 3 : filtered.length})</h1>
+        <Button size="sm" variant={treinamento ? 'default' : 'outline'} onClick={() => navigate({ search: (prev) => ({ ...prev, treinamento: !treinamento }) })}>{treinamento ? 'Voltar aos pacientes reais' : 'TESTE / Treinamento (3)'}</Button>
+        {!treinamento && <>
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex rounded-md border bg-card p-0.5 text-xs">
             <button onClick={() => setScope("internados")} className={cn("rounded px-2.5 py-1 font-medium transition", scope === "internados" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground")}>
@@ -60,7 +68,9 @@ function List() {
             ))}
           </div>
         </div>
+        </>}
       </div>
+      {treinamento ? <IcuTrainingPatients /> : <>
       <div className="relative max-w-md">
         <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
         <input
@@ -95,6 +105,7 @@ function List() {
           </tbody>
         </table>
       </div>
+      </>}
     </div>
   );
 }

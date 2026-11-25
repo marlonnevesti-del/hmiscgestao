@@ -30,9 +30,11 @@ import { identifiedPhysioEvolution, isPhysioOpen } from "@/lib/physio";
 import { cn } from "@/lib/utils";
 import { defaultEvoCat, needsCatConfirm } from "@/lib/evolution-category";
 import { Maximize2 } from "lucide-react";
+import { exampleForChart } from '@/lib/icu-examples';
+import { IcuTrainingChart } from '@/components/IcuTrainingPanel';
 
 export const Route = createFileRoute("/_authenticated/pacientes/$id")({
-  loader: ({ params }) => { const p = getState().patients.find((x) => x.id === params.id); if (!p) throw notFound(); return { name: p.name }; },
+  loader: ({ params }) => { const example = exampleForChart(params.id); if (example) return { name: example.name }; const p = getState().patients.find((x) => x.id === params.id); if (!p) throw notFound(); return { name: p.name }; },
   head: ({ loaderData }) => ({ meta: [
     { title: loaderData ? `PEP · ${loaderData.name} – HMI Gestão` : "Prontuário – HMI Gestão" },
     { name: "description", content: "Prontuário eletrônico do paciente: evolução, prescrição, sinais vitais, partograma e RN." },
@@ -50,7 +52,9 @@ function PEP() {
   const sheetEncounter = useStore((s) => s.encounters.slice().reverse().find((x) => x.patientId === id));
   const employeeName = useStore((s) => s.employeeName);
   const [print, setPrint] = useState(false);
-  if (!p) return <div className="p-8 text-center text-muted-foreground">Prontuário não encontrado. <Link to="/pacientes" className="text-clinical">Voltar</Link></div>;
+  const example = exampleForChart(id);
+  if (example) return <IcuTrainingChart example={example} />;
+  if (!p) return <div className="p-8 text-center text-muted-foreground">Prontuário não encontrado. <Link to="/pacientes" search={{ treinamento: false, caso: 'UTIN' }} className="text-clinical">Voltar</Link></div>;
   const obst = p.type === "gestante";
   const showNB = p.type === "neonato" || !!p.babyIds?.length;
   return (

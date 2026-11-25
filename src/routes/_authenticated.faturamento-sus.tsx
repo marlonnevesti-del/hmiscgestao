@@ -17,8 +17,13 @@ import { loadSigtap, type SigtapProc } from "@/lib/sigtap";
 import { loadSigtapRules, sigtapGlosas, type SigtapRules } from "@/lib/sigtap-compat";
 import { aihFile, bpaFile, cihaFile, cihaFileName, buildSusRows, EXIT_REASONS, isObstetricExit, CNES, competenceOf, SIGTAP_DEFAULT, HMISC_BPA_CODES, type Professional, type SusRow } from "@/lib/sus-billing";
 import { cn } from "@/lib/utils";
+import { trainingSearch } from '@/lib/icu-examples';
+import { IcuTrainingPatients } from '@/components/IcuTrainingPanel';
+import { IcuExamples } from '@/components/IcuExamples';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export const Route = createFileRoute("/_authenticated/faturamento-sus")({
+  validateSearch: trainingSearch,
   head: () => ({ meta: [
     { title: "Faturamento SUS – BPA e AIH – HMI Gestão" },
     { name: "description", content: "Competência mensal com conferência, pendências e remessas BPA e SISAIH01." },
@@ -27,8 +32,17 @@ export const Route = createFileRoute("/_authenticated/faturamento-sus")({
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary" },
   ] }),
-  component: SusBilling,
+  component: BillingPage,
 });
+
+function BillingPage() {
+  const { treinamento, caso } = Route.useSearch();
+  return <Tabs key={`${treinamento}-${caso}`} defaultValue={treinamento ? 'treinamento' : 'real'} className="space-y-4">
+    <TabsList className="flex h-auto flex-wrap"><TabsTrigger value="real">Faturamento real</TabsTrigger><TabsTrigger value="treinamento">TESTE / Treinamento (3)</TabsTrigger></TabsList>
+    <TabsContent value="real"><SusBilling /></TabsContent>
+    <TabsContent value="treinamento"><div className="space-y-4"><h1 className="text-xl font-semibold">Faturamento SUS · AIH de treinamento</h1><IcuTrainingPatients /><IcuExamples initialUnit={caso} initialView="billing" /></div></TabsContent>
+  </Tabs>;
+}
 
 type Tab = "BPA" | "AIH" | "CIHA";
 type Doc = { title: string; rows?: SusRow[]; laudo?: SusRow } | null;
