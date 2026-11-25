@@ -1,4 +1,5 @@
 # Roadmap
+- [x] Adicionar busca SIGTAP no atendimento médico com consulta sugerida, limpeza explícita e bloqueio de avaliação/desfecho sem código; 61 testes passaram e pesquisa/alta conferidas em cópia isolada, sem alterar pacientes reais.
 - [x] Incluir checklist de parto seguro e MEOWS, Bishop, Silverman-Andersen e risco de HPP na Maternidade e no PEP, com histórico compartilhado e testes; leitura confirmada em sessão independente.
 - [x] Mostrar observação e leitos obstétricos existentes sem copiar leitos pediátricos nem mudar reservas do NIR; disponibilidade real continua dependente do NIR/Hotelaria.
 - [x] Consolidar as duas planilhas do corpo clínico sem duplicar médicos; guardar CNS somente no estado clínico protegido e completar seleção nos documentos (199 médicos importados; 49 CNS aguardam correção da fonte).

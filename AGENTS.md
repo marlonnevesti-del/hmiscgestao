@@ -30,6 +30,7 @@ use the editor.
 <!-- LOVABLE:END -->
 
 ## Project rules
+- Medical SIGTAP uses the existing encounter.sigtapCode; shared selection and store guards preserve explicit blanks and block completion, avoiding UI-only validation.
 - Maternity assessments use versioned pure rules in `src/lib/maternity.ts` and append-only encounter.maternity entries via saveMaternityRecord; the sector and PEP share them, MEOWS uses color triggers rather than a summed score, and the bed view reads existing CO/FIA assignments without changing NIR reservations.
 - Physiotherapy evolution identification is composed by `identifiedPhysioEvolution` from the current patient when a template is selected; this keeps all three models consistent without changing saved evolutions or clinical text.
 - Imported physician identifiers stay only in the approved-user clinical snapshot; deduplicate by CRM/UF, match login by council or exact unique name, and never autofill missing, invalid or shared CNS to avoid billing misidentification.

@@ -1,5 +1,6 @@
 import { EMPTY_MILK_BANK, LHP_VALIDITY_DAYS, batchApproved, kcalFromCrematocrit, type MilkBank } from './milk-bank';
 import { physioRequestIssues } from './physio';
+import { medicalSigtapCode, requireMedicalSigtap } from './medical-sigtap';
 import { serviceRequestIssues } from './service-orders';
 import { maternityResult, type MaternityKind, type MaternityRecord } from './maternity';
 import { canAccessUnitTab } from './hospital-data';
@@ -110,11 +111,12 @@ export function callPatient(id: string) {
   const { e } = getEncounter(id);
   const owner = inCareBy(e);
   if (owner && owner !== professionalName(state.profile)) throw new Error(`Paciente já está em atendimento médico com ${owner}.`);
-  commitEncounter(transition(e, 'EM_ATENDIMENTO_MEDICO', professionalName(state.profile), 'Consulta / reavaliação iniciada'));
+  commitEncounter({ ...transition(e, 'EM_ATENDIMENTO_MEDICO', professionalName(state.profile), 'Consulta / reavaliação iniciada'), sigtapCode: medicalSigtapCode(e.sigtapCode) });
 }
 export function saveMedical(id: string, medical: NonNullable<Encounter['medical']>) {
   requireAction('prescrever'); const { e, p } = getEncounter(id);
   if (e.status_fluxo !== 'EM_ATENDIMENTO_MEDICO') throw new Error('Inicie o atendimento médico primeiro.');
+  requireMedicalSigtap(e.sigtapCode ?? '');
   commitEncounter({ ...e, medical }, { patients: state.patients.map((x) => x.id === p.id ? { ...x, diagnosis: medical.diagnosis, evolutions: [{ time: new Date().toLocaleString('pt-BR'), cat: 'Médica' as const, author: professionalName(state.profile), text: `Anamnese: ${medical.anamnesis}\nExame: ${medical.exam}\nCID-10: ${medical.cid}\nHipótese: ${medical.diagnosis}` }, ...x.evolutions] } : x) });
 }
 export function signPrescription(id: string) {
@@ -340,6 +342,7 @@ export function recordMedication(id: string, rxId: string, time: string, status:
 export function requestAdmission(id: string, req: { ward: string; character: 'Urgência' | 'Eletiva'; cid: string; justification: string; isolation: boolean; oxygen: boolean }) {
   requireAction('prescrever'); const { e, p } = getEncounter(id);
   if (!['EM_ATENDIMENTO_MEDICO', 'EM_OBSERVACAO_REAVALIACAO'].includes(e.status_fluxo)) throw new Error('Solicitação disponível durante a avaliação médica.');
+  requireMedicalSigtap(e.sigtapCode ?? '');
   if (e.admission?.status === 'pendente') throw new Error('Já existe uma solicitação aguardando o NIR.');
   if (!req.justification.trim()) throw new Error('Informe a justificativa clínica.');
   if (req.ward) { const ageErr = bedAgeIssue({ birthDate: p.registration?.birthDate, age: p.age, type: p.type }, req.ward, req.ward); if (ageErr) throw new Error(ageErr); }
@@ -413,6 +416,7 @@ export function rejectAdmission(id: string, note: string) {
 export function finishEncounter(id: string, outcome: 'internacao' | 'co' | 'exames' | 'alta', details: { bed?: string; summary: string; recipe: string; exam: string }) {
   requireAction('prescrever'); const { e, p } = getEncounter(id);
   if (!['EM_ATENDIMENTO_MEDICO', 'EM_OBSERVACAO_REAVALIACAO', 'ENCAMINHADO_INTERNACAO', 'ENCAMINHADO_CO'].includes(e.status_fluxo)) throw new Error('Desfecho disponível após avaliação médica.');
+  requireMedicalSigtap(e.sigtapCode ?? '');
   const by = professionalName(state.profile); const at = new Date().toISOString();
   if (outcome === 'exames') { if (!details.exam.trim()) throw new Error('Informe o exame.'); commitEncounter({ ...(e.status_fluxo === 'EM_ATENDIMENTO_MEDICO' ? transition(e, 'EM_OBSERVACAO_REAVALIACAO', by, `Exames: ${details.exam}`, at) : e), examPending: details.exam }); return; }
   if (outcome === 'co') {
@@ -488,6 +492,14 @@ export function addRoom(name: string) { if (state.profile !== 'Administrador') t
 export function removeRoom(name: string) { if (state.profile !== 'Administrador') throw new Error('Apenas administradores gerenciam consultórios.'); setState((s) => ({ rooms: removeRoomName(s.rooms, name) })); }
 
 /** Salva o Laudo de AIH preenchido pelo médico no atendimento (fica no histórico). */
+/** Medical selection permits an explicit blank so completion cannot silently restore the default. */
+export function setMedicalSigtapCode(id: string, code: string) {
+  requireAction('prescrever');
+  const { e } = getEncounter(id);
+  if (!['EM_ATENDIMENTO_MEDICO', 'EM_OBSERVACAO_REAVALIACAO', 'ENCAMINHADO_INTERNACAO', 'ENCAMINHADO_CO'].includes(e.status_fluxo)) throw new Error('Inicie ou retome o atendimento médico para alterar o SIGTAP.');
+  if (code !== '') requireMedicalSigtap(code);
+  setState((s) => ({ encounters: s.encounters.map((x) => x.id === id ? { ...x, sigtapCode: code } : x) }));
+}
 /** Registra no atendimento o código SIGTAP do procedimento realizado (usado no faturamento BPA). */
 export function saveSigtapCode(id: string, code: string) {
   const c = code.replace(/\D/g, '');
