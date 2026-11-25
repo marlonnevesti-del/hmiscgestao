@@ -22,7 +22,7 @@ import type { Patient } from './hospital-data';
 
 const pat = (id = 'amb-p1'): Patient => ({
   id, name: 'Ana Gestante', prontuario: 'PR-10', cpf: '11122233344', age: '28a', type: 'gestante',
-  bed: '', diagnosis: '', admission: '', insurance: 'SUS', weight: 65, ward: 'Maternidade', authorized: true, days: 0, risks: [], allergies: [],
+  bed: '', diagnosis: '', admission: '', insurance: 'SUS', weight: 65, ward: 'PSO', authorized: true, days: 0, risks: [], allergies: [],
   vitals: [], prescriptions: [], evolutions: [],
 });
 
