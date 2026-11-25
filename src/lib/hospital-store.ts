@@ -1,6 +1,6 @@
 import { EMPTY_MILK_BANK, LHP_VALIDITY_DAYS, batchApproved, kcalFromCrematocrit, type MilkBank } from './milk-bank';
 import { physioRequestIssues } from './physio';
-import { medicalSigtapCode, requireMedicalSigtap } from './medical-sigtap';
+import { DEFAULT_TRIAGE_SIGTAP, medicalSigtapCode, requireMedicalSigtap } from './medical-sigtap';
 import { serviceRequestIssues } from './service-orders';
 import { maternityResult, type MaternityKind, type MaternityRecord } from './maternity';
 import { canAccessUnitTab } from './hospital-data';
@@ -96,10 +96,11 @@ export function completeTriage(id: string, t: Triage) {
   requireAction('triagem');
   const { e, p } = getEncounter(id);
   validateTriage(p.type === 'pediatria' || p.type === 'neonato', t);
+  const triage: Triage = { ...t, sigtapCode: t.sigtapCode || DEFAULT_TRIAGE_SIGTAP };
   const next = e.status_fluxo === 'AGUARDANDO_MEDICO'
     ? { ...e, history: [...e.history, { status: e.status_fluxo, at: new Date().toISOString(), by: professionalName(state.profile), note: 'Reclassificação de risco pelo PCACR' }] }
     : transition(e, 'AGUARDANDO_MEDICO', professionalName(state.profile), 'Triagem concluída');
-  commitEncounter({ ...next, triage: t, complaint: t.complaint }, { patients: state.patients.map((x) => x.id === p.id ? { ...x, weight: t.weight, ...(Number(t.height) > 0 ? { height: Number(t.height) } : {}), guardian: t.guardian, ig: t.ig, dum: t.dum, allergies: t.allergies, risks: t.allergies.length ? [...new Set([...x.risks, 'Alergia' as const])] : x.risks.filter((r) => r !== 'Alergia'), vitals: [...x.vitals, t.vital] } : x) });
+  commitEncounter({ ...next, triage, complaint: t.complaint }, { patients: state.patients.map((x) => x.id === p.id ? { ...x, weight: t.weight, ...(Number(t.height) > 0 ? { height: Number(t.height) } : {}), guardian: t.guardian, ig: t.ig, dum: t.dum, allergies: t.allergies, risks: t.allergies.length ? [...new Set([...x.risks, 'Alergia' as const])] : x.risks.filter((r) => r !== 'Alergia'), vitals: [...x.vitals, t.vital] } : x) });
 }
 /** Profissional que está com o paciente em consulta agora (semáforo entre computadores). */
 export function inCareBy(e: Encounter): string | null {

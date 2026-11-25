@@ -1,5 +1,6 @@
 import type { Encounter } from "./care-flow";
 import type { Patient } from "./hospital-data";
+import { DEFAULT_TRIAGE_SIGTAP } from "./medical-sigtap";
 
 export const CNES = "2077485";
 export interface Professional { name: string; cns: string; cbo: string }
@@ -8,6 +9,7 @@ export interface SusRow {
   date: string; cns: string; cpf: string; name: string; birthDate: string; sex: string; motherName: string;
   cityCode: string; cid: string; procedure: string; issues: string[];
   aihNumber: string; aihAuthorizedAt: string; exitReason: string; births: AihBirth[];
+  origin?: "triage";
 }
 export interface AihBirth { rnId: string; name: string; dnv: string; weight: number; weeks: string; alive: boolean }
 
@@ -67,7 +69,7 @@ export function birthsOf(e: Encounter, p: Patient | undefined, patients: Patient
 }
 
 export function buildSusRows(encounters: Encounter[], patients: Patient[], competence: string, prof: Professional): SusRow[] {
-  return encounters.filter((e) => competenceOf(e.openedAt) === competence).map((e) => {
+  return encounters.filter((e) => competenceOf(e.openedAt) === competence).flatMap((e) => {
     const p = patients.find((x) => x.id === e.patientId);
     const r = p?.registration;
     const kind = wasAdmitted(e) ? "AIH" : "BPA";
@@ -82,7 +84,11 @@ export function buildSusRows(encounters: Encounter[], patients: Patient[], compe
     };
     row.issues = susIssues(row, prof);
     examsWithoutReport(e).forEach((x) => row.issues.push(`Exame realizado sem laudo: ${x.exams}`));
-    return row;
+    const triageCode = digits(e.triage?.sigtapCode) || (e.triage ? DEFAULT_TRIAGE_SIGTAP : "");
+    if (!triageCode || (kind === "BPA" && row.procedure === triageCode)) return [row];
+    const triageRow: SusRow = { ...row, kind: "BPA", procedure: triageCode, aihNumber: "", aihAuthorizedAt: "", exitReason: "", births: [], origin: "triage", issues: [] };
+    triageRow.issues = susIssues(triageRow, prof);
+    return [row, triageRow];
   });
 }
 

@@ -142,6 +142,7 @@ function TriageForm({ encounter, onDone }: { encounter: Encounter; onDone: () =>
       {suggestion && <div className="mt-4 flex flex-wrap items-center gap-3 rounded-lg border bg-muted/40 p-3 text-sm"><RiskBadge risk={suggestion.cor} /><span>Classificação calculada pelo PCACR · espera máxima: <b>{suggestion.tempoMax === 0 ? "imediata" : `${suggestion.tempoMax} min`}</b></span></div>}
     </section>
     <section><h2 className="mb-2 font-semibold">Classificação de risco</h2><div className="grid gap-2 sm:grid-cols-3 md:grid-cols-5">{RISKS.map((item) => <Button type="button" variant="outline" key={item} onClick={() => { setRisk(item); setFlowchartId(""); setDescriptors([]); }} className={cn("h-auto flex-col items-start px-3 py-3 whitespace-normal", MANCHESTER[item].cls, effectiveRisk === item && "ring-2 ring-ring ring-offset-2")}><b className="uppercase">{item}</b><span className="text-xs">{MANCHESTER[item].label}</span></Button>)}</div>{suggestion && <p className="mt-2 text-xs text-muted-foreground">Para escolher outra cor manualmente, clique nela; os descritores serão limpos.</p>}</section>
+    <p className="rounded-md border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">Procedimento SUS vinculado automaticamente: <strong className="font-mono text-foreground">0301060118</strong> · Acolhimento com classificação de risco.</p>
     <Button type="submit">{previous ? "Salvar reclassificação" : "Salvar triagem e liberar para médico"}</Button>
   </form>;
 }
