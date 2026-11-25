@@ -5,6 +5,7 @@ import { WARDS, type Patient } from "@/lib/hospital-data";
 import { registrationFor } from "@/lib/patient-registration-mapping";
 import { patientAge } from "@/lib/patient-registration";
 import { findStockMedication, type StockMedication } from "@/lib/pharmacy-stock";
+import { pharmacySectorLabel } from "@/lib/pharmacy-sectors";
 
 /** Imprime a requisição SURE090_R do kit dispensado. */
 export function printRequisition() {
@@ -19,11 +20,16 @@ export function RequisitionPrint({ p, e, stock }: { p?: Patient | undefined; e?:
   if (typeof document === "undefined" || !p || !e) return null;
   const r = registrationFor(p);
   const ward = WARDS.find((w) => w.id === p.ward)?.name ?? p.ward;
+  const sectorLabel = pharmacySectorLabel(e, p);
   const [room, bed] = (p.bed || "").split("-");
   const items = p.prescriptions.filter((x) => x.pharmacy && x.batchId === e.prescriptionBatchId);
   return createPortal(<div className="req-root"><section className="req-page">
     <Letterhead title="REQUISIÇÃO" />
     <div className="req-h2">SURE090_R - Requisição de Medicamentos por Horário de Dispensação</div>
+    <div className="req-row" style={{ fontSize: "13px", fontWeight: 700, border: "1px solid #000", padding: "4px 8px", marginBottom: "6px" }}>
+      <span>SETOR: {sectorLabel.toUpperCase()}</span>
+      {p.bed && <span>LEITO: {p.bed}</span>}
+    </div>
     <div className="req-row"><span><b>Requisição:</b> {e.requisition ?? ""} - 0</span><span><b>Requisitada em:</b> {fmt(e.signedAt)}</span><span><b>Atendida em:</b> {fmt(e.dispensedAt)}</span></div>
     <div className="req-row"><span><b>{e.type === "Maternidade" ? "FIA" : "BAA"}:</b> {e.number}</span><span>{ward}{room && ` - Quarto: ${room}`}{bed && ` - Leito: ${bed}`}</span></div>
     <div className="req-row"><span><b>Paciente:</b> {p.prontuario} - {p.name.toUpperCase()}</span><span><b>Sexo:</b> {r.sex}</span><span><b>Idade:</b> {patientAge(r) || p.age}</span></div>

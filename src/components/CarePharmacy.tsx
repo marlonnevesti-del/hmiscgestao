@@ -15,6 +15,7 @@ import { LabelPrint, printLabels, type Label } from "./LabelPrint";
 import { adjustPrescription, adjustStock, advanceCompletedMedication, allBatchDosesDone, deleteStockItem, createStockMedication, dispenseKit, dispenseScheduledDose, recordMedication, useStore, validatePrescription } from "@/lib/hospital-store";
 import { findStockMedication, fmtExpiry, lotsByExpiry } from "@/lib/pharmacy-stock";
 import { canDispenseNow, isImmediatePrescription, PHARMACY_START_HOUR, remainingDoses } from "@/lib/pharmacy-schedule";
+import { matchesPharmacySector, PHARMACY_SECTORS, pharmacySectorLabel, type PharmacySectorId } from "@/lib/pharmacy-sectors";
 import { cn } from "@/lib/utils";
 import { BreakageForm, MovementLog, NursingRequestForm, RequestInbox, ReturnForm, TransferForm, EntryForm, LoanPanel } from "./SupplyPanels";
 import { LabelStudio } from "./LabelStudio";
@@ -62,15 +63,21 @@ function PrescriptionQueue() {
   const [lots, setLots] = useState<Record<string, string>>({});
   const [specialReasons, setSpecialReasons] = useState<Record<string, string>>({});
   const [retainMap, setRetainMap] = useState<Record<string, boolean>>({});
+  const [sector, setSector] = useState<PharmacySectorId>("todos");
   const [printId, setPrintId] = useState("");
   const [doseLabel, setDoseLabel] = useState<Label | null>(null);
   const printEnc = encounters.find((x) => x.id === printId);
-  const list = encounters.filter((encounter) => encounter.status_fluxo === "AGUARDANDO_FARMACIA");
+  const allPending = encounters
+    .filter((encounter) => encounter.status_fluxo === "AGUARDANDO_FARMACIA")
+    .map((encounter) => ({ encounter, patient: patients.find((item) => item.id === encounter.patientId) }))
+    .filter((row): row is { encounter: typeof encounters[number]; patient: NonNullable<typeof patients[number]> } => Boolean(row.patient));
+  const list = allPending.filter(({ encounter, patient }) => matchesPharmacySector(sector, encounter, patient));
   const nowHour = new Date().getHours();
   const beforeStart = nowHour < PHARMACY_START_HOUR;
   const retained = encounters.flatMap((encounter) => {
     const patient = patients.find((item) => item.id === encounter.patientId);
     if (!patient) return [];
+    if (sector !== "todos" && sector !== "imediatas" && !matchesPharmacySector(sector, encounter, patient)) return [];
     return patient.prescriptions
       .filter((rx) => rx.batchId === encounter.prescriptionBatchId && rx.pharmacy === "Parcial" && remainingDoses(rx).length > 0)
       .map((rx) => ({ encounter, patient, rx, pending: remainingDoses(rx) }));
@@ -81,15 +88,25 @@ function PrescriptionQueue() {
         ? `Horário padrão de dispensação: a partir das ${PHARMACY_START_HOUR}:00. Antes desse horário, somente doses imediatas ou casos especiais com justificativa.`
         : `Janela de dispensação aberta (a partir das ${PHARMACY_START_HOUR}:00). Para prescrições com 2 ou mais doses, as doses restantes permanecem na farmácia para entrega nos respectivos horários.`}
     </div>
-    <h2 className="font-semibold">Prescrições aguardando dispensação ({list.length})</h2>{!list.length && <p className="py-6 text-muted-foreground">Nenhuma prescrição aguardando farmácia.</p>}{list.map((encounter) => {
-    const patient = patients.find((item) => item.id === encounter.patientId);
-    if (!patient) return null;
+    <div className="mb-4 flex flex-wrap gap-2 border-b pb-3" role="tablist" aria-label="Pastas de setores da farmácia">
+      {PHARMACY_SECTORS.map((tab) => {
+        const count = allPending.filter(({ encounter, patient }) => matchesPharmacySector(tab.id, encounter, patient)).length;
+        const active = sector === tab.id;
+        return (
+          <Button key={tab.id} size="sm" variant={active ? "default" : "outline"} role="tab" aria-selected={active} onClick={() => setSector(tab.id)}>
+            {tab.label} ({count})
+          </Button>
+        );
+      })}
+    </div>
+    <h2 className="font-semibold">Prescrições aguardando dispensação ({list.length})</h2>{!list.length && <p className="py-6 text-muted-foreground">Nenhuma prescrição aguardando farmácia nesta pasta.</p>}{list.map(({ encounter, patient }) => {
     const batchMeds = patient.prescriptions.filter((prescription) => prescription.pharmacy && prescription.batchId === encounter.prescriptionBatchId);
     const hasMultiDose = batchMeds.some((r) => (r.times?.length ?? 0) >= 2);
     const retainRemaining = retainMap[encounter.id] ?? hasMultiDose;
     const specialCaseReason = specialReasons[encounter.id] ?? "";
     const gate = canDispenseNow(batchMeds, { specialCaseReason });
-    return <section key={encounter.id} className="space-y-3 border-b py-4"><Button variant="link" asChild><Link to="/pacientes/$id" params={{ id: patient.id }}>{patient.name} · {patient.bed || patient.ward}</Link></Button><div className="text-xs">Peso {patient.weight} kg · Liberada por: {encounter.signedBy}</div><EncounterTimeline patientId={patient.id} />
+    const sectorName = pharmacySectorLabel(encounter, patient);
+    return <section key={encounter.id} className="space-y-3 border-b py-4"><div className="flex flex-wrap items-center gap-2"><Button variant="link" className="h-auto p-0" asChild><Link to="/pacientes/$id" params={{ id: patient.id }}>{patient.name} · {patient.bed || patient.ward}</Link></Button><span className="rounded bg-muted px-2 py-0.5 text-xs font-medium text-foreground">{sectorName}</span></div><div className="text-xs">Peso {patient.weight} kg · Liberada por: {encounter.signedBy}</div><EncounterTimeline patientId={patient.id} />
       {batchMeds.map((prescription) => {
         const medication = findStockMedication(stock, prescription.item);
         const totalDoses = prescription.times?.length ?? 1;
