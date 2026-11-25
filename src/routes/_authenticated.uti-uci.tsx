@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { AlertTriangle, ClipboardList } from 'lucide-react';
+import { AlertTriangle, ClipboardList, Stethoscope } from 'lucide-react';
 import { Letterhead } from '@/components/DischargePrint';
 import { Button } from '@/components/ui/button';
 import { IcuExamples } from '@/components/IcuExamples';
@@ -62,7 +62,12 @@ function SafetyBanner({ p }: { p: Patient }) {
 }
 
 function PatientPanel({ u, p }: { u: IcuUnit; p: Patient }) {
-  return <div className="space-y-4"><SafetyBanner p={p} />
+  return <div className="space-y-4">
+    <div className="flex flex-wrap items-center justify-between gap-2">
+      <div className="min-w-0 text-sm"><b>{p.name}</b> · Leito {p.bed || '—'}</div>
+      <Button asChild size="sm" variant="outline"><Link to="/pacientes/$id" params={{ id: p.id }} search={{ aba: 'prescricao' }}><Stethoscope className="mr-1 h-4 w-4" />Prescrever / Abrir PEP</Link></Button>
+    </div>
+    <SafetyBanner p={p} />
     <Tabs defaultValue={u === 'UTIN' ? 'neo' : 'escalas'}><TabsList className="flex-wrap">
       {[...(u === 'UTIN' ? ['neo', 'sinais'] : []), 'escalas', 'balanco', 'bundles', 'evolucao', 'sbar', 'exames', 'seguranca'].map((t) => <TabsTrigger key={t} value={t}>{({ neo: 'Neonatal', sinais: 'Sinais vitais', escalas: 'Escalas', balanco: 'Balanço hídrico', bundles: 'Bundles', evolucao: 'Evoluções', sbar: 'SAE · SBAR', exames: 'Exames', seguranca: 'Editar alertas' } as Record<string, string>)[t]}</TabsTrigger>)}
     </TabsList>

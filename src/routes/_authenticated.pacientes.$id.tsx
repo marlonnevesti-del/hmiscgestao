@@ -34,6 +34,7 @@ import { exampleForChart } from '@/lib/icu-examples';
 import { IcuTrainingChart } from '@/components/IcuTrainingPanel';
 
 export const Route = createFileRoute("/_authenticated/pacientes/$id")({
+  validateSearch: (search: Record<string, unknown>): { aba?: 'prescricao' } => search['aba'] === 'prescricao' ? { aba: 'prescricao' } : {},
   loader: ({ params }) => { const example = exampleForChart(params.id); if (example) return { name: example.name }; const p = getState().patients.find((x) => x.id === params.id); if (!p) throw notFound(); return { name: p.name }; },
   head: ({ loaderData }) => ({ meta: [
     { title: loaderData ? `PEP · ${loaderData.name} – HMI Gestão` : "Prontuário – HMI Gestão" },
@@ -48,6 +49,7 @@ export const Route = createFileRoute("/_authenticated/pacientes/$id")({
 
 function PEP() {
   const { id } = Route.useParams();
+  const { aba } = Route.useSearch();
   const p = useStore((s) => s.patients.find((x) => x.id === id));
   const sheetEncounter = useStore((s) => s.encounters.slice().reverse().find((x) => x.patientId === id));
   const employeeName = useStore((s) => s.employeeName);
@@ -86,7 +88,7 @@ function PEP() {
       </div>
       <PatientSheetPrint p={p} e={sheetEncounter} user={employeeName} />
       <SpecialConditionsBanner patient={p} />
-      <Tabs defaultValue="resumo" className="print:hidden">
+      <Tabs key={`${id}-${aba ?? 'resumo'}`} defaultValue={aba ?? 'resumo'} className="print:hidden">
         <TabsList className="flex-wrap">
           <TabsTrigger value="resumo">Resumo & Evolução</TabsTrigger>
           <TabsTrigger value="cadastro">Cadastro do paciente</TabsTrigger>

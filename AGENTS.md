@@ -30,6 +30,7 @@ use the editor.
 <!-- LOVABLE:END -->
 
 ## Project rules
+- ICU/UCI prescription shortcuts use the PEP search parameter `aba=prescricao`, opening the shared prescription tab without changing clinical status or prescribing permissions.
 - ICU teaching cases are static, isolated documents in icu-examples.ts, exposed in PEP, admissions and SUS billing through virtual chart IDs and training views, never clinical snapshot rows or export inputs, so simulations cannot occupy beds or contaminate billing.
 - Medical SIGTAP uses the existing encounter.sigtapCode; shared selection and store guards preserve explicit blanks and block completion, avoiding UI-only validation.
 - Maternity assessments use versioned pure rules in `src/lib/maternity.ts` and append-only encounter.maternity entries via saveMaternityRecord; the sector and PEP share them, MEOWS uses color triggers rather than a summed score, and the bed view reads existing CO/FIA assignments without changing NIR reservations.

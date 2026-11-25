@@ -1,4 +1,5 @@
 # Roadmap
+- [x] Adicionar atalho “Prescrever / Abrir PEP” ao paciente selecionado em UTI/UCI, sem alterar permissões ou fluxo clínico; abertura direta da aba conferida em prontuário existente, mas clique na unidade não testado por ausência de pacientes nas três unidades. Edição contínua de internados não incluída neste atalho.
 - [x] Disponibilizar os três casos em Pacientes/PEP, Internações e Faturamento SUS como treinamento isolado; quatro testes passaram, navegação verificada com administrador e sem exportação de remessas; nenhuma alteração nos pacientes ou leitos reais.
 - [x] Preparar três casos fictícios de UTIN, UTIP e UCI com fluxo e documentos didáticos isolados dos pacientes e remessas reais; leitura verificada com administrador, dois testes passaram e impressão conferida em 11 páginas A4; homologação fiscal não realizada.
 - [x] Adicionar busca SIGTAP no atendimento médico com consulta sugerida, limpeza explícita e bloqueio de avaliação/desfecho sem código; 61 testes passaram e pesquisa/alta conferidas em cópia isolada, sem alterar pacientes reais.
