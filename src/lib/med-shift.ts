@@ -27,7 +27,7 @@ export function doseRows(encounters: Encounter[], patients: Patient[], admins: R
     const p = patients.find((x) => x.id === e.patientId);
     if (!p) continue;
     const signed = Date.parse(e.signedAt);
-    for (const rx of p.prescriptions) {
+    for (const rx of p.prescriptions.filter((r) => r.batchId === e.prescriptionBatchId)) {
       for (const time of rx.times ?? []) {
         const key = `${p.id}|${rx.id}|${time}`;
         const admin = admins[key];

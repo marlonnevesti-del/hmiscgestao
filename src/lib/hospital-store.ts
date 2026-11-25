@@ -132,11 +132,14 @@ export function saveMedical(id: string, medical: NonNullable<Encounter['medical'
 export function signPrescription(id: string) {
   requireAction('prescrever'); const { e, p } = getEncounter(id);
   if (!e.medical?.diagnosis.trim()) throw new Error('Registre a avaliação e hipótese diagnóstica.');
-  if (!p.prescriptions.length) throw new Error('Adicione itens à prescrição.');
-  const needsPharmacy = p.prescriptions.some((r) => r.cat === 'Medicamento' || r.cat === 'Hidratação');
+  const fresh = p.prescriptions.filter((r) => !r.batchId && r.pharmacy !== 'Dispensada');
+  if (!fresh.length) throw new Error('Adicione novos itens à prescrição antes de liberar.');
+  const freshIds = new Set(fresh.map((r) => r.id));
+  const needsPharmacy = fresh.some((r) => r.cat === 'Medicamento' || r.cat === 'Hidratação');
   const at = new Date().toISOString();
+  const batchId = crypto.randomUUID();
   const next = transition(e, needsPharmacy ? 'AGUARDANDO_FARMACIA' : 'EM_OBSERVACAO_REAVALIACAO', professionalName(state.profile), 'Prescrição liberada', at);
-  commitEncounter({ ...next, signedAt: at, signedBy: professionalName(state.profile) }, { patients: state.patients.map((x) => x.id === p.id ? { ...x, prescriptions: x.prescriptions.map((r) => r.cat === 'Medicamento' || r.cat === 'Hidratação' ? { ...r, pharmacy: 'Pendente', times: r.times?.length ? r.times : [nowHM()] } : r.cat === 'Cuidados' ? { ...r, times: r.times?.length ? r.times : [nowHM()] } : r) } : x) });
+  commitEncounter({ ...next, signedAt: at, signedBy: professionalName(state.profile), prescriptionBatchId: batchId }, { patients: state.patients.map((x) => x.id === p.id ? { ...x, prescriptions: x.prescriptions.map((r) => !freshIds.has(r.id) ? r : r.cat === 'Medicamento' || r.cat === 'Hidratação' ? { ...r, batchId, pharmacy: 'Pendente', times: r.times?.length ? r.times : [nowHM()] } : r.cat === 'Cuidados' ? { ...r, batchId, times: r.times?.length ? r.times : [nowHM()] } : { ...r, batchId }) } : x) });
 }
 export function validatePrescription(id: string, rxId: string) {
   requireAction('farmacia'); const { e, p } = getEncounter(id);
@@ -154,7 +157,7 @@ export function adjustPrescription(id: string, rxId: string, item: string, posol
 }
 export function dispenseKit(id: string, intervention: string, lots: Record<string, string> = {}) {
   requireAction('farmacia'); const { e, p } = getEncounter(id);
-  const meds = p.prescriptions.filter((r) => r.pharmacy);
+  const meds = p.prescriptions.filter((r) => r.batchId === e.prescriptionBatchId && r.pharmacy);
   if (!meds.length || meds.some((r) => r.pharmacy !== 'Validada')) throw new Error('Valide todos os itens do kit antes de dispensar.');
   const missingLot = meds.find((r) => !(lots[r.id] ?? '').trim());
   if (missingLot) throw new Error(`Informe o lote de ${missingLot.item}.`);
@@ -173,7 +176,7 @@ export function dispenseKit(id: string, intervention: string, lots: Record<strin
   const at = new Date().toISOString(); const by = professionalName(state.profile);
   const consumo = meds.map((r) => { const m = findStockMedication(state.stock, r.item)!; return { ...{ id: crypto.randomUUID(), at: new Date().toISOString(), by: professionalName(state.profile) }, kind: 'consumo' as const, from: m.location ?? 'Farmácia', to: p.name, item: m.name, code: m.code, qty: r.times?.length ?? 1, lot: (lots[r.id] ?? '').trim(), reason: 'Dispensação', patient: p.name, patientId: p.id, baa: e.number, ...(e.fia ? { fia: e.fia.number } : {}) }; });
   const requisition = `${String(state.movements.length + state.encounters.indexOf(e) * 7 + 230000).slice(-6)}/${new Date().getFullYear()}`;
-  commitEncounter({ ...transition(e, 'AGUARDANDO_MEDICACAO', by, 'Medicamentos prescritos dispensados'), intervention, dispensedAt: at, dispensedBy: by, requisition }, { stock, movements: [...consumo, ...state.movements], patients: state.patients.map((x) => x.id === p.id ? { ...x, prescriptions: x.prescriptions.map((r) => r.pharmacy ? { ...r, pharmacy: 'Dispensada', lot: (lots[r.id] ?? '').trim() } : r) } : x) });
+  commitEncounter({ ...transition(e, 'AGUARDANDO_MEDICACAO', by, 'Medicamentos prescritos dispensados'), intervention, dispensedAt: at, dispensedBy: by, requisition }, { stock, movements: [...consumo, ...state.movements], patients: state.patients.map((x) => x.id === p.id ? { ...x, prescriptions: x.prescriptions.map((r) => r.batchId === e.prescriptionBatchId && r.pharmacy ? { ...r, pharmacy: 'Dispensada', lot: (lots[r.id] ?? '').trim() } : r) } : x) });
 }
 const depotKey = (d: Depot) => (d === 'farmacia' ? 'stock' : 'warehouse') as 'stock' | 'warehouse';
 const depotAction = (d: Depot): 'farmacia' | 'almoxarifado' => (d === 'farmacia' ? 'farmacia' : 'almoxarifado');
@@ -346,7 +349,7 @@ export function recordMedication(id: string, rxId: string, time: string, status:
   if (status !== 'checado' && !reason.trim()) throw new Error('Informe a justificativa.');
   const at = new Date().toISOString();
   const admins = { ...state.admins, [key]: { status, by: professionalName(state.profile), at, reason } };
-  const allDone = p.prescriptions.filter((r) => r.times?.length).every((r) => r.times?.every((t) => ['checado', 'cancelado'].includes(admins[`${p.id}|${r.id}|${t}`]?.status ?? '')));
+  const allDone = p.prescriptions.filter((r) => r.batchId === e.prescriptionBatchId && r.times?.length).every((r) => r.times?.every((t) => ['checado', 'cancelado', 'nao', 'adiado'].includes(admins[`${p.id}|${r.id}|${t}`]?.status ?? '')));
   commitEncounter(allDone && e.status_fluxo === 'AGUARDANDO_MEDICACAO' ? transition(e, 'EM_OBSERVACAO_REAVALIACAO', professionalName(state.profile), 'Medicação concluída - pronto para reavaliação', at) : e, { admins });
 }
 export function requestAdmission(id: string, req: { ward: string; character: 'Urgência' | 'Eletiva'; cid: string; justification: string; isolation: boolean; oxygen: boolean }) {

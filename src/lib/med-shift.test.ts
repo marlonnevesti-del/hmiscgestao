@@ -13,6 +13,11 @@ describe("med-shift", () => {
   it("unchecked past dose is atrasado", () => expect(doseRows([enc], [pat()], {}, now)[0]?.status).toBe("atrasado"));
   it("checked dose", () => expect(doseRows([enc], [pat()], { "p1|rx1|08:00": { status: "checado", by: "Ana", at: "x" } }, now)[0]?.status).toBe("checado"));
   it("undispensed is aguardando", () => expect(doseRows([enc], [pat({ ...rx, pharmacy: "Validada" })], {}, now)[0]?.status).toBe("aguardando"));
+  it("mostra somente as doses da liberação atual", () => {
+    const current = { ...enc, prescriptionBatchId: "nova" };
+    const patient = { ...pat(), prescriptions: [{ ...rx, batchId: "antiga" }, { ...rx, id: "rx2", batchId: "nova" }] } as Patient;
+    expect(doseRows([current], [patient], {}, now).map((d) => d.key)).toEqual(["p1|rx2|08:00"]);
+  });
   it("time before signature goes to next day", () => expect(doseRows([enc], [pat({ ...rx, times: ["06:00"] })], {}, now)[0]?.dueAt).toBe(new Date("2026-03-11T06:00:00").getTime()));
   it("progress 1 of 4 = 25%", () => {
     const r = { status: "checado" } as DoseRow;

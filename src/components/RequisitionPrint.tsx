@@ -20,7 +20,7 @@ export function RequisitionPrint({ p, e, stock }: { p?: Patient | undefined; e?:
   const r = registrationFor(p);
   const ward = WARDS.find((w) => w.id === p.ward)?.name ?? p.ward;
   const [room, bed] = (p.bed || "").split("-");
-  const items = p.prescriptions.filter((x) => x.pharmacy);
+  const items = p.prescriptions.filter((x) => x.pharmacy && x.batchId === e.prescriptionBatchId);
   return createPortal(<div className="req-root"><section className="req-page">
     <Letterhead title="REQUISIÇÃO" />
     <div className="req-h2">SURE090_R - Requisição de Medicamentos por Horário de Dispensação</div>

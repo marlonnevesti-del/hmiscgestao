@@ -15,6 +15,16 @@ describe('SBAR', () => {
   it('background has allergy and MDR', () => { const { b } = buildSbar(p, e, now); expect(b).toContain('Penicilina'); expect(b).toContain('Klebsiella MDR'); });
   it('assessment has last vitals', () => expect(buildSbar(p, e, now).a).toContain('PA 110/70'));
   it('recommendation has pending exams', () => expect(buildSbar(p, e, now).r).toContain('Hemocultura'));
+  it('conta somente medicamentos e doses da liberação atual', () => {
+    const patient = { ...p, prescriptions: [
+      { id: 'antigo', cat: 'Medicamento', item: 'Dipirona', posologia: '1 g', times: ['06:00'], batchId: 'antiga' },
+      { id: 'atual', cat: 'Medicamento', item: 'Paracetamol', posologia: '500 mg', times: ['12:00', '18:00'], batchId: 'nova' },
+    ] } as Patient;
+    const current = { ...e, prescriptionBatchId: 'nova' } as Encounter;
+    const sbar = buildSbar(patient, current, now);
+    expect(sbar.a).toContain('Medicamentos ativos: 1');
+    expect(sbar.r).toContain('Doses a conferir: 2');
+  });
   it('filters ward and excludes discharged', () => {
     const other = { ...e, id: 'e2', fia: { ...e.fia!, ward: 'UTIP' } } as Encounter;
     const gone = { ...e, id: 'e3', discharge: { summary: '', recipe: '', at: '', by: '' } } as Encounter;

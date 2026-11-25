@@ -17,14 +17,15 @@ export function buildSbar(p: Patient, e: Encounter, now = Date.now()): Sbar {
     `Admissão: ${new Date(e.openedAt).toLocaleDateString('pt-BR')}`,
   ].filter(Boolean).join(' · ');
   const v = p.vitals.at(-1); const ev = p.evolutions.at(-1);
-  const meds = p.prescriptions.filter((x) => x.cat === 'Medicamento').length;
+  const currentPrescriptions = p.prescriptions.filter((x) => x.batchId === e.prescriptionBatchId);
+  const meds = currentPrescriptions.filter((x) => x.cat === 'Medicamento').length;
   const a = [
     v ? `PA ${v.pas}/${v.pad} · FC ${v.fc} · FR ${v.fr} · Tax ${v.tax} · Sat ${v.sat} · Dor ${v.dor}` : 'Sem sinais registrados',
     ev ? `${ev.cat} · ${ev.author} · ${ev.text.slice(0, 180)}` : '',
     `Medicamentos ativos: ${meds}`,
     ...(p.physio?.filter((x) => x.status === 'Aguardando' || x.status === 'Em acompanhamento').map((x) => `Fisioterapia: ${x.status}`) ?? []),
   ].filter(Boolean).join(' · ');
-  const doses = p.prescriptions.reduce((n, x) => n + (x.times?.length ?? 0), 0);
+  const doses = currentPrescriptions.reduce((n, x) => n + (x.times?.length ?? 0), 0);
   const pend = [e.examPending ? `Exames pendentes: ${e.examPending}` : '', doses ? `Doses a conferir: ${doses}` : '', p.dischargeForecast ? `Previsão de alta: ${p.dischargeForecast}` : ''].filter(Boolean);
   return { s, b, a, r: pend.length ? pend.join(' · ') : 'Sem pendências registradas' };
 }

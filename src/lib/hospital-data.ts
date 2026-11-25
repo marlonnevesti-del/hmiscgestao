@@ -130,7 +130,7 @@ export interface Evolution { time: string; cat: EvoCat; author: string; text: st
 export interface Vital { time: string; pas: number; pad: number; fc: number; fr: number; tax: number; sat: number; dor: number; ingesta: number; diurese: number; vomitos: number }
 export interface PartoPoint { hour: number; dilat: number; altura: number; bcf: number; contr: number }
 export type PrescCat = "Dieta" | "Hidratação" | "Medicamento" | "Cuidados" | "Exames";
-export interface Prescription { id: string; cat: PrescCat; item: string; posologia: string; times?: string[]; pharmacy?: "Pendente" | "Validada" | "Dispensada" | undefined; lot?: string | undefined; atb?: AtbInfo | undefined }
+export interface Prescription { id: string; cat: PrescCat; item: string; posologia: string; times?: string[]; pharmacy?: "Pendente" | "Validada" | "Dispensada" | undefined; lot?: string | undefined; atb?: AtbInfo | undefined; batchId?: string | undefined }
 export interface Newborn { apgar1: number; apgar5: number; pesoNascer: number; comprimento: number; pc: number; tipagem: string; coracaozinho: string; olhinho: string; vacinas: string[]; motherId?: string | undefined }
 
 export interface Patient {

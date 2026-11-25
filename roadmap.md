@@ -32,3 +32,4 @@
 - [ ] Internação direta pelo médico com leito real da Hotelaria (reserva na internação, liberação na alta) — adiada pelo usuário.
 - [x] Unificar as filas "Aguardando consulta" e "Atendimento Médico" do Pronto-Socorro em uma aba única, com espera/PCACR e ações médicas, preservando o acesso da enfermagem e as liberações antigas.
 - [x] Adicionar os 41 setores ao cadastro de colaboradores, permitir novos setores pelo administrador e liberar automaticamente as áreas associadas ao setor.
+- [x] Separar liberações da prescrição para não repetir dispensação/estoque e devolver à revisão médica após doses checadas, justificadas, adiadas ou canceladas; 64 testes passaram.
