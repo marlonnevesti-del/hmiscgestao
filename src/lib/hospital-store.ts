@@ -27,7 +27,7 @@ import { changeQty, checkQty, loanReturnedQty, transferItem, type Depot, type Mo
 export const PHARMACY_CATALOG = catalogToStock([...CATALOG.farm, ...CONTROLLED], 'farm');
 export const WAREHOUSE_CATALOG = catalogToStock(WAREHOUSE, 'almox');
 import { registrationPatch } from "./patient-registration-mapping";
-import type { PatientRegistration } from "./patient-registration";
+import { ageYears, emptyRegistration, type PatientRegistration } from "./patient-registration";
 import { doctorKey, validDoctorCns, documentCns, learnDoctor, mergeDoctors, mergeImportedDoctors, resolveDoctor, type Doctor } from "./doctors";
 import { addSpecialty, canEditOrCancelEncounter, DEFAULT_SPECIALTIES, isObstetricSpecialty, type AmbSpecialty, type Appointment, type SadtReport, type SpecialtyGroup } from "./ambulatorio";
 import { normText, type AgendaImportItem } from "./agenda-import";
@@ -900,6 +900,97 @@ export function scheduleAppointment(input: Omit<Appointment, 'id' | 'status' | '
   if (!state.ambSpecialties.some((x) => x.id === input.specialtyId)) throw new Error('Selecione a especialidade.');
   if (state.appointments.some((a) => a.status === 'agendado' && a.date === input.date && a.time === input.time && a.specialtyId === input.specialtyId && a.professional.trim().toLowerCase() === input.professional.trim().toLowerCase())) throw new Error('Horário já ocupado para este profissional.');
   setState((s) => ({ appointments: [...s.appointments, { ...input, id: crypto.randomUUID(), status: 'agendado', createdBy: professionalName(s.profile) }] }));
+}
+export interface QuickPatientInput {
+  name: string;
+  birthDate?: string;
+  ageText?: string;
+  motherOrGuardian?: string;
+  phone?: string;
+  cpf?: string;
+  cns?: string;
+}
+export function quickScheduleAppointment(
+  patientInput: QuickPatientInput,
+  appointmentInput: Omit<Appointment, 'id' | 'status' | 'createdBy' | 'patientId'>,
+) {
+  requireAction('recepcao');
+  const name = patientInput.name.trim();
+  if (!name) throw new Error('Informe o nome completo do paciente.');
+  if (!appointmentInput.date || !appointmentInput.time) throw new Error('Informe data e horário.');
+  const spec = state.ambSpecialties.find((x) => x.id === appointmentInput.specialtyId);
+  if (!spec) throw new Error('Selecione a especialidade.');
+  if (state.appointments.some((a) => a.status === 'agendado' && a.date === appointmentInput.date && a.time === appointmentInput.time && a.specialtyId === appointmentInput.specialtyId && a.professional.trim().toLowerCase() === appointmentInput.professional.trim().toLowerCase())) {
+    throw new Error('Horário já ocupado para este profissional.');
+  }
+  const cleanCpf = (patientInput.cpf ?? '').replace(/\D/g, '');
+  const cleanCns = (patientInput.cns ?? '').replace(/\D/g, '');
+  const cleanPhone = (patientInput.phone ?? '').replace(/\D/g, '');
+  const motherOrGuardian = (patientInput.motherOrGuardian ?? '').trim();
+  const birthDate = (patientInput.birthDate ?? '').trim();
+  const existing = state.patients.find((p) =>
+    (cleanCpf && p.cpf.replace(/\D/g, '') === cleanCpf) ||
+    (cleanCns && (p.registration?.cns ?? '').replace(/\D/g, '') === cleanCns)
+  );
+  let resolvedPatient: Patient;
+  let reused = false;
+  if (existing) {
+    resolvedPatient = existing;
+    reused = true;
+  } else {
+    const years = birthDate ? ageYears(birthDate) : null;
+    const ageLabel = years !== null ? `${years} ${years === 1 ? 'ano' : 'anos'}` : ((patientInput.ageText ?? '').trim() || '—');
+    const areaCode = cleanPhone.length >= 10 ? cleanPhone.slice(0, 2) : '';
+    const phoneNumber = cleanPhone.length >= 10 ? cleanPhone.slice(2) : cleanPhone;
+    const baseReg = emptyRegistration();
+    const registration: PatientRegistration = {
+      ...baseReg,
+      civilName: name.toUpperCase(),
+      birthDate,
+      cpf: cleanCpf,
+      cns: cleanCns,
+      parent1: motherOrGuardian,
+      guardian: motherOrGuardian,
+      phones: [{ primary: true, type: 'Celular', areaCode, number: phoneNumber, complement: '' }],
+      createdBy: professionalName(state.profile),
+      createdAt: new Date().toISOString(),
+    };
+    resolvedPatient = {
+      id: `pat-amb-${crypto.randomUUID().slice(0, 8)}`,
+      prontuario: `AMB-${String(state.patients.length + 1).padStart(5, '0')}`,
+      name: name.toUpperCase(),
+      cpf: cleanCpf,
+      ...(motherOrGuardian ? { motherName: motherOrGuardian, guardian: motherOrGuardian } : {}),
+      type: isObstetricSpecialty(spec.name) ? 'gestante' : 'pediatria',
+      age: ageLabel,
+      weight: 0,
+      allergies: [],
+      risks: [],
+      ward: 'ENFP',
+      bed: '',
+      insurance: 'SUS',
+      authorized: false,
+      diagnosis: '',
+      admission: appointmentInput.date,
+      days: 0,
+      evolutions: [],
+      vitals: [],
+      prescriptions: [],
+      registration,
+    };
+  }
+  const appointment: Appointment = {
+    ...appointmentInput,
+    patientId: resolvedPatient.id,
+    id: crypto.randomUUID(),
+    status: 'agendado',
+    createdBy: professionalName(state.profile),
+  };
+  setState((s) => ({
+    patients: reused ? s.patients : [...s.patients, resolvedPatient],
+    appointments: [...s.appointments, appointment],
+  }));
+  return { patient: resolvedPatient, appointment, reused };
 }
 export function importAppointments(items: AgendaImportItem[]) {
   requireAction('recepcao');

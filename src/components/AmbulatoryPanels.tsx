@@ -17,7 +17,7 @@ import { GROUP_LABELS, isObstetricSpecialty, type SadtReport, type SpecialtyGrou
 import type { Encounter } from "@/lib/care-flow";
 import { ExamRequestsBoard } from "./ExamRequestsBoard";
 import { doctorsForSpecialty, mergeDoctors } from "@/lib/doctors";
-import { checkInAppointment, createAmbSpecialty, professionalName, saveSadtReport, rememberDoctor, scheduleAppointment, setAppointmentStatus, toggleAmbSpecialty, useStore } from "@/lib/hospital-store";
+import { checkInAppointment, createAmbSpecialty, professionalName, quickScheduleAppointment, saveSadtReport, rememberDoctor, scheduleAppointment, setAppointmentStatus, toggleAmbSpecialty, useStore } from "@/lib/hospital-store";
 
 const act = (fn: () => void, ok?: string) => { try { fn(); if (ok) toast.success(ok); } catch (e) { toast.error(e instanceof Error ? e.message : "Ação não concluída"); } };
 const today = () => new Date().toLocaleDateString("sv-SE");
@@ -71,6 +71,8 @@ export function AmbulatoryAgenda() {
   const list = useStore((s) => s.appointments); const specs = useStore((s) => s.ambSpecialties); const patients = useStore((s) => s.patients); const profile = useStore((s) => s.profile); const accessAreas = useStore((s) => s.accessAreas);
   const [date, setDate] = useState(today()); const [filter, setFilter] = useState(""); const [docFilter, setDocFilter] = useState("");
   const [f, setF] = useState({ time: "", specialtyId: "", professional: "", patientId: "", note: "", nursingPreConsult: false }); const [q, setQ] = useState("");
+  const [quickMode, setQuickMode] = useState(false);
+  const [quick, setQuick] = useState({ name: "", birthDate: "", ageText: "", motherOrGuardian: "", phone: "", cpf: "", cns: "" });
   const found = q.length > 1 ? patients.filter((p) => [p.name, p.cpf, p.prontuario, p.registration?.cns ?? ""].some((v) => v.toLowerCase().includes(q.toLowerCase()))).slice(0, 6) : [];
   const agendaDoctors = useMemo(() => Array.from(new Set(list.map((a) => a.professional.trim()).filter(Boolean))).sort((a, b) => a.localeCompare(b, "pt-BR")), [list]);
   const day = useMemo(() => list.filter((a) => a.date === date && (!filter || a.specialtyId === filter) && (!docFilter || a.professional.trim() === docFilter)).sort((a, b) => a.time.localeCompare(b.time)), [list, date, filter, docFilter]);
@@ -93,11 +95,43 @@ export function AmbulatoryAgenda() {
       <label className="grid gap-1 text-xs">Médico / Profissional<select className={sel} value={docFilter} onChange={(e) => setDocFilter(e.target.value)}><option value="">Todos</option>{agendaDoctors.map((d) => <option key={d} value={d}>{d}</option>)}</select></label>
       {editable && <AgendaImport />}
     </div>
-    {editable && <form className="grid gap-2 rounded-lg border bg-card p-3 md:grid-cols-3" onSubmit={(e) => { e.preventDefault(); act(() => { scheduleAppointment({ ...f, date }); setF({ ...f, time: "", patientId: "", note: "", nursingPreConsult: false }); }, "Consulta agendada"); }}>
+    {editable && <form className="grid gap-2 rounded-lg border bg-card p-3 md:grid-cols-3" onSubmit={(e) => {
+      e.preventDefault();
+      act(() => {
+        if (quickMode) {
+          const res = quickScheduleAppointment(quick, { time: f.time, specialtyId: f.specialtyId, professional: f.professional, note: f.note, nursingPreConsult: f.nursingPreConsult, date });
+          setQuick({ name: "", birthDate: "", ageText: "", motherOrGuardian: "", phone: "", cpf: "", cns: "" });
+          setQuickMode(false);
+          setF({ ...f, time: "", patientId: "", note: "", nursingPreConsult: false });
+          toast.success(res.reused ? "Consulta agendada (paciente já cadastrado)" : "Paciente pré-cadastrado e consulta agendada");
+        } else {
+          scheduleAppointment({ ...f, date });
+          setF({ ...f, time: "", patientId: "", note: "", nursingPreConsult: false });
+          toast.success("Consulta agendada");
+        }
+      });
+    }}>
       <h3 className="text-sm font-semibold md:col-span-3">Agendar consulta em {new Date(`${date}T12:00`).toLocaleDateString("pt-BR")}</h3>
-      <div className="grid gap-1 text-xs md:col-span-3">Paciente {chosen ? <span className="text-sm font-medium">{chosen.name} · {chosen.prontuario} <Button type="button" variant="link" size="sm" onClick={() => setF({ ...f, patientId: "" })}>trocar</Button></span> : <>
-        <Input placeholder="Buscar por nome, CPF, CNS ou prontuário (paciente novo: cadastre na aba Recepção)" value={q} onChange={(e) => setQ(e.target.value)} />
-        <div className="flex flex-wrap gap-1">{found.map((p) => <Button type="button" key={p.id} size="sm" variant="outline" onClick={() => { setF({ ...f, patientId: p.id }); setQ(""); }}>{p.name} · {p.prontuario}</Button>)}</div></>}
+      <div className="grid gap-1 text-xs md:col-span-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <span>Paciente</span>
+          <Button type="button" size="sm" variant={quickMode ? "secondary" : "outline"} onClick={() => { setQuickMode(!quickMode); setF({ ...f, patientId: "" }); setQ(""); }}>
+            {quickMode ? "Buscar paciente existente" : "+ Novo paciente (Rápido)"}
+          </Button>
+        </div>
+        {quickMode ? (
+          <div className="grid gap-2 rounded-md border bg-muted/30 p-2.5 md:grid-cols-3">
+            <label className="grid gap-1 text-xs md:col-span-2">Nome completo *<Input placeholder="Nome completo do paciente" value={quick.name} onChange={(e) => setQuick({ ...quick, name: e.target.value })} /></label>
+            <label className="grid gap-1 text-xs">Data de nascimento<Input type="date" value={quick.birthDate} onChange={(e) => setQuick({ ...quick, birthDate: e.target.value })} /></label>
+            <label className="grid gap-1 text-xs">Idade (se não souber data)<Input placeholder="Ex: 5 anos" value={quick.ageText} onChange={(e) => setQuick({ ...quick, ageText: e.target.value })} /></label>
+            <label className="grid gap-1 text-xs">Mãe ou responsável<Input placeholder="Nome da mãe ou responsável" value={quick.motherOrGuardian} onChange={(e) => setQuick({ ...quick, motherOrGuardian: e.target.value })} /></label>
+            <label className="grid gap-1 text-xs">Telefone / WhatsApp<Input placeholder="(DDD) 99999-9999" value={quick.phone} onChange={(e) => setQuick({ ...quick, phone: e.target.value })} /></label>
+            <label className="grid gap-1 text-xs">CPF (opcional)<Input placeholder="Somente números" value={quick.cpf} onChange={(e) => setQuick({ ...quick, cpf: e.target.value })} /></label>
+            <label className="grid gap-1 text-xs">CNS (opcional)<Input placeholder="Cartão Nacional de Saúde" value={quick.cns} onChange={(e) => setQuick({ ...quick, cns: e.target.value })} /></label>
+          </div>
+        ) : chosen ? <span className="text-sm font-medium">{chosen.name} · {chosen.prontuario} <Button type="button" variant="link" size="sm" onClick={() => setF({ ...f, patientId: "" })}>trocar</Button></span> : <>
+          <Input placeholder="Buscar por nome, CPF, CNS ou prontuário" value={q} onChange={(e) => setQ(e.target.value)} />
+          <div className="flex flex-wrap gap-1">{found.map((p) => <Button type="button" key={p.id} size="sm" variant="outline" onClick={() => { setF({ ...f, patientId: p.id }); setQ(""); }}>{p.name} · {p.prontuario}</Button>)}</div></>}
       </div>
       <label className="grid gap-1 text-xs">Especialidade<select className={sel} value={f.specialtyId} onChange={(e) => setF({ ...f, specialtyId: e.target.value })}><option value="">Selecione…</option>{(["medica", "nao_medica", "sadt"] as const).map((g) => <optgroup key={g} label={GROUP_LABELS[g]}>{specs.filter((s) => s.group === g && s.active).map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</optgroup>)}</select></label>
       <label className="grid gap-1 text-xs">Horário<Input type="time" value={f.time} onChange={(e) => setF({ ...f, time: e.target.value })} /></label>
@@ -106,8 +140,8 @@ export function AmbulatoryAgenda() {
       <div className="flex flex-wrap items-end gap-3"><label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={f.nursingPreConsult || isObstetricSpecialty(specs.find((s) => s.id === f.specialtyId)?.name ?? "")} disabled={isObstetricSpecialty(specs.find((s) => s.id === f.specialtyId)?.name ?? "")} onChange={(e) => setF({ ...f, nursingPreConsult: e.target.checked })} />Pré-consulta de enfermagem</label><Button type="submit">Agendar</Button></div>
     </form>}
     <table className="w-full text-sm"><thead><tr className="border-b text-left text-xs text-muted-foreground"><th className="py-2">Hora</th><th>Paciente</th><th>Especialidade</th><th>Profissional</th><th>Situação</th><th /></tr></thead>
-      <tbody>{day.map((a) => { const p = patients.find((x) => x.id === a.patientId); return <tr key={a.id} className="border-b">
-        <td className="py-2 font-mono">{a.time}</td><td>{p?.name ?? "—"}{a.note && <div className="text-xs text-muted-foreground">{a.note}</div>}{a.nursingPreConsult && <div className="text-xs text-primary">Pré-consulta de enfermagem</div>}</td><td>{specs.find((s) => s.id === a.specialtyId)?.name}</td><td>{a.professional}</td><td>{STATUS[a.status]}</td>
+      <tbody>{day.map((a) => { const p = patients.find((x) => x.id === a.patientId); const ph = p?.registration?.phones?.[0]; const phoneLabel = ph?.number ? `${ph.areaCode ? `(${ph.areaCode}) ` : ""}${ph.number}` : ""; return <tr key={a.id} className="border-b">
+        <td className="py-2 font-mono">{a.time}</td><td>{p?.name ?? "—"}{phoneLabel && <div className="text-xs text-muted-foreground">Tel: {phoneLabel}</div>}{a.note && <div className="text-xs text-muted-foreground">{a.note}</div>}{a.nursingPreConsult && <div className="text-xs text-primary">Pré-consulta de enfermagem</div>}</td><td>{specs.find((s) => s.id === a.specialtyId)?.name}</td><td>{a.professional}</td><td>{STATUS[a.status]}</td>
         <td className="space-x-1 text-right">{editable && a.status === "agendado" && <><Button size="sm" onClick={() => act(() => { setCreated(checkInAppointment(a.id)); }, "Chegada registrada · BAA gerado")}>Registrar chegada</Button><Button size="sm" variant="ghost" onClick={() => act(() => setAppointmentStatus(a.id, "faltou"))}>Faltou</Button><Button size="sm" variant="ghost" className="text-destructive" onClick={() => act(() => setAppointmentStatus(a.id, "cancelado"))}>Cancelar</Button></>}</td>
       </tr>; })}</tbody></table>
     {!day.length && <p className="py-4 text-sm text-muted-foreground">Nenhuma consulta agendada nesta data.</p>}
