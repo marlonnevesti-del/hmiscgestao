@@ -176,7 +176,9 @@ export function dispenseKit(id: string, intervention: string, lots: Record<strin
   const at = new Date().toISOString(); const by = professionalName(state.profile);
   const consumo = meds.map((r) => { const m = findStockMedication(state.stock, r.item)!; return { ...{ id: crypto.randomUUID(), at: new Date().toISOString(), by: professionalName(state.profile) }, kind: 'consumo' as const, from: m.location ?? 'Farmácia', to: p.name, item: m.name, code: m.code, qty: r.times?.length ?? 1, lot: (lots[r.id] ?? '').trim(), reason: 'Dispensação', patient: p.name, patientId: p.id, baa: e.number, ...(e.fia ? { fia: e.fia.number } : {}) }; });
   const requisition = `${String(state.movements.length + state.encounters.indexOf(e) * 7 + 230000).slice(-6)}/${new Date().getFullYear()}`;
-  commitEncounter({ ...transition(e, 'AGUARDANDO_MEDICACAO', by, 'Medicamentos prescritos dispensados'), intervention, dispensedAt: at, dispensedBy: by, requisition }, { stock, movements: [...consumo, ...state.movements], patients: state.patients.map((x) => x.id === p.id ? { ...x, prescriptions: x.prescriptions.map((r) => r.batchId === e.prescriptionBatchId && r.pharmacy ? { ...r, pharmacy: 'Dispensada', lot: (lots[r.id] ?? '').trim() } : r) } : x) });
+  const dispensed = transition(e, 'AGUARDANDO_MEDICACAO', by, 'Medicamentos prescritos dispensados', at);
+  const next = allBatchDosesDone(dispensed, p, state.admins) ? transition(dispensed, 'EM_OBSERVACAO_REAVALIACAO', by, 'Doses já concluídas - pronto para reavaliação', at) : dispensed;
+  commitEncounter({ ...next, intervention, dispensedAt: at, dispensedBy: by, requisition }, { stock, movements: [...consumo, ...state.movements], patients: state.patients.map((x) => x.id === p.id ? { ...x, prescriptions: x.prescriptions.map((r) => r.batchId === e.prescriptionBatchId && r.pharmacy ? { ...r, pharmacy: 'Dispensada', lot: (lots[r.id] ?? '').trim() } : r) } : x) });
 }
 const depotKey = (d: Depot) => (d === 'farmacia' ? 'stock' : 'warehouse') as 'stock' | 'warehouse';
 const depotAction = (d: Depot): 'farmacia' | 'almoxarifado' => (d === 'farmacia' ? 'farmacia' : 'almoxarifado');
@@ -340,6 +342,17 @@ export function addStock(item: string, qty: number) {
   if (existing) { adjustStock(existing.id, qty); return; }
   createStockMedication({ name: medicationKey(item), presentation: '', unit: 'un', quantity: qty, minimum: 0 });
 }
+const TERMINAL_ADMIN: Admin['status'][] = ['checado', 'cancelado', 'nao', 'adiado'];
+export function allBatchDosesDone(e: Encounter, p: Patient, admins: Record<string, Admin>) {
+  const items = p.prescriptions.filter((r) => r.batchId === e.prescriptionBatchId && r.times?.length);
+  return items.every((r) => r.times?.every((t) => TERMINAL_ADMIN.includes(admins[`${p.id}|${r.id}|${t}`]?.status as Admin['status'])));
+}
+export function advanceCompletedMedication(id: string) {
+  requireAction('checar'); const { e, p } = getEncounter(id);
+  if (e.status_fluxo !== 'AGUARDANDO_MEDICACAO' || !allBatchDosesDone(e, p, state.admins)) return false;
+  commitEncounter(transition(e, 'EM_OBSERVACAO_REAVALIACAO', professionalName(state.profile), 'Medicação já concluída - enviado para reavaliação'));
+  return true;
+}
 export function recordMedication(id: string, rxId: string, time: string, status: Admin['status'], reason = '') {
   requireAction(status === 'cancelado' ? 'prescrever' : 'checar'); const { e, p } = getEncounter(id);
   const rx = p.prescriptions.find((r) => r.id === rxId);
@@ -349,7 +362,7 @@ export function recordMedication(id: string, rxId: string, time: string, status:
   if (status !== 'checado' && !reason.trim()) throw new Error('Informe a justificativa.');
   const at = new Date().toISOString();
   const admins = { ...state.admins, [key]: { status, by: professionalName(state.profile), at, reason } };
-  const allDone = p.prescriptions.filter((r) => r.batchId === e.prescriptionBatchId && r.times?.length).every((r) => r.times?.every((t) => ['checado', 'cancelado', 'nao', 'adiado'].includes(admins[`${p.id}|${r.id}|${t}`]?.status ?? '')));
+  const allDone = allBatchDosesDone(e, p, admins);
   commitEncounter(allDone && e.status_fluxo === 'AGUARDANDO_MEDICACAO' ? transition(e, 'EM_OBSERVACAO_REAVALIACAO', professionalName(state.profile), 'Medicação concluída - pronto para reavaliação', at) : e, { admins });
 }
 export function requestAdmission(id: string, req: { ward: string; character: 'Urgência' | 'Eletiva'; cid: string; justification: string; isolation: boolean; oxygen: boolean }) {
