@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { AlertTriangle, ClipboardList } from 'lucide-react';
 import { Letterhead } from '@/components/DischargePrint';
 import { Button } from '@/components/ui/button';
+import { IcuExamples } from '@/components/IcuExamples';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { NoPermission } from '@/components/AppShell';
 import { useStore, addIntensive, setIntensiveSafety, encounterFor } from '@/lib/hospital-store';
@@ -29,8 +30,8 @@ function Page() {
   const profile = useStore((s) => s.profile); const areas = useStore((s) => s.accessAreas);
   if (!canAccessPage(profile, '/uti-uci', areas)) return <NoPermission action="acessar a UTI Pediátrica e UCI" />;
   return <div className="space-y-4 p-4"><h1 className="text-2xl font-bold">UTI Pediátrica · UCI · UTI Neonatal</h1>
-    <Tabs defaultValue="UTIP"><TabsList><TabsTrigger value="UTIP">UTI Pediátrica</TabsTrigger><TabsTrigger value="UCI">UCI</TabsTrigger><TabsTrigger value="UTIN">UTI Neonatal</TabsTrigger><TabsTrigger value="neorel">Indicadores UTI Neo</TabsTrigger></TabsList>
-      <TabsContent value="UTIP"><Unit u="UTIP" /></TabsContent><TabsContent value="UCI"><Unit u="UCI" /></TabsContent><TabsContent value="UTIN"><Unit u="UTIN" /></TabsContent><TabsContent value="neorel"><NeoReport /></TabsContent></Tabs></div>;
+    <Tabs defaultValue="UTIP"><TabsList className="flex h-auto flex-wrap justify-start"><TabsTrigger value="UTIP">UTI Pediátrica</TabsTrigger><TabsTrigger value="UCI">UCI</TabsTrigger><TabsTrigger value="UTIN">UTI Neonatal</TabsTrigger><TabsTrigger value="neorel">Indicadores UTI Neo</TabsTrigger><TabsTrigger value="examples">Exemplos de internação</TabsTrigger></TabsList>
+      <TabsContent value="UTIP"><Unit u="UTIP" /></TabsContent><TabsContent value="UCI"><Unit u="UCI" /></TabsContent><TabsContent value="UTIN"><Unit u="UTIN" /></TabsContent><TabsContent value="neorel"><NeoReport /></TabsContent><TabsContent value="examples"><IcuExamples /></TabsContent></Tabs></div>;
 }
 
 function Unit({ u }: { u: IcuUnit }) {

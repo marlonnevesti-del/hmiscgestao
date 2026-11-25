@@ -251,3 +251,16 @@
 @media print {
   body.print-term .print-doc-root:not(.term-root) { display: none !important; }
 }
+
+.icu-example-print { display: none; }
+@page icu-example { size: A4 portrait; margin: 15mm; }
+@media print {
+  body.print-icu-example > *:not(.icu-example-print) { display: none !important; }
+  body.print-icu-example .icu-example-print { display: block !important; color: var(--foreground); background: var(--card); font: 10pt/1.4 Arial, sans-serif; }
+  .icu-example-page { page: icu-example; }
+  .icu-example-page + .icu-example-page { break-before: page; }
+  .icu-example-page dl > div { margin-bottom: 12pt; break-inside: avoid; }
+  .icu-example-page dd { margin: 2pt 0 0; }
+  .icu-example-page .text-muted-foreground { color: var(--foreground); }
+  .icu-example-notice { border: 1pt solid var(--foreground); padding: 6pt; font-weight: bold; }
+}
