@@ -42,6 +42,7 @@ import { Route as AuthenticatedProntoSocorroRouteImport } from './routes/_authen
 import { Route as AuthenticatedRaioXRouteImport } from './routes/_authenticated.raio-x'
 import { Route as AuthenticatedRecepcaoRouteImport } from './routes/_authenticated.recepcao'
 import { Route as AuthenticatedScirasRouteImport } from './routes/_authenticated.sciras'
+import { Route as AuthenticatedSegurancaBackupsRouteImport } from './routes/_authenticated.seguranca-backups'
 import { Route as AuthenticatedSolicitacaoAlmoxarifadoRouteImport } from './routes/_authenticated.solicitacao-almoxarifado'
 import { Route as AuthenticatedUtiUciRouteImport } from './routes/_authenticated.uti-uci'
 import { Route as AuthenticatedPacientesIndexRouteImport } from './routes/_authenticated.pacientes.index'
@@ -229,6 +230,12 @@ const AuthenticatedScirasRoute = AuthenticatedScirasRouteImport.update({
   path: '/sciras',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedSegurancaBackupsRoute =
+  AuthenticatedSegurancaBackupsRouteImport.update({
+    id: '/seguranca-backups',
+    path: '/seguranca-backups',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedSolicitacaoAlmoxarifadoRoute =
   AuthenticatedSolicitacaoAlmoxarifadoRouteImport.update({
     id: '/solicitacao-almoxarifado',
@@ -286,6 +293,7 @@ export interface FileRoutesByFullPath {
   '/raio-x': typeof AuthenticatedRaioXRoute
   '/recepcao': typeof AuthenticatedRecepcaoRoute
   '/sciras': typeof AuthenticatedScirasRoute
+  '/seguranca-backups': typeof AuthenticatedSegurancaBackupsRoute
   '/solicitacao-almoxarifado': typeof AuthenticatedSolicitacaoAlmoxarifadoRoute
   '/uti-uci': typeof AuthenticatedUtiUciRoute
   '/pacientes/$id': typeof AuthenticatedPacientesIdRoute
@@ -323,6 +331,7 @@ export interface FileRoutesByTo {
   '/raio-x': typeof AuthenticatedRaioXRoute
   '/recepcao': typeof AuthenticatedRecepcaoRoute
   '/sciras': typeof AuthenticatedScirasRoute
+  '/seguranca-backups': typeof AuthenticatedSegurancaBackupsRoute
   '/solicitacao-almoxarifado': typeof AuthenticatedSolicitacaoAlmoxarifadoRoute
   '/uti-uci': typeof AuthenticatedUtiUciRoute
   '/': typeof AuthenticatedIndexRoute
@@ -363,6 +372,7 @@ export interface FileRoutesById {
   '/_authenticated/raio-x': typeof AuthenticatedRaioXRoute
   '/_authenticated/recepcao': typeof AuthenticatedRecepcaoRoute
   '/_authenticated/sciras': typeof AuthenticatedScirasRoute
+  '/_authenticated/seguranca-backups': typeof AuthenticatedSegurancaBackupsRoute
   '/_authenticated/solicitacao-almoxarifado': typeof AuthenticatedSolicitacaoAlmoxarifadoRoute
   '/_authenticated/uti-uci': typeof AuthenticatedUtiUciRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
@@ -404,6 +414,7 @@ export interface FileRouteTypes {
     | '/raio-x'
     | '/recepcao'
     | '/sciras'
+    | '/seguranca-backups'
     | '/solicitacao-almoxarifado'
     | '/uti-uci'
     | '/pacientes/$id'
@@ -441,6 +452,7 @@ export interface FileRouteTypes {
     | '/raio-x'
     | '/recepcao'
     | '/sciras'
+    | '/seguranca-backups'
     | '/solicitacao-almoxarifado'
     | '/uti-uci'
     | '/'
@@ -480,6 +492,7 @@ export interface FileRouteTypes {
     | '/_authenticated/raio-x'
     | '/_authenticated/recepcao'
     | '/_authenticated/sciras'
+    | '/_authenticated/seguranca-backups'
     | '/_authenticated/solicitacao-almoxarifado'
     | '/_authenticated/uti-uci'
     | '/_authenticated/'
@@ -728,6 +741,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedScirasRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/seguranca-backups': {
+      id: '/_authenticated/seguranca-backups'
+      path: '/seguranca-backups'
+      fullPath: '/seguranca-backups'
+      preLoaderRoute: typeof AuthenticatedSegurancaBackupsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/solicitacao-almoxarifado': {
       id: '/_authenticated/solicitacao-almoxarifado'
       path: '/solicitacao-almoxarifado'
@@ -787,6 +807,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedRaioXRoute: typeof AuthenticatedRaioXRoute
   AuthenticatedRecepcaoRoute: typeof AuthenticatedRecepcaoRoute
   AuthenticatedScirasRoute: typeof AuthenticatedScirasRoute
+  AuthenticatedSegurancaBackupsRoute: typeof AuthenticatedSegurancaBackupsRoute
   AuthenticatedSolicitacaoAlmoxarifadoRoute: typeof AuthenticatedSolicitacaoAlmoxarifadoRoute
   AuthenticatedUtiUciRoute: typeof AuthenticatedUtiUciRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
@@ -822,6 +843,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedRaioXRoute: AuthenticatedRaioXRoute,
   AuthenticatedRecepcaoRoute: AuthenticatedRecepcaoRoute,
   AuthenticatedScirasRoute: AuthenticatedScirasRoute,
+  AuthenticatedSegurancaBackupsRoute: AuthenticatedSegurancaBackupsRoute,
   AuthenticatedSolicitacaoAlmoxarifadoRoute:
     AuthenticatedSolicitacaoAlmoxarifadoRoute,
   AuthenticatedUtiUciRoute: AuthenticatedUtiUciRoute,
