@@ -9,6 +9,8 @@ export interface SadtReport { exam: string; technique: string; findings: string;
 
 export const UNITS = ['Ambulatório', 'Pronto socorro', 'Maternidade'] as const;
 export type CareUnit = typeof UNITS[number];
+export const AMBULATORY_MOTIVES = ['CONSULTA', 'RETORNO', 'CONSULTA SISREG'] as const;
+export type AmbulatoryMotive = typeof AMBULATORY_MOTIVES[number];
 
 export const GROUP_LABELS: Record<SpecialtyGroup, string> = { medica: 'Especialidades médicas', nao_medica: 'Especialidades não médicas', sadt: 'SADT' };
 
@@ -30,6 +32,12 @@ const OBSTETRIC = ['gestacao-de-alto-risco', 'cardiotocografia', 'usg-doppler-ob
 /** Ambulatory nursing pre-consult: obstetric specialties always, others only when flagged at registration/agenda. */
 export const isObstetricSpecialty = (specialty: string) => OBSTETRIC.includes(slug(specialty)) || /obstetr/i.test(specialty);
 export const needsNursingPreConsult = (e: { type: string; specialty: string; nursingPreConsult?: boolean }) => e.type === 'Ambulatório' && (!!e.nursingPreConsult || isObstetricSpecialty(e.specialty));
+
+/** Só permite trocar setor ou excluir atendimento enquanto o paciente ainda não iniciou atendimento. */
+export const canEditOrCancelEncounter = (e: {
+  status_fluxo: string; triage?: unknown; medical?: unknown; signedAt?: string; fia?: unknown; discharge?: unknown;
+}) => (e.status_fluxo === 'AGUARDANDO_TRIAGEM' || e.status_fluxo === 'AGUARDANDO_MEDICO')
+  && !e.triage && !e.medical && !e.signedAt && !e.fia && !e.discharge;
 
 export function addSpecialty(list: AmbSpecialty[], name: string, group: SpecialtyGroup): AmbSpecialty[] {
   const n = name.trim();

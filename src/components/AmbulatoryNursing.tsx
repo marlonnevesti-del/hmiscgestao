@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CallPanelButton } from "./CallPanelButton";
 import { canAct, type Patient } from "@/lib/hospital-data";
-import { nowHM, professionalName, updatePatient, useStore } from "@/lib/hospital-store";
+import { completeAmbulatoryNursing, useStore } from "@/lib/hospital-store";
 import type { Encounter } from "@/lib/care-flow";
 import { needsNursingPreConsult } from "@/lib/ambulatorio";
 
@@ -35,23 +35,29 @@ function NursingCard({ encounter, patient }: { encounter: Encounter; patient: Pa
     if (!window.confirm(`Confirmar registro da pré-consulta de ${patient.name}?`)) return;
     const n = (k: string) => Number((v[k] ?? "").replace(",", ".")) || 0;
     const sv = FIELDS.filter(([k]) => v[k]).map(([k, l]) => `${l}: ${v[k]}`).join(" · ");
-    updatePatient(patient.id, (x) => ({
-      ...(n("peso") > 0 ? { weight: n("peso") } : {}), ...(n("altura") > 0 ? { height: n("altura") } : {}),
-      vitals: sv ? [...x.vitals, { time: nowHM(), pas: n("pas"), pad: n("pad"), fc: n("fc"), fr: n("fr"), tax: n("tax"), sat: n("sat"), dor: 0, ingesta: 0, diurese: 0, vomitos: 0 }] : x.vitals,
-      evolutions: [{ time: new Date().toLocaleString("pt-BR"), cat: "Enfermagem" as const, author: professionalName(profile), text: `Pré-consulta ${encounter.number}${sv ? `\nSinais vitais: ${sv}` : ""}\n${text.trim()}` }, ...x.evolutions],
-    }));
-    setText(""); setV({}); setOpen(false); toast.success("Pré-consulta registrada no prontuário");
+    try {
+      completeAmbulatoryNursing(encounter.id, {
+        ...(sv ? { vitals: { pas: n("pas"), pad: n("pad"), fc: n("fc"), fr: n("fr"), tax: n("tax"), sat: n("sat") }, summary: sv } : {}),
+        ...(n("peso") > 0 ? { weight: n("peso") } : {}),
+        ...(n("altura") > 0 ? { height: n("altura") } : {}),
+        text,
+      });
+      setText(""); setV({}); setOpen(false);
+      toast.success("Pré-consulta finalizada e paciente liberado para o consultório médico");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Não foi possível finalizar a pré-consulta");
+    }
   };
   return <div className="rounded-xl border bg-card p-3">
     <div className="flex flex-wrap items-center gap-2">
-      <div className="min-w-0 flex-1"><div className="font-medium">{patient.name} <span className="text-xs text-muted-foreground">{patient.age}</span></div><div className="text-xs text-muted-foreground">{encounter.number} · {encounter.complaint}{done ? " · pré-consulta realizada" : ""}</div></div>
+      <div className="min-w-0 flex-1"><div className="font-medium">{patient.name} <span className="text-xs text-muted-foreground">{patient.age}</span></div><div className="text-xs text-muted-foreground">{encounter.number} · {encounter.complaint}{encounter.status_fluxo === "AGUARDANDO_TRIAGEM" ? " · aguardando enfermagem (médico ainda não alertado)" : done ? " · encaminhado ao consultório" : ""}</div></div>
       {allowed && <CallPanelButton patientId={patient.id} fixedRoom="Enfermagem" />}
       <Button size="sm" disabled={!allowed} onClick={() => setOpen((o) => !o)}>{open ? "Fechar" : "Pré-consulta"}</Button>
     </div>
     {open && <div className="mt-3 space-y-2">
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">{FIELDS.map(([k, l]) => <Input key={k} aria-label={l} placeholder={l} inputMode="decimal" value={v[k] ?? ""} onChange={(ev) => setV({ ...v, [k]: ev.target.value })} />)}</div>
       <textarea aria-label="Evolução de enfermagem" rows={6} value={text} onChange={(ev) => setText(ev.target.value)} placeholder="Evolução de enfermagem: queixa, antecedentes, orientações…" className="w-full rounded-md border bg-background p-2 text-sm" />
-      <Button onClick={save} disabled={!text.trim()}>Salvar evolução</Button>
+      <Button onClick={save} disabled={!text.trim()}>Finalizar pré-consulta e liberar para médico</Button>
     </div>}
   </div>;
 }

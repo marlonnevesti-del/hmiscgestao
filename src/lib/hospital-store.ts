@@ -28,7 +28,7 @@ export const WAREHOUSE_CATALOG = catalogToStock(WAREHOUSE, 'almox');
 import { registrationPatch } from "./patient-registration-mapping";
 import type { PatientRegistration } from "./patient-registration";
 import { doctorKey, validDoctorCns, documentCns, learnDoctor, mergeDoctors, mergeImportedDoctors, resolveDoctor, type Doctor } from "./doctors";
-import { addSpecialty, DEFAULT_SPECIALTIES, type AmbSpecialty, type Appointment, type SadtReport, type SpecialtyGroup } from "./ambulatorio";
+import { addSpecialty, canEditOrCancelEncounter, DEFAULT_SPECIALTIES, isObstetricSpecialty, type AmbSpecialty, type Appointment, type SadtReport, type SpecialtyGroup } from "./ambulatorio";
 
 interface State { encounters: Encounter[]; beSequence: number; fiaSequence: number; stock: StockMedication[]; warehouse: StockMedication[]; profile: Profile; employeeName: string; patients: Patient[]; queue: QueueItem[]; surgeries: Surgery[]; admins: Record<string, Admin>; rooms: string[]; calls: PanelCall[]; cidGroups: CidGroup[]; cidAreas: CidArea[]; employeeArea: string; accessAreas: string[] | null; removedStock: string[]; movements: Movement[]; requests: SupplyRequest[]; ambSpecialties: AmbSpecialty[]; appointments: Appointment[]; cmeKits: CmeKit[]; cmeCycles: CmeCycle[]; doctors: Doctor[]; milkBank: import('./milk-bank').MilkBank }
 let state: State = { profile: "Outro", employeeName: "", patients: [], queue: [], surgeries: [], admins: {}, encounters: [], beSequence: 0, fiaSequence: 0, stock: PHARMACY_CATALOG, warehouse: WAREHOUSE_CATALOG, rooms: DEFAULT_ROOMS, calls: [], cidGroups: DEFAULT_CID_GROUPS, cidAreas: DEFAULT_CID_AREAS, employeeArea: "", accessAreas: null, removedStock: [], movements: [], requests: [], ambSpecialties: DEFAULT_SPECIALTIES, appointments: [], cmeKits: DEFAULT_KITS, cmeCycles: [], doctors: [], milkBank: EMPTY_MILK_BANK };
@@ -73,11 +73,58 @@ export function openEncounter(patient: Patient, type: string, specialty: string,
   const at = new Date().toISOString();
   const beq = takeSequence('baa', state.beSequence + 1);
   const number = `BAA-${new Date().getFullYear()}-${String(beq).padStart(6, '0')}`;
-  const e: Encounter = { id: crypto.randomUUID(), patientId: patient.id, number, type, specialty, complaint, ...(nursingPreConsult && type === 'Ambulatório' ? { nursingPreConsult: true } : {}), status_fluxo: 'AGUARDANDO_TRIAGEM', openedAt: at, history: [{ status: 'AGUARDANDO_TRIAGEM', at, by: professionalName(state.profile), note: 'Recepção: abertura de BAA' }] };
-  const direct = type === 'Ambulatório';
-  const opened = direct ? transition(e, 'AGUARDANDO_MEDICO', professionalName(state.profile), 'Ambulatório: pré-consulta de enfermagem e atendimento', at) : e;
+  const ambToNursing = type === 'Ambulatório' && (nursingPreConsult || isObstetricSpecialty(specialty));
+  const e: Encounter = { id: crypto.randomUUID(), patientId: patient.id, number, type, specialty, complaint, ...(ambToNursing ? { nursingPreConsult: true } : {}), status_fluxo: 'AGUARDANDO_TRIAGEM', openedAt: at, history: [{ status: 'AGUARDANDO_TRIAGEM', at, by: professionalName(state.profile), note: ambToNursing ? 'Recepção: encaminhado para Triagem / Enfermagem' : 'Recepção: abertura de BAA' }] };
+  const direct = type === 'Ambulatório' && !ambToNursing;
+  const opened = direct ? transition(e, 'AGUARDANDO_MEDICO', professionalName(state.profile), 'Ambulatório: encaminhado direto ao Consultório', at) : e;
   setState((s) => ({ beSequence: Math.max(s.beSequence, beq), patients: [...s.patients.filter((p) => p.id !== patient.id), patient], encounters: [...s.encounters, opened], queue: direct ? s.queue : [...s.queue, { id: e.id, name: patient.name, group: patient.type === 'gestante' || patient.type === 'puerpera' ? 'obstetrica' : 'pediatria', complaint, arrivedMinAgo: 0, detail: patient.age }] }));
   return opened;
+}
+export function switchAmbulatorySector(id: string, toNursing: boolean) {
+  requireAction('recepcao');
+  const { e } = getEncounter(id);
+  if (e.type !== 'Ambulatório') throw new Error('Troca de setor disponível apenas para o Ambulatório.');
+  if (!canEditOrCancelEncounter(e)) throw new Error('Não é possível alterar o setor: o paciente já iniciou atendimento.');
+  const at = new Date().toISOString();
+  const by = professionalName(state.profile);
+  const { nursingPreConsult: _n, ...base } = e;
+  const nextStatus = toNursing ? 'AGUARDANDO_TRIAGEM' : 'AGUARDANDO_MEDICO';
+  const note = toNursing ? 'Recepção: alterado para Triagem / Enfermagem' : 'Recepção: alterado para Consultório Ambulatório';
+  const next: Encounter = { ...base, ...(toNursing ? { nursingPreConsult: true } : {}), status_fluxo: nextStatus, history: [...e.history, { status: nextStatus, at, by, note }] };
+  setState((s) => ({ encounters: s.encounters.map((x) => x.id === id ? next : x) }));
+  return next;
+}
+export function cancelUnattendedEncounter(id: string) {
+  requireAction('recepcao');
+  const { e } = getEncounter(id);
+  if (!canEditOrCancelEncounter(e)) throw new Error('Não é possível excluir: o paciente já iniciou atendimento.');
+  setState((s) => ({ encounters: s.encounters.filter((x) => x.id !== id), queue: s.queue.filter((q) => q.id !== id) }));
+}
+export function completeAmbulatoryNursing(
+  id: string,
+  input: { vitals?: { pas: number; pad: number; fc: number; fr: number; tax: number; sat: number }; weight?: number; height?: number; summary?: string; text: string },
+) {
+  if (!canAct(state.profile, 'checar', state.accessAreas) && !canAct(state.profile, 'triagem', state.accessAreas)) {
+    throw new Error('Sem permissão para finalizar pré-consulta de enfermagem.');
+  }
+  if (!input.text.trim()) throw new Error('Digite a evolução de enfermagem.');
+  const { e, p } = getEncounter(id);
+  const at = new Date().toISOString();
+  const by = professionalName(state.profile);
+  const next = e.status_fluxo === 'AGUARDANDO_TRIAGEM'
+    ? transition(e, 'AGUARDANDO_MEDICO', by, 'Enfermagem: pré-consulta finalizada e encaminhada ao consultório', at)
+    : { ...e, history: [...e.history, { status: e.status_fluxo, at, by, note: 'Enfermagem: pré-consulta atualizada' }] };
+  const evoText = `Pré-consulta ${e.number}${input.summary ? `\nSinais vitais: ${input.summary}` : ''}\n${input.text.trim()}`;
+  commitEncounter(next, {
+    patients: state.patients.map((x) => x.id === p.id ? {
+      ...x,
+      ...(input.weight && input.weight > 0 ? { weight: input.weight } : {}),
+      ...(input.height && input.height > 0 ? { height: input.height } : {}),
+      vitals: input.vitals ? [...x.vitals, { time: nowHM(), ...input.vitals, dor: 0, ingesta: 0, diurese: 0, vomitos: 0 }] : x.vitals,
+      evolutions: [{ time: new Date().toLocaleString('pt-BR'), cat: 'Enfermagem' as const, author: by, text: evoText }, ...x.evolutions],
+    } : x),
+  });
+  return next;
 }
 export function savePatientRegistration(id: string, input: PatientRegistration) {
   requireAction('recepcao');

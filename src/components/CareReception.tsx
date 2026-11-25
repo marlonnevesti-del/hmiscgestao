@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Printer } from "lucide-react";
+import { ArrowLeftRight, Printer, X } from "lucide-react";
 import { PatientSheetPrint, printSheet } from "./PatientSheetPrint";
 import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
@@ -16,14 +16,14 @@ import { registrationFor, registrationPatch } from "@/lib/patient-registration-m
 import { PEDIATRIC_EXCEPTION_REASONS, ageYears, pediatricAgeIssue, newbornBirthIssue, registrationIssues, registrationSchema, unknownPatientName, type RegistrationMode } from "@/lib/patient-registration";
 import { ATTENDANCE_TYPES, type Encounter } from "@/lib/care-flow";
 import { can, canAct, type Patient } from "@/lib/hospital-data";
-import { deleteEncounter, openEncounter, professionalName, registerPatientOnly, savePatientRegistration, useStore } from "@/lib/hospital-store";
+import { cancelUnattendedEncounter, deleteEncounter, openEncounter, professionalName, registerPatientOnly, savePatientRegistration, switchAmbulatorySector, useStore } from "@/lib/hospital-store";
 import { SPECIAL_CONDITIONS } from "@/lib/special-conditions";
-import { GROUP_LABELS, isObstetricSpecialty, type CareUnit } from "@/lib/ambulatorio";
+import { AMBULATORY_MOTIVES, GROUP_LABELS, canEditOrCancelEncounter, isObstetricSpecialty, type AmbulatoryMotive, type CareUnit } from "@/lib/ambulatorio";
 
 const INITIAL_FORM = {
   name: "", cpf: "", birth: "", mother: "", guardian: "", insurance: "SUS",
   type: ATTENDANCE_TYPES[0] as string, specialty: "Obstetrícia",
-  patientType: "gestante" as Patient["type"], complaint: "",
+  patientType: "gestante" as Patient["type"], complaint: "", ambMotive: "CONSULTA" as AmbulatoryMotive,
   conditions: [] as string[], otherCondition: "", nursingPreConsult: false,
 };
 
@@ -118,18 +118,21 @@ export function CareReception({ unit }: { unit?: CareUnit } = {}) {
     try {
       const { patient, reg } = buildPatient(true);
       if (!window.confirm(`Confirmar o cadastro e a abertura do atendimento de ${patient.name}?\nNascimento: ${reg.birthDate || "não informado"} · Sexo: ${reg.sex || "—"} · CNS/CPF: ${reg.cns || reg.cpf || "—"}`)) return;
-      const encounter = openEncounter({ ...patient, admission: new Date().toLocaleString("pt-BR"), prescriptions: [] }, f.type, f.specialty, overPedAge && pedEx.on ? `${f.complaint} [Exceção pediátrica ${pedAge} anos: ${pedEx.reason}${pedEx.note.trim() ? ` – ${pedEx.note.trim()}` : ""}]` : f.complaint, f.nursingPreConsult);
+      const baseComplaint = unit === "Ambulatório" ? (f.complaint.trim() ? `${f.ambMotive} · ${f.complaint.trim()}` : f.ambMotive) : f.complaint;
+      const finalComplaint = overPedAge && pedEx.on ? `${baseComplaint} [Exceção pediátrica ${pedAge} anos: ${pedEx.reason}${pedEx.note.trim() ? ` – ${pedEx.note.trim()}` : ""}]` : baseComplaint;
+      const toNursing = unit === "Ambulatório" ? (f.nursingPreConsult || isObstetricSpecialty(f.specialty)) : f.nursingPreConsult;
+      const encounter = openEncounter({ ...patient, admission: new Date().toLocaleString("pt-BR"), prescriptions: [] }, f.type, f.specialty, finalComplaint, toNursing);
       setCreated(encounter);
-      toast.success(`${encounter.number} gerado e enviado para ${encounter.status_fluxo === "AGUARDANDO_TRIAGEM" ? "triagem" : "atendimento"}`);
+      toast.success(`${encounter.number} gerado e enviado para ${encounter.status_fluxo === "AGUARDANDO_TRIAGEM" ? "Triagem / Enfermagem" : "Consultório Ambulatório"}`);
       clearIdentity();
-      setF((current) => ({ ...current, complaint: "", nursingPreConsult: false }));
+      setF((current) => ({ ...current, complaint: "", ambMotive: "CONSULTA", nursingPreConsult: false }));
       setPedEx({ on: false, reason: "", note: "" });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Não foi possível abrir o atendimento");
     }
   };
 
-  const textFields = (unit === "Ambulatório" ? [["complaint", "Motivo da consulta"]] : [["specialty", "Especialidade"], ["complaint", "Queixa principal"]]) as readonly (readonly ["specialty" | "complaint", string])[];
+  const textFields = (unit === "Ambulatório" ? [["complaint", "Observação / Queixa (opcional)"]] : [["specialty", "Especialidade"], ["complaint", "Queixa principal"]]) as readonly (readonly ["specialty" | "complaint", string])[];
   const shown = unit ? encounters.filter((encounter) => encounter.type === unit) : encounters;
 
   return <div className="space-y-4">
@@ -149,9 +152,18 @@ export function CareReception({ unit }: { unit?: CareUnit } = {}) {
         <div className="min-w-0 md:col-span-3"><PatientRegistrationFields birthError={birthError} mode={mode} value={registration} onChange={setRegistration} recordNumber={patients.find(p => p.id === existing)?.prontuario} /></div>
         {existing && <div className="md:col-span-3"><Button type="button" variant="outline" onClick={() => { try { savePatientRegistration(existing, registration); toast.success("Cadastro atualizado sem abrir novo atendimento"); } catch (error) { toast.error(error instanceof Error ? error.message : "Não foi possível salvar"); } }}>Salvar alterações do cadastro</Button></div>}
         <h2 className="mt-3 border-t pt-4 font-semibold md:col-span-3">Abertura de atendimento</h2>
-        {unit === "Ambulatório" && <label className="grid gap-1 text-xs">Especialidade<select aria-label="Especialidade" value={f.specialty} onChange={(event) => set("specialty", event.target.value)} className="h-9 rounded-md border bg-background px-2"><option value="">Selecione…</option>{(["medica", "nao_medica", "sadt"] as const).map((g) => <optgroup key={g} label={GROUP_LABELS[g]}>{ambSpecialties.filter((x) => x.group === g && x.active).map((x) => <option key={x.id} value={x.name}>{x.name}</option>)}</optgroup>)}</select></label>}
-        {unit === "Ambulatório" && <label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={f.nursingPreConsult || isObstetricSpecialty(f.specialty)} disabled={isObstetricSpecialty(f.specialty)} onChange={(event) => setF((c) => ({ ...c, nursingPreConsult: event.target.checked }))} />Encaminhar para pré-consulta de enfermagem{isObstetricSpecialty(f.specialty) ? " (obrigatória: obstétrico)" : ""}</label>}
-        {textFields.map(([key, label]) => <label key={key} className="grid gap-1 text-xs">{label}<Input value={f[key]} onChange={(event) => set(key, event.target.value)} required={["name", "specialty", "complaint"].includes(key)} /></label>)}
+        {unit === "Ambulatório" && <>
+          <div className="grid gap-1 text-xs md:col-span-3">
+            <span className="font-medium">Setor de atendimento</span>
+            <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Setor de atendimento">
+              <Button type="button" size="sm" variant={!(f.nursingPreConsult || isObstetricSpecialty(f.specialty)) ? "default" : "outline"} disabled={isObstetricSpecialty(f.specialty)} onClick={() => setF((c) => ({ ...c, nursingPreConsult: false }))}>Consultório Ambulatório</Button>
+              <Button type="button" size="sm" variant={(f.nursingPreConsult || isObstetricSpecialty(f.specialty)) ? "default" : "outline"} onClick={() => setF((c) => ({ ...c, nursingPreConsult: true }))}>Triagem / Enfermagem{isObstetricSpecialty(f.specialty) ? " (obrigatória: obstétrico)" : ""}</Button>
+            </div>
+          </div>
+          <label className="grid gap-1 text-xs">Motivo de atendimento<select aria-label="Motivo de atendimento" value={f.ambMotive} onChange={(event) => setF((c) => ({ ...c, ambMotive: event.target.value as AmbulatoryMotive }))} className="h-9 rounded-md border bg-background px-2">{AMBULATORY_MOTIVES.map((m) => <option key={m} value={m}>{m}</option>)}</select></label>
+          <label className="grid gap-1 text-xs">Tipo de atendimento (Especialidade)<select aria-label="Especialidade" value={f.specialty} onChange={(event) => set("specialty", event.target.value)} required className="h-9 rounded-md border bg-background px-2"><option value="">Selecione…</option>{(["medica", "nao_medica", "sadt"] as const).map((g) => <optgroup key={g} label={GROUP_LABELS[g]}>{ambSpecialties.filter((x) => x.group === g && x.active).map((x) => <option key={x.id} value={x.name}>{x.name}</option>)}</optgroup>)}</select></label>
+        </>}
+        {textFields.map(([key, label]) => <label key={key} className="grid gap-1 text-xs">{label}<Input value={f[key]} onChange={(event) => set(key, event.target.value)} required={unit === "Ambulatório" ? false : ["name", "specialty", "complaint"].includes(key)} /></label>)}
         <label className="grid gap-1 text-xs">Tipo de paciente<select aria-label="Tipo de paciente" value={f.patientType} onChange={(event) => set("patientType", event.target.value)} className="h-9 rounded-md border bg-background px-2">{[["gestante", "Gestante"], ["puerpera", "Puérpera"], ["pediatria", "Criança"], ["neonato", "Recém-nascido"]].map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label>
         {overPedAge && <div role="alert" className={`grid gap-2 rounded-lg border-2 p-3 text-xs md:col-span-3 ${pedError ? "border-destructive bg-destructive/10" : "border-clinical bg-clinical-soft"}`}>
           <div className="font-semibold text-destructive">Paciente com {pedAge} anos excede o limite padrão da Pediatria (14 anos).</div>
@@ -178,7 +190,9 @@ export function CareReception({ unit }: { unit?: CareUnit } = {}) {
     <h2 className="font-semibold">Atendimentos abertos ({shown.filter((encounter) => encounter.status_fluxo !== "ALTA_HOSPITALAR").length})</h2>
     {shown.slice().reverse().map((encounter) => {
       const patient = patients.find((item) => item.id === encounter.patientId);
-      return <div key={encounter.id} className="border-b py-2"><div className="flex flex-wrap items-center gap-2"><Button variant="link" asChild><Link to="/pacientes/$id" params={{ id: encounter.patientId }}>{patient?.name}</Link></Button><SpecialConditionBadges patient={patient} /><span className="text-xs text-muted-foreground">{encounter.number}</span>{patient && <InpatientDocsButtons p={patient} e={encounter} />}{profile === "Administrador" && <Button size="sm" variant="ghost" className="text-destructive" onClick={() => { if (!window.confirm(`Apagar o atendimento ${encounter.number} de ${patient?.name ?? "paciente"}? Esta ação não pode ser desfeita.`)) return; try { deleteEncounter(encounter.id); toast.success("Atendimento apagado"); } catch (error) { toast.error(error instanceof Error ? error.message : "Não foi possível apagar"); } }}>Apagar</Button>}</div><EncounterTimeline patientId={encounter.patientId} /></div>;
+      const unattended = canEditOrCancelEncounter(encounter);
+      const canRec = canAct(profile, "recepcao", accessAreas);
+      return <div key={encounter.id} className="border-b py-2"><div className="flex flex-wrap items-center gap-2"><Button variant="link" asChild><Link to="/pacientes/$id" params={{ id: encounter.patientId }}>{patient?.name}</Link></Button><SpecialConditionBadges patient={patient} /><span className="text-xs text-muted-foreground">{encounter.number}</span>{patient && <InpatientDocsButtons p={patient} e={encounter} />}{encounter.type === "Ambulatório" && unattended && canRec && <Button size="sm" variant="outline" onClick={() => { const toNursing = encounter.status_fluxo !== "AGUARDANDO_TRIAGEM"; try { switchAmbulatorySector(encounter.id, toNursing); toast.success(toNursing ? "Alterado para Triagem / Enfermagem" : "Alterado para Consultório Ambulatório"); } catch (error) { toast.error(error instanceof Error ? error.message : "Não foi possível alterar o setor"); } }}><ArrowLeftRight className="h-3.5 w-3.5" />{encounter.status_fluxo === "AGUARDANDO_TRIAGEM" ? "Mudar para Consultório" : "Mudar para Triagem"}</Button>}{unattended && canRec && <Button size="icon" variant="ghost" aria-label={`Excluir atendimento ${encounter.number}`} title="Excluir atendimento não iniciado" className="ml-auto h-7 w-7 text-destructive" onClick={() => { if (!window.confirm(`Excluir o atendimento ${encounter.number} de ${patient?.name ?? "paciente"}? Só é possível enquanto não houver atendimento iniciado.`)) return; try { cancelUnattendedEncounter(encounter.id); toast.success("Atendimento excluído"); } catch (error) { toast.error(error instanceof Error ? error.message : "Não foi possível excluir"); } }}><X className="h-4 w-4" /></Button>}{!unattended && profile === "Administrador" && <Button size="sm" variant="ghost" className="text-destructive" onClick={() => { if (!window.confirm(`Apagar o atendimento ${encounter.number} de ${patient?.name ?? "paciente"}? Esta ação não pode ser desfeita.`)) return; try { deleteEncounter(encounter.id); toast.success("Atendimento apagado"); } catch (error) { toast.error(error instanceof Error ? error.message : "Não foi possível apagar"); } }}>Apagar</Button>}</div><EncounterTimeline patientId={encounter.patientId} /></div>;
     })}
     {!shown.length && <p className="py-6 text-sm text-muted-foreground">Nenhum atendimento aberto.</p>}
 
