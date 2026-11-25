@@ -507,6 +507,26 @@ export function saveSigtapCode(id: string, code: string) {
   if (c.length !== 10) return;
   setState((s) => ({ encounters: s.encounters.map((e) => e.id === id ? { ...e, sigtapCode: c } : e) }));
 }
+/** Registra procedimentos adicionais (ex.: aferição de PA, temperatura) com seus códigos SIGTAP no atendimento. */
+export function addEncounterProcedures(id: string, items: { name: string; code: string; sector?: string }[]) {
+  const clean = items.map((x) => ({ name: x.name.trim(), code: x.code.trim(), sector: x.sector?.trim() })).filter((x) => x.name);
+  if (!clean.length) return;
+  const at = new Date().toISOString();
+  const by = state.employeeName;
+  setState((s) => ({
+    encounters: s.encounters.map((e) => {
+      if (e.id !== id) return e;
+      const prev = e.extraProcedures ?? [];
+      const next = [...prev];
+      for (const item of clean) {
+        const digitsCode = item.code.replace(/\D/g, '');
+        const exists = next.some((p) => (digitsCode && p.code.replace(/\D/g, '') === digitsCode) || (!digitsCode && p.name.toLowerCase() === item.name.toLowerCase()));
+        if (!exists) next.push({ id: `proc-${crypto.randomUUID()}`, name: item.name, code: digitsCode.length === 10 ? digitsCode : item.code, ...(item.sector ? { sector: item.sector } : {}), at, by });
+      }
+      return { ...e, extraProcedures: next };
+    }),
+  }));
+}
 
 export function saveAihLaudo(id: string, data: Record<string, string>) {
   setState((s) => ({ encounters: s.encounters.map((e) => e.id === id ? { ...e, aihLaudo: { ...data, savedBy: s.employeeName, savedAt: new Date().toISOString() } } : e) }));

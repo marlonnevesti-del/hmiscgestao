@@ -15,12 +15,13 @@ export interface AdmissionRequest {
   isolation: boolean; oxygen: boolean; requestedAt: string; requestedBy: string; decidedAt?: string; decidedBy?: string; bed?: string; note?: string;
 }
 export interface FiaRecord { number: string; openedAt: string; ward: string; bed: string; doctor: string; authorizedBy: string; cid: string; justification: string; character: string }
+export interface ExtraProcedure { id: string; name: string; code: string; sector?: string; at: string; by: string }
 export interface Encounter {
   maternity?: import('./maternity').MaternityRecord[];
   id: string; number: string; patientId: string; status_fluxo: FlowStatus; openedAt: string; type: string; specialty: string; complaint: string; nursingPreConsult?: boolean;
   history: { status: FlowStatus; at: string; by: string; note: string }[];
   triage?: Triage; medical?: { anamnesis: string; exam: string; cid: string; diagnosis: string };
-  signedAt?: string; signedBy?: string; intervention?: string; dispensedAt?: string; dispensedBy?: string; requisition?: string; examPending?: string; discharge?: { summary: string; recipe: string; at: string; by: string }; admission?: AdmissionRequest; fia?: FiaRecord; baaClosedAt?: string; sadtReport?: import('./ambulatorio').SadtReport; aihLaudo?: Record<string, string>; sigtapCode?: string; examRequests?: import('./exam-requests').ExamRequest[]; clinicalDocs?: Partial<Record<import('./inpatient-docs').ClinicalDocKind, import('./inpatient-docs').ClinicalDoc[]>>;
+  signedAt?: string; signedBy?: string; intervention?: string; dispensedAt?: string; dispensedBy?: string; requisition?: string; examPending?: string; discharge?: { summary: string; recipe: string; at: string; by: string }; admission?: AdmissionRequest; fia?: FiaRecord; baaClosedAt?: string; sadtReport?: import('./ambulatorio').SadtReport; aihLaudo?: Record<string, string>; sigtapCode?: string; extraProcedures?: ExtraProcedure[]; examRequests?: import('./exam-requests').ExamRequest[]; clinicalDocs?: Partial<Record<import('./inpatient-docs').ClinicalDocKind, import('./inpatient-docs').ClinicalDoc[]>>;
 }
 const NEXT: Record<FlowStatus, FlowStatus[]> = {
   AGUARDANDO_TRIAGEM: ['AGUARDANDO_MEDICO'],
