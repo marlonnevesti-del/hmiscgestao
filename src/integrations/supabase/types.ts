@@ -53,6 +53,45 @@ export type Database = {
         }
         Relationships: []
       }
+      clinical_state_history: {
+        Row: {
+          appointment_count: number
+          data: Json
+          encounter_count: number
+          id: string
+          patient_count: number
+          reason: string
+          saved_at: string
+          saved_by: string | null
+          state_id: string
+          version: number
+        }
+        Insert: {
+          appointment_count?: number
+          data: Json
+          encounter_count?: number
+          id?: string
+          patient_count?: number
+          reason?: string
+          saved_at?: string
+          saved_by?: string | null
+          state_id?: string
+          version: number
+        }
+        Update: {
+          appointment_count?: number
+          data?: Json
+          encounter_count?: number
+          id?: string
+          patient_count?: number
+          reason?: string
+          saved_at?: string
+          saved_by?: string | null
+          state_id?: string
+          version?: number
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           access_areas: string[] | null
@@ -152,6 +191,10 @@ export type Database = {
       remove_employee_access: {
         Args: { target_id: string }
         Returns: undefined
+      }
+      restore_clinical_state_snapshot: {
+        Args: { _history_id: string }
+        Returns: number
       }
       review_employee: {
         Args: { new_status: string; target_id: string }

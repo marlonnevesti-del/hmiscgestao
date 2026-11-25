@@ -1,6 +1,6 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useMemo, useState, type ReactNode } from "react";
-import { Activity, Ambulance, Baby, Stethoscope, Package, BedDouble, Bell, ChevronLeft, ClipboardList, HeartPulse, Pill, Receipt, Scissors, Search, ShieldCheck, ShieldAlert, Tv, Dumbbell, Milk, Bone, ScanLine, Printer, UserCog, UserPlus, Users, LogOut } from "lucide-react";
+import { Activity, Ambulance, Baby, Stethoscope, Package, BedDouble, Bell, ChevronLeft, ClipboardList, HeartPulse, History, Pill, Receipt, Scissors, Search, ShieldCheck, ShieldAlert, Tv, Dumbbell, Milk, Bone, ScanLine, Printer, UserCog, UserPlus, Users, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
@@ -95,6 +95,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             </div>
           ))}
           {profile === "Administrador" && <Link to="/gestao-atendimentos" title="BAAs e FIAs abertas" className="flex items-center gap-3 rounded-md px-3 py-2 text-sm hover:bg-sidebar-accent"><ClipboardList className="h-4 w-4 shrink-0" />{!collapsed && "BAAs e FIAs abertas"}</Link>}
+          {profile === "Administrador" && <Link to="/seguranca-backups" title="Segurança e Backups" className="flex items-center gap-3 rounded-md px-3 py-2 text-sm hover:bg-sidebar-accent"><History className="h-4 w-4 shrink-0" />{!collapsed && "Segurança & Backups"}</Link>}
           {canApproveEmployees(access?.roles ?? [], access?.profile.status ?? "") && <Link to="/colaboradores" title="Colaboradores" className="flex items-center gap-3 rounded-md px-3 py-2 text-sm hover:bg-sidebar-accent"><UserCog className="h-4 w-4 shrink-0" />{!collapsed && "Colaboradores"}</Link>}
           {!collapsed && canAccessPage(profile, "/pacientes", accessAreas) && (() => {
             const admitted = patients.filter((p) => p.bed.trim() !== "").slice(0, 5);

@@ -106,6 +106,13 @@
       "when": 1795543680572,
       "tag": "0014_guard_clinical_state_version",
       "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1795605966891,
+      "tag": "0015_create_clinical_state_history",
+      "breakpoints": true
     }
   ]
 }

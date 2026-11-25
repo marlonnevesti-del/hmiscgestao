@@ -97,7 +97,7 @@ export const defaultAreas = (profile: Profile): string[] => [
 /** Areas chosen by the admin override the function defaults; null means "use the function". */
 export function canAccessPage(profile: Profile, path: string, areas?: readonly string[] | null) {
   if (profile === "Administrador") return true;
-  if (path.startsWith("/gestao-atendimentos")) return false;
+  if (path.startsWith("/gestao-atendimentos") || path.startsWith("/seguranca-backups")) return false;
   if (path === "/" || path === "/solicitacao-almoxarifado") return true;
   const seg = path.split("/")[1] ?? "";
   if (UNIT_IDS.includes(seg)) { const u = UNIT_AREAS.find((x) => x.id === seg)!; return u.tabs.some((t) => canAccessUnitTab(profile, u.id, t.id, areas)); }
