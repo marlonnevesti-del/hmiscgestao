@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
-import { Check, Plus, Printer, X } from "lucide-react";
+import { Check, Plus, Printer, Save, X } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -44,6 +45,16 @@ export function ProcedurePrintButton({ patientId, sector = "", procedure = "", s
     setAdding(false);
   };
   const allItems: ProcItem[] = f.name.trim() ? [...items, { id: "draft", name: f.name.trim(), code: f.code.trim() }] : items;
+  const saveRecord = () => {
+    rememberDoctor(f.professional, f.register);
+    if (enc) {
+      addEncounterProcedures(
+        enc.id,
+        allItems.map((x) => ({ name: x.name, code: x.code, sector: f.sector })),
+        { professional: f.professional, register: f.register, sector: f.sector, indication: f.indication, description: f.description, materials: f.materials, complications: f.complications, notes: f.notes },
+      );
+    }
+  };
   return <>
     <Button type="button" size={size} variant="outline" onClick={() => { setF(blank()); setItems([]); setAdding(true); setOpen(true); }}><Printer className="mr-1 h-4 w-4" />Imprimir procedimento</Button>
     <Dialog open={open} onOpenChange={setOpen}>
@@ -75,7 +86,10 @@ export function ProcedurePrintButton({ patientId, sector = "", procedure = "", s
           <label className="grid gap-1 text-xs">Profissional executante<DoctorNameInput value={f.professional} onChange={set("professional")} onCrm={set("register")} /></label>{field("register", "Registro (CRM / COREN / CREFITO)")}{field("assistant", "Auxiliar / equipe")}{field("indication", "Indicação / diagnóstico")}
           {area("description", "Descrição técnica")}{area("materials", "Materiais / medicamentos utilizados")}{area("complications", "Intercorrências")}{area("notes", "Orientações / observações")}
         </div>
-        <Button disabled={!allItems.length} onClick={() => { rememberDoctor(f.professional, f.register); if (enc) addEncounterProcedures(enc.id, allItems.map((x) => ({ name: x.name, code: x.code, sector: f.sector }))); setOpen(false); printProcedure(); }}><Printer className="mr-1 h-4 w-4" />Imprimir ficha</Button>
+        <div className="flex flex-wrap justify-end gap-2">
+          <Button type="button" variant="secondary" disabled={!allItems.length} onClick={() => { saveRecord(); setOpen(false); toast.success("Procedimentos salvos no prontuário e faturamento SUS"); }}><Save className="mr-1 h-4 w-4" />Salvar no prontuário</Button>
+          <Button type="button" disabled={!allItems.length} onClick={() => { saveRecord(); setOpen(false); printProcedure(); }}><Printer className="mr-1 h-4 w-4" />Imprimir ficha</Button>
+        </div>
       </DialogContent>
     </Dialog>
     {open || allItems.length > 0 ? <ProcedureSheet f={f} items={allItems} p={p} be={enc?.number} /> : null}

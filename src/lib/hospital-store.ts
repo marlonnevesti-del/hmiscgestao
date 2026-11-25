@@ -639,13 +639,18 @@ export function saveSigtapCode(id: string, code: string) {
   setState((s) => ({ encounters: s.encounters.map((e) => e.id === id ? { ...e, sigtapCode: c } : e) }));
 }
 /** Registra procedimentos adicionais (ex.: aferição de PA, temperatura) com seus códigos SIGTAP no atendimento. */
-export function addEncounterProcedures(id: string, items: { name: string; code: string; sector?: string }[]) {
+export function addEncounterProcedures(
+  id: string,
+  items: { name: string; code: string; sector?: string }[],
+  clinicalNote?: { professional?: string; register?: string; sector?: string; indication?: string; description?: string; materials?: string; complications?: string; notes?: string },
+) {
   const clean = items.map((x) => ({ name: x.name.trim(), code: x.code.trim(), sector: x.sector?.trim() })).filter((x) => x.name);
   if (!clean.length) return;
   const at = new Date().toISOString();
   const by = state.employeeName;
-  setState((s) => ({
-    encounters: s.encounters.map((e) => {
+  setState((s) => {
+    const target = s.encounters.find((e) => e.id === id);
+    const encounters = s.encounters.map((e) => {
       if (e.id !== id) return e;
       const prev = e.extraProcedures ?? [];
       const next = [...prev];
@@ -655,8 +660,24 @@ export function addEncounterProcedures(id: string, items: { name: string; code: 
         if (!exists) next.push({ id: `proc-${crypto.randomUUID()}`, name: item.name, code: digitsCode.length === 10 ? digitsCode : item.code, ...(item.sector ? { sector: item.sector } : {}), at, by });
       }
       return { ...e, extraProcedures: next };
-    }),
-  }));
+    });
+    if (!target || !clinicalNote) return { encounters };
+    const lines = [
+      `Procedimento(s): ${clean.map((x) => `${x.name}${x.code ? ` (${x.code})` : ''}`).join('; ')}`,
+      clinicalNote.sector?.trim() ? `Setor: ${clinicalNote.sector.trim()}` : '',
+      clinicalNote.indication?.trim() ? `Indicação: ${clinicalNote.indication.trim()}` : '',
+      clinicalNote.description?.trim() ? `Descrição técnica: ${clinicalNote.description.trim()}` : '',
+      clinicalNote.materials?.trim() ? `Materiais/med.: ${clinicalNote.materials.trim()}` : '',
+      clinicalNote.complications?.trim() ? `Intercorrências: ${clinicalNote.complications.trim()}` : '',
+      clinicalNote.notes?.trim() ? `Observações: ${clinicalNote.notes.trim()}` : '',
+    ].filter(Boolean);
+    const author = [clinicalNote.professional?.trim() || by, clinicalNote.register?.trim()].filter(Boolean).join(' · ');
+    const evo = { time: new Date(at).toLocaleString('pt-BR'), cat: 'Procedimento' as const, author, text: lines.join('\n') };
+    return {
+      encounters,
+      patients: s.patients.map((p) => (p.id === target.patientId ? { ...p, evolutions: [evo, ...p.evolutions] } : p)),
+    };
+  });
 }
 
 export function saveAihLaudo(id: string, data: Record<string, string>) {

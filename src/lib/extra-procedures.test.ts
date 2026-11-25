@@ -27,4 +27,24 @@ describe("procedimentos adicionais com SIGTAP", () => {
     expect(extraRows.map((r) => r.procedure)).toEqual(["0301100250", "0301100039"]);
     expect(extraRows.every((r) => r.kind === "BPA")).toBe(true);
   });
+
+  it("registra evolução clínica no prontuário ao salvar com descrição técnica e materiais", () => {
+    setState(() => ({ profile: "Administrador", employeeName: "Enf. Teste", accessAreas: null, patients: [], encounters: [], queue: [], surgeries: [], beSequence: 0 }));
+    const p = { id: "p-proc-2", name: "Paciente Evolução Proc", age: "32a", type: "maternidade", risk: "verde", bed: "", weight: 68, allergies: [], risks: [], vitals: [], prescriptions: [], evolutions: [], exams: [] } as unknown as Patient;
+    const enc = openEncounter(p, "Pronto socorro", "Clínica Médica", "Ferimento");
+
+    addEncounterProcedures(
+      enc.id,
+      [{ name: "SUTURA SIMPLES", code: "04.01.01.005-8", sector: "Consultório médico" }],
+      { professional: "Dr. Carlos", register: "CRM-SC 12345", sector: "Consultório médico", description: "Sutura com 3 pontos simples", materials: "Fio nylon 4-0, lidocaína 2%" },
+    );
+
+    const savedPatient = getState().patients.find((x) => x.id === p.id);
+    expect(savedPatient?.evolutions).toHaveLength(1);
+    expect(savedPatient?.evolutions[0]?.cat).toBe("Procedimento");
+    expect(savedPatient?.evolutions[0]?.author).toBe("Dr. Carlos · CRM-SC 12345");
+    expect(savedPatient?.evolutions[0]?.text).toContain("SUTURA SIMPLES (04.01.01.005-8)");
+    expect(savedPatient?.evolutions[0]?.text).toContain("Sutura com 3 pontos simples");
+    expect(savedPatient?.evolutions[0]?.text).toContain("Fio nylon 4-0, lidocaína 2%");
+  });
 });
