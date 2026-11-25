@@ -42,6 +42,14 @@ export const ACCESS_AREAS = [
   { id: "farmacia", label: "Farmácia" }, { id: "almoxarifado", label: "Almoxarifado" }, { id: "faturamento", label: "Faturamento (TISS e SUS)" }, { id: "nir", label: "NIR – Regulação de Leitos" }, { id: "sciras", label: "SCIRAS / CCIH" },
   { id: "uti-uci", label: "UTI Ped · UCI · UTI Neo" }, { id: "fisioterapia", label: "Fisioterapia" }, { id: "raio-x", label: "Raio-X" }, { id: "gesso", label: "Gesso" }, { id: "banco-de-leite", label: "Banco de Leite" },
 ] as const;
+export const INVENTORY_AREAS = [
+  { id: "inventario:farmacia", depot: "farmacia" as const, label: "Coordenação / Homologação de Inventário – Farmácia" },
+  { id: "inventario:almoxarifado", depot: "almoxarifado" as const, label: "Coordenação / Homologação de Inventário – Almoxarifado" },
+] as const;
+export function canApproveInventory(profile: Profile, depot: "farmacia" | "almoxarifado", areas?: readonly string[] | null) {
+  if (profile === "Administrador") return true;
+  return Boolean(areas?.includes(`inventario:${depot}`));
+}
 export type UnitArea = "ambulatorio" | "pronto-socorro" | "maternidade";
 export type UnitTab = "agenda" | "recepcao" | "acolhimento" | "atendimento" | "sadt" | "especialidades" | "internados" | "relatorios" | "observacao" | "assistencia" | "coordenacao";
 /** Care-unit entries with their selectable sub-levels (stored as "unit:tab"). */
@@ -61,6 +69,7 @@ export const PHARMACY_TABS = [
   { id: "kits", label: "Kits do centro cirúrgico" },
   { id: "etiquetas", label: "Etiquetas" },
   { id: "requisicao", label: "Saída via requisição" }, { id: "mapa", label: "Mapa de movimentação" },
+  { id: "inventario", label: "Inventário" },
 ] as const;
 /** Warehouse sections shown as sidebar sub-items (/almoxarifado?aba=id). */
 export const WAREHOUSE_TABS = [
@@ -70,6 +79,7 @@ export const WAREHOUSE_TABS = [
   { id: "transferencia", label: "Transferência" }, { id: "devolucao", label: "Devolução" },
   { id: "quebra", label: "Quebra / Extravio" }, { id: "etiquetas", label: "Etiquetas" },
   { id: "requisicao", label: "Saída via requisição" }, { id: "mapa", label: "Mapa de movimentação" },
+  { id: "inventario", label: "Inventário" },
 ] as const;
 const UNIT_IDS: string[] = UNIT_AREAS.map((u) => u.id);
 /** Default (function-derived) permission for one tab of a care unit. */

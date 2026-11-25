@@ -127,6 +127,13 @@
       "when": 1795607907096,
       "tag": "0017_add_employee_sector_access",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1795638490721,
+      "tag": "0018_inventory_coordinator_areas",
+      "breakpoints": true
     }
   ]
 }

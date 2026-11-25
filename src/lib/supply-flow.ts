@@ -1,7 +1,7 @@
 import type { StockMedication } from "./pharmacy-stock";
 
 export type Depot = "farmacia" | "almoxarifado";
-export type MovementKind = "transferencia" | "devolucao" | "quebra" | "entrada" | "emprestimo_saida" | "emprestimo_entrada" | "vencimento" | "consumo" | "requisicao";
+export type MovementKind = "transferencia" | "devolucao" | "quebra" | "entrada" | "emprestimo_saida" | "emprestimo_entrada" | "vencimento" | "consumo" | "requisicao" | "inventario";
 export interface Movement { id: string; kind: MovementKind; from: string; to: string; item: string; code?: string | undefined; qty: number; lot: string; reason: string; at: string; by: string; expiry?: string; doc?: string; due?: string; settledAt?: string; settledBy?: string; returnedQty?: number; returns?: { qty: number; at: string; by: string }[]; patient?: string; patientId?: string; fia?: string; baa?: string; costCenter?: string; urgent?: boolean }
 export const loanReturnedQty = (m: Movement) => m.returnedQty ?? (m.settledAt ? m.qty : 0);
 export interface SupplyRequest { id: string; target: Depot; items: string; sector: string; patient: string; note: string; status: "Pendente" | "Atendido" | "Recusado"; at: string; by: string; handledBy?: string; handledAt?: string; answer?: string }

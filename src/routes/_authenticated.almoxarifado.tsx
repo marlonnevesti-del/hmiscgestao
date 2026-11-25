@@ -5,6 +5,7 @@ import { BreakageForm, MovementLog, RequestInbox, ReturnForm, TransferForm, Entr
 import { ConsumptionReport, ExpiryPanel } from "@/components/ControlledCabinet";
 import { MovementMap, RequisitionOut } from "@/components/MovementMap";
 import { LabelStudio } from "@/components/LabelStudio";
+import { InventoryPanel } from "@/components/InventoryPanel";
 import { can, WAREHOUSE_TABS } from "@/lib/hospital-data";
 import { adjustWarehouse, deleteStockItem, useStore } from "@/lib/hospital-store";
 
@@ -39,5 +40,6 @@ function Almoxarifado() {
     <TabsContent value="quebra" className="space-y-3"><BreakageForm depot="almoxarifado" /><MovementLog kinds={["quebra"]} depot="almoxarifado" /></TabsContent>
     <TabsContent value="etiquetas"><LabelStudio depot="almoxarifado" /></TabsContent>
     <TabsContent value="requisicao"><RequisitionOut depot="almoxarifado" /></TabsContent><TabsContent value="mapa"><MovementMap depot="almoxarifado" /></TabsContent>
+    <TabsContent value="inventario"><InventoryPanel depot="almoxarifado" /></TabsContent>
   </Tabs></div>;
 }

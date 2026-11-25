@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StockTable } from "./StockTable";
 import { EncounterTimeline } from "./EncounterTimeline";
+import { InventoryPanel } from "./InventoryPanel";
 import { can, PHARMACY_TABS, WARDS } from "@/lib/hospital-data";
 import { findByBarcode } from "@/lib/barcode";
 import { BarcodeScan } from "./BarcodeScan";
@@ -51,6 +52,7 @@ function Pharmacy() {
     <TabsContent value="dispensados"><DispensedKits /></TabsContent><TabsContent value="kits"><SurgicalKits /></TabsContent>
     <TabsContent value="etiquetas"><LabelStudio /></TabsContent>
     <TabsContent value="requisicao"><RequisitionOut depot="farmacia" /></TabsContent><TabsContent value="mapa"><MovementMap depot="farmacia" /></TabsContent>
+    <TabsContent value="inventario"><InventoryPanel depot="farmacia" /></TabsContent>
   </Tabs>;
 }
 

@@ -13,7 +13,8 @@ import { linkCode } from "./barcode";
 import { PATIENTS, QUEUE, SURGERIES, type Admin, type Newborn, type Patient, type Profile, type QueueItem, type Surgery } from "./hospital-data";
 
 import { transition, validateTriage, type Encounter, type Triage, type FlowStatus } from "./care-flow";
-import { BASE_BEDS, can, canAct, canAccessPage } from "./hospital-data";
+import { BASE_BEDS, can, canAct, canAccessPage, canApproveInventory } from "./hospital-data";
+import { buildInventoryAdjustments, type InventorySession } from "./inventory";
 import { DEFAULT_CID_AREAS, DEFAULT_CID_GROUPS, addArea, addGroup, type CidArea, type CidGroup } from "./cid-access";
 import { DEFAULT_ROOMS, addRoomName, pushCall, removeRoomName, type PanelCall } from "./panel-calls";
 import { catalogToStock, findStockMedication, medicationKey, type StockMedication } from "./pharmacy-stock";
@@ -31,8 +32,8 @@ import { doctorKey, validDoctorCns, documentCns, learnDoctor, mergeDoctors, merg
 import { addSpecialty, canEditOrCancelEncounter, DEFAULT_SPECIALTIES, isObstetricSpecialty, type AmbSpecialty, type Appointment, type SadtReport, type SpecialtyGroup } from "./ambulatorio";
 import { normText, type AgendaImportItem } from "./agenda-import";
 
-interface State { encounters: Encounter[]; beSequence: number; fiaSequence: number; stock: StockMedication[]; warehouse: StockMedication[]; profile: Profile; employeeName: string; patients: Patient[]; queue: QueueItem[]; surgeries: Surgery[]; admins: Record<string, Admin>; rooms: string[]; calls: PanelCall[]; cidGroups: CidGroup[]; cidAreas: CidArea[]; employeeArea: string; accessAreas: string[] | null; removedStock: string[]; movements: Movement[]; requests: SupplyRequest[]; ambSpecialties: AmbSpecialty[]; appointments: Appointment[]; cmeKits: CmeKit[]; cmeCycles: CmeCycle[]; doctors: Doctor[]; milkBank: import('./milk-bank').MilkBank }
-let state: State = { profile: "Outro", employeeName: "", patients: [], queue: [], surgeries: [], admins: {}, encounters: [], beSequence: 0, fiaSequence: 0, stock: PHARMACY_CATALOG, warehouse: WAREHOUSE_CATALOG, rooms: DEFAULT_ROOMS, calls: [], cidGroups: DEFAULT_CID_GROUPS, cidAreas: DEFAULT_CID_AREAS, employeeArea: "", accessAreas: null, removedStock: [], movements: [], requests: [], ambSpecialties: DEFAULT_SPECIALTIES, appointments: [], cmeKits: DEFAULT_KITS, cmeCycles: [], doctors: [], milkBank: EMPTY_MILK_BANK };
+interface State { encounters: Encounter[]; beSequence: number; fiaSequence: number; stock: StockMedication[]; warehouse: StockMedication[]; profile: Profile; employeeName: string; patients: Patient[]; queue: QueueItem[]; surgeries: Surgery[]; admins: Record<string, Admin>; rooms: string[]; calls: PanelCall[]; cidGroups: CidGroup[]; cidAreas: CidArea[]; employeeArea: string; accessAreas: string[] | null; removedStock: string[]; movements: Movement[]; requests: SupplyRequest[]; ambSpecialties: AmbSpecialty[]; appointments: Appointment[]; cmeKits: CmeKit[]; cmeCycles: CmeCycle[]; doctors: Doctor[]; milkBank: import('./milk-bank').MilkBank; inventories: InventorySession[] }
+let state: State = { profile: "Outro", employeeName: "", patients: [], queue: [], surgeries: [], admins: {}, encounters: [], beSequence: 0, fiaSequence: 0, stock: PHARMACY_CATALOG, warehouse: WAREHOUSE_CATALOG, rooms: DEFAULT_ROOMS, calls: [], cidGroups: DEFAULT_CID_GROUPS, cidAreas: DEFAULT_CID_AREAS, employeeArea: "", accessAreas: null, removedStock: [], movements: [], requests: [], ambSpecialties: DEFAULT_SPECIALTIES, appointments: [], cmeKits: DEFAULT_KITS, cmeCycles: [], doctors: [], milkBank: EMPTY_MILK_BANK, inventories: [] };
 let employeeCrm = '';
 export function setEmployeeCrm(crm: string) { employeeCrm = crm; }
 export function currentDoctor() { return resolveDoctor(mergeDoctors(state.doctors), state.employeeName, employeeCrm); }
@@ -486,6 +487,86 @@ export function adjustWarehouse(id: string, delta: number, lot = '') {
   if (item.quantity + delta < 0) throw new Error('O ajuste não pode deixar o estoque negativo.');
   if (lot) { const next = changeQty(state.warehouse, id, delta, lot); setState(() => ({ warehouse: next })); return; }
   setState((s) => ({ warehouse: s.warehouse.map((x) => x.id === id ? { ...x, quantity: x.quantity + delta } : x) }));
+}
+export function saveInventoryCount(depot: Depot, itemId: string, countedQty: number) {
+  requireAction(depot);
+  if (!Number.isInteger(countedQty) || countedQty < 0) throw new Error('Informe uma contagem inteira maior ou igual a zero.');
+  const items = depot === 'farmacia' ? state.stock : state.warehouse;
+  const item = items.find((x) => x.id === itemId);
+  if (!item) throw new Error('Item não encontrado no estoque.');
+  const now = new Date().toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+  const by = professionalName(state.profile);
+  setState((s) => {
+    const list = Array.isArray(s.inventories) ? s.inventories : [];
+    const existing = list.find((inv) => inv.depot === depot && inv.status === 'rascunho');
+    const line = {
+      itemId: item.id,
+      ...(item.code ? { code: item.code } : {}),
+      name: item.name,
+      unit: item.unit,
+      ...(item.category ? { category: item.category } : {}),
+      ...(item.unitCost !== undefined ? { unitCost: item.unitCost } : {}),
+      systemQty: item.quantity,
+      countedQty,
+      countedBy: by,
+      countedAt: now,
+    };
+    if (existing) {
+      return { inventories: list.map((inv) => inv.id === existing.id ? { ...inv, updatedAt: now, updatedBy: by, lines: { ...inv.lines, [item.id]: line } } : inv) };
+    }
+    const created: InventorySession = { id: `inv-${crypto.randomUUID()}`, depot, status: 'rascunho', startedAt: now, startedBy: by, updatedAt: now, updatedBy: by, lines: { [item.id]: line } };
+    return { inventories: [created, ...list] };
+  });
+}
+export function clearInventoryCount(depot: Depot, itemId: string) {
+  requireAction(depot);
+  const now = new Date().toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+  const by = professionalName(state.profile);
+  setState((s) => ({
+    inventories: (Array.isArray(s.inventories) ? s.inventories : []).map((inv) => {
+      if (inv.depot !== depot || inv.status !== 'rascunho') return inv;
+      const { [itemId]: _removed, ...rest } = inv.lines;
+      return { ...inv, updatedAt: now, updatedBy: by, lines: rest };
+    }),
+  }));
+}
+export function approveInventoryCorrection(depot: Depot, justification: string) {
+  if (!canApproveInventory(state.profile, depot, state.accessAreas)) throw new Error('Apenas o coordenador de inventário ou administrador pode efetivar correções de estoque.');
+  const note = justification.trim();
+  if (!note) throw new Error('Informe uma justificativa formal para efetivar a correção de inventário.');
+  const list = Array.isArray(state.inventories) ? state.inventories : [];
+  const draft = list.find((inv) => inv.depot === depot && inv.status === 'rascunho');
+  if (!draft || Object.keys(draft.lines).length === 0) throw new Error('Nenhuma contagem registrada para homologação.');
+  const items = depot === 'farmacia' ? state.stock : state.warehouse;
+  const adjustments = buildInventoryAdjustments(items, draft.lines);
+  if (adjustments.length === 0) throw new Error('Não há divergências para corrigir neste levantamento.');
+  const now = new Date().toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+  const approver = professionalName(state.profile);
+  const depotName = depot === 'farmacia' ? 'Farmácia' : 'Almoxarifado';
+  const byId = new Map(adjustments.map((a) => [a.itemId, a]));
+  const updatedItems = items.map((item) => {
+    const adj = byId.get(item.id);
+    return adj ? { ...item, quantity: adj.countedQty } : item;
+  });
+  const newMovements: Movement[] = adjustments.map((adj) => ({
+    id: `mv-${crypto.randomUUID()}`,
+    kind: 'inventario',
+    from: adj.delta < 0 ? depotName : 'Inventário',
+    to: adj.delta > 0 ? depotName : 'Inventário',
+    item: adj.name,
+    ...(adj.code ? { code: adj.code } : {}),
+    qty: Math.abs(adj.delta),
+    lot: adj.delta > 0 ? 'SOBRA' : 'FALTA',
+    reason: `Inventário (${adj.delta > 0 ? '+' : ''}${adj.delta}) · Contado por ${adj.countedBy} · Homologado por ${approver}: ${note}`,
+    at: now,
+    by: approver,
+  }));
+  setState((s) => ({
+    ...(depot === 'farmacia' ? { stock: updatedItems } : { warehouse: updatedItems }),
+    movements: [...newMovements, ...s.movements],
+    inventories: (Array.isArray(s.inventories) ? s.inventories : []).map((inv) => inv.id === draft.id ? { ...inv, status: 'homologado', updatedAt: now, updatedBy: approver, approvedAt: now, approvedBy: approver, justification: note, appliedAdjustments: adjustments.length } : inv),
+  }));
+  return adjustments.length;
 }
 /** Atalho usado pela integração da prescrição para acrescentar unidades a um item. */
 export function addStock(item: string, qty: number) {

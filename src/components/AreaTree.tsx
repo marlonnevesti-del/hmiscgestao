@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ChevronRight } from "lucide-react";
-import { ACCESS_AREAS, UNIT_AREAS } from "@/lib/hospital-data";
+import { ACCESS_AREAS, INVENTORY_AREAS, UNIT_AREAS } from "@/lib/hospital-data";
 import { cn } from "@/lib/utils";
 import { WAREHOUSE_CATEGORIES, requestAreaId, type WarehouseCategory } from "@/lib/warehouse-categories";
 
@@ -36,5 +36,7 @@ export function AreaTree({ value, onChange, requestDefaults = [] }: { value: str
     <div className="grid gap-2 sm:grid-cols-2">{ACCESS_AREAS.map((a) => <label key={a.id} className="flex items-center gap-2 rounded-md border p-2 text-sm"><input type="checkbox" checked={value.includes(a.id)} onChange={(ev) => toggle(a.id, ev.target.checked)} />{a.label}</label>)}</div>
     <div className="pt-2 text-xs uppercase tracking-wider text-muted-foreground">Solicitação ao Almoxarifado · categorias liberadas</div>
     <div className="grid gap-2 sm:grid-cols-2">{WAREHOUSE_CATEGORIES.map((c) => <label key={c.id} className="flex items-center gap-2 rounded-md border p-2 text-sm"><input type="checkbox" checked={reqOn(c.id)} onChange={(ev) => toggleReq(c.id, ev.target.checked)} />{c.label}</label>)}</div>
+    <div className="pt-2 text-xs uppercase tracking-wider text-muted-foreground">Coordenação de Estoque & Inventário</div>
+    <div className="grid gap-2 sm:grid-cols-2">{INVENTORY_AREAS.map((a) => <label key={a.id} className="flex items-center gap-2 rounded-md border p-2 text-sm"><input type="checkbox" checked={value.includes(a.id)} onChange={(ev) => toggle(a.id, ev.target.checked)} />{a.label}</label>)}</div>
   </div>;
 }

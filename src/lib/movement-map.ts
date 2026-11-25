@@ -1,6 +1,6 @@
 import type { Movement, MovementKind } from "./supply-flow";
 
-export const KIND_LABEL: Record<MovementKind, string> = { entrada: "Entrada NF", consumo: "Prescrição (dispensação)", requisicao: "Saída via requisição", transferencia: "Transferência", devolucao: "Devolução", quebra: "Quebra / Extravio", vencimento: "Baixa por validade", emprestimo_saida: "Empréstimo (saída)", emprestimo_entrada: "Empréstimo (entrada)" };
+export const KIND_LABEL: Record<MovementKind, string> = { entrada: "Entrada NF", consumo: "Prescrição (dispensação)", requisicao: "Saída via requisição", transferencia: "Transferência", devolucao: "Devolução", quebra: "Quebra / Extravio", vencimento: "Baixa por validade", emprestimo_saida: "Empréstimo (saída)", emprestimo_entrada: "Empréstimo (entrada)", inventario: "Ajuste de inventário" };
 const IN: MovementKind[] = ["entrada", "devolucao", "emprestimo_entrada"];
 
 export interface MapFilter { from?: string; to?: string; depot?: string; product?: string; patient?: string; fia?: string; lot?: string; costCenter?: string; kind?: MovementKind | "" }
@@ -9,6 +9,7 @@ const has = (v: string | undefined, q: string | undefined) => !q?.trim() || (v ?
 /** Sinal do movimento para o estoque consultado: entrada (+) ou saída (-). */
 export function movementSign(m: Movement, depot?: string) {
   if (m.kind === "transferencia") return depot && m.to === depot ? 1 : -1;
+  if (m.kind === "inventario") return m.lot === "SOBRA" ? 1 : -1;
   return IN.includes(m.kind) ? 1 : -1;
 }
 
