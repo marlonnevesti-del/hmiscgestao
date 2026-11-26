@@ -43,7 +43,8 @@ describe("acesso de colaboradores", () => {
   it("recepção abre cadastros mas não acessa áreas clínicas nem faturamento", () => {
     const profile = clinicalProfile("Recepcionista", ["employee"]);
     expect(canAccessPage(profile, "/recepcao")).toBe(true);
-    for (const path of ["/atendimento", "/acolhimento", "/farmacia", "/enfermagem", "/colaboradores", "/faturamento", "/pacientes/123"]) expect(canAccessPage(profile, path)).toBe(false);
+    expect(canAccessPage(profile, "/pacientes/123")).toBe(true);
+    for (const path of ["/atendimento", "/acolhimento", "/farmacia", "/enfermagem", "/colaboradores", "/faturamento"]) expect(canAccessPage(profile, path)).toBe(false);
   });
   it("médico não recebe acesso de recepção ou farmácia", () => {
     expect(canAccessPage(clinicalProfile("Médico", ["employee"]), "/atendimento")).toBe(true);
@@ -75,7 +76,7 @@ describe("áreas liberadas pelo administrador", () => {
     expect(pageAccess("Médico", "/pacientes/1", ["atendimento", "pacientes"])).toBe(true);
     expect(pageAccess("Recepção", "/farmacia", ["recepcao"])).toBe(false);
   });
-  it("sugere recepção para recepcionista", () => { expect(defaultAreas("Recepção")).toEqual(["recepcao", "ambulatorio:agenda", "ambulatorio:recepcao", "ambulatorio:especialidades", "pronto-socorro:recepcao", "pronto-socorro:internados", "maternidade:recepcao", "maternidade:internados"]); });
+  it("sugere recepção para recepcionista", () => { expect(defaultAreas("Recepção")).toEqual(["recepcao", "pacientes", "ambulatorio:agenda", "ambulatorio:recepcao", "ambulatorio:especialidades", "pronto-socorro:recepcao", "pronto-socorro:internados", "maternidade:recepcao", "maternidade:internados"]); });
   it("médico liberado só no atendimento do PS vê só essa aba", () => { const a = ["pronto-socorro:atendimento"]; expect(unitTab("Médico", "pronto-socorro", "atendimento", a)).toBe(true); expect(unitTab("Médico", "pronto-socorro", "recepcao", a)).toBe(false); expect(pageAccess("Médico", "/pronto-socorro", a)).toBe(true); expect(pageAccess("Médico", "/ambulatorio", a)).toBe(false); });
 });
 
