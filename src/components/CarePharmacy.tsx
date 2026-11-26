@@ -15,7 +15,7 @@ import { BarcodeScan } from "./BarcodeScan";
 import { LabelPrint, printLabels, type Label } from "./LabelPrint";
 import { adjustStock, advanceCompletedMedication, allBatchDosesDone, deleteStockItem, createStockMedication, dispenseKit, recordMedication, useStore, validatePrescription } from "@/lib/hospital-store";
 import { findStockMedication, fmtExpiry, lotsByExpiry } from "@/lib/pharmacy-stock";
-import { canDispenseNow, isImmediatePrescription, PHARMACY_START_HOUR } from "@/lib/pharmacy-schedule";
+import { canDispenseNow, isImmediatePrescription, PHARMACY_START_HOUR, remainingDoses } from "@/lib/pharmacy-schedule";
 import { matchesPharmacySector, PHARMACY_SECTORS, pharmacySectorLabel, type PharmacySectorId } from "@/lib/pharmacy-sectors";
 import { cn } from "@/lib/utils";
 import { BreakageForm, MovementLog, NursingRequestForm, RequestInbox, ReturnForm, TransferForm, EntryForm, LoanPanel } from "./SupplyPanels";
@@ -89,14 +89,25 @@ function PrescriptionQueue() {
   const [printTarget, setPrintTarget] = useState<{ id: string; time?: string } | null>(null);
   const [doseLabel, setDoseLabel] = useState<Label | null>(null);
   const printEnc = encounters.find((x) => x.id === printTarget?.id);
+  const activePharmacyStatuses = new Set(["AGUARDANDO_FARMACIA", "AGUARDANDO_MEDICACAO", "EM_OBSERVACAO_REAVALIACAO", "ENCAMINHADO_INTERNACAO"]);
   const allPending = encounters
-    .filter((encounter) => encounter.status_fluxo === "AGUARDANDO_FARMACIA")
     .map((encounter) => ({ encounter, patient: patients.find((item) => item.id === encounter.patientId) }))
-    .filter((row): row is { encounter: typeof encounters[number]; patient: NonNullable<typeof patients[number]> } => Boolean(row.patient));
+    .filter((row): row is { encounter: typeof encounters[number]; patient: NonNullable<typeof patients[number]> } => {
+      if (!row.patient || !activePharmacyStatuses.has(row.encounter.status_fluxo)) return false;
+      if (row.encounter.status_fluxo === "AGUARDANDO_FARMACIA") return true;
+      return row.patient.prescriptions.some(
+        (rx) => rx.batchId === row.encounter.prescriptionBatchId && rx.pharmacy && (rx.times?.length ? remainingDoses(rx).length > 0 : rx.pharmacy !== "Dispensada"),
+      );
+    });
   const list = allPending.filter(({ encounter, patient }) => matchesPharmacySector(sector, encounter, patient));
   const doseRows = list.flatMap(({ encounter, patient }) => {
-    const batchMeds = patient.prescriptions.filter((prescription) => prescription.pharmacy && prescription.batchId === encounter.prescriptionBatchId);
-    const times = Array.from(new Set(batchMeds.flatMap((rx) => (rx.times?.length ? rx.times : ["Agora"]))));
+    const batchMeds = patient.prescriptions.filter(
+      (prescription) =>
+        prescription.pharmacy &&
+        prescription.batchId === encounter.prescriptionBatchId &&
+        (prescription.times?.length ? remainingDoses(prescription).length > 0 : prescription.pharmacy !== "Dispensada"),
+    );
+    const times = Array.from(new Set(batchMeds.flatMap((rx) => (rx.times?.length ? remainingDoses(rx) : ["Agora"]))));
     const sectorName = pharmacySectorLabel(encounter, patient);
     return times
       .filter((t) => matchesDoseInterval(t, interval))
@@ -107,7 +118,7 @@ function PrescriptionQueue() {
         time,
         sectorName,
         batchMeds,
-        medsAtTime: batchMeds.filter((rx) => (rx.times?.length ? rx.times : ["Agora"]).includes(time)),
+        medsAtTime: batchMeds.filter((rx) => (rx.times?.length ? remainingDoses(rx) : ["Agora"]).includes(time)),
       }));
   });
   const nowHour = new Date().getHours();
@@ -182,7 +193,7 @@ function PrescriptionQueue() {
         </label>
       )}
       <label className="grid gap-1 text-xs">Intervenção farmacêutica<textarea aria-label={`Intervenção farmacêutica de ${patient.name}`} className="min-h-16 rounded-md border bg-background p-2" value={notes[encounter.id] ?? ""} onChange={(event) => setNotes((current) => ({ ...current, [encounter.id]: event.target.value }))} /></label>
-      <Button disabled={!can(profile, "farmacia") || !gate.ok} onClick={() => run(() => { dispenseKit(encounter.id, notes[encounter.id] ?? "", lots, { specialCaseReason }); toast.success(`Requisição do horário ${time} dispensada para a enfermagem`); setPrintTarget({ id: encounter.id, time }); printRequisition(); })}>Dispensar horário {time}</Button>
+      <Button disabled={!can(profile, "farmacia") || !gate.ok} onClick={() => run(() => { dispenseKit(encounter.id, notes[encounter.id] ?? "", lots, { specialCaseReason, targetTime: time }); toast.success(`Requisição do horário ${time} dispensada para a enfermagem`); setPrintTarget({ id: encounter.id, time }); printRequisition(); })}>Dispensar horário {time}</Button>
                       </td>
                     </tr>
                   )}

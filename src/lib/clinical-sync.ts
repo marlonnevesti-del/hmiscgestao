@@ -4,7 +4,7 @@ import { PHARMACY_CATALOG, WAREHOUSE_CATALOG, getState, setState, subscribeState
 import { DEFAULT_CID_AREAS, DEFAULT_CID_GROUPS } from "./cid-access";
 import { DEFAULT_ROOMS } from "./panel-calls";
 import { DEFAULT_SPECIALTIES } from "./ambulatorio";
-import { registerSyncRetry, setSyncStatus } from "./sync-status";
+import { registerSyncRetry, setInitialSynced, setSyncStatus } from "./sync-status";
 import { refillSequence } from "./sequence-pool";
 import { mergeCatalog, normalizeStock } from "./pharmacy-stock";
 import { normalizeInstitution, type InstitutionConfig } from "./institution";
@@ -101,6 +101,7 @@ async function pull() {
   }
   if (!data && version === -1) version = 0;
   initialPulled = true;
+  setInitialSynced(true);
   if (dirty && version >= 0) void push();
 }
 

@@ -1,6 +1,25 @@
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { useStore } from "@/lib/hospital-store";
+import { useInitialSynced } from "@/lib/sync-status";
+
+const ALERTED_KEY = "hmisc-pharmacy-alerted-v1";
+
+function readAlerted(): Set<string> {
+  try {
+    const raw = sessionStorage.getItem(ALERTED_KEY);
+    const parsed = raw ? (JSON.parse(raw) as unknown) : [];
+    return new Set(Array.isArray(parsed) ? parsed.map(String) : []);
+  } catch {
+    return new Set();
+  }
+}
+
+function saveAlerted(keys: Set<string>) {
+  try {
+    sessionStorage.setItem(ALERTED_KEY, JSON.stringify(Array.from(keys).slice(-200)));
+  } catch { /* storage indisponível */ }
+}
 
 function chime() {
   try {
@@ -18,12 +37,22 @@ function chime() {
 export function PharmacyCallAlert() {
   const encounters = useStore((s) => s.encounters);
   const patients = useStore((s) => s.patients);
+  const initialSynced = useInitialSynced();
   const seen = useRef<Set<string> | null>(null);
   useEffect(() => {
+    if (!initialSynced) return;
     const waiting = encounters.filter((e) => e.status_fluxo === "AGUARDANDO_FARMACIA");
-    if (!seen.current) { seen.current = new Set(waiting.map((e) => e.id)); return; }
-    const fresh = waiting.filter((e) => !seen.current!.has(e.id));
-    seen.current = new Set(waiting.map((e) => e.id));
+    const keyOf = (e: typeof waiting[number]) => `${e.id}:${e.prescriptionBatchId ?? ""}`;
+    if (!seen.current) {
+      const stored = readAlerted();
+      waiting.forEach((e) => stored.add(keyOf(e)));
+      seen.current = stored;
+      saveAlerted(stored);
+      return;
+    }
+    const fresh = waiting.filter((e) => !seen.current!.has(keyOf(e)));
+    waiting.forEach((e) => seen.current!.add(keyOf(e)));
+    saveAlerted(seen.current);
     if (!fresh.length) return;
     chime();
     fresh.forEach((e) => {
@@ -31,7 +60,7 @@ export function PharmacyCallAlert() {
       toast.warning(`Nova prescrição para a farmácia: ${name}`, { description: `${e.number} · liberada por ${e.signedBy ?? "médico"}`, duration: 20000, action: { label: "Abrir farmácia", onClick: () => { window.location.href = "/farmacia"; } } });
       if (typeof Notification !== "undefined" && Notification.permission === "granted") new Notification("Nova prescrição", { body: name });
     });
-  }, [encounters, patients]);
+  }, [encounters, patients, initialSynced]);
   useEffect(() => { if (typeof Notification !== "undefined" && Notification.permission === "default") void Notification.requestPermission(); }, []);
   return null;
 }

@@ -124,4 +124,25 @@ describe("Retenção de doses restantes na farmácia (2+ administrações)", () 
     expect(remainingDoses(doneRx)).toEqual([]);
     expect(getState().stock.find((s) => s.name === "dipirona")?.quantity).toBe(2);
   });
+
+  it("dispensa apenas o horário selecionado (targetTime) e mantém os demais horários pendentes na lista", () => {
+    dispenseKit(encId, "Dose 14:00", { "rx-8x8": "L10" }, { now: AT_16H, targetTime: "14:00" });
+    const afterFirst = getState().patients[0]?.prescriptions.find((r) => r.id === "rx-8x8")!;
+    expect(afterFirst.pharmacy).toBe("Parcial");
+    expect(afterFirst.dispensedTimes).toEqual(["14:00"]);
+    expect(remainingDoses(afterFirst)).toEqual(["22:00", "06:00"]);
+    expect(getState().stock.find((s) => s.name === "dipirona")?.quantity).toBe(4);
+
+    dispenseKit(encId, "Dose 22:00", { "rx-8x8": "L10" }, { now: AT_16H, targetTime: "22:00" });
+    const afterSecond = getState().patients[0]?.prescriptions.find((r) => r.id === "rx-8x8")!;
+    expect(afterSecond.pharmacy).toBe("Parcial");
+    expect(remainingDoses(afterSecond)).toEqual(["06:00"]);
+    expect(getState().stock.find((s) => s.name === "dipirona")?.quantity).toBe(3);
+
+    dispenseKit(encId, "Dose 06:00", { "rx-8x8": "L10" }, { now: AT_16H, targetTime: "06:00" });
+    const afterThird = getState().patients[0]?.prescriptions.find((r) => r.id === "rx-8x8")!;
+    expect(afterThird.pharmacy).toBe("Dispensada");
+    expect(remainingDoses(afterThird)).toEqual([]);
+    expect(getState().stock.find((s) => s.name === "dipirona")?.quantity).toBe(2);
+  });
 });

@@ -265,18 +265,32 @@ export function dispenseKit(
   id: string,
   intervention: string,
   lots: Record<string, string> = {},
-  opts?: { now?: Date; specialCaseReason?: string; retainRemaining?: boolean },
+  opts?: { now?: Date; specialCaseReason?: string; retainRemaining?: boolean; targetTime?: string },
 ) {
   requireAction('farmacia'); const { e, p } = getEncounter(id);
-  const meds = p.prescriptions.filter((r) => r.batchId === e.prescriptionBatchId && r.pharmacy);
-  if (!meds.length || meds.some((r) => r.pharmacy !== 'Validada')) throw new Error('Valide todos os itens do kit antes de dispensar.');
+  const targetTime = opts?.targetTime?.trim() || undefined;
+  const allBatchMeds = p.prescriptions.filter((r) => r.batchId === e.prescriptionBatchId && r.pharmacy);
+  const meds = targetTime
+    ? allBatchMeds.filter((r) => {
+        const pending = remainingDoses(r);
+        if (r.times?.length) return pending.includes(targetTime);
+        return targetTime === 'Agora' && r.pharmacy !== 'Dispensada';
+      })
+    : allBatchMeds;
+  if (!meds.length || meds.some((r) => r.pharmacy !== 'Validada' && !(targetTime && r.pharmacy === 'Parcial'))) {
+    throw new Error('Valide todos os itens do kit antes de dispensar.');
+  }
   const gate = canDispenseNow(meds, opts);
   if (!gate.ok) throw new Error(gate.reason);
-  const missingLot = meds.find((r) => !(lots[r.id] ?? '').trim());
+  const missingLot = meds.find((r) => !(lots[r.id] ?? (targetTime ? r.lot : '') ?? '').trim());
   if (missingLot) throw new Error(`Informe o lote de ${missingLot.item}.`);
   const specialReason = (opts?.specialCaseReason ?? '').trim();
   const dosePlan = new Map<string, string[]>();
   meds.forEach((r) => {
+    if (targetTime) {
+      dosePlan.set(r.id, r.times?.length ? [targetTime] : ['']);
+      return;
+    }
     const pending = remainingDoses(r);
     const onlyFirst = Boolean(opts?.retainRemaining) && pending.length >= 2;
     const onlyImmediateBefore16 = gate.isBeforeStart && !specialReason;
@@ -305,7 +319,7 @@ export function dispenseKit(
     const count = (dosePlan.get(r.id) ?? []).length;
     if (!count) return;
     const m = findStockMedication(stock, r.item)!;
-    stock = changeQty(stock, m.id, -count, (lots[r.id] ?? '').trim());
+    stock = changeQty(stock, m.id, -count, (lots[r.id] ?? (targetTime ? r.lot : '') ?? '').trim());
   });
   const at = new Date().toISOString(); const by = professionalName(state.profile);
   const consumo = meds
@@ -313,11 +327,14 @@ export function dispenseKit(
     .map((r) => {
       const m = findStockMedication(state.stock, r.item)!;
       const dosesNow = dosePlan.get(r.id) ?? [];
-      const reason = specialReason ? `Dispensação (caso especial: ${specialReason})` : 'Dispensação';
-      return { id: crypto.randomUUID(), at, by, kind: 'consumo' as const, from: m.location ?? 'Farmácia', to: p.name, item: m.name, code: m.code, qty: dosesNow.length, lot: (lots[r.id] ?? '').trim(), reason, patient: p.name, patientId: p.id, baa: e.number, ...(e.fia ? { fia: e.fia.number } : {}) };
+      const baseReason = targetTime ? `Dispensação horário ${targetTime}` : 'Dispensação';
+      const reason = specialReason ? `${baseReason} (caso especial: ${specialReason})` : baseReason;
+      return { id: crypto.randomUUID(), at, by, kind: 'consumo' as const, from: m.location ?? 'Farmácia', to: p.name, item: m.name, code: m.code, qty: dosesNow.length, lot: (lots[r.id] ?? (targetTime ? r.lot : '') ?? '').trim(), reason, patient: p.name, patientId: p.id, baa: e.number, ...(e.fia ? { fia: e.fia.number } : {}) };
     });
   const requisition = `${String(state.movements.length + state.encounters.indexOf(e) * 7 + 230000).slice(-6)}/${new Date().getFullYear()}`;
-  const dispensed = transition(e, 'AGUARDANDO_MEDICACAO', by, 'Medicamentos prescritos dispensados', at);
+  const dispensed = e.status_fluxo === 'AGUARDANDO_FARMACIA'
+    ? transition(e, 'AGUARDANDO_MEDICACAO', by, targetTime ? `Horário ${targetTime} dispensado` : 'Medicamentos prescritos dispensados', at)
+    : e;
   const next = allBatchDosesDone(dispensed, p, state.admins) ? transition(dispensed, 'EM_OBSERVACAO_REAVALIACAO', by, 'Doses já concluídas - pronto para reavaliação', at) : dispensed;
   commitEncounter(
     { ...next, intervention, dispensedAt: at, dispensedBy: by, requisition },
@@ -330,6 +347,7 @@ export function dispenseKit(
               ...x,
               prescriptions: x.prescriptions.map((r) => {
                 if (r.batchId !== e.prescriptionBatchId || !r.pharmacy) return r;
+                if (targetTime && !dosePlan.has(r.id)) return r;
                 const dosesNow = (dosePlan.get(r.id) ?? []).filter(Boolean);
                 const nextDispensed = Array.from(new Set([...(r.dispensedTimes ?? []), ...dosesNow]));
                 const allTimes = r.times ?? [];
