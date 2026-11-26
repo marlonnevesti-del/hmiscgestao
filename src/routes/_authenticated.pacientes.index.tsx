@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { Search } from "lucide-react";
 import { PatientIcon, TYPE_LABEL } from "@/components/PatientIcon";
-import { WARDS, type PatientType } from "@/lib/hospital-data";
+import { realAllergies, WARDS, type PatientType } from "@/lib/hospital-data";
 import { useStore } from "@/lib/hospital-store";
 import { cn } from "@/lib/utils";
 import { Button } from '@/components/ui/button';
@@ -87,7 +87,7 @@ function List() {
             {filtered.map((p) => (
               <tr key={p.id} className="border-t hover:bg-muted/50">
                 <td className="px-3 py-2 font-mono text-xs">{p.bed || "—"}</td>
-                <td className="px-3 py-2 font-medium"><span className="inline-flex items-center gap-1.5"><PatientIcon type={p.type} className="h-3.5 w-3.5 text-primary" />{p.name}</span>{p.allergies.length > 0 && <span className="ml-2 rounded bg-maternal-soft px-1.5 text-[10px] text-maternal">ALERGIA</span>}</td>
+                <td className="px-3 py-2 font-medium"><span className="inline-flex items-center gap-1.5"><PatientIcon type={p.type} className="h-3.5 w-3.5 text-primary" />{p.name}</span>{realAllergies(p.allergies).length > 0 && <span className="ml-2 rounded bg-maternal-soft px-1.5 text-[10px] text-maternal">ALERGIA</span>}</td>
                 <td className="px-3 py-2">{p.ig ?? p.age}</td>
                 <td className="px-3 py-2 text-muted-foreground">{p.diagnosis}</td>
                 <td className="px-3 py-2">{WARDS.find((w) => w.id === p.ward)?.name}</td>

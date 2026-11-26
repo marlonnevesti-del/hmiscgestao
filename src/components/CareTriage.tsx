@@ -38,9 +38,13 @@ export function CareTriage({ unit }: { unit?: string } = {}) {
         return <div key={risk} className={cn("rounded-lg px-4 py-3", MANCHESTER[risk].cls)}><div className="text-xs font-semibold uppercase tracking-wide">{MANCHESTER[risk].label}</div><div className="flex flex-wrap items-baseline justify-between gap-1"><span className="font-mono text-3xl font-semibold">{count}</span><span className="text-xs">{risk === "vermelho" ? "Imediato" : "Por gravidade"}</span></div></div>;
       })}
     </div>
-    <div className="grid gap-5 xl:grid-cols-2">
-      {(["obstetrica", "pediatria"] as const).map((group) => <QueueColumn key={group} group={group} items={active.filter((encounter) => isObstetric(patients.find((patient) => patient.id === encounter.patientId)) === (group === "obstetrica"))} now={now} onSelect={setSelected} />)}
-    </div>
+    {unit === "Maternidade" ? (
+      <QueueColumn group="obstetrica" items={active} now={now} onSelect={setSelected} />
+    ) : unit === "Pronto socorro" ? (
+      <QueueColumn group="pediatria" items={active} now={now} onSelect={setSelected} />
+    ) : (
+      <div className="grid gap-5 xl:grid-cols-2">{(["obstetrica", "pediatria"] as const).map((group) => <QueueColumn key={group} group={group} items={active.filter((encounter) => isObstetric(patients.find((patient) => patient.id === encounter.patientId)) === (group === "obstetrica"))} now={now} onSelect={setSelected} />)}</div>
+    )}
     <Dialog open={!!selected} onOpenChange={(open) => !open && setSelected(null)}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl"><DialogHeader><DialogTitle>{selected?.triage ? "Reclassificar" : "Classificar"} · {patients.find((patient) => patient.id === selected?.patientId)?.name}</DialogTitle></DialogHeader>{selected && <TriageForm encounter={selected} onDone={() => setSelected(null)} />}</DialogContent>
     </Dialog>

@@ -134,6 +134,13 @@
       "when": 1795638490721,
       "tag": "0018_inventory_coordinator_areas",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1795720160074,
+      "tag": "0019_allow_internacoes_area",
+      "breakpoints": true
     }
   ]
 }

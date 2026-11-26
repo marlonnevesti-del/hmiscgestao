@@ -40,7 +40,7 @@ export const ACCESS_AREAS = [
   { id: "atendimento", label: "Consultório Médico" }, { id: "pacientes", label: "Pacientes / PEP" },
   { id: "enfermagem", label: "Posto de Enfermagem" }, { id: "centro-cirurgico", label: "Centro Cirúrgico" }, { id: "cme", label: "CME – Esterilização" },
   { id: "farmacia", label: "Farmácia" }, { id: "almoxarifado", label: "Almoxarifado" }, { id: "faturamento", label: "Faturamento (TISS e SUS)" }, { id: "nir", label: "NIR – Regulação de Leitos" }, { id: "sciras", label: "SCIRAS / CCIH" },
-  { id: "uti-uci", label: "UTI Ped · UCI · UTI Neo" }, { id: "fisioterapia", label: "Fisioterapia" }, { id: "raio-x", label: "Raio-X" }, { id: "gesso", label: "Gesso" }, { id: "banco-de-leite", label: "Banco de Leite" },
+  { id: "internacoes", label: "Censo · Internações" }, { id: "uti-uci", label: "UTI Ped · UCI · UTI Neo" }, { id: "fisioterapia", label: "Fisioterapia" }, { id: "raio-x", label: "Raio-X" }, { id: "gesso", label: "Gesso" }, { id: "banco-de-leite", label: "Banco de Leite" },
 ] as const;
 export const INVENTORY_AREAS = [
   { id: "inventario:farmacia", depot: "farmacia" as const, label: "Coordenação / Homologação de Inventário – Farmácia" },
@@ -111,7 +111,7 @@ export function canAccessPage(profile: Profile, path: string, areas?: readonly s
   if (path === "/" || path === "/solicitacao-almoxarifado" || path === "/ajuda") return true;
   const seg = path.split("/")[1] ?? "";
   if (UNIT_IDS.includes(seg)) { const u = UNIT_AREAS.find((x) => x.id === seg)!; return u.tabs.some((t) => canAccessUnitTab(profile, u.id, t.id, areas)); }
-  if (areas && ["uti-uci", "fisioterapia", "raio-x", "gesso", "banco-de-leite"].includes(seg) && areas.includes(seg)) return true;
+  if (areas && ["internacoes", "uti-uci", "fisioterapia", "raio-x", "gesso", "banco-de-leite"].includes(seg) && areas.includes(seg)) return true;
   if (areas && seg === "pacientes" && areas.includes("recepcao")) return true;
   if (areas) return areas.includes(seg === "faturamento-sus" || seg === "prestacao-contas" || seg === "centro-de-custos" ? "faturamento" : seg === "internacoes" ? "nir" : seg === "documentos-recepcao" || seg === "painel-tv" ? "recepcao" : seg === "uti-uci" ? "enfermagem" : seg === "fisioterapia" || seg === "raio-x" || seg === "gesso" ? "pacientes" : seg === "banco-de-leite" ? "enfermagem" : seg);
   if (path === "/painel-tv") return can(profile, "recepcao");
@@ -131,6 +131,12 @@ export function canAccessPage(profile: Profile, path: string, areas?: readonly s
   if (path === "/enfermagem") return can(profile, "checar");
   if (path === "/faturamento" || path === "/faturamento-sus" || path === "/prestacao-contas" || path === "/centro-de-custos") return can(profile, "faturar");
   return false;
+}
+
+const NO_ALLERGY_RE = /^(n[aã]o|nega|nenhum[ao]?|sem\s+alergias?|nkda|desconhecid[ao]s?|n\/?a|-)+$/i;
+/** Returns only actual allergies, ignoring negations such as "Não" or "Nega". */
+export function realAllergies(allergies?: readonly string[] | null): string[] {
+  return (allergies ?? []).map((a) => a.trim()).filter((a) => a.length > 0 && !NO_ALLERGY_RE.test(a) && !/^nega\b/i.test(a) && !/^n[aã]o\s+(possui|tem|relata|refere|sabe)/i.test(a));
 }
 
 export type PatientType = "gestante" | "puerpera" | "pediatria" | "neonato";

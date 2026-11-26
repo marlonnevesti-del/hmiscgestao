@@ -25,7 +25,7 @@ import { PatientRegistrationFields } from "@/components/PatientRegistrationField
 import { registrationFor } from "@/lib/patient-registration-mapping";
 import { DoseCalculator, calcResult, initCalc } from "@/components/DoseCalculator";
 import { doseText } from "@/lib/dose-calc";
-import { DRUGS, WARDS, allergyConflict, can, interactionsWith, type EvoCat, type Patient, type PrescCat, type Vital } from "@/lib/hospital-data";
+import { DRUGS, WARDS, allergyConflict, can, interactionsWith, realAllergies, type EvoCat, type Patient, type PrescCat, type Vital } from "@/lib/hospital-data";
 import { getState, nowHM, professionalName, recordPhysioSession, registerBirth, updatePatient, useStore } from "@/lib/hospital-store";
 import { identifiedPhysioEvolution, isPhysioOpen } from "@/lib/physio";
 import { cn } from "@/lib/utils";
@@ -72,7 +72,7 @@ function PEP() {
             <div className="text-xs text-muted-foreground">Pront. {p.prontuario} · {p.age}{p.ig ? ` · IG ${p.ig}` : ""} · <b className="text-foreground">{p.weight} kg</b>{p.guardian ? ` · Resp.: ${p.guardian}` : ""}</div>
           </div>
           <div className="flex flex-wrap gap-2">
-            {p.allergies.length > 0 ? <span className="pulse-alert rounded-md bg-maternal px-2 py-1 text-xs font-bold text-primary-foreground">ALERGIA: {p.allergies.join(", ")}</span> : <span className="rounded-md bg-muted px-2 py-1 text-xs">Sem alergias conhecidas</span>}
+            {realAllergies(p.allergies).length > 0 && <span className="pulse-alert rounded-md bg-maternal px-2 py-1 text-xs font-bold text-primary-foreground">ALERGIA: {realAllergies(p.allergies).join(", ")}</span>}
             {p.risks.map((r) => <span key={r} className={cn("rounded-full px-2 py-1 text-[10px] font-semibold", r === "Queda" ? "bg-mt-yellow text-foreground" : r === "Alergia" ? "bg-maternal-soft text-maternal" : r === "Risco Hemorrágico" ? "bg-maternal text-primary-foreground" : "bg-mt-orange text-primary-foreground")}>{r}</span>)}
           </div>
           <div className="ml-auto flex flex-wrap items-center gap-3">
@@ -116,7 +116,7 @@ function PEP() {
           <div className="mx-auto w-full rounded-full border-4 border-primary px-6 py-3 text-xs">
             <div className="flex items-center justify-between"><b className="text-sm">{p.name}</b><span className="font-mono">{p.bed}</span></div>
             <div>Pront. {p.prontuario} · Nasc./Idade: {p.age}{p.motherName ? ` · Mãe: ${p.motherName}` : ""}</div>
-            <div className="mt-1 flex items-center justify-between"><span className="font-mono tracking-[0.3em]">||| |||| | ||| {p.prontuario.replace("-", "")} || |</span>{p.allergies.length > 0 && <b className="text-maternal">ALERGIA</b>}</div>
+            <div className="mt-1 flex items-center justify-between"><span className="font-mono tracking-[0.3em]">||| |||| | ||| {p.prontuario.replace("-", "")} || |</span>{realAllergies(p.allergies).length > 0 && <b className="text-maternal">ALERGIA</b>}</div>
           </div>
           <button onClick={() => window.print()} className="rounded-md bg-primary py-2 text-sm font-medium text-primary-foreground">Imprimir</button>
         </DialogContent>
