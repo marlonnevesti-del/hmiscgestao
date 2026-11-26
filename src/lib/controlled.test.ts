@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { expiryStatus, monthlyConsumption } from "./controlled";
+import { consumptionByPeriod, expiryStatus, monthlyConsumption } from "./controlled";
 import type { StockMedication } from "./pharmacy-stock";
 import type { Movement } from "./supply-flow";
 
@@ -16,4 +16,12 @@ describe("relatório mensal de consumo", () => {
   it("soma só o consumo do mês escolhido", () => expect(rows[0]!.consumed).toBe(50));
   it("perda por validade fica separada", () => expect(rows[0]!.lost).toBe(4));
   it("sugestão = consumo +20% + mínimo − saldo válido", () => expect(rows[0]!.suggestion).toBe(50));
+  it("filtra consumo por dia específico", () => {
+    const mvs = [mv("consumo", 12, "2026-11-03T10:00:00Z"), mv("consumo", 30, "2026-11-04T10:00:00Z")];
+    expect(consumptionByPeriod([item], mvs, "day", "2026-11-03", today)[0]!.consumed).toBe(12);
+  });
+  it("soma consumo do ano inteiro", () => {
+    const mvs = [mv("consumo", 12, "2026-01-10T10:00:00Z"), mv("consumo", 30, "2026-11-04T10:00:00Z"), mv("consumo", 50, "2025-12-31T10:00:00Z")];
+    expect(consumptionByPeriod([item], mvs, "year", "2026", today)[0]!.consumed).toBe(42);
+  });
 });

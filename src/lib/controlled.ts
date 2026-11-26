@@ -31,18 +31,24 @@ export function lotMap(stock: StockMedication[], today: Date): LotRow[] {
 }
 
 export interface ConsumptionRow { item: string; code?: string | undefined; unit: string; consumed: number; lost: number; balance: number; validBalance: number; minimum: number; suggestion: number }
+export type ConsumptionPeriod = "day" | "month" | "year";
 /**
- * Consumo do mês (AAAA-MM): dispensações + quebras. Perdas por vencimento aparecem à parte.
+ * Consumo por período (dia AAAA-MM-DD, mês AAAA-MM ou ano AAAA): dispensações + quebras. Perdas por vencimento aparecem à parte.
  * Sugestão de pedido = consumo × (1 + margem) + mínimo − saldo válido (lotes não vencidos), nunca negativa.
  */
-export function monthlyConsumption(stock: StockMedication[], movements: Movement[], month: string, today: Date, margin = 0.2): ConsumptionRow[] {
-  const inMonth = movements.filter((m) => m.at.slice(0, 7) === month);
+export function consumptionByPeriod(stock: StockMedication[], movements: Movement[], period: ConsumptionPeriod, value: string, today: Date, margin = 0.2): ConsumptionRow[] {
+  const len = period === "day" ? 10 : period === "month" ? 7 : 4;
+  const inPeriod = movements.filter((m) => m.at.slice(0, len) === value);
   return stock.map((i) => {
-    const mine = inMonth.filter((m) => (m.code && i.code ? m.code === i.code : m.item === i.name));
+    const mine = inPeriod.filter((m) => (m.code && i.code ? m.code === i.code : m.item === i.name));
     const consumed = mine.filter((m) => m.kind === "consumo" || m.kind === "quebra").reduce((s, m) => s + m.qty, 0);
     const lost = mine.filter((m) => m.kind === "vencimento").reduce((s, m) => s + m.qty, 0);
     const validBalance = (i.lots ?? []).filter((l) => l.quantity > 0 && expiryStatus(l.expiry, today) !== "vencido").reduce((s, l) => s + l.quantity, 0) || ((i.lots ?? []).length ? 0 : i.quantity);
     const suggestion = Math.max(0, Math.ceil(consumed * (1 + margin) + i.minimum - validBalance));
     return { item: i.name, code: i.code, unit: i.unit, consumed, lost, balance: i.quantity, validBalance, minimum: i.minimum, suggestion };
   });
+}
+
+export function monthlyConsumption(stock: StockMedication[], movements: Movement[], month: string, today: Date, margin = 0.2): ConsumptionRow[] {
+  return consumptionByPeriod(stock, movements, "month", month, today, margin);
 }

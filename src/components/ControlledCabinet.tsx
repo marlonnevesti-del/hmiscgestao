@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useStore, writeOffExpired } from "@/lib/hospital-store";
 import { fmtExpiry, lotsByExpiry } from "@/lib/pharmacy-stock";
-import { EXPIRY_LABEL, isControlled, lotMap, monthlyConsumption, expiryStatus, type ExpiryStatus } from "@/lib/controlled";
+import { EXPIRY_LABEL, isControlled, lotMap, consumptionByPeriod, expiryStatus, type ConsumptionPeriod, type ExpiryStatus } from "@/lib/controlled";
 import { MovementLog } from "./SupplyPanels";
 import { cn } from "@/lib/utils";
 
@@ -71,20 +71,31 @@ export function ExpiryPanel({ depot = "farmacia" }: { depot?: Depot }) {
 export function ConsumptionReport({ depot = "farmacia" }: { depot?: Depot }) {
   const wh = depot === "almoxarifado";
   const all = useStore((s) => (wh ? s.warehouse : s.stock)); const movements = useStore((s) => s.movements);
-  const now = new Date(); const [month, setMonth] = useState(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`);
+  const now = new Date();
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const [period, setPeriod] = useState<ConsumptionPeriod>("month");
+  const [day, setDay] = useState(`${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`);
+  const [month, setMonth] = useState(`${now.getFullYear()}-${pad(now.getMonth() + 1)}`);
+  const [year, setYear] = useState(String(now.getFullYear()));
   const [scope, setScope] = useState<"ctrl" | "all">(wh ? "all" : "ctrl"); const [margin, setMargin] = useState("20");
-  const rows = monthlyConsumption(scope === "ctrl" ? all.filter(isControlled) : all, movements, month, now, Number(margin) / 100).sort((a, b) => b.suggestion - a.suggestion || b.consumed - a.consumed || a.item.localeCompare(b.item, "pt-BR"));
+  const periodValue = period === "day" ? day : period === "month" ? month : year;
+  const periodLabel = period === "day" ? day.split("-").reverse().join("/") : period === "month" ? `${MONTHS[Number(month.slice(5)) - 1]}/${month.slice(0, 4)}` : `Ano ${year}`;
+  const periodUnit = period === "day" ? "dia" : period === "month" ? "mês" : "ano";
+  const rows = consumptionByPeriod(scope === "ctrl" ? all.filter(isControlled) : all, movements, period, periodValue, now, Number(margin) / 100).sort((a, b) => b.suggestion - a.suggestion || b.consumed - a.consumed || a.item.localeCompare(b.item, "pt-BR"));
   const shown = scope === "ctrl" ? rows : rows.filter((r) => r.consumed || r.lost || r.suggestion);
   return <div className="space-y-3">
     <div className="flex flex-wrap items-end gap-2 print:hidden">
-      <label className="text-xs">Mês<Input type="month" value={month} onChange={(e) => setMonth(e.target.value)} className="w-44" /></label>
+      <div className="flex items-center gap-1">{([["day", "Dia"], ["month", "Mês"], ["year", "Ano"]] as const).map(([k, label]) => <Button key={k} size="sm" variant={period === k ? "default" : "outline"} onClick={() => setPeriod(k)}>{label}</Button>)}</div>
+      {period === "day" && <label className="text-xs">Data<Input type="date" value={day} onChange={(e) => setDay(e.target.value)} className="w-40" /></label>}
+      {period === "month" && <label className="text-xs">Mês<Input type="month" value={month} onChange={(e) => setMonth(e.target.value)} className="w-44" /></label>}
+      {period === "year" && <label className="text-xs">Ano<Input type="number" min={2020} max={2099} value={year} onChange={(e) => setYear(e.target.value)} className="w-28" /></label>}
       <label className="text-xs">Margem de segurança (%)<Input type="number" min={0} value={margin} onChange={(e) => setMargin(e.target.value)} className="w-28" /></label>
       {!wh && <><Button size="sm" variant={scope === "ctrl" ? "default" : "outline"} onClick={() => setScope("ctrl")}>Controlados</Button><Button size="sm" variant={scope === "all" ? "default" : "outline"} onClick={() => setScope("all")}>Toda a farmácia</Button></>}
       <Button size="sm" variant="outline" className="ml-auto" onClick={() => window.print()}><Printer className="mr-1 size-4" />Imprimir</Button>
     </div>
-    <div className="rounded-xl border bg-card p-3"><p className="font-semibold">Relatório de consumo — {MONTHS[Number(month.slice(5)) - 1]}/{month.slice(0, 4)}</p><p className="text-xs text-muted-foreground">Consumo = dispensações + quebras do mês. Sugestão de pedido = consumo + {margin}% + estoque mínimo − saldo válido (sem lotes vencidos).</p></div>
+    <div className="rounded-xl border bg-card p-3"><p className="font-semibold">Relatório de consumo — {periodLabel}</p><p className="text-xs text-muted-foreground">Consumo = dispensações + quebras do {periodUnit}. Sugestão de pedido = consumo + {margin}% + estoque mínimo − saldo válido (sem lotes vencidos).</p></div>
     <div className="overflow-x-auto rounded-xl border bg-card"><table className="w-full text-sm"><thead className="bg-muted/50 text-left text-xs uppercase text-muted-foreground"><tr><th className="p-2">Código</th><th className="p-2">Medicamento</th><th className="p-2">Un.</th><th className="p-2 text-right">Consumo</th><th className="p-2 text-right">Perda validade</th><th className="p-2 text-right">Saldo válido</th><th className="p-2 text-right">Pedido sugerido</th></tr></thead>
       <tbody>{shown.map((r) => <tr key={r.item} className="border-t"><td className="p-2 font-mono">{r.code}</td><td className="p-2">{r.item}</td><td className="p-2">{r.unit}</td><td className="p-2 text-right">{r.consumed}</td><td className="p-2 text-right">{r.lost || ""}</td><td className="p-2 text-right">{r.validBalance}</td><td className={cn("p-2 text-right font-semibold", r.suggestion > 0 && "text-primary")}>{r.suggestion}</td></tr>)}
-        {!shown.length && <tr><td colSpan={7} className="p-4 text-center text-muted-foreground">Sem consumo registrado neste mês.</td></tr>}</tbody></table></div>
+        {!shown.length && <tr><td colSpan={7} className="p-4 text-center text-muted-foreground">Sem consumo registrado neste {periodUnit}.</td></tr>}</tbody></table></div>
   </div>;
 }
