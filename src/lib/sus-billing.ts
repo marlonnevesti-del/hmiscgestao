@@ -160,15 +160,47 @@ export function bpaFile(rows: SusRow[], competence: string, prof: Professional, 
   return [header, ...lines].join("\r\n") + "\r\n";
 }
 
-/** Remessa de AIH em lote (registro por internação) para conferência/importação no SISAIH01. */
+/** Remessa de AIH em lote no layout oficial da interface texto do SISAIH01 (1800 colunas por linha). */
 export function aihFile(rows: SusRow[], competence: string, prof: Professional, inst: InstitutionConfig = DEFAULT_INSTITUTION): string {
   const cnes = inst.cnes || CNES;
-  return rows.filter((r) => r.kind === "AIH" && r.issues.length === 0).map((r) => [
-    num(cnes, 7), competence, pad(r.encounter.number, 13), r.date.replace(/-/g, ""), num(r.procedure, 10), pad(r.cid, 4),
-    num(r.cns, 15), pad(plain(r.name), 70), r.birthDate.replace(/-/g, ""), r.sex, pad(plain(r.motherName), 70), num(r.cityCode, 7),
-    num(prof.cns, 15), num(prof.cbo, 6), num(r.aihNumber, 13), r.aihAuthorizedAt.replace(/-/g, "").padEnd(8, "0"), num(r.exitReason, 2),
-    ...r.births.flatMap((b) => [num(b.dnv, 11), num(b.weight, 4), num(b.weeks, 2), b.alive ? "1" : "2"]),
-  ].join("")).join("\r\n") + "\r\n";
+  const mun6 = (inst.ibgeMunicipio || "420460").replace(/\D/g, "").slice(0, 6).padEnd(6, "0");
+  const orgEmis = inst.esferaGestao === "M" ? `M${mun6}000` : `E${mun6.slice(0, 2)}0000000`;
+  const dirCns = inst.diretorClinico.cns || prof.cns;
+  const ok = rows.filter((r) => r.kind === "AIH" && r.issues.length === 0);
+  if (!ok.length) return "";
+  return ok.map((r) => {
+    const dtInt = num(r.date, 8);
+    const dtEmis = r.aihAuthorizedAt ? num(r.aihAuthorizedAt, 8) : dtInt;
+    const dtSai = dtInt;
+    const isObst = r.births.length > 0 || /^O/i.test(r.cid) || /^(0310|0411)/.test(r.procedure);
+    const espec = isObst ? "02" : ageAt(r.birthDate, r.date) < 18 ? "07" : "03";
+    const vivos = Math.min(9, r.births.filter((b) => b.alive).length);
+    const mortos = Math.min(9, r.births.filter((b) => !b.alive).length);
+    const pacMun6 = (r.cityCode || mun6).replace(/\D/g, "").slice(0, 6).padEnd(6, "0");
+    return [
+      num(1, 8), "000", num(competence, 6), "000", pad(orgEmis, 10),
+      num(cnes, 7), num(mun6, 6), num(r.aihNumber, 13), "01", espec,
+      "0".repeat(45), "02", "000", "0".repeat(13), "0".repeat(13),
+      dtEmis, dtInt, dtSai, num(r.procedure, 10), "2", num(r.procedure, 10),
+      "02", num(r.exitReason || "11", 2),
+      "2", num(prof.cns, 15), "2", num(prof.cns, 15),
+      "2", num(dirCns, 15), "2", num(dirCns, 15),
+      pad(plain(r.cid), 4), "0000", "0".repeat(11),
+      pad(plain(r.name), 70), num(r.birthDate, 8), r.sex === "M" || r.sex === "F" ? r.sex : "I",
+      "99", pad(plain(r.motherName), 70), pad(plain(r.motherName || r.name), 70),
+      "5", "0000", "00000", "N", "N", num(r.cns, 15), "010", "081",
+      pad(plain(inst.logradouro || "RUA PRINCIPAL"), 50), pad(plain(inst.numero || "SN"), 7),
+      pad("", 15), pad(plain(inst.bairro || "CENTRO"), 30), num(pacMun6, 6),
+      pad(plain(inst.uf || "SC"), 2), num(inst.cep || "88809020", 8),
+      pad(plain(r.encounter.number), 15), "0000", "0000",
+      "0".repeat(711), "0".repeat(7), "00", "0".repeat(10),
+      "0", "0000", "0", "0".repeat(14), "0".repeat(6), "000", "0",
+      String(vivos), String(mortos), String(vivos), "0", "0",
+      "0".repeat(10), "00", "0", "    ", "00", "00", "1",
+      "0".repeat(35), "0".repeat(12), " ".repeat(32), "48", "0".repeat(9),
+      " ".repeat(50), "    0".repeat(9), "0".repeat(165),
+    ].join("");
+  }).join("\r\n") + "\r\n";
 }
 
 export function ageAt(birth: string, at: string) {

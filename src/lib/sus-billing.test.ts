@@ -9,7 +9,7 @@ describe("faturamento SUS", () => {
     expect(CNES).toBe("2594277");
     const row: SusRow = { encounter: { id: "e", number: "BAA-1", patientId: "p", status_fluxo: "ALTA_HOSPITALAR", openedAt: "2026-11-10T10:00:00Z", type: "Maternidade", specialty: "Obstetrícia", complaint: "Avaliação", history: [] }, date: "2026-11-10", cpf: "", name: "Ana", procedure: "0301060061", ...good, issues: [], aihNumber: "4226100012345", aihAuthorizedAt: "2026-11-10", exitReason: "12", births: [] };
     expect(bpaFile([row], "202611", prof).split("\r\n")[1]?.slice(2, 9)).toBe("2594277");
-    expect(aihFile([{ ...row, kind: "AIH" }], "202611", prof).slice(0, 7)).toBe("2594277");
+    expect(aihFile([{ ...row, kind: "AIH" }], "202611", prof).slice(30, 37)).toBe("2594277");
   });
   it("competência AAAAMM", () => expect(competenceOf("2026-11-17T10:00:00Z")).toBe("202611"));
   it("sem CNS do paciente é pendência", () => expect(susIssues({ ...good, cns: "" }, prof)).toContain("Paciente sem CNS (15 dígitos)"));
@@ -82,5 +82,20 @@ describe("dados institucionais nas remessas SUS", () => {
     expect(header).toContain("47708771002650");
     expect(header).toContain("SECRETARIA DE ESTADO DA SAUDE DE SANTA C");
     expect(header).toContain("EHMISC 1.0");
+  });
+  it("arquivo SISAIH01 segue layout de 1800 colunas com CNES nas posições 31-37 e município nas posições 38-43", () => {
+    const row = {
+      encounter: { id: "e1", number: "FIA-2026-9002" }, patientId: "p1", name: "FERNANDA COSTA", cns: "700003334445552",
+      birthDate: "1994-09-12", sex: "F", motherName: "ROSA COSTA", cityCode: "420460", date: "2026-11-05",
+      kind: "AIH", procedure: "0310010039", cid: "O800", aihNumber: "4226100123456", aihAuthorizedAt: "2026-11-05",
+      exitReason: "61", births: [{ rnId: "r1", name: "RN", dnv: "98765432101", weight: 3280, weeks: "39", alive: true }], issues: [],
+    } as never;
+    const line = aihFile([row], "202611", { name: "Dr", cns: "708006369271128", cbo: "225125" }, DEFAULT_INSTITUTION).split("\r\n")[0] ?? "";
+    expect(line).toHaveLength(1800);
+    expect(line.slice(11, 17)).toBe("202611");
+    expect(line.slice(30, 37)).toBe("2594277");
+    expect(line.slice(37, 43)).toBe("420460");
+    expect(line.slice(43, 56)).toBe("4226100123456");
+    expect(line.slice(56, 60)).toBe("0102");
   });
 });
