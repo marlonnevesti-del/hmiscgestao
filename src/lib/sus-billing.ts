@@ -1,7 +1,7 @@
 import type { Encounter } from "./care-flow";
 import type { Patient } from "./hospital-data";
 import { DEFAULT_TRIAGE_SIGTAP } from "./medical-sigtap";
-import { CNES } from "./institution";
+import { CNES, DEFAULT_INSTITUTION, type InstitutionConfig } from "./institution";
 
 export { CNES } from "./institution";
 export interface Professional { name: string; cns: string; cbo: string }
@@ -147,11 +147,13 @@ const num = (v: string | number, n: number) => String(v).replace(/\D/g, "").slic
 const plain = (v: string) => v.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
 
 /** Remessa BPA-I (linhas tipo 03) no layout posicional; só exporta linhas sem pendência. */
-export function bpaFile(rows: SusRow[], competence: string, prof: Professional): string {
+export function bpaFile(rows: SusRow[], competence: string, prof: Professional, inst: InstitutionConfig = DEFAULT_INSTITUTION): string {
   const ok = rows.filter((r) => r.kind === "BPA" && r.issues.length === 0);
-  const header = `01#BPA#${competence}${num(ok.length, 6)}${num(1, 6)}${num(0, 4)}${pad("HMISC", 30)}${pad("HMISC", 6)}${num("", 14)}${pad("SECRETARIA MUNICIPAL DE SAUDE", 40)}M${pad("HMISC 1.0", 10)}`;
+  const cnes = inst.cnes || CNES;
+  const esfera = inst.esferaGestao === "M" ? "M" : "E";
+  const header = `01#BPA#${competence}${num(ok.length, 6)}${num(1, 6)}${num(0, 4)}${pad(plain(inst.razaoSocial || inst.nomeFantasia || "HMISC"), 30)}${pad(plain(inst.sigla || "HMISC"), 6)}${num(inst.cnpj, 14)}${pad(plain(inst.orgaoGestor || "SECRETARIA DE ESTADO DA SAUDE"), 40)}${esfera}${pad("HMISC 1.0", 10)}`;
   const lines = ok.map((r, i) => [
-    "03", num(CNES, 7), competence, num(prof.cns, 15), num(prof.cbo, 6), r.date.replace(/-/g, ""), num(1, 3), num(i + 1, 2),
+    "03", num(cnes, 7), competence, num(prof.cns, 15), num(prof.cbo, 6), r.date.replace(/-/g, ""), num(1, 3), num(i + 1, 2),
     num(r.procedure, 10), num(r.cns, 15), r.sex, num(r.cityCode, 6), pad(r.cid, 4), num(ageAt(r.birthDate, r.date), 3), num(1, 6),
     "01", pad(r.encounter.number, 13), "BPA", pad(plain(r.name), 30), r.birthDate.replace(/-/g, ""),
   ].join(""));
@@ -159,9 +161,10 @@ export function bpaFile(rows: SusRow[], competence: string, prof: Professional):
 }
 
 /** Remessa de AIH em lote (registro por internação) para conferência/importação no SISAIH01. */
-export function aihFile(rows: SusRow[], competence: string, prof: Professional): string {
+export function aihFile(rows: SusRow[], competence: string, prof: Professional, inst: InstitutionConfig = DEFAULT_INSTITUTION): string {
+  const cnes = inst.cnes || CNES;
   return rows.filter((r) => r.kind === "AIH" && r.issues.length === 0).map((r) => [
-    num(CNES, 7), competence, pad(r.encounter.number, 13), r.date.replace(/-/g, ""), num(r.procedure, 10), pad(r.cid, 4),
+    num(cnes, 7), competence, pad(r.encounter.number, 13), r.date.replace(/-/g, ""), num(r.procedure, 10), pad(r.cid, 4),
     num(r.cns, 15), pad(plain(r.name), 70), r.birthDate.replace(/-/g, ""), r.sex, pad(plain(r.motherName), 70), num(r.cityCode, 7),
     num(prof.cns, 15), num(prof.cbo, 6), num(r.aihNumber, 13), r.aihAuthorizedAt.replace(/-/g, "").padEnd(8, "0"), num(r.exitReason, 2),
     ...r.births.flatMap((b) => [num(b.dnv, 11), num(b.weight, 4), num(b.weeks, 2), b.alive ? "1" : "2"]),
@@ -177,7 +180,7 @@ export function ageAt(birth: string, at: string) {
 }
 
 /** Nome oficial da remessa CIHA01: CNES + AAAA + MM + ".CHA". */
-export const cihaFileName = (competence: string) => `${CNES}${competence}.CHA`;
+export const cihaFileName = (competence: string, cnes: string = CNES) => `${cnes.replace(/\D/g, "") || CNES}${competence}.CHA`;
 const ddmmaaaa = (iso: string) => { const d = iso.slice(0, 10).split("-"); return d.length === 3 ? `${d[2]}${d[1]}${d[0]}` : "00000000"; };
 
 /**
@@ -185,9 +188,9 @@ const ddmmaaaa = (iso: string) => { const d = iso.slice(0, 10).split("-"); retur
  * Header tipo 1; internações (FIA) tipo 2; ambulatoriais (BAA) tipo 4; sem movimento tipo 3.
  * Endereço/nascimento/sexo seguem as posições oficiais (2–131); os campos seguintes seguem a ordem da portaria.
  */
-export function cihaFile(rows: SusRow[], competence: string): string {
+export function cihaFile(rows: SusRow[], competence: string, inst: InstitutionConfig = DEFAULT_INSTITUTION): string {
   const ok = rows.filter((r) => r.issues.length === 0);
-  const header = `1${num(CNES, 7)}${pad("1.0.0.0", 7)}`;
+  const header = `1${num(inst.cnes || CNES, 7)}${pad("1.0.0.0", 7)}`;
   if (!ok.length) return [header, "3"].join("\r\n") + "\r\n";
   const lines = ok.map((r) => {
     const a = r.patient?.registration?.addresses?.find((x) => x.primary) ?? r.patient?.registration?.addresses?.[0];

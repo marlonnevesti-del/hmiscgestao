@@ -31,9 +31,10 @@ import { ageYears, emptyRegistration, type PatientRegistration } from "./patient
 import { doctorKey, validDoctorCns, documentCns, learnDoctor, mergeDoctors, mergeImportedDoctors, resolveDoctor, type Doctor } from "./doctors";
 import { addSpecialty, canEditOrCancelEncounter, DEFAULT_SPECIALTIES, isObstetricSpecialty, type AmbSpecialty, type Appointment, type SadtReport, type SpecialtyGroup } from "./ambulatorio";
 import { normText, type AgendaImportItem } from "./agenda-import";
+import { DEFAULT_INSTITUTION, normalizeInstitution, type InstitutionConfig } from "./institution";
 
-interface State { encounters: Encounter[]; beSequence: number; fiaSequence: number; stock: StockMedication[]; warehouse: StockMedication[]; profile: Profile; employeeName: string; patients: Patient[]; queue: QueueItem[]; surgeries: Surgery[]; admins: Record<string, Admin>; rooms: string[]; calls: PanelCall[]; cidGroups: CidGroup[]; cidAreas: CidArea[]; employeeArea: string; accessAreas: string[] | null; removedStock: string[]; movements: Movement[]; requests: SupplyRequest[]; ambSpecialties: AmbSpecialty[]; appointments: Appointment[]; cmeKits: CmeKit[]; cmeCycles: CmeCycle[]; doctors: Doctor[]; milkBank: import('./milk-bank').MilkBank; inventories: InventorySession[] }
-let state: State = { profile: "Outro", employeeName: "", patients: [], queue: [], surgeries: [], admins: {}, encounters: [], beSequence: 0, fiaSequence: 0, stock: PHARMACY_CATALOG, warehouse: WAREHOUSE_CATALOG, rooms: DEFAULT_ROOMS, calls: [], cidGroups: DEFAULT_CID_GROUPS, cidAreas: DEFAULT_CID_AREAS, employeeArea: "", accessAreas: null, removedStock: [], movements: [], requests: [], ambSpecialties: DEFAULT_SPECIALTIES, appointments: [], cmeKits: DEFAULT_KITS, cmeCycles: [], doctors: [], milkBank: EMPTY_MILK_BANK, inventories: [] };
+interface State { encounters: Encounter[]; beSequence: number; fiaSequence: number; stock: StockMedication[]; warehouse: StockMedication[]; profile: Profile; employeeName: string; patients: Patient[]; queue: QueueItem[]; surgeries: Surgery[]; admins: Record<string, Admin>; rooms: string[]; calls: PanelCall[]; cidGroups: CidGroup[]; cidAreas: CidArea[]; employeeArea: string; accessAreas: string[] | null; removedStock: string[]; movements: Movement[]; requests: SupplyRequest[]; ambSpecialties: AmbSpecialty[]; appointments: Appointment[]; cmeKits: CmeKit[]; cmeCycles: CmeCycle[]; doctors: Doctor[]; milkBank: import('./milk-bank').MilkBank; inventories: InventorySession[]; institution: InstitutionConfig }
+let state: State = { profile: "Outro", employeeName: "", patients: [], queue: [], surgeries: [], admins: {}, encounters: [], beSequence: 0, fiaSequence: 0, stock: PHARMACY_CATALOG, warehouse: WAREHOUSE_CATALOG, rooms: DEFAULT_ROOMS, calls: [], cidGroups: DEFAULT_CID_GROUPS, cidAreas: DEFAULT_CID_AREAS, employeeArea: "", accessAreas: null, removedStock: [], movements: [], requests: [], ambSpecialties: DEFAULT_SPECIALTIES, appointments: [], cmeKits: DEFAULT_KITS, cmeCycles: [], doctors: [], milkBank: EMPTY_MILK_BANK, inventories: [], institution: DEFAULT_INSTITUTION };
 let employeeCrm = '';
 export function setEmployeeCrm(crm: string) { employeeCrm = crm; }
 export function currentDoctor() { return resolveDoctor(mergeDoctors(state.doctors), state.employeeName, employeeCrm); }
@@ -1368,4 +1369,11 @@ export function dispenseMilk(batchId: string, patientId: string, volume: number)
   if (!b || b.status !== 'Aprovado') throw new Error('Lote não liberado.');
   if (!(volume > 0) || volume > b.remaining) throw new Error(`Volume indisponível no lote (restam ${b.remaining} mL).`);
   milk((m) => ({ batches: m.batches.map((x) => x.id === batchId ? { ...x, remaining: x.remaining - volume } : x), dispenses: [...m.dispenses, { id: crypto.randomUUID(), batchId, patientId, volume, at: new Date().toISOString(), by: professionalName(state.profile) }] }));
+}
+
+export function saveInstitution(next: Partial<InstitutionConfig>) {
+  if (!canAct(state.profile, "faturar", state.accessAreas) && state.profile !== "Administrador") {
+    throw new Error("Apenas Faturamento ou Administração podem alterar os dados do hospital.");
+  }
+  setState((s) => ({ institution: normalizeInstitution({ ...s.institution, ...next }) }));
 }

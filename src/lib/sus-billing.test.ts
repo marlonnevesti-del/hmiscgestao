@@ -65,3 +65,20 @@ describe("regras HMISC BPA", () => {
   it("materno acima de 4h usa 0301060029", () => expect(maternalCodeByDuration({ ...base, baaClosedAt: "2026-11-01T14:01:00Z" })).toBe("0301060029"));
   it("exame realizado sem laudo é pendência", () => expect(examsWithoutReport({ examRequests: [{ status: "Realizado", exams: "Hemograma" }, { status: "Laudado", exams: "RX", report: "ok" }] } as never)).toHaveLength(1));
 });
+
+import { DEFAULT_INSTITUTION } from "./institution";
+describe("dados institucionais nas remessas SUS", () => {
+  it("pré-carrega CNES 2594277, CNPJ 47.708.771/0026-50 e Diretor Clínico com CNS 708006369271128", () => {
+    expect(DEFAULT_INSTITUTION.cnes).toBe("2594277");
+    expect(DEFAULT_INSTITUTION.cnpj).toBe("47.708.771/0026-50");
+    expect(DEFAULT_INSTITUTION.esferaGestao).toBe("E");
+    expect(DEFAULT_INSTITUTION.diretorClinico.nome).toBe("MANOEL ROBSON DAMIN MONTEIRO");
+    expect(DEFAULT_INSTITUTION.diretorClinico.cns).toBe("708006369271128");
+  });
+  it("cabeçalho BPA usa CNPJ (14 dígitos), esfera Estadual e órgão gestor configurados", () => {
+    const header = bpaFile([], "202611", { name: "Dr", cns: "708006369271128", cbo: "225125" }, DEFAULT_INSTITUTION).split("\r\n")[0] ?? "";
+    expect(header).toContain("47708771002650");
+    expect(header).toContain("SECRETARIA DE ESTADO DA SAUDE DE SANTA C");
+    expect(header).toContain("EHMISC 1.0");
+  });
+});

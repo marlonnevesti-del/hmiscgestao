@@ -7,10 +7,11 @@ import { DEFAULT_SPECIALTIES } from "./ambulatorio";
 import { registerSyncRetry, setSyncStatus } from "./sync-status";
 import { refillSequence } from "./sequence-pool";
 import { mergeCatalog, normalizeStock } from "./pharmacy-stock";
+import { normalizeInstitution, type InstitutionConfig } from "./institution";
 import { toast } from "sonner";
 
 // Shared clinical data persisted as one snapshot row; keys below are the durable part of the store.
-const KEYS = ["encounters", "beSequence", "fiaSequence", "stock", "patients", "queue", "surgeries", "admins", "rooms", "calls", "warehouse", "cidGroups", "cidAreas", "removedStock", "movements", "requests", "ambSpecialties", "appointments", "cmeKits", "cmeCycles", "doctors", "milkBank", "inventories"] as const;
+const KEYS = ["encounters", "beSequence", "fiaSequence", "stock", "patients", "queue", "surgeries", "admins", "rooms", "calls", "warehouse", "cidGroups", "cidAreas", "removedStock", "movements", "requests", "ambSpecialties", "appointments", "cmeKits", "cmeCycles", "doctors", "milkBank", "inventories", "institution"] as const;
 type Snapshot = Record<(typeof KEYS)[number], unknown> & { deletedPatientIds?: string[] };
 // IDs de pacientes de teste já excluídos definitivamente; impede ressuscitação por abas antigas em cache.
 const PURGED_TEST_PATIENT_IDS = [
@@ -69,7 +70,7 @@ function apply(data: Partial<Snapshot>, v: number) {
       if (Array.isArray(clinical["queue"])) clinical["queue"] = clinical["queue"].filter((q) => !gone.has(String(idOf(q))));
     }
   }
-  setState(() => ({ ...clinical, stock: mergeCatalog(normalizeStock(data.stock), PHARMACY_CATALOG, removed), warehouse: mergeCatalog(normalizeStock(data.warehouse), WAREHOUSE_CATALOG, removed), ...(Array.isArray(data.rooms) && data.rooms.length ? {} : { rooms: DEFAULT_ROOMS }), ...(Array.isArray(data.calls) ? {} : { calls: [] }), ...(Array.isArray(data.movements) ? {} : { movements: [] }), ...(Array.isArray(data.requests) ? {} : { requests: [] }), ...(Array.isArray(data.ambSpecialties) && data.ambSpecialties.length ? {} : { ambSpecialties: DEFAULT_SPECIALTIES }), ...(Array.isArray(data.appointments) ? {} : { appointments: [] }), ...(Array.isArray(data.doctors) ? {} : { doctors: [] }), ...(Array.isArray(data.cidGroups) && data.cidGroups.length ? {} : { cidGroups: DEFAULT_CID_GROUPS }), ...(Array.isArray(data.cidAreas) ? {} : { cidAreas: DEFAULT_CID_AREAS }) }) as never);
+  setState(() => ({ ...clinical, institution: normalizeInstitution(data.institution as Partial<InstitutionConfig> | undefined), stock: mergeCatalog(normalizeStock(data.stock), PHARMACY_CATALOG, removed), warehouse: mergeCatalog(normalizeStock(data.warehouse), WAREHOUSE_CATALOG, removed), ...(Array.isArray(data.rooms) && data.rooms.length ? {} : { rooms: DEFAULT_ROOMS }), ...(Array.isArray(data.calls) ? {} : { calls: [] }), ...(Array.isArray(data.movements) ? {} : { movements: [] }), ...(Array.isArray(data.requests) ? {} : { requests: [] }), ...(Array.isArray(data.ambSpecialties) && data.ambSpecialties.length ? {} : { ambSpecialties: DEFAULT_SPECIALTIES }), ...(Array.isArray(data.appointments) ? {} : { appointments: [] }), ...(Array.isArray(data.doctors) ? {} : { doctors: [] }), ...(Array.isArray(data.cidGroups) && data.cidGroups.length ? {} : { cidGroups: DEFAULT_CID_GROUPS }), ...(Array.isArray(data.cidAreas) ? {} : { cidAreas: DEFAULT_CID_AREAS }) }) as never);
   applying = false;
 }
 

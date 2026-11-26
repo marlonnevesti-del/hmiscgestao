@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils";
 import { trainingSearch } from '@/lib/icu-examples';
 import { IcuTrainingPatients } from '@/components/IcuTrainingPanel';
 import { IcuExamples } from '@/components/IcuExamples';
+import { InstitutionForm } from '@/components/InstitutionForm';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export const Route = createFileRoute("/_authenticated/faturamento-sus")({
@@ -38,8 +39,9 @@ export const Route = createFileRoute("/_authenticated/faturamento-sus")({
 function BillingPage() {
   const { treinamento, caso } = Route.useSearch();
   return <Tabs key={`${treinamento}-${caso}`} defaultValue={treinamento ? 'treinamento' : 'real'} className="space-y-4">
-    <TabsList className="flex h-auto flex-wrap"><TabsTrigger value="real">Faturamento real</TabsTrigger><TabsTrigger value="treinamento">TESTE / Treinamento (3)</TabsTrigger></TabsList>
+    <TabsList className="flex h-auto flex-wrap"><TabsTrigger value="real">Faturamento real</TabsTrigger><TabsTrigger value="instituicao">Dados do Hospital</TabsTrigger><TabsTrigger value="treinamento">TESTE / Treinamento (3)</TabsTrigger></TabsList>
     <TabsContent value="real"><SusBilling /></TabsContent>
+    <TabsContent value="instituicao"><div className="space-y-4"><div><h1 className="text-xl font-semibold">Dados da Instituição / Hospital</h1><p className="text-sm text-muted-foreground">Identificação oficial usada nos cabeçalhos e remessas BPA, SISAIH01 e CIHA-01 enviadas ao Estado.</p></div><InstitutionForm /></div></TabsContent>
     <TabsContent value="treinamento"><div className="space-y-4"><h1 className="text-xl font-semibold">Faturamento SUS · AIH de treinamento</h1><IcuTrainingPatients /><IcuExamples initialUnit={caso} initialView="billing" /></div></TabsContent>
   </Tabs>;
 }
@@ -58,6 +60,8 @@ function SusBilling() {
   const encounters = useStore((s) => s.encounters);
   const patients = useStore((s) => s.patients);
   const profile = useStore((s) => s.profile);
+  const institution = useStore((s) => s.institution);
+  const activeCnes = institution.cnes || CNES;
   const [comp, setComp] = useState(() => competenceOf(new Date().toISOString()));
   const [tab, setTab] = useState<Tab>("BPA");
   const [onlyIssues, setOnlyIssues] = useState(false);
@@ -84,7 +88,7 @@ function SusBilling() {
 
   return (
     <div className="space-y-4">
-      <div><h1 className="text-xl font-semibold">Faturamento SUS</h1><p className="text-sm text-muted-foreground">BPA (BAAs), SISAIH01 (FIAs) e CIHA-01 · CNES {CNES}</p></div>
+      <div><h1 className="text-xl font-semibold">Faturamento SUS</h1><p className="text-sm text-muted-foreground">BPA (BAAs), SISAIH01 (FIAs) e CIHA-01 · CNES {activeCnes} · CNPJ {institution.cnpj} · Gestão {institution.esferaGestao === "M" ? "Municipal" : "Estadual"}</p></div>
       {!allowed && <NoPermission action="gerar relatórios e remessas SUS (perfil Faturamento)" />}
       <div className="grid gap-3 rounded-lg border bg-card p-4 md:grid-cols-[160px_1fr_160px_120px]">
         <label className="text-xs font-medium">Competência<Input type="month" value={`${comp.slice(0, 4)}-${comp.slice(4)}`} onChange={(e) => e.target.value && setComp(e.target.value.replace("-", ""))} /></label>
@@ -102,7 +106,7 @@ function SusBilling() {
             <div className="flex flex-wrap gap-2">
               <label className="flex items-center gap-1 text-xs"><input type="checkbox" checked={onlyIssues} onChange={(e) => setOnlyIssues(e.target.checked)} /> Só pendências</label>
               <Button size="sm" variant="outline" disabled={!all.length} onClick={() => print({ title: `RELATÓRIO DE CONFERÊNCIA ${tab === "BPA" ? "BPA-I" : tab === "AIH" ? "AIH" : "CIHA-01"} – COMPETÊNCIA ${month}`, rows: all })}>Imprimir conferência</Button>
-              <Button size="sm" disabled={!allowed || !okCount} onClick={() => tab === "BPA" ? download(`PA${CNES}.${comp.slice(4)}`, bpaFile(rows, comp, prof)) : tab === "AIH" ? download(`AIH${CNES}_${comp}.txt`, aihFile(rows, comp, prof)) : download(cihaFileName(comp), cihaFile(rows, comp))}>Baixar arquivo {tab === "BPA" ? "BPA" : tab === "AIH" ? "SISAIH01" : "CIHA-01"} ({okCount})</Button>
+              <Button size="sm" disabled={!allowed || !okCount} onClick={() => tab === "BPA" ? download(`PA${activeCnes}.${comp.slice(4)}`, bpaFile(rows, comp, prof, institution)) : tab === "AIH" ? download(`AIH${activeCnes}_${comp}.txt`, aihFile(rows, comp, prof, institution)) : download(cihaFileName(comp, activeCnes), cihaFile(rows, comp, institution))}>Baixar arquivo {tab === "BPA" ? "BPA" : tab === "AIH" ? "SISAIH01" : "CIHA-01"} ({okCount})</Button>
             </div>
           </div>
           <div className="mb-3 space-y-2">
@@ -164,19 +168,21 @@ function AihDataDialog({ row, onClose }: { row: SusRow; onClose: () => void }) {
 }
 
 function PrintDoc({ doc, prof, month }: { doc: NonNullable<Doc>; prof: Professional; month: string }) {
+  const institution = useStore((s) => s.institution);
+  const activeCnes = institution.cnes || CNES;
   const field = (k: string, v: string) => <div key={k} style={{ border: "1px solid #000", padding: 4 }}><div style={{ fontSize: "8pt" }}>{k}</div><div style={{ fontWeight: 600 }}>{v || "—"}</div></div>;
   const grid = (items: [string, string][]) => <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", marginBottom: 8 }}>{items.map(([k, v]) => field(k, v))}</div>;
   const sign = <div style={{ marginTop: 40, textAlign: "center" }}>______________________________________<br />{prof.name || "Profissional responsável"} · CNS {prof.cns || "—"} · CBO {prof.cbo || "—"}</div>;
   return createPortal(<div className="proc-root">
     <Letterhead title={doc.title} />
     {doc.rows && <>
-      <p>Estabelecimento: HMISC · CNES {CNES} · Competência {month} · Emitido em {new Date().toLocaleString("pt-BR")}</p>
+      <p>Estabelecimento: {institution.nomeFantasia} · CNPJ {institution.cnpj} · CNES {activeCnes} · Competência {month} · Emitido em {new Date().toLocaleString("pt-BR")}</p>
       <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "9pt" }}><thead><tr>{["Data", "Nº", "Paciente", "CNS", "Nasc.", "Sexo", "IBGE", "CID", "SIGTAP", "Pendências"].map((h) => <th key={h} style={{ border: "1px solid #000", padding: 2, textAlign: "left" }}>{h}</th>)}</tr></thead>
         <tbody>{doc.rows.map((r) => <tr key={`${r.encounter.id}-${r.origin ?? "main"}`}>{[fmt(r.date), r.encounter.number, r.name, r.cns, fmt(r.birthDate), r.sex, r.cityCode, r.cid, r.procedure, r.issues.join("; ") || "OK"].map((v, i) => <td key={i} style={{ border: "1px solid #000", padding: 2 }}>{v || "—"}</td>)}</tr>)}</tbody></table>
       <p>Total: {doc.rows.length} · Prontos: {doc.rows.filter((r) => !r.issues.length).length} · Com pendência: {doc.rows.filter((r) => r.issues.length).length}</p>
     </>}
     {doc.laudo && <>
-      <h3>Identificação do estabelecimento</h3>{grid([["Estabelecimento solicitante", "HMISC"], ["CNES", CNES], ["Nº FIA / atendimento", doc.laudo.encounter.number], ["Nº AIH autorizada", doc.laudo.aihNumber], ["Data de autorização", fmt(doc.laudo.aihAuthorizedAt)], ["Motivo de saída", EXIT_REASONS.find(([c]) => c === doc.laudo?.exitReason)?.join(" – ") ?? ""]])}
+      <h3>Identificação do estabelecimento</h3>{grid([["Estabelecimento solicitante", institution.nomeFantasia], ["CNPJ", institution.cnpj], ["CNES", activeCnes], ["Diretor Clínico", `${institution.diretorClinico.nome} · CRM ${institution.diretorClinico.crm}/${institution.diretorClinico.uf} · CNS ${institution.diretorClinico.cns}`], ["Nº FIA / atendimento", doc.laudo.encounter.number], ["Nº AIH autorizada", doc.laudo.aihNumber], ["Data de autorização", fmt(doc.laudo.aihAuthorizedAt)], ["Motivo de saída", EXIT_REASONS.find(([c]) => c === doc.laudo?.exitReason)?.join(" – ") ?? ""]])}
       <h3>Identificação do paciente</h3>{grid([["Nome", doc.laudo.name], ["CNS", doc.laudo.cns], ["CPF", doc.laudo.cpf], ["Data de nascimento", fmt(doc.laudo.birthDate)], ["Sexo", doc.laudo.sex], ["Nome da mãe", doc.laudo.motherName], ["Município (IBGE)", doc.laudo.cityCode], ["Data de internação", fmt(doc.laudo.date)], ["Caráter", "Urgência"]])}
       <h3>Justificativa da internação</h3>{grid([["Diagnóstico", doc.laudo.encounter.medical?.diagnosis ?? ""], ["CID-10 principal", doc.laudo.cid], ["Procedimento solicitado (SIGTAP)", doc.laudo.procedure]])}
       <div style={{ border: "1px solid #000", padding: 4, minHeight: 80 }}><div style={{ fontSize: "8pt" }}>Principais sinais, sintomas e condições</div>{doc.laudo.encounter.medical?.anamnesis} {doc.laudo.encounter.medical?.exam}</div>
