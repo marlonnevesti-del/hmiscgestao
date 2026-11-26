@@ -8,7 +8,7 @@ export const WAREHOUSE_CATEGORIES = [
 ] as const;
 export type WarehouseCategory = (typeof WAREHOUSE_CATEGORIES)[number]["id"];
 /** Grupo de Compra do relatório (número) → macro-categoria. */
-export const PURCHASE_GROUP_CATEGORY: Record<number, WarehouseCategory> = { 1: "hospitalar", 2: "hospitalar", 8: "hospitalar", 9: "medicamento", 3: "escritorio", 7: "escritorio", 5: "alimentacao", 10: "alimentacao", 6: "higiene", 13: "higiene" };
+export const PURCHASE_GROUP_CATEGORY: Record<number, WarehouseCategory> = { 1: "hospitalar", 2: "hospitalar", 8: "hospitalar", 12: "hospitalar", 9: "medicamento", 3: "escritorio", 7: "escritorio", 5: "alimentacao", 10: "alimentacao", 14: "alimentacao", 6: "higiene", 13: "higiene" };
 export const categoryLabel = (id?: string) => WAREHOUSE_CATEGORIES.find((c) => c.id === id)?.label ?? "Sem categoria";
 
 /** Area id that grants requesting one category ("pedido:<categoria>"). */

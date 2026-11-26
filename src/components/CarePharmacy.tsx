@@ -22,7 +22,7 @@ import { BreakageForm, MovementLog, NursingRequestForm, RequestInbox, ReturnForm
 import { LabelStudio } from "./LabelStudio";
 import { SurgicalKits } from "./SurgicalKits";
 import { MovementMap, RequisitionOut } from "./MovementMap";
-import { ControlledCabinet, ConsumptionReport, ExpiryPanel } from "./ControlledCabinet";
+import { ConsumptionReport, ExpiryPanel } from "./ControlledCabinet";
 import { RequisitionPrint, printRequisition } from "./RequisitionPrint";
 
 function run(action: () => void) { try { action(); } catch (error) { toast.error(error instanceof Error ? error.message : "Ação não concluída"); } }
@@ -41,10 +41,10 @@ function Pharmacy() {
   const aba = useRouterState({ select: (st) => (st.location.search as { aba?: string }).aba });
   const tab = PHARMACY_TABS.find((t) => t.id === aba)?.id ?? "fila";
   return <Tabs value={tab} className="space-y-4">
-    <TabsList className="hidden"><TabsTrigger value="fila">Fila de prescrições ({list.length})</TabsTrigger><TabsTrigger value="estoque">Estoque ({stock.length})</TabsTrigger><TabsTrigger value="controlados">Armário de controlados</TabsTrigger><TabsTrigger value="validades">Validades / Estorno</TabsTrigger><TabsTrigger value="consumo">Consumo mensal</TabsTrigger><TabsTrigger value="pedidos">Pedidos da enfermagem ({pending})</TabsTrigger><TabsTrigger value="entrada">Entrada NF</TabsTrigger><TabsTrigger value="emprestimo">Empréstimos</TabsTrigger><TabsTrigger value="transferencia">Transferência</TabsTrigger><TabsTrigger value="devolucao">Devolução</TabsTrigger><TabsTrigger value="quebra">Quebra/Extravio</TabsTrigger><TabsTrigger value="dispensados">Medicamentos prescritos</TabsTrigger><TabsTrigger value="etiquetas">Etiquetas</TabsTrigger></TabsList>
+    <TabsList className="hidden"><TabsTrigger value="fila">Fila de prescrições ({list.length})</TabsTrigger><TabsTrigger value="estoque">Estoque ({stock.length})</TabsTrigger><TabsTrigger value="validades">Validades / Estorno</TabsTrigger><TabsTrigger value="consumo">Consumo mensal</TabsTrigger><TabsTrigger value="pedidos">Pedidos da enfermagem ({pending})</TabsTrigger><TabsTrigger value="entrada">Entrada NF</TabsTrigger><TabsTrigger value="emprestimo">Empréstimos</TabsTrigger><TabsTrigger value="transferencia">Transferência</TabsTrigger><TabsTrigger value="devolucao">Devolução</TabsTrigger><TabsTrigger value="quebra">Quebra/Extravio</TabsTrigger><TabsTrigger value="dispensados">Medicamentos prescritos</TabsTrigger><TabsTrigger value="etiquetas">Etiquetas</TabsTrigger></TabsList>
     <TabsContent value="fila"><PrescriptionQueue /></TabsContent>
     <TabsContent value="estoque"><StockManager /></TabsContent>
-    <TabsContent value="controlados"><ControlledCabinet /></TabsContent><TabsContent value="validades"><ExpiryPanel /></TabsContent><TabsContent value="consumo"><ConsumptionReport /></TabsContent>
+    <TabsContent value="validades"><ExpiryPanel /></TabsContent><TabsContent value="consumo"><ConsumptionReport /></TabsContent>
     <TabsContent value="pedidos"><RequestInbox target="farmacia" /></TabsContent>
     <TabsContent value="entrada" className="space-y-3"><EntryForm depot="farmacia" /><MovementLog kinds={["entrada"]} depot="farmacia" /></TabsContent><TabsContent value="emprestimo"><LoanPanel depot="farmacia" /></TabsContent><TabsContent value="transferencia" className="space-y-3"><TransferForm from="farmacia" /><MovementLog kinds={["transferencia"]} depot="farmacia" /></TabsContent>
     <TabsContent value="devolucao" className="space-y-3"><ReturnForm depot="farmacia" /><MovementLog kinds={["devolucao"]} depot="farmacia" /></TabsContent>

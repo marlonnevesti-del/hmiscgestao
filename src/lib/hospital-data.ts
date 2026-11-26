@@ -60,7 +60,7 @@ export const UNIT_AREAS: { id: UnitArea; label: string; tabs: { id: UnitTab; lab
 ];
 /** Pharmacy sections shown as sidebar sub-items (/farmacia?aba=id). */
 export const PHARMACY_TABS = [
-  { id: "fila", label: "Fila de prescrições" }, { id: "controlados", label: "Armário de controlados" },
+  { id: "fila", label: "Fila de prescrições" },
   { id: "validades", label: "Validades / Estorno" }, { id: "consumo", label: "Consumo mensal" },
   { id: "estoque", label: "Estoque geral" }, { id: "pedidos", label: "Pedidos da enfermagem" },
   { id: "entrada", label: "Entrada NF" }, { id: "emprestimo", label: "Empréstimos" },

@@ -28,7 +28,7 @@ function Almoxarifado() {
   const aba = useRouterState({ select: (st) => (st.location.search as { aba?: string }).aba });
   const tab = WAREHOUSE_TABS.find((t) => t.id === aba);
   const cur = tab?.id ?? "pedidos";
-  return <div className="space-y-4"><div><h1 className="text-xl font-semibold">Almoxarifado geral · {(tab ?? WAREHOUSE_TABS[0]).label}</h1><p className="text-sm text-muted-foreground">Materiais separados em 5 categorias, com lotes e validades.</p></div><Tabs value={cur} className="space-y-4">
+  return <div className="space-y-4"><div><h1 className="text-xl font-semibold">Almoxarifado geral · {(tab ?? WAREHOUSE_TABS[0]).label}</h1><p className="text-sm text-muted-foreground">Materiais organizados por Grupo de Compra, com lotes e validades.</p></div><Tabs value={cur} className="space-y-4">
     <TabsContent value="pedidos"><RequestInbox target="almoxarifado" /></TabsContent>
     <TabsContent value="validades"><ExpiryPanel depot="almoxarifado" /></TabsContent>
     <TabsContent value="consumo"><ConsumptionReport depot="almoxarifado" /></TabsContent>
