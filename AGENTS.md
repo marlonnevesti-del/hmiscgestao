@@ -30,6 +30,8 @@ use the editor.
 <!-- LOVABLE:END -->
 
 ## Project rules
+- Billing identifiers are shared through institution.ts; SUS exports and TISS guides must use the same CNES to prevent divergence.
+- Reception CPF autofill uses exact normalized matches from patient-registration-mapping; ambiguous matches require selection and identifier changes detach the previous identity to avoid mixed records.
 - ICU/UCI prescription shortcuts use the PEP search parameter `aba=prescricao`, opening the shared prescription tab without changing clinical status or prescribing permissions.
 - ICU teaching cases are static, isolated documents in icu-examples.ts, exposed in PEP, admissions and SUS billing through virtual chart IDs and training views, never clinical snapshot rows or export inputs, so simulations cannot occupy beds or contaminate billing.
 - Medical SIGTAP uses the existing encounter.sigtapCode; shared selection and store guards preserve explicit blanks and block completion, avoiding UI-only validation.

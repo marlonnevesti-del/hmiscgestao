@@ -12,8 +12,8 @@ import { EncounterTimeline } from "./EncounterTimeline";
 import { InpatientDocsButtons } from "./InpatientDocsPrint";
 import { SpecialConditionBadges } from "./SpecialConditions";
 import { PatientRegistrationFields } from "./PatientRegistrationFields";
-import { registrationFor, registrationPatch } from "@/lib/patient-registration-mapping";
-import { PEDIATRIC_EXCEPTION_REASONS, ageYears, pediatricAgeIssue, newbornBirthIssue, registrationIssues, registrationSchema, unknownPatientName, type RegistrationMode } from "@/lib/patient-registration";
+import { patientsByCpf, registrationFor, registrationPatch } from "@/lib/patient-registration-mapping";
+import { PEDIATRIC_EXCEPTION_REASONS, ageYears, pediatricAgeIssue, newbornBirthIssue, registrationIssues, registrationSchema, unknownPatientName, type PatientRegistration, type RegistrationMode } from "@/lib/patient-registration";
 import { ATTENDANCE_TYPES, type Encounter } from "@/lib/care-flow";
 import { can, canAct, type Patient } from "@/lib/hospital-data";
 import { cancelUnattendedEncounter, deleteEncounter, openEncounter, professionalName, registerPatientOnly, savePatientRegistration, switchAmbulatorySector, useStore } from "@/lib/hospital-store";
@@ -34,6 +34,7 @@ export function CareReception({ unit }: { unit?: CareUnit } = {}) {
   const profile = useStore((s) => s.profile); const accessAreas = useStore((s) => s.accessAreas);
   const [search, setSearch] = useState("");
   const [existing, setExisting] = useState("");
+  const [cpfStatus, setCpfStatus] = useState("");
   const [created, setCreated] = useState<Encounter | null>(null);
   // Assim que o atendimento é confirmado, a BAA abre direto para impressão e assinatura.
   useEffect(() => {
@@ -48,6 +49,7 @@ export function CareReception({ unit }: { unit?: CareUnit } = {}) {
   const set = (key: keyof Omit<typeof f, "conditions" | "nursingPreConsult">, value: string) => setF((current) => ({ ...current, [key]: value }));
 
   const choose = (patient: Patient) => {
+    setCpfStatus("");
     setRegistration(registrationFor(patient));
     setExisting(patient.id);
     setF((current) => ({
@@ -59,9 +61,33 @@ export function CareReception({ unit }: { unit?: CareUnit } = {}) {
   };
 
   const clearIdentity = () => {
+    setCpfStatus("");
     setRegistration(registrationFor());
     setExisting("");
     setF((current) => ({ ...current, name: "", cpf: "", birth: "", mother: "", guardian: "", conditions: [], otherCondition: "" }));
+  };
+
+  const changeRegistration = (next: PatientRegistration) => {
+    if (next.cpf === registration.cpf) {
+      setRegistration(next);
+      return;
+    }
+    // A changed identifier must never silently retain another patient's identity.
+    if (existing && next.cpf.replace(/\D/g, "") !== registration.cpf.replace(/\D/g, "")) {
+      clearIdentity();
+      next = { ...registrationFor(), cpf: next.cpf };
+    }
+    const matches = patientsByCpf(patients, next.cpf);
+    const patient = matches.length === 1 ? matches[0] : undefined;
+    if (patient) {
+      choose(patient);
+      setCpfStatus("Dados recuperados do cadastro HMISC. Confira antes de salvar.");
+      return;
+    }
+    setRegistration(next);
+    setCpfStatus(next.cpf.replace(/\D/g, "").length !== 11 ? "" : matches.length > 1
+      ? "CPF presente em mais de um cadastro. Selecione o paciente pela busca antes de continuar."
+      : "CPF não encontrado no HMISC. Preencha os dados do novo paciente.");
   };
 
   const birthError = f.patientType === "neonato" && !registration.estimatedAge ? newbornBirthIssue(registration.birthDate) : null;
@@ -85,7 +111,9 @@ export function CareReception({ unit }: { unit?: CareUnit } = {}) {
       throw new Error("Para criança ou recém-nascido, preencha o nome do responsável ou da mãe (filiação 1).");
     }
     if (f.conditions.includes("Outra") && !f.otherCondition.trim()) throw new Error("Descreva a outra condição especial.");
-    const old = patients.find((patient) => patient.id === existing || (registration.cpf.replace(/\D/g, "").length === 11 && patient.cpf.replace(/\D/g, "") === registration.cpf.replace(/\D/g, "")));
+    const cpfMatches = patientsByCpf(patients, registration.cpf);
+    if (!existing && cpfMatches.length > 1) throw new Error("CPF duplicado. Selecione o paciente pela busca antes de continuar.");
+    const old = patients.find((patient) => patient.id === existing) ?? cpfMatches[0];
     const id = old?.id ?? crypto.randomUUID();
     const patient: Patient = {
       ...(old ?? {
@@ -149,7 +177,8 @@ export function CareReception({ unit }: { unit?: CareUnit } = {}) {
           <Button type="button" variant={mode === "simplificado" ? "destructive" : "outline"} onClick={() => setMode("simplificado")}>Cadastro simplificado (emergência / sem documento)</Button>
           <span className="self-center text-xs text-muted-foreground">Campos em azul com * são obrigatórios.</span>
         </div>
-        <div className="min-w-0 md:col-span-3"><PatientRegistrationFields birthError={birthError} mode={mode} value={registration} onChange={setRegistration} recordNumber={patients.find(p => p.id === existing)?.prontuario} /></div>
+        {cpfStatus && <p role="status" className="text-sm text-muted-foreground md:col-span-3">{cpfStatus}</p>}
+        <div className="min-w-0 md:col-span-3"><PatientRegistrationFields birthError={birthError} mode={mode} value={registration} onChange={changeRegistration} recordNumber={patients.find(p => p.id === existing)?.prontuario} /></div>
         {existing && <div className="md:col-span-3"><Button type="button" variant="outline" onClick={() => { try { savePatientRegistration(existing, registration); toast.success("Cadastro atualizado sem abrir novo atendimento"); } catch (error) { toast.error(error instanceof Error ? error.message : "Não foi possível salvar"); } }}>Salvar alterações do cadastro</Button></div>}
         <h2 className="mt-3 border-t pt-4 font-semibold md:col-span-3">Abertura de atendimento</h2>
         {unit === "Ambulatório" && <>

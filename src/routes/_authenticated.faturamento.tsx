@@ -7,6 +7,7 @@ import { NoPermission } from "@/components/AppShell";
 import { buildBill, can, isEligibleForTiss } from "@/lib/hospital-data";
 import { useStore } from "@/lib/hospital-store";
 import { cn } from "@/lib/utils";
+import { CNES } from "@/lib/institution";
 
 export const Route = createFileRoute("/_authenticated/faturamento")({
   head: () => ({ meta: [
@@ -74,7 +75,7 @@ function Fat() {
           <DialogHeader><DialogTitle>Guia TISS – {guide}</DialogTitle></DialogHeader>
           <div className="hidden print:block"><Letterhead title={`GUIA TISS – ${guide}`} /></div>
           <div className="grid grid-cols-2 gap-px border bg-border text-xs">
-            {[["1 - Registro ANS", sel.p.insurance === "SUS" ? "—" : "326305"], ["2 - Nº guia prestador", sel.p.guia ?? "PENDENTE"], ["7 - Beneficiário", sel.p.name], ["8 - Nº carteira", sel.p.cpf], ["13 - Contratado", "Hospital Materno-Infantil HMISC"], ["15 - CNES", "2077485"], ["21 - Caráter atendimento", "Urgência"], ["23 - Indicação clínica", sel.p.diagnosis], ["Data admissão", sel.p.admission], ["Diárias", String(sel.p.days)], ["Autorização", sel.p.authorized ? "Autorizada" : "AGUARDANDO"], ["Valor total", brl(sel.total)]].map(([k, v]) => <div key={k} className="bg-card p-2"><div className="text-[10px] text-muted-foreground">{k}</div><div className={cn("font-medium", (v === "PENDENTE" || v === "AGUARDANDO") && "text-maternal")}>{v}</div></div>)}
+            {[["1 - Registro ANS", sel.p.insurance === "SUS" ? "—" : "326305"], ["2 - Nº guia prestador", sel.p.guia ?? "PENDENTE"], ["7 - Beneficiário", sel.p.name], ["8 - Nº carteira", sel.p.cpf], ["13 - Contratado", "Hospital Materno-Infantil HMISC"], ["15 - CNES", CNES], ["21 - Caráter atendimento", "Urgência"], ["23 - Indicação clínica", sel.p.diagnosis], ["Data admissão", sel.p.admission], ["Diárias", String(sel.p.days)], ["Autorização", sel.p.authorized ? "Autorizada" : "AGUARDANDO"], ["Valor total", brl(sel.total)]].map(([k, v]) => <div key={k} className="bg-card p-2"><div className="text-[10px] text-muted-foreground">{k}</div><div className={cn("font-medium", (v === "PENDENTE" || v === "AGUARDANDO") && "text-maternal")}>{v}</div></div>)}
           </div>
           <Button onClick={() => window.print()}>Imprimir guia</Button>
         </DialogContent>

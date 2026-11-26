@@ -1,8 +1,9 @@
 import type { Encounter } from "./care-flow";
 import type { Patient } from "./hospital-data";
 import { DEFAULT_TRIAGE_SIGTAP } from "./medical-sigtap";
+import { CNES } from "./institution";
 
-export const CNES = "2077485";
+export { CNES } from "./institution";
 export interface Professional { name: string; cns: string; cbo: string }
 export interface SusRow {
   encounter: Encounter; patient?: Patient | undefined; kind: "BPA" | "AIH";
