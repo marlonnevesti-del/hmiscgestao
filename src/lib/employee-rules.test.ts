@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { canApproveEmployees, canCreateAdmins, canRemoveEmployee, clinicalProfile, employeeSchema, employeeRegistrationInputSchema, needsCouncil, filterEmployees } from "./employee-rules";
+import { adminEmployeeCreationSchema, canApproveEmployees, canCreateAdmins, canRemoveEmployee, clinicalProfile, employeeSchema, employeeRegistrationInputSchema, formatEmployeeAccessSummary, generateSecurePassword, needsCouncil, filterEmployees } from "./employee-rules";
 import { can, canAccessPage } from "./hospital-data";
 import { ATTENDANCE_TYPES } from "./care-flow";
 describe("acesso de colaboradores", () => {
@@ -77,4 +77,26 @@ describe("áreas liberadas pelo administrador", () => {
   });
   it("sugere recepção para recepcionista", () => { expect(defaultAreas("Recepção")).toEqual(["recepcao", "ambulatorio:agenda", "ambulatorio:recepcao", "ambulatorio:especialidades", "pronto-socorro:recepcao", "pronto-socorro:internados", "maternidade:recepcao", "maternidade:internados"]); });
   it("médico liberado só no atendimento do PS vê só essa aba", () => { const a = ["pronto-socorro:atendimento"]; expect(unitTab("Médico", "pronto-socorro", "atendimento", a)).toBe(true); expect(unitTab("Médico", "pronto-socorro", "recepcao", a)).toBe(false); expect(pageAccess("Médico", "/pronto-socorro", a)).toBe(true); expect(pageAccess("Médico", "/ambulatorio", a)).toBe(false); });
+});
+
+describe("cadastro manual e gerador de senha", () => {
+  const base = { full_name: "Ana Paula Silva", username: "anapaula", email: "ana@hmisc.com.br", password: "Hmisc@2026!9", cpf: "12345678901", phone: "48999999999", birth_date: "1992-05-10", address: "Rua Central 100", job_function: "Recepcionista", sector: "Recep Mat", council_type: "", council_number: "", council_state: "" };
+  it("gera senha forte com maiúscula, minúscula, número e símbolo", () => {
+    const pass = generateSecurePassword(12);
+    expect(pass).toHaveLength(12);
+    expect(pass).toMatch(/[A-Z]/);
+    expect(pass).toMatch(/[a-z]/);
+    expect(pass).toMatch(/[0-9]/);
+    expect(pass).toMatch(/[@#$%&*!?]/);
+  });
+  it("define liberação imediata como padrão no cadastro manual", () => {
+    const parsed = adminEmployeeCreationSchema.parse(base);
+    expect(parsed.approve_immediately).toBe(true);
+  });
+  it("formata resumo copiável de acesso", () => {
+    const text = formatEmployeeAccessSummary({ full_name: base.full_name, username: base.username, email: base.email, password: base.password });
+    expect(text).toContain("Colaborador: Ana Paula Silva");
+    expect(text).toContain("Usuário: anapaula");
+    expect(text).toContain("Senha inicial: Hmisc@2026!9");
+  });
 });

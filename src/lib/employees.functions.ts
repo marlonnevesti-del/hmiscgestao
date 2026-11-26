@@ -2,8 +2,9 @@ import { createServerFn } from "@tanstack/react-start";
 import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { employeeRegistrationInputSchema, employeeFunctionSchema } from "./employee-rules";
-import { hasOnlyKnownAreas, isKnownSector, mergeEmployeeSectors } from "./employee-sectors";
+import { adminEmployeeCreationSchema, clinicalProfile, employeeRegistrationInputSchema, employeeFunctionSchema } from "./employee-rules";
+import { hasOnlyKnownAreas, isKnownSector, mergeEmployeeSectors, withSectorAreas } from "./employee-sectors";
+import { defaultAreas } from "./hospital-data";
 
 const sectorNameSchema = z.string().trim().min(2, "Informe o nome do setor").max(80);
 const sectorAreasSchema = z.array(z.string()).max(80).refine(hasOnlyKnownAreas, "Área de acesso inválida");
@@ -123,6 +124,38 @@ export const createAdministrator = createServerFn({ method: "POST" }).middleware
     const { error: grantError } = await context.supabase.rpc("grant_administrator", { target_id: created.user.id });
     if (grantError) { await supabaseAdmin.auth.admin.deleteUser(created.user.id); throw new Error("Não foi possível conceder o acesso administrativo"); }
     return { ok: true, message: "Administrador cadastrado e liberado" };
+  });
+
+export const adminCreateEmployee = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => adminEmployeeCreationSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    const { data: admin } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
+    const { data: principal } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "super_admin" });
+    if (!admin && !principal) return { ok: false, message: "Somente administradores podem cadastrar colaboradores manualmente" };
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: taken } = await supabaseAdmin.from("profiles").select("id").ilike("username", data.username.trim().replace(/[%_\\]/g, "\\$&")).limit(1);
+    if (taken?.length) return { ok: false, message: "Este nome de usuário já está em uso. Escolha outro." };
+    const { data: sectorRows, error: sectorError } = await supabaseAdmin.from("employee_sectors").select("name,access_areas").eq("is_active", true).limit(500);
+    if (sectorError || !isKnownSector(data.sector, (sectorRows ?? []).map((sector) => sector.name))) return { ok: false, message: "Selecione um setor válido." };
+    const { password, other_function, approve_immediately, ...fields } = data;
+    const resolvedFunction = data.job_function === "Outro" ? other_function : data.job_function;
+    const { data: created, error } = await supabaseAdmin.auth.admin.createUser({
+      email: data.email,
+      password,
+      email_confirm: true,
+      user_metadata: { ...fields, job_function: resolvedFunction },
+    });
+    if (error || !created.user) {
+      return { ok: false, message: error?.code === "weak_password" ? "Escolha uma senha mais segura, com letras, números e símbolos." : "Não foi possível cadastrar o colaborador. Verifique se o e-mail já está em uso." };
+    }
+    if (approve_immediately) {
+      const areas = withSectorAreas(defaultAreas(clinicalProfile(resolvedFunction, [])), data.sector, sectorRows ?? []);
+      const { error: areaErr } = await context.supabase.rpc("set_employee_areas", { target_id: created.user.id, areas });
+      const { error: revErr } = await context.supabase.rpc("review_employee", { target_id: created.user.id, new_status: "approved" });
+      if (areaErr || revErr) return { ok: true, message: "Colaborador cadastrado. Conclua a liberação na lista de pendentes." };
+      return { ok: true, message: "Colaborador cadastrado e liberado com sucesso." };
+    }
+    return { ok: true, message: "Colaborador cadastrado como pendente de liberação." };
   });
 export const loginWithUsername = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => z.object({ username: z.string().trim().min(1).max(50), password: z.string().min(1).max(128) }).parse(input))

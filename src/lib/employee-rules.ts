@@ -33,6 +33,46 @@ export const employeeRegistrationInputSchema = employeeSchema.and(z.object({
     } catch { return false; }
   }, "Origem inválida").transform((origin) => new URL(origin).origin),
 }));
+export const adminEmployeeCreationSchema = employeeSchema.and(z.object({
+  approve_immediately: z.boolean().default(true),
+}));
+export type AdminEmployeeCreation = z.input<typeof adminEmployeeCreationSchema>;
+
+const PASS_UPPER = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+const PASS_LOWER = "abcdefghijkmnopqrstuvwxyz";
+const PASS_DIGIT = "23456789";
+const PASS_SYMBOL = "@#$%&*!?";
+const PASS_ALL = PASS_UPPER + PASS_LOWER + PASS_DIGIT + PASS_SYMBOL;
+
+export function generateSecurePassword(length = 12): string {
+  const size = Math.max(8, Math.min(32, Math.floor(length)));
+  const randomIndex = (max: number) => {
+    const buf = new Uint32Array(1);
+    crypto.getRandomValues(buf);
+    return (buf[0] ?? 0) % max;
+  };
+  const pick = (pool: string) => pool[randomIndex(pool.length)] ?? pool[0]!;
+  const chars = [pick(PASS_UPPER), pick(PASS_LOWER), pick(PASS_DIGIT), pick(PASS_SYMBOL)];
+  while (chars.length < size) chars.push(pick(PASS_ALL));
+  for (let i = chars.length - 1; i > 0; i--) {
+    const j = randomIndex(i + 1);
+    const tmp = chars[i]!;
+    chars[i] = chars[j]!;
+    chars[j] = tmp;
+  }
+  return chars.join("");
+}
+
+export function formatEmployeeAccessSummary(data: { full_name: string; username: string; email: string; password: string }): string {
+  return [
+    "HMISC · Acesso ao Sistema",
+    `Colaborador: ${data.full_name}`,
+    `Usuário: ${data.username}`,
+    `E-mail: ${data.email}`,
+    `Senha inicial: ${data.password}`,
+  ].join("\n");
+}
+
 export const canApproveEmployees = (roles: readonly string[], status: string) => status === "approved" && roles.some((r) => r === "admin" || r === "super_admin");
 export const canCreateAdmins = (roles: readonly string[], status: string) => status === "approved" && roles.includes("super_admin");
 export const canRemoveEmployee = (callerRoles: readonly string[], callerStatus: string, callerId: string, targetId: string, targetRoles: readonly string[]) => canApproveEmployees(callerRoles, callerStatus) && callerId !== targetId && !targetRoles.includes('super_admin') && (!targetRoles.includes('admin') || callerRoles.includes('super_admin'));
