@@ -4,6 +4,7 @@ import { EncounterTimeline } from "@/components/EncounterTimeline";
 import { MaternityCare } from "@/components/MaternityCare";
 import { ProcedurePrintButton } from "@/components/ProcedurePrint";
 import { MedicalAssessment, PrescriptionRelease } from "@/components/CareMedical";
+import { PRESCRIBABLE_FLOW } from "@/lib/care-flow";
 import { Button } from "@/components/ui/button";
 import { atbMissing, isAntimicrobial, isRestricted, newAtb, type AtbForm, type AtbInfo } from "@/lib/sciras";
 import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
@@ -204,7 +205,7 @@ function Prescricao({ p }: { p: Patient }) {
   const [calc, setCalc] = useState(() => initCalc(DRUGS[0]!));
   const [atbF, setAtbF] = useState({ weight: "", vitals: "", dose: "", interval: "", focus: "", days: "", justification: "" });
   const encounter = getState().encounters.slice().reverse().find((e) => e.patientId === p.id);
-  const editable = allowed && encounter?.status_fluxo === "EM_ATENDIMENTO_MEDICO";
+  const editable = allowed && !!encounter && PRESCRIBABLE_FLOW.has(encounter.status_fluxo);
   const dose = calcResult(drug, calc, p.weight);
   const allergy = allergyConflict(drug, p.allergies);
   const inter = interactionsWith(drug, p.prescriptions);

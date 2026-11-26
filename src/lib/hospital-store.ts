@@ -182,14 +182,18 @@ export function saveMedical(id: string, medical: NonNullable<Encounter['medical'
 }
 export function signPrescription(id: string) {
   requireAction('prescrever'); const { e, p } = getEncounter(id);
-  if (!e.medical?.diagnosis.trim()) throw new Error('Registre a avaliação e hipótese diagnóstica.');
+  if (!e.medical?.diagnosis.trim() && !p.diagnosis.trim()) throw new Error('Registre a avaliação e hipótese diagnóstica.');
   const fresh = p.prescriptions.filter((r) => !r.batchId && r.pharmacy !== 'Dispensada');
   if (!fresh.length) throw new Error('Adicione novos itens à prescrição antes de liberar.');
   const freshIds = new Set(fresh.map((r) => r.id));
   const needsPharmacy = fresh.some((r) => r.cat === 'Medicamento' || r.cat === 'Hidratação');
   const at = new Date().toISOString();
   const batchId = crypto.randomUUID();
-  const next = transition(e, needsPharmacy ? 'AGUARDANDO_FARMACIA' : 'EM_OBSERVACAO_REAVALIACAO', professionalName(state.profile), 'Prescrição liberada', at);
+  const by = professionalName(state.profile);
+  const target = needsPharmacy ? 'AGUARDANDO_FARMACIA' : (e.status_fluxo === 'EM_ATENDIMENTO_MEDICO' ? 'EM_OBSERVACAO_REAVALIACAO' : e.status_fluxo);
+  const next = target === e.status_fluxo
+    ? { ...e, history: [...e.history, { status: e.status_fluxo, at, by, note: 'Prescrição atualizada' }] }
+    : transition(e, target, by, 'Prescrição liberada', at);
   commitEncounter({ ...next, signedAt: at, signedBy: professionalName(state.profile), prescriptionBatchId: batchId }, { patients: state.patients.map((x) => x.id === p.id ? { ...x, prescriptions: x.prescriptions.map((r) => !freshIds.has(r.id) ? r : r.cat === 'Medicamento' || r.cat === 'Hidratação' ? { ...r, batchId, pharmacy: 'Pendente', times: r.times?.length ? r.times : [nowHM()] } : r.cat === 'Cuidados' ? { ...r, batchId, times: r.times?.length ? r.times : [nowHM()] } : { ...r, batchId }) } : x) });
 }
 export function validatePrescription(id: string, rxId: string) {

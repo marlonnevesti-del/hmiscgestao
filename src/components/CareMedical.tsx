@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { EncounterTimeline } from './EncounterTimeline';
 import { CidPicker } from './CidPicker';
-import { FLOW_LABELS, sortMedicalQueue, type Encounter } from '@/lib/care-flow';
+import { FLOW_LABELS, PRESCRIBABLE_FLOW, sortMedicalQueue, type Encounter } from '@/lib/care-flow';
 import { BASE_BEDS, can, MANCHESTER, WARDS, type Patient } from '@/lib/hospital-data';
 import { callPatient, finishEncounter, psSetDestination, reopenEncounter, requestAdmission, saveMedical, setMedicalSigtapCode, signPrescription, useStore } from '@/lib/hospital-store';
 import { cn } from '@/lib/utils';
@@ -72,8 +72,9 @@ export function MedicalAssessment({ p }: { p:Patient }) {
 }
 export function PrescriptionRelease({ patientId }: { patientId:string }) {
   const e=useStore((s)=>s.encounters.slice().reverse().find((x)=>x.patientId===patientId)); const profile=useStore((s)=>s.profile);
-  const count=useStore((s)=>s.patients.find((x)=>x.id===patientId)?.prescriptions.length??0);
-  useEffect(()=>{ if(e&&count>0&&can(profile,'prescrever')&&e.status_fluxo==='EM_ATENDIMENTO_MEDICO'&&e.medical?.diagnosis.trim()){ try{signPrescription(e.id);toast.success('Prescrição liberada para farmácia e enfermagem');}catch{/* aguarda dados */} } },[e?.id,e?.status_fluxo,e?.medical?.diagnosis,count,profile]);
+  const pat=useStore((s)=>s.patients.find((x)=>x.id===patientId));
+  const freshCount=pat?.prescriptions.filter((r)=>!r.batchId&&r.pharmacy!=='Dispensada').length??0;
+  useEffect(()=>{ if(e&&freshCount>0&&can(profile,'prescrever')&&PRESCRIBABLE_FLOW.has(e.status_fluxo)&&(e.medical?.diagnosis.trim()||pat?.diagnosis.trim())){ try{signPrescription(e.id);toast.success('Prescrição liberada para farmácia e enfermagem');}catch{/* aguarda dados */} } },[e?.id,e?.status_fluxo,e?.medical?.diagnosis,pat?.diagnosis,freshCount,profile]);
   if(!e)return null;
   return <div className="flex flex-wrap items-center gap-3 border-b pb-3">{e.signedAt&&<span className="text-xs text-clinical">Liberada por {e.signedBy} · {new Date(e.signedAt).toLocaleString('pt-BR')}</span>}{!e.signedAt&&<span className="text-xs text-muted-foreground">A prescrição é liberada automaticamente para farmácia e enfermagem ao incluir os itens.</span>}</div>;
 }
