@@ -112,12 +112,13 @@ export function canAccessPage(profile: Profile, path: string, areas?: readonly s
   const seg = path.split("/")[1] ?? "";
   if (UNIT_IDS.includes(seg)) { const u = UNIT_AREAS.find((x) => x.id === seg)!; return u.tabs.some((t) => canAccessUnitTab(profile, u.id, t.id, areas)); }
   if (areas && ["uti-uci", "fisioterapia", "raio-x", "gesso", "banco-de-leite"].includes(seg) && areas.includes(seg)) return true;
+  if (areas && seg === "pacientes" && areas.includes("recepcao")) return true;
   if (areas) return areas.includes(seg === "faturamento-sus" || seg === "prestacao-contas" || seg === "centro-de-custos" ? "faturamento" : seg === "internacoes" ? "nir" : seg === "documentos-recepcao" || seg === "painel-tv" ? "recepcao" : seg === "uti-uci" ? "enfermagem" : seg === "fisioterapia" || seg === "raio-x" || seg === "gesso" ? "pacientes" : seg === "banco-de-leite" ? "enfermagem" : seg);
   if (path === "/painel-tv") return can(profile, "recepcao");
   if (path === "/recepcao" || path === "/documentos-recepcao") return can(profile, "recepcao") || can(profile, "checar");
   if (path === "/acolhimento") return can(profile, "triagem");
   if (path === "/atendimento") return can(profile, "prescrever");
-  if (path.startsWith("/pacientes")) return can(profile, "evoluir") || can(profile, "prescrever") || can(profile, "checar");
+  if (path.startsWith("/pacientes")) return can(profile, "evoluir") || can(profile, "prescrever") || can(profile, "checar") || can(profile, "recepcao");
   if (path === "/centro-cirurgico" || path === "/cme" || path === "/gestao-cirurgica") return can(profile, "cirurgia");
   if (path === "/farmacia") return can(profile, "farmacia");
   if (path === "/almoxarifado") return can(profile, "almoxarifado");
@@ -133,7 +134,7 @@ export function canAccessPage(profile: Profile, path: string, areas?: readonly s
 }
 
 export type PatientType = "gestante" | "puerpera" | "pediatria" | "neonato";
-export type EvoCat = "Médica" | "Enfermagem" | "Fisioterapia" | "Serviço Social" | "SCIRAS" | "Raio-X" | "Gesso" | "Procedimento";
+export type EvoCat = "Médica" | "Enfermagem" | "Fisioterapia" | "Serviço Social" | "Nutricionista" | "Psicólogo(a)" | "SCIRAS" | "Raio-X" | "Gesso" | "Procedimento";
 export type Risk = "Queda" | "Alergia" | "Flebite" | "Risco Hemorrágico";
 
 export interface Evolution { time: string; cat: EvoCat; author: string; text: string }

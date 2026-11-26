@@ -1,5 +1,5 @@
 import { MedShiftBoard } from "./MedShiftBoard";
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { ProcedurePrintButton } from "./ProcedurePrint";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { toast } from "sonner";
@@ -13,7 +13,7 @@ import { can, PHARMACY_TABS, WARDS } from "@/lib/hospital-data";
 import { findByBarcode } from "@/lib/barcode";
 import { BarcodeScan } from "./BarcodeScan";
 import { LabelPrint, printLabels, type Label } from "./LabelPrint";
-import { adjustPrescription, adjustStock, advanceCompletedMedication, allBatchDosesDone, deleteStockItem, createStockMedication, dispenseKit, dispenseScheduledDose, recordMedication, useStore, validatePrescription } from "@/lib/hospital-store";
+import { adjustStock, advanceCompletedMedication, allBatchDosesDone, deleteStockItem, createStockMedication, dispenseKit, dispenseScheduledDose, recordMedication, useStore, validatePrescription } from "@/lib/hospital-store";
 import { findStockMedication, fmtExpiry, lotsByExpiry } from "@/lib/pharmacy-stock";
 import { canDispenseNow, isImmediatePrescription, PHARMACY_START_HOUR, remainingDoses } from "@/lib/pharmacy-schedule";
 import { matchesPharmacySector, PHARMACY_SECTORS, pharmacySectorLabel, type PharmacySectorId } from "@/lib/pharmacy-sectors";
@@ -56,6 +56,25 @@ function Pharmacy() {
   </Tabs>;
 }
 
+const DOSE_INTERVALS = [
+  { id: "TODOS", label: "TODOS" },
+  { id: "16-19", label: "16:00 - 19:59", start: 16, end: 19 },
+  { id: "20-23", label: "20:00 - 23:59", start: 20, end: 23 },
+  { id: "00-03", label: "00:00 - 03:59", start: 0, end: 3 },
+  { id: "04-07", label: "04:00 - 07:59", start: 4, end: 7 },
+  { id: "08-11", label: "08:00 - 11:59", start: 8, end: 11 },
+  { id: "12-15", label: "12:00 - 15:59", start: 12, end: 15 },
+] as const;
+
+function matchesDoseInterval(time: string, intervalId: string): boolean {
+  if (intervalId === "TODOS" || time === "Agora") return true;
+  const h = Number(time.split(":")[0]);
+  if (Number.isNaN(h)) return true;
+  const found = DOSE_INTERVALS.find((x) => x.id === intervalId);
+  if (!found || !("start" in found)) return true;
+  return h >= found.start && h <= found.end;
+}
+
 function PrescriptionQueue() {
   const encounters = useStore((state) => state.encounters);
   const patients = useStore((state) => state.patients);
@@ -66,6 +85,8 @@ function PrescriptionQueue() {
   const [specialReasons, setSpecialReasons] = useState<Record<string, string>>({});
   const [retainMap, setRetainMap] = useState<Record<string, boolean>>({});
   const [sector, setSector] = useState<PharmacySectorId>("todos");
+  const [interval, setInterval] = useState<string>("TODOS");
+  const [expandedKey, setExpandedKey] = useState<string | null>(null);
   const [printId, setPrintId] = useState("");
   const [doseLabel, setDoseLabel] = useState<Label | null>(null);
   const printEnc = encounters.find((x) => x.id === printId);
@@ -74,6 +95,22 @@ function PrescriptionQueue() {
     .map((encounter) => ({ encounter, patient: patients.find((item) => item.id === encounter.patientId) }))
     .filter((row): row is { encounter: typeof encounters[number]; patient: NonNullable<typeof patients[number]> } => Boolean(row.patient));
   const list = allPending.filter(({ encounter, patient }) => matchesPharmacySector(sector, encounter, patient));
+  const doseRows = list.flatMap(({ encounter, patient }) => {
+    const batchMeds = patient.prescriptions.filter((prescription) => prescription.pharmacy && prescription.batchId === encounter.prescriptionBatchId);
+    const times = Array.from(new Set(batchMeds.flatMap((rx) => (rx.times?.length ? rx.times : ["Agora"]))));
+    const sectorName = pharmacySectorLabel(encounter, patient);
+    return times
+      .filter((t) => matchesDoseInterval(t, interval))
+      .map((time) => ({
+        rowKey: `${encounter.id}::${time}`,
+        encounter,
+        patient,
+        time,
+        sectorName,
+        batchMeds,
+        medsAtTime: batchMeds.filter((rx) => (rx.times?.length ? rx.times : ["Agora"]).includes(time)),
+      }));
+  });
   const nowHour = new Date().getHours();
   const beforeStart = nowHour < PHARMACY_START_HOUR;
   const retained = encounters.flatMap((encounter) => {
@@ -101,20 +138,54 @@ function PrescriptionQueue() {
         );
       })}
     </div>
-    <h2 className="font-semibold">Prescrições aguardando dispensação ({list.length})</h2>{!list.length && <p className="py-6 text-muted-foreground">Nenhuma prescrição aguardando farmácia nesta pasta.</p>}{list.map(({ encounter, patient }) => {
-    const batchMeds = patient.prescriptions.filter((prescription) => prescription.pharmacy && prescription.batchId === encounter.prescriptionBatchId);
+    <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+      <h2 className="font-semibold">Prescrições aguardando dispensação ({doseRows.length})</h2>
+      <label className="flex items-center gap-2 text-xs">
+        <span className="text-muted-foreground">Intervalo:</span>
+        <select aria-label="Intervalo de horário" className="h-8 rounded-md border bg-background px-2 text-xs" value={interval} onChange={(e) => setInterval(e.target.value)}>
+          {DOSE_INTERVALS.map((opt) => <option key={opt.id} value={opt.id}>{opt.label}</option>)}
+        </select>
+      </label>
+    </div>
+    {!doseRows.length && <p className="py-6 text-muted-foreground">Nenhuma prescrição aguardando farmácia nesta pasta.</p>}
+    {doseRows.length > 0 && (
+      <div className="overflow-x-auto rounded-lg border">
+        <table className="w-full text-sm">
+          <thead className="border-b bg-muted/40 text-left text-xs text-muted-foreground">
+            <tr>
+              <th className="px-3 py-2">Setor</th>
+              <th className="px-3 py-2">Paciente</th>
+              <th className="px-3 py-2">Horário</th>
+            </tr>
+          </thead>
+          <tbody>
+            {doseRows.map((row) => {
+              const { rowKey, encounter, patient, time, sectorName, batchMeds, medsAtTime } = row;
+              const expanded = expandedKey === rowKey;
     const hasMultiDose = batchMeds.some((r) => (r.times?.length ?? 0) >= 2);
     const retainRemaining = retainMap[encounter.id] ?? hasMultiDose;
     const specialCaseReason = specialReasons[encounter.id] ?? "";
     const gate = canDispenseNow(batchMeds, { specialCaseReason });
-    const sectorName = pharmacySectorLabel(encounter, patient);
-    return <section key={encounter.id} className="space-y-3 border-b py-4"><div className="flex flex-wrap items-center gap-2"><Button variant="link" className="h-auto p-0" asChild><Link to="/pacientes/$id" params={{ id: patient.id }}>{patient.name} · {patient.bed || patient.ward}</Link></Button><span className="rounded bg-muted px-2 py-0.5 text-xs font-medium text-foreground">{sectorName}</span></div><div className="text-xs">Peso {patient.weight} kg · Liberada por: {encounter.signedBy}</div><EncounterTimeline patientId={patient.id} />
-      {batchMeds.map((prescription) => {
+              return (
+                <Fragment key={rowKey}>
+                  <tr className={cn("cursor-pointer border-b hover:bg-muted/40", expanded && "bg-muted/30")} onClick={() => setExpandedKey(expanded ? null : rowKey)}>
+                    <td className="px-3 py-2 font-medium">{sectorName}</td>
+                    <td className="px-3 py-2 font-semibold text-primary underline-offset-2 hover:underline">{patient.name}</td>
+                    <td className="px-3 py-2 font-mono text-xs">{time}</td>
+                  </tr>
+                  {expanded && (
+                    <tr className="border-b bg-card">
+                      <td colSpan={3} className="space-y-3 p-4">
+                        <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
+                          <span>Peso {patient.weight} kg · Leito {patient.bed || "—"} · Liberada por: {encounter.signedBy}</span>
+                          <Link to="/pacientes/$id" params={{ id: patient.id }} className="text-primary hover:underline">Abrir prontuário</Link>
+                        </div>
+                        {medsAtTime.map((prescription) => {
         const medication = findStockMedication(stock, prescription.item);
         const totalDoses = prescription.times?.length ?? 1;
         const needed = retainRemaining && totalDoses >= 2 ? 1 : totalDoses;
         const insufficient = !medication || medication.quantity < needed;
-        return <div key={prescription.id} className="flex flex-wrap justify-between gap-2 border-b py-2 text-sm"><div><b>{prescription.item}</b>{isImmediatePrescription(prescription) && <span className="ml-2 rounded bg-clinical-soft px-1.5 py-0.5 text-[10px] font-semibold text-clinical">Dose imediata</span>}<div className="text-xs text-muted-foreground">{prescription.posologia} · Horários: {prescription.times?.join(", ")} · {prescription.pharmacy}</div><div className={cn("text-xs", insufficient ? "text-destructive" : "text-muted-foreground")}>{medication ? `Estoque: ${medication.quantity} ${medication.unit} · entregar agora: ${needed}${retainRemaining && totalDoses >= 2 ? ` (${totalDoses - 1} retida(s) na farmácia)` : ""}` : "Medicamento ainda não cadastrado no estoque"}</div></div><div className="flex flex-wrap items-center gap-2"><BarcodeScan className="w-56" placeholder="Bipar frasco" onScan={(code) => { const hit = findByBarcode(stock, code); if (!hit || hit.item.id !== medication?.id) { toast.error(hit ? `Produto errado: ${hit.item.name}` : "Código não cadastrado no estoque"); return; } if (hit.lot) setLots((c) => ({ ...c, [prescription.id]: hit.lot!.lot })); toast.success(hit.lot ? `Conferido · lote ${hit.lot.lot}` : "Produto conferido — informe o lote"); }} />{lotsByExpiry(medication).length ? <select aria-label={`Lote de ${prescription.item}`} className="h-9 w-64 rounded-md border bg-background px-2 text-sm" value={lots[prescription.id] ?? ""} onChange={(event) => setLots((c) => ({ ...c, [prescription.id]: event.target.value }))}><option value="">Lote * (vence primeiro no topo)</option>{lotsByExpiry(medication).map((l) => <option key={l.lot + l.expiry} value={l.lot}>{`${l.lot} · val. ${fmtExpiry(l.expiry)} · ${l.quantity}`}</option>)}</select> : <Input aria-label={`Lote de ${prescription.item}`} placeholder="Lote *" className="w-32" value={lots[prescription.id] ?? ""} onChange={(event) => setLots((c) => ({ ...c, [prescription.id]: event.target.value }))} />}<Button variant="ghost" disabled={!can(profile, "farmacia") || prescription.pharmacy !== "Pendente"} onClick={() => { const item = window.prompt("Ajustar dose / apresentação", prescription.item); if (item == null) return; const pos = window.prompt("Via / posologia", prescription.posologia) ?? prescription.posologia; run(() => adjustPrescription(encounter.id, prescription.id, item, pos)); }}>Ajustar dose</Button><Button variant="ghost" onClick={() => { const quantity = window.prompt("Quantidade (ex.: 1,1 ML)", ""); if (!quantity) return; const time = window.prompt("Horário", `${new Date().toLocaleDateString("pt-BR")} ${prescription.times?.[0] ?? ""}`) ?? ""; const diluent = window.prompt("Diluente (vazio se não houver)", "") ?? ""; setDoseLabel({ kind: "dose", patient: patient.name, bed: patient.bed, sector: WARDS.find((w) => w.id === patient.ward)?.name ?? String(patient.ward), drug: medication?.name ?? prescription.item, quantity, route: prescription.route ?? prescription.posologia.match(/\b(VO|EV|IM|SC|SNG|IV)\b/i)?.[0]?.toUpperCase() ?? "VO", time, validity: "24H", diluent, copies: needed }); printLabels(); }}>Etiqueta dose</Button><Button variant="outline" disabled={!can(profile, "farmacia") || prescription.pharmacy !== "Pendente"} onClick={() => run(() => validatePrescription(encounter.id, prescription.id))}>Validar item</Button></div></div>;
+        return <div key={prescription.id} className="flex flex-wrap justify-between gap-2 border-b py-2 text-sm"><div><b>{prescription.item}</b>{isImmediatePrescription(prescription) && <span className="ml-2 rounded bg-clinical-soft px-1.5 py-0.5 text-[10px] font-semibold text-clinical">Dose imediata</span>}<div className="text-xs text-muted-foreground">{prescription.posologia} · Horário: {time} · {prescription.pharmacy}</div><div className={cn("text-xs", insufficient ? "text-destructive" : "text-muted-foreground")}>{medication ? `Estoque: ${medication.quantity} ${medication.unit} · entregar agora: ${needed}${retainRemaining && totalDoses >= 2 ? ` (${totalDoses - 1} retida(s) na farmácia)` : ""}` : "Medicamento ainda não cadastrado no estoque"}</div></div><div className="flex flex-wrap items-center gap-2"><BarcodeScan className="w-56" placeholder="Bipar frasco ou lote" onScan={(code) => { const hit = findByBarcode(stock, code); if (!hit || hit.item.id !== medication?.id) { toast.error(hit ? `Produto errado: ${hit.item.name}` : "Código não cadastrado no estoque"); return; } if (hit.lot) setLots((c) => ({ ...c, [prescription.id]: hit.lot!.lot })); toast.success(hit.lot ? `Conferido · lote ${hit.lot.lot}` : "Produto conferido — informe o lote"); }} />{lotsByExpiry(medication).length ? <select aria-label={`Lote de ${prescription.item}`} className="h-9 w-64 rounded-md border bg-background px-2 text-sm" value={lots[prescription.id] ?? ""} onChange={(event) => setLots((c) => ({ ...c, [prescription.id]: event.target.value }))}><option value="">Lote * (vence primeiro no topo)</option>{lotsByExpiry(medication).map((l) => <option key={l.lot + l.expiry} value={l.lot}>{`${l.lot} · val. ${fmtExpiry(l.expiry)} · ${l.quantity}`}</option>)}</select> : <Input aria-label={`Lote de ${prescription.item}`} placeholder="Lote *" className="w-32" value={lots[prescription.id] ?? ""} onChange={(event) => setLots((c) => ({ ...c, [prescription.id]: event.target.value }))} />}<Button variant="ghost" onClick={() => { const quantity = window.prompt("Quantidade (ex.: 1,1 ML)", ""); if (!quantity) return; const t = window.prompt("Horário", `${new Date().toLocaleDateString("pt-BR")} ${time}`) ?? ""; const diluent = window.prompt("Diluente (vazio se não houver)", "") ?? ""; setDoseLabel({ kind: "dose", patient: patient.name, bed: patient.bed, sector: sectorName, drug: medication?.name ?? prescription.item, quantity, route: prescription.route ?? prescription.posologia.match(/\b(VO|EV|IM|SC|SNG|IV)\b/i)?.[0]?.toUpperCase() ?? "VO", time: t, validity: "24H", diluent, copies: needed }); printLabels(); }}>Etiqueta dose</Button><Button variant="outline" disabled={!can(profile, "farmacia") || prescription.pharmacy !== "Pendente"} onClick={() => run(() => validatePrescription(encounter.id, prescription.id))}>Validar item</Button></div></div>;
       })}
       {hasMultiDose && (
         <label className="flex items-center gap-2 text-xs">
@@ -130,8 +201,16 @@ function PrescriptionQueue() {
       )}
       <label className="grid gap-1 text-xs">Intervenção farmacêutica<textarea aria-label={`Intervenção farmacêutica de ${patient.name}`} className="min-h-16 rounded-md border bg-background p-2" value={notes[encounter.id] ?? ""} onChange={(event) => setNotes((current) => ({ ...current, [encounter.id]: event.target.value }))} /></label>
       <Button disabled={!can(profile, "farmacia") || !gate.ok} onClick={() => run(() => { dispenseKit(encounter.id, notes[encounter.id] ?? "", lots, { specialCaseReason, retainRemaining }); toast.success(retainRemaining && hasMultiDose ? "1ª dose dispensada — doses restantes retidas na farmácia" : "Medicamentos prescritos dispensados para a enfermagem"); setPrintId(encounter.id); printRequisition(); })}>Dispensar medicamentos prescritos</Button>
-    </section>;
-  })}
+                      </td>
+                    </tr>
+                  )}
+                </Fragment>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    )}
     {retained.length > 0 && (
       <section className="mt-6 space-y-2 border-t pt-4">
         <h3 className="font-semibold">Doses programadas retidas na farmácia ({retained.length})</h3>

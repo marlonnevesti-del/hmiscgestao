@@ -9,9 +9,35 @@ import { Textarea } from "@/components/ui/textarea";
 import { canApproveInventory } from "@/lib/hospital-data";
 import { approveInventoryCorrection, clearInventoryCount, saveInventoryCount, useStore } from "@/lib/hospital-store";
 import { buildInventoryAdjustments, computeInventorySummary, findItemByBarcodeOrCode } from "@/lib/inventory";
+import { isControlled } from "@/lib/controlled";
+import type { StockMedication } from "@/lib/pharmacy-stock";
 import { DEPOT_LABEL, type Depot } from "@/lib/supply-flow";
 
 type Filter = "todos" | "divergentes" | "contados" | "pendentes";
+type InvCategory = "todos" | "medicamento" | "controlados" | "armario-controlados" | "materiais";
+
+const INV_CATEGORIES: { id: InvCategory; label: string }[] = [
+  { id: "todos", label: "Todos" },
+  { id: "medicamento", label: "Medicamento" },
+  { id: "controlados", label: "Medicamentos controlados" },
+  { id: "armario-controlados", label: "Armários controlados" },
+  { id: "materiais", label: "Materiais médicos" },
+];
+
+const MATERIAL_RE = /\b(seringa|agulha|equipo|cateter|sonda|gaze|luva|atadura|esparadrapo|micropore|curativo|scalp|jelco|abocath|fralda|algod[aã]o|compressa|l[aâ]mina|bisturi|fio\s+cir|m[aá]scara|avental|touca|prop[eé]|tubo\s+endotraq|c[aâ]nula|coletor|frasco\s+coletor|eletrodo|material|insumo)\b/i;
+const CONTROLLED_RE = /\b(controlad|psicotr[oó]pic|entorpecent|morfina|fentanil|midazolam|diazepam|clonazepam|fenobarbital|tramadol|code[ií]na|petidina|cetamina|propofol|haloperidol|clorpromazina|alprazolam|lorazepam|zolpidem)\b/i;
+
+function matchesInvCategory(item: StockMedication, cat: InvCategory, depot: Depot): boolean {
+  if (cat === "todos") return true;
+  const text = `${item.name} ${item.category ?? ""} ${item.presentation ?? ""} ${item.location ?? ""}`;
+  const inCabinet = isControlled(item);
+  const isMat = depot === "almoxarifado" || /material|m[ée]dic|hospitalar|insumo/i.test(item.category ?? "") || MATERIAL_RE.test(text);
+  const isCtrl = inCabinet || CONTROLLED_RE.test(text);
+  if (cat === "armario-controlados") return inCabinet;
+  if (cat === "controlados") return isCtrl;
+  if (cat === "materiais") return isMat && !isCtrl;
+  return !isMat && !isCtrl;
+}
 const brl = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
 export function InventoryPanel({ depot }: { depot: Depot }) {
@@ -23,6 +49,7 @@ export function InventoryPanel({ depot }: { depot: Depot }) {
   const [scan, setScan] = useState("");
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<Filter>("todos");
+  const [invCat, setInvCat] = useState<InvCategory>("todos");
   const [approveOpen, setApproveOpen] = useState(false);
   const [justification, setJustification] = useState("");
 
@@ -36,6 +63,7 @@ export function InventoryPanel({ depot }: { depot: Depot }) {
   const filtered = useMemo(() => {
     const q = query.trim().toLocaleLowerCase("pt-BR");
     return items.filter((item) => {
+      if (!matchesInvCategory(item, invCat, depot)) return false;
       const line = lines[item.id];
       if (filter === "contados" && !line) return false;
       if (filter === "pendentes" && line) return false;
@@ -43,7 +71,7 @@ export function InventoryPanel({ depot }: { depot: Depot }) {
       if (!q) return true;
       return item.name.toLocaleLowerCase("pt-BR").includes(q) || (item.code ?? "").toLocaleLowerCase("pt-BR").includes(q) || (item.category ?? "").toLocaleLowerCase("pt-BR").includes(q);
     });
-  }, [items, lines, query, filter]);
+  }, [items, lines, query, filter, invCat, depot]);
 
   function handleScan(e: React.FormEvent) {
     e.preventDefault();
@@ -91,6 +119,16 @@ export function InventoryPanel({ depot }: { depot: Depot }) {
   }
 
   return <div className="space-y-4">
+    <div className="flex flex-wrap gap-2 border-b pb-3" role="tablist" aria-label="Categorias do inventário">
+      {INV_CATEGORIES.map((c) => {
+        const count = items.filter((it) => matchesInvCategory(it, c.id, depot)).length;
+        return (
+          <Button key={c.id} size="sm" variant={invCat === c.id ? "default" : "outline"} role="tab" aria-selected={invCat === c.id} onClick={() => setInvCat(c.id)}>
+            {c.label} ({count})
+          </Button>
+        );
+      })}
+    </div>
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
       <div className="rounded-lg border bg-card p-3"><div className="text-xs text-muted-foreground">Itens no estoque</div><div className="text-2xl font-semibold">{summary.totalItems}</div></div>
       <div className="rounded-lg border bg-card p-3"><div className="text-xs text-muted-foreground">Contados / Pendentes</div><div className="text-2xl font-semibold">{summary.countedItems} <span className="text-sm font-normal text-muted-foreground">/ {summary.pendingItems}</span></div></div>

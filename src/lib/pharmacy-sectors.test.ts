@@ -20,10 +20,16 @@ const mkEncounter = (over: Partial<Encounter> = {}): Encounter => ({
 describe("pharmacy-sectors", () => {
   it("classifica setores clínicos corretamente", () => {
     expect(resolvePharmacySector(mkEncounter(), mkPatient({ ward: "PSP" }))).toBe("ps");
-    expect(resolvePharmacySector(mkEncounter({ type: "Maternidade" }), mkPatient({ ward: "CO" }))).toBe("maternidade");
-    expect(resolvePharmacySector(mkEncounter(), mkPatient({ ward: "UTIN", bed: "UTIN-01" }))).toBe("uti");
-    expect(resolvePharmacySector(mkEncounter(), mkPatient({ ward: "ENFP", bed: "ENFP-02" }))).toBe("internacao");
-    expect(resolvePharmacySector(mkEncounter({ type: "Ambulatório" }), mkPatient({ ward: "PSP", bed: "" }))).toBe("ambulatorio");
+    expect(resolvePharmacySector(mkEncounter({ type: "Maternidade" }), mkPatient({ ward: "CO" }))).toBe("co");
+    expect(resolvePharmacySector(mkEncounter({ type: "Maternidade" }), mkPatient({ ward: "AC" }))).toBe("maternidade");
+    expect(resolvePharmacySector(mkEncounter(), mkPatient({ ward: "UTIN", bed: "UTIN-01" }))).toBe("uti-neo");
+    expect(resolvePharmacySector(mkEncounter(), mkPatient({ ward: "UTIP", bed: "UTIP-01" }))).toBe("uti-ped");
+    expect(resolvePharmacySector(mkEncounter(), mkPatient({ ward: "UCI", bed: "UCI-01" }))).toBe("uci");
+    expect(resolvePharmacySector(mkEncounter(), mkPatient({ ward: "ENFP", bed: "ENFP-02" }))).toBe("pediatria");
+    const fiaBase = { openedAt: "2026-11-25T10:00:00Z", doctor: "Dr. Teste", authorizedBy: "NIR", cid: "K35", justification: "Cirurgia", character: "Urgência" as const };
+    expect(resolvePharmacySector(mkEncounter({ fia: { ...fiaBase, number: "FIA-1", ward: "Clínica Cirúrgica", bed: "CCIR-01" } }), mkPatient({ ward: "ENFP", bed: "CCIR-01" }))).toBe("clinica-cirurgica");
+    expect(resolvePharmacySector(mkEncounter({ fia: { ...fiaBase, number: "FIA-2", ward: "Centro Cirúrgico", bed: "CC-01" } }), mkPatient({ ward: "ENFP", bed: "CC-01" }))).toBe("cc");
+    expect(resolvePharmacySector(mkEncounter({ fia: { ...fiaBase, number: "FIA-3", ward: "RPA", bed: "RPA-01" } }), mkPatient({ ward: "ENFP", bed: "RPA-01" }))).toBe("rpa");
   });
 
   it("identifica doses imediatas na pasta dedicada", () => {
@@ -34,11 +40,11 @@ describe("pharmacy-sectors", () => {
     expect(hasImmediateBatchDose(e, p)).toBe(true);
     expect(matchesPharmacySector("imediatas", e, p)).toBe(true);
     expect(matchesPharmacySector("ps", e, p)).toBe(true);
-    expect(matchesPharmacySector("uti", e, p)).toBe(false);
+    expect(matchesPharmacySector("uti-ped", e, p)).toBe(false);
   });
 
   it("formata rótulo do setor para etiqueta e requisição", () => {
-    expect(pharmacySectorLabel(mkEncounter(), mkPatient({ ward: "UTIP" }))).toBe("UTI / UCI · UTI Pediátrica");
-    expect(pharmacySectorLabel(mkEncounter({ type: "Ambulatório" }), mkPatient({ ward: "PSP", bed: "" }))).toBe("Ambulatório");
+    expect(pharmacySectorLabel(mkEncounter(), mkPatient({ ward: "UTIP" }))).toBe("Uti Ped");
+    expect(pharmacySectorLabel(mkEncounter(), mkPatient({ ward: "UTIN" }))).toBe("Uti Neo");
   });
 });

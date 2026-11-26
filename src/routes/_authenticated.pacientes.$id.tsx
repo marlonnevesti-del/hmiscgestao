@@ -53,6 +53,8 @@ function PEP() {
   const p = useStore((s) => s.patients.find((x) => x.id === id));
   const sheetEncounter = useStore((s) => s.encounters.slice().reverse().find((x) => x.patientId === id));
   const employeeName = useStore((s) => s.employeeName);
+  const profile = useStore((s) => s.profile);
+  const receptionOnly = can(profile, "recepcao") && !can(profile, "evoluir") && !can(profile, "prescrever") && !can(profile, "checar");
   const [print, setPrint] = useState(false);
   const example = exampleForChart(id);
   if (example) return <IcuTrainingChart example={example} />;
@@ -84,6 +86,7 @@ function PEP() {
           </div>
         </div>
         <div className="mt-1 text-xs"><span className="font-medium">Diagnóstico:</span> {p.diagnosis}</div>
+        {receptionOnly && <div className="mt-1 inline-block rounded bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">Acesso Recepção · somente visualização do prontuário e impressão de documentos</div>}
         <EncounterTimeline patientId={p.id} />
       </div>
       <PatientSheetPrint p={p} e={sheetEncounter} user={employeeName} />
@@ -122,7 +125,7 @@ function PEP() {
 }
 
 const Card = ({ title, children, className, action }: { title: string; children: React.ReactNode; className?: string; action?: React.ReactNode }) => <div className={cn("rounded-lg border bg-card p-4", className)}><div className="mb-3 flex items-center justify-between gap-2"><h3 className="text-sm font-semibold">{title}</h3>{action}</div>{children}</div>;
-const CATS: EvoCat[] = ["Médica", "Enfermagem", "Fisioterapia", "Serviço Social"];
+const CATS: EvoCat[] = ["Médica", "Enfermagem", "Fisioterapia", "Serviço Social", "Nutricionista", "Psicólogo(a)"];
 const SOAP = {
   "SOAP": "S: \nO: PA __/__ mmHg, FC __ bpm, Tax __ °C\nA: \nP: ",
   "Evolução obstétrica": "S: Refere contrações / perda de líquido: \nO: Dilatação __ cm, altura __ (De Lee), BCF __ bpm, DU __/10min\nA: \nP: ",
@@ -149,7 +152,7 @@ function Evolucao({ p }: { p: Patient }) {
   const [physioType, setPhysioType] = useState("");
   const save = (finish = false) => { if (cat === "Fisioterapia" && openPhysio) { try { if (finish && !window.confirm(`Confirmar alta da fisioterapia de ${p.name}?`)) return; recordPhysioSession(p.id, openPhysio.id, { conduct: text, pre: "", post: "" }, finish); setText(""); setFocus(false); toast.success(finish ? "Sessão registrada e alta da fisioterapia" : "Sessão de fisioterapia registrada"); } catch (e) { toast.error(e instanceof Error ? e.message : "Ação não concluída"); } return; } updatePatient(p.id, (x) => ({ evolutions: [{ time: new Date().toLocaleString("pt-BR"), cat, author: professionalName(profile), text }, ...x.evolutions] })); setText(""); setFocus(false); toast.success("Evolução registrada"); };
   const list = p.evolutions.filter((e) => f === "Todos" || e.cat === f);
-  const color = (c: EvoCat) => ({ Médica: "bg-primary", Enfermagem: "bg-clinical", Fisioterapia: "bg-bed-isolation", "Serviço Social": "bg-mt-orange", SCIRAS: "bg-destructive", "Raio-X": "bg-muted-foreground", Gesso: "bg-muted-foreground" } as Record<EvoCat, string>)[c];
+  const color = (c: EvoCat) => ({ Médica: "bg-primary", Enfermagem: "bg-clinical", Fisioterapia: "bg-bed-isolation", "Serviço Social": "bg-mt-orange", Nutricionista: "bg-emerald-600", "Psicólogo(a)": "bg-violet-600", SCIRAS: "bg-destructive", "Raio-X": "bg-muted-foreground", Gesso: "bg-muted-foreground", Procedimento: "bg-muted-foreground" } as Record<EvoCat, string>)[c];
   return (
     <div className="grid gap-4 lg:grid-cols-[1fr_minmax(420px,44%)]">
       <Card title="Linha do tempo">
@@ -186,15 +189,20 @@ function Evolucao({ p }: { p: Patient }) {
 
 function Prescricao({ p }: { p: Patient }) {
   const profile = useStore((s) => s.profile);
+  const stock = useStore((s) => s.stock);
   const allowed = can(profile, "prescrever");
   const ped = p.type === "pediatria" || p.type === "neonato";
   const [cat, setCat] = useState<PrescCat>("Medicamento");
   const [drugName, setDrugName] = useState(DRUGS[0]?.name ?? "");
+  const [drugSearch, setDrugSearch] = useState("");
+  const [selectedMeds, setSelectedMeds] = useState<string[]>([]);
   const [free, setFree] = useState(""); const [pos, setPos] = useState(""); const [route, setRoute] = useState<AdminRoute>("VO"); const [frequency, setFrequency] = useState<PosologyOption>("8x8"); const [immediate, setImmediate] = useState(false); const [typed, setTyped] = useState(false); const [typedDrug, setTypedDrug] = useState("");
-  const drug = DRUGS.find((d) => d.name === drugName);
+  const allDrugNames = Array.from(new Set([...DRUGS.map((d) => d.name), ...stock.map((s) => s.name)])).sort((a, b) => a.localeCompare(b, "pt-BR"));
+  const filteredDrugNames = drugSearch.trim() ? allDrugNames.filter((n) => n.toLocaleLowerCase("pt-BR").includes(drugSearch.trim().toLocaleLowerCase("pt-BR"))) : allDrugNames;
+  const drug = DRUGS.find((d) => d.name === drugName) ?? DRUGS[0]!;
+  const isCatalogCalcDrug = DRUGS.some((d) => d.name === drugName);
   const [calc, setCalc] = useState(() => initCalc(DRUGS[0]!));
   const [atbF, setAtbF] = useState({ weight: "", vitals: "", dose: "", interval: "", focus: "", days: "", justification: "" });
-  if (!drug) return null;
   const encounter = getState().encounters.slice().reverse().find((e) => e.patientId === p.id);
   const editable = allowed && encounter?.status_fluxo === "EM_ATENDIMENTO_MEDICO";
   const dose = calcResult(drug, calc, p.weight);
@@ -228,7 +236,21 @@ function Prescricao({ p }: { p: Patient }) {
     if (!editable) { toast.error("Inicie ou retome o atendimento médico para editar a prescrição."); return; }
     if (isMed && (ped && !(p.weight > 0))) { toast.error("Peso obrigatório para dose pediátrica"); return; }
     if (isMed && allergy) { toast.error(`Conflito de alergia: ${allergy}`); return; }
-    const item = isMed ? (ped || calc.perDose || p.weight > 0 ? doseText(drug.name, dose, parseFloat(calc.mgKgDay.replace(",", ".")) || 0, drug.presentations?.[calc.presentation]) : `${drug.name} ${free || ""}`.trim()) : free;
+    if (isMed && selectedMeds.length > 0) {
+      const names = Array.from(new Set(selectedMeds));
+      const allergyHit = names.find((n) => p.allergies.some((a) => n.toLowerCase().includes(a.toLowerCase())));
+      if (allergyHit) { toast.error(`Conflito de alergia: ${allergyHit}`); return; }
+      const now = Date.now();
+      updatePatient(p.id, (x) => ({
+        prescriptions: [
+          ...x.prescriptions,
+          ...names.map((n, idx) => ({ id: `rx-${now}-${idx}`, cat, item: `${n} ${free || ""}`.trim(), posologia: medPosologia, route, frequency, immediate: isImmediate, ...(medTimes ? { times: medTimes, pharmacy: "Pendente" as const } : {}), ...(atb ? { atb } : {}) })),
+        ],
+      }));
+      setSelectedMeds([]); setFree(""); setPos(""); setImmediate(false); toast.success(`${names.length} medicamento(s) adicionado(s) à prescrição`);
+      return;
+    }
+    const item = isMed ? (isCatalogCalcDrug && (ped || calc.perDose || p.weight > 0) ? doseText(drug.name, dose, parseFloat(calc.mgKgDay.replace(",", ".")) || 0, drug.presentations?.[calc.presentation]) : `${drugName} ${free || ""}`.trim()) : free;
     if (!item) return;
     updatePatient(p.id, (x) => ({ prescriptions: [...x.prescriptions, { id: `rx-${Date.now()}`, cat, item, posologia: medPosologia, ...(isMed ? { route, frequency, immediate: isImmediate } : {}), ...(medTimes ? { times: medTimes, pharmacy: "Pendente" as const } : {}), ...(atb ? { atb } : {}) }] }));
     if (atb) { setAtbF({ weight: "", vitals: "", dose: "", interval: "", focus: "", days: "", justification: "" }); if (atb.restricted) toast.warning("Antimicrobiano restrito: aguardando autorização da SCIRAS"); }
@@ -253,8 +275,22 @@ function Prescricao({ p }: { p: Patient }) {
             <input aria-label="Medicamento digitado" value={typedDrug} onChange={(e) => setTypedDrug(e.target.value)} placeholder="Medicamento (ex.: Ceftriaxona 1 g)" className="h-8 w-full rounded-md border bg-background px-2 text-xs" />
             <input value={free} onChange={(e) => setFree(e.target.value)} placeholder="Dose / diluição (opcional)" className="h-8 w-full rounded-md border bg-background px-2 text-xs" />
           </> : cat === "Medicamento" ? <>
-            <select value={drugName} onChange={(e) => { setDrugName(e.target.value); const d = DRUGS.find((x) => x.name === e.target.value); if (d) setCalc(initCalc(d)); }} className="h-8 w-full rounded-md border bg-background px-2 text-xs">{DRUGS.map((d) => <option key={d.name}>{d.name}</option>)}</select>
-            {ped || p.weight > 0 ? (
+            <input aria-label="Buscar medicamento" value={drugSearch} onChange={(e) => setDrugSearch(e.target.value)} placeholder={`Buscar na lista completa (${allDrugNames.length} medicamentos)...`} className="h-8 w-full rounded-md border bg-background px-2 text-xs" />
+            <div className="flex gap-1">
+              <select aria-label="Medicamento" value={drugName} onChange={(e) => { setDrugName(e.target.value); const d = DRUGS.find((x) => x.name === e.target.value); if (d) setCalc(initCalc(d)); }} className="h-8 flex-1 rounded-md border bg-background px-2 text-xs">{filteredDrugNames.map((name) => <option key={name} value={name}>{name}</option>)}</select>
+              <button type="button" onClick={() => { if (drugName && !selectedMeds.includes(drugName)) setSelectedMeds((cur) => [...cur, drugName]); }} className="rounded-md border px-2 text-xs font-medium hover:bg-muted" title="Adicionar à seleção múltipla">+ Vários</button>
+            </div>
+            {selectedMeds.length > 0 && (
+              <div className="flex flex-wrap gap-1 rounded-md border bg-muted/30 p-1.5">
+                {selectedMeds.map((m) => (
+                  <span key={m} className="inline-flex items-center gap-1 rounded bg-primary/10 px-1.5 py-0.5 text-[11px] font-medium text-primary">
+                    {m}
+                    <button type="button" onClick={() => setSelectedMeds((cur) => cur.filter((x) => x !== m))} className="text-muted-foreground hover:text-destructive">×</button>
+                  </span>
+                ))}
+              </div>
+            )}
+            {isCatalogCalcDrug && (ped || p.weight > 0) ? (
               <DoseCalculator drug={drug} weight={p.weight} value={calc} onChange={setCalc} />
             ) : <input value={free} onChange={(e) => setFree(e.target.value)} placeholder="Dose (ex.: 500 mg)" className="h-8 w-full rounded-md border bg-background px-2 text-xs" />}
             {allergy && <div className="pulse-alert flex items-start gap-2 rounded-md bg-maternal p-2 text-xs font-semibold text-primary-foreground"><AlertTriangle className="h-4 w-4 shrink-0" />Paciente alérgico(a) a {allergy}!</div>}
