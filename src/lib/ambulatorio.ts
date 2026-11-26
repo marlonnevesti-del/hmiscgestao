@@ -5,11 +5,15 @@ export interface Appointment {
   id: string; date: string; time: string; specialtyId: string; professional: string; patientId: string;
   note: string; nursingPreConsult?: boolean; status: 'agendado' | 'chegou' | 'faltou' | 'cancelado'; encounterId?: string; createdBy: string;
 }
-export interface SadtReport { exam: string; technique: string; findings: string; conclusion: string; professional: string; council: string; at: string }
+export interface SadtRectification { at: string; by: string; reason: string; previousConclusion: string }
+export interface SadtReport {
+  exam: string; technique: string; findings: string; conclusion: string; professional: string; council: string; at: string;
+  releasedBy?: string; releasedAt?: string; rectifications?: SadtRectification[];
+}
 
 export const UNITS = ['Ambulatório', 'Pronto socorro', 'Maternidade'] as const;
 export type CareUnit = typeof UNITS[number];
-export const AMBULATORY_MOTIVES = ['CONSULTA', 'RETORNO', 'CONSULTA SISREG'] as const;
+export const AMBULATORY_MOTIVES = ['CONSULTA', 'RETORNO', 'CONSULTA SISREG', 'EXAME DE MAMA'] as const;
 export type AmbulatoryMotive = typeof AMBULATORY_MOTIVES[number];
 
 export const GROUP_LABELS: Record<SpecialtyGroup, string> = { medica: 'Especialidades médicas', nao_medica: 'Especialidades não médicas', sadt: 'SADT' };

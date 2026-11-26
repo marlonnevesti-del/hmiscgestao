@@ -12,7 +12,7 @@ import { useSyncExternalStore } from "react";
 import { linkCode } from "./barcode";
 import { PATIENTS, QUEUE, SURGERIES, type Admin, type Newborn, type Patient, type Profile, type QueueItem, type Surgery } from "./hospital-data";
 
-import { transition, validateTriage, type Encounter, type Triage, type FlowStatus } from "./care-flow";
+import { transition, validateTriage, type Encounter, type ExtraProcedure, type Triage, type FlowStatus } from "./care-flow";
 import { BASE_BEDS, can, canAct, canAccessPage, canApproveInventory } from "./hospital-data";
 import { buildInventoryAdjustments, type InventorySession } from "./inventory";
 import { DEFAULT_CID_AREAS, DEFAULT_CID_GROUPS, addArea, addGroup, type CidArea, type CidGroup } from "./cid-access";
@@ -70,18 +70,69 @@ function getEncounter(id: string) {
 function commitEncounter(e: Encounter, patch: Partial<State> = {}) {
   setState((s) => ({ ...patch, encounters: s.encounters.map((x) => x.id === e.id ? e : x), queue: s.queue.filter((q) => q.id !== e.id) }));
 }
-export function openEncounter(patient: Patient, type: string, specialty: string, complaint: string, nursingPreConsult = false) {
+export function openEncounter(
+  patient: Patient,
+  type: string,
+  specialty: string,
+  complaint: string,
+  nursingPreConsult = false,
+  opts?: { sigtapCode?: string; extraProcedures?: ExtraProcedure[] },
+) {
   requireAction('recepcao');
   if (state.encounters.some((e) => e.patientId === patient.id && e.status_fluxo !== 'ALTA_HOSPITALAR')) throw new Error('Paciente já possui um BAA ativo.');
   const at = new Date().toISOString();
   const beq = takeSequence('baa', state.beSequence + 1);
   const number = `BAA-${new Date().getFullYear()}-${String(beq).padStart(6, '0')}`;
   const ambToNursing = type === 'Ambulatório' && (nursingPreConsult || isObstetricSpecialty(specialty));
-  const e: Encounter = { id: crypto.randomUUID(), patientId: patient.id, number, type, specialty, complaint, ...(ambToNursing ? { nursingPreConsult: true } : {}), status_fluxo: 'AGUARDANDO_TRIAGEM', openedAt: at, history: [{ status: 'AGUARDANDO_TRIAGEM', at, by: professionalName(state.profile), note: ambToNursing ? 'Recepção: encaminhado para Triagem / Enfermagem' : 'Recepção: abertura de BAA' }] };
+  const e: Encounter = {
+    id: crypto.randomUUID(), patientId: patient.id, number, type, specialty, complaint,
+    ...(ambToNursing ? { nursingPreConsult: true } : {}),
+    ...(opts?.sigtapCode ? { sigtapCode: opts.sigtapCode } : {}),
+    ...(opts?.extraProcedures?.length ? { extraProcedures: opts.extraProcedures } : {}),
+    status_fluxo: 'AGUARDANDO_TRIAGEM', openedAt: at,
+    history: [{ status: 'AGUARDANDO_TRIAGEM', at, by: professionalName(state.profile), note: ambToNursing ? 'Recepção: encaminhado para Triagem / Enfermagem' : 'Recepção: abertura de BAA' }],
+  };
   const direct = type === 'Ambulatório' && !ambToNursing;
   const opened = direct ? transition(e, 'AGUARDANDO_MEDICO', professionalName(state.profile), 'Ambulatório: encaminhado direto ao Consultório', at) : e;
   setState((s) => ({ beSequence: Math.max(s.beSequence, beq), patients: [...s.patients.filter((p) => p.id !== patient.id), patient], encounters: [...s.encounters, opened], queue: direct ? s.queue : [...s.queue, { id: e.id, name: patient.name, group: patient.type === 'gestante' || patient.type === 'puerpera' ? 'obstetrica' : 'pediatria', complaint, arrivedMinAgo: 0, detail: patient.age }] }));
   return opened;
+}
+export function rectifyOpenEncounter(
+  id: string,
+  patch: { specialty?: string; complaint?: string; sigtapCode?: string; extraProcedures?: ExtraProcedure[] },
+) {
+  requireAction('recepcao');
+  const { e } = getEncounter(id);
+  if (!canEditOrCancelEncounter(e)) throw new Error('Não é possível retificar: o atendimento já foi iniciado.');
+  const at = new Date().toISOString();
+  const by = professionalName(state.profile);
+  const next: Encounter = {
+    ...e,
+    ...(patch.specialty !== undefined && patch.specialty.trim() ? { specialty: patch.specialty.trim() } : {}),
+    ...(patch.complaint !== undefined ? { complaint: patch.complaint.trim() } : {}),
+    ...(patch.sigtapCode !== undefined ? { sigtapCode: patch.sigtapCode.trim() } : {}),
+    ...(patch.extraProcedures !== undefined ? { extraProcedures: patch.extraProcedures } : {}),
+    history: [...e.history, { status: e.status_fluxo, at, by, note: 'Recepção: abertura do atendimento retificada' }],
+  };
+  setState((s) => ({ encounters: s.encounters.map((x) => x.id === id ? next : x) }));
+  return next;
+}
+export function createReceptionSadtRequest(
+  patientId: string,
+  input: { examCode: string; examName: string; specialty: string; requester: string; insurance?: string },
+) {
+  requireAction('recepcao');
+  const p = state.patients.find((x) => x.id === patientId);
+  if (!p) throw new Error('Paciente não encontrado.');
+  if (!input.examCode.trim() || !input.examName.trim()) throw new Error('Selecione o exame.');
+  if (!input.requester.trim()) throw new Error('Informe o médico solicitante.');
+  const at = new Date().toISOString();
+  const by = professionalName(state.profile);
+  const complaint = `Solicitação SADT · ${input.examCode} - ${input.examName} · Solicitante: ${input.requester.trim()} · Convênio: ${input.insurance || 'SUS'}`;
+  return openEncounter(p, 'Ambulatório', input.specialty, complaint, false, {
+    sigtapCode: input.examCode,
+    extraProcedures: [{ id: crypto.randomUUID(), code: input.examCode, name: input.examName, at, by }],
+  });
 }
 export function switchAmbulatorySector(id: string, toNursing: boolean) {
   requireAction('recepcao');
@@ -1083,13 +1134,37 @@ export function checkInAppointment(id: string) {
   return e;
 }
 export function saveSadtReport(id: string, r: Omit<SadtReport, 'at'>) {
-  requireAction('prescrever');
+  if (!canAct(state.profile, 'prescrever', state.accessAreas) && !(state.accessAreas ?? []).includes('ambulatorio:sadt') && !canAct(state.profile, 'recepcao', state.accessAreas)) {
+    throw new Error('Seu perfil não permite liberar laudos SADT.');
+  }
   const { e } = getEncounter(id);
   if (!r.findings.trim() || !r.conclusion.trim()) throw new Error('Preencha achados e conclusão do laudo.');
+  if (!r.professional.trim()) throw new Error('Informe o médico laudista responsável.');
   const by = professionalName(state.profile); const at = new Date().toISOString();
   let next = e.status_fluxo === 'AGUARDANDO_MEDICO' ? transition(e, 'EM_ATENDIMENTO_MEDICO', by, 'Exame SADT iniciado', at) : e;
-  next = transition(next, 'ALTA_HOSPITALAR', by, `Laudo SADT emitido: ${r.exam}`, at);
-  commitEncounter({ ...next, sadtReport: { ...r, at } });
+  next = transition(next, 'ALTA_HOSPITALAR', by, `Laudo SADT liberado (${r.professional}): ${r.exam}`, at);
+  commitEncounter({ ...next, sadtReport: { ...r, at, releasedBy: by, releasedAt: at } });
+}
+export function rectifySadtReport(id: string, r: Omit<SadtReport, 'at' | 'rectifications'>, reason: string) {
+  if (!canAct(state.profile, 'prescrever', state.accessAreas) && !(state.accessAreas ?? []).includes('ambulatorio:sadt')) {
+    throw new Error('Seu perfil não permite retificar laudos SADT.');
+  }
+  const { e } = getEncounter(id);
+  if (!e.sadtReport) throw new Error('Este exame ainda não possui laudo liberado.');
+  if (!reason.trim()) throw new Error('Informe a justificativa da retificação do laudo.');
+  if (!r.findings.trim() || !r.conclusion.trim()) throw new Error('Preencha achados e conclusão do laudo.');
+  const by = professionalName(state.profile); const at = new Date().toISOString();
+  const rectifications = [
+    ...(e.sadtReport.rectifications ?? []),
+    { at, by, reason: reason.trim(), previousConclusion: e.sadtReport.conclusion },
+  ];
+  const next: Encounter = {
+    ...e,
+    sadtReport: { ...e.sadtReport, ...r, at: e.sadtReport.at, releasedBy: by, releasedAt: at, rectifications },
+    history: [...e.history, { status: e.status_fluxo, at, by, note: `Laudo SADT retificado: ${reason.trim()}` }],
+  };
+  commitEncounter(next);
+  return next;
 }
 
 // ---- CME ----

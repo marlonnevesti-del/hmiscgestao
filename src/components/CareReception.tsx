@@ -16,9 +16,10 @@ import { patientsByCpf, registrationFor, registrationPatch } from "@/lib/patient
 import { PEDIATRIC_EXCEPTION_REASONS, ageYears, pediatricAgeIssue, newbornBirthIssue, registrationIssues, registrationSchema, unknownPatientName, type PatientRegistration, type RegistrationMode } from "@/lib/patient-registration";
 import { ATTENDANCE_TYPES, type Encounter } from "@/lib/care-flow";
 import { can, canAct, type Patient } from "@/lib/hospital-data";
-import { cancelUnattendedEncounter, deleteEncounter, openEncounter, professionalName, registerPatientOnly, savePatientRegistration, switchAmbulatorySector, useStore } from "@/lib/hospital-store";
+import { cancelUnattendedEncounter, deleteEncounter, openEncounter, professionalName, rectifyOpenEncounter, registerPatientOnly, savePatientRegistration, switchAmbulatorySector, useStore } from "@/lib/hospital-store";
 import { SPECIAL_CONDITIONS } from "@/lib/special-conditions";
 import { AMBULATORY_MOTIVES, GROUP_LABELS, canEditOrCancelEncounter, isObstetricSpecialty, type AmbulatoryMotive, type CareUnit } from "@/lib/ambulatorio";
+import { AMBULATORY_PRESETS, buildInfoSusProcedures, type AmbulatoryPreset } from "@/lib/sadt-reception";
 
 const INITIAL_FORM = {
   name: "", cpf: "", birth: "", mother: "", guardian: "", insurance: "SUS",
@@ -36,6 +37,10 @@ export function CareReception({ unit }: { unit?: CareUnit } = {}) {
   const [existing, setExisting] = useState("");
   const [cpfStatus, setCpfStatus] = useState("");
   const [created, setCreated] = useState<Encounter | null>(null);
+  const [preset, setPreset] = useState<AmbulatoryPreset | null>(null);
+  const [infoSusCodes, setInfoSusCodes] = useState<string[]>([]);
+  const [rectifyEnc, setRectifyEnc] = useState<Encounter | null>(null);
+  const [rectifyForm, setRectifyForm] = useState({ specialty: "", complaint: "" });
   // Assim que o atendimento é confirmado, a BAA abre direto para impressão e assinatura.
   useEffect(() => {
     if (!created) return;
@@ -149,11 +154,18 @@ export function CareReception({ unit }: { unit?: CareUnit } = {}) {
       const baseComplaint = unit === "Ambulatório" ? (f.complaint.trim() ? `${f.ambMotive} · ${f.complaint.trim()}` : f.ambMotive) : f.complaint;
       const finalComplaint = overPedAge && pedEx.on ? `${baseComplaint} [Exceção pediátrica ${pedAge} anos: ${pedEx.reason}${pedEx.note.trim() ? ` – ${pedEx.note.trim()}` : ""}]` : baseComplaint;
       const toNursing = unit === "Ambulatório" ? (f.nursingPreConsult || isObstetricSpecialty(f.specialty)) : f.nursingPreConsult;
-      const encounter = openEncounter({ ...patient, admission: new Date().toLocaleString("pt-BR"), prescriptions: [] }, f.type, f.specialty, finalComplaint, toNursing);
+      const at = new Date().toISOString();
+      const extraProcedures = preset ? buildInfoSusProcedures(preset, infoSusCodes, professionalName(profile), at) : undefined;
+      const encounter = openEncounter(
+        { ...patient, admission: new Date().toLocaleString("pt-BR"), prescriptions: [] },
+        f.type, f.specialty, finalComplaint, toNursing,
+        preset ? { sigtapCode: preset.mainSigtap.code, ...(extraProcedures?.length ? { extraProcedures } : {}) } : undefined,
+      );
       setCreated(encounter);
       toast.success(`${encounter.number} gerado e enviado para ${encounter.status_fluxo === "AGUARDANDO_TRIAGEM" ? "Triagem / Enfermagem" : "Consultório Ambulatório"}`);
       clearIdentity();
       setF((current) => ({ ...current, complaint: "", ambMotive: "CONSULTA", nursingPreConsult: false }));
+      setPreset(null); setInfoSusCodes([]);
       setPedEx({ on: false, reason: "", note: "" });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Não foi possível abrir o atendimento");
@@ -182,6 +194,27 @@ export function CareReception({ unit }: { unit?: CareUnit } = {}) {
         {existing && <div className="md:col-span-3"><Button type="button" variant="outline" onClick={() => { try { savePatientRegistration(existing, registration); toast.success("Cadastro atualizado sem abrir novo atendimento"); } catch (error) { toast.error(error instanceof Error ? error.message : "Não foi possível salvar"); } }}>Salvar alterações do cadastro</Button></div>}
         <h2 className="mt-3 border-t pt-4 font-semibold md:col-span-3">Abertura de atendimento</h2>
         {unit === "Ambulatório" && <>
+          <div className="grid gap-2 rounded-lg border bg-muted/30 p-3 text-xs md:col-span-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="font-medium">Atalhos de atendimento SADT / Ambulatório:</span>
+              {AMBULATORY_PRESETS.map((pr) => <Button key={pr.id} type="button" size="sm" variant={preset?.id === pr.id ? "default" : "outline"} onClick={() => {
+                setPreset(pr);
+                setInfoSusCodes([]);
+                setF((c) => ({ ...c, specialty: pr.specialty, ambMotive: pr.motive, patientType: pr.patientType, nursingPreConsult: false, complaint: `${pr.sector} · ${pr.room} · ${pr.professional}` }));
+              }}>{pr.label}</Button>)}
+              {preset && <Button type="button" size="sm" variant="ghost" onClick={() => { setPreset(null); setInfoSusCodes([]); }}>Limpar atalho</Button>}
+            </div>
+            {preset && <div className="space-y-2 border-t pt-2">
+              <div><b>Procedimento principal SUS:</b> {preset.mainSigtap.shortCode} — {preset.mainSigtap.name} · <b>Profissional:</b> {preset.professional}</div>
+              <div className="font-medium">INFO SUS · Códigos adicionais de faturamento:</div>
+              <div className="grid gap-1.5 sm:grid-cols-2">
+                {preset.infoSus.map((opt) => <label key={opt.code} className="flex cursor-pointer items-center gap-2">
+                  <Checkbox checked={infoSusCodes.includes(opt.code)} onCheckedChange={(checked) => setInfoSusCodes((cur) => checked ? [...cur, opt.code] : cur.filter((x) => x !== opt.code))} />
+                  <span><b>{opt.shortCode}</b> — {opt.name}</span>
+                </label>)}
+              </div>
+            </div>}
+          </div>
           <div className="grid gap-1 text-xs md:col-span-3">
             <span className="font-medium">Setor de atendimento</span>
             <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Setor de atendimento">
@@ -221,9 +254,30 @@ export function CareReception({ unit }: { unit?: CareUnit } = {}) {
       const patient = patients.find((item) => item.id === encounter.patientId);
       const unattended = canEditOrCancelEncounter(encounter);
       const canRec = canAct(profile, "recepcao", accessAreas);
-      return <div key={encounter.id} className="border-b py-2"><div className="flex flex-wrap items-center gap-2"><Button variant="link" asChild><Link to="/pacientes/$id" params={{ id: encounter.patientId }}>{patient?.name}</Link></Button><SpecialConditionBadges patient={patient} /><span className="text-xs text-muted-foreground">{encounter.number}</span>{patient && <InpatientDocsButtons p={patient} e={encounter} />}{encounter.type === "Ambulatório" && unattended && canRec && <Button size="sm" variant="outline" onClick={() => { const toNursing = encounter.status_fluxo !== "AGUARDANDO_TRIAGEM"; try { switchAmbulatorySector(encounter.id, toNursing); toast.success(toNursing ? "Alterado para Triagem / Enfermagem" : "Alterado para Consultório Ambulatório"); } catch (error) { toast.error(error instanceof Error ? error.message : "Não foi possível alterar o setor"); } }}><ArrowLeftRight className="h-3.5 w-3.5" />{encounter.status_fluxo === "AGUARDANDO_TRIAGEM" ? "Mudar para Consultório" : "Mudar para Triagem"}</Button>}{unattended && canRec && <Button size="icon" variant="ghost" aria-label={`Excluir atendimento ${encounter.number}`} title="Excluir atendimento não iniciado" className="ml-auto h-7 w-7 text-destructive" onClick={() => { if (!window.confirm(`Excluir o atendimento ${encounter.number} de ${patient?.name ?? "paciente"}? Só é possível enquanto não houver atendimento iniciado.`)) return; try { cancelUnattendedEncounter(encounter.id); toast.success("Atendimento excluído"); } catch (error) { toast.error(error instanceof Error ? error.message : "Não foi possível excluir"); } }}><X className="h-4 w-4" /></Button>}{!unattended && profile === "Administrador" && <Button size="sm" variant="ghost" className="text-destructive" onClick={() => { if (!window.confirm(`Apagar o atendimento ${encounter.number} de ${patient?.name ?? "paciente"}? Esta ação não pode ser desfeita.`)) return; try { deleteEncounter(encounter.id); toast.success("Atendimento apagado"); } catch (error) { toast.error(error instanceof Error ? error.message : "Não foi possível apagar"); } }}>Apagar</Button>}</div><EncounterTimeline patientId={encounter.patientId} /></div>;
+      return <div key={encounter.id} className="border-b py-2"><div className="flex flex-wrap items-center gap-2"><Button variant="link" asChild><Link to="/pacientes/$id" params={{ id: encounter.patientId }}>{patient?.name}</Link></Button><SpecialConditionBadges patient={patient} /><span className="text-xs text-muted-foreground">{encounter.number}</span>{patient && <InpatientDocsButtons p={patient} e={encounter} />}{encounter.type === "Ambulatório" && unattended && canRec && <Button size="sm" variant="outline" onClick={() => { const toNursing = encounter.status_fluxo !== "AGUARDANDO_TRIAGEM"; try { switchAmbulatorySector(encounter.id, toNursing); toast.success(toNursing ? "Alterado para Triagem / Enfermagem" : "Alterado para Consultório Ambulatório"); } catch (error) { toast.error(error instanceof Error ? error.message : "Não foi possível alterar o setor"); } }}><ArrowLeftRight className="h-3.5 w-3.5" />{encounter.status_fluxo === "AGUARDANDO_TRIAGEM" ? "Mudar para Consultório" : "Mudar para Triagem"}</Button>}{unattended && canRec && <Button size="sm" variant="outline" onClick={() => { setRectifyEnc(encounter); setRectifyForm({ specialty: encounter.specialty, complaint: encounter.complaint }); }}>Retificar abertura</Button>}{unattended && canRec && <Button size="icon" variant="ghost" aria-label={`Excluir atendimento ${encounter.number}`} title="Excluir atendimento não iniciado" className="ml-auto h-7 w-7 text-destructive" onClick={() => { if (!window.confirm(`Excluir o atendimento ${encounter.number} de ${patient?.name ?? "paciente"}? Só é possível enquanto não houver atendimento iniciado.`)) return; try { cancelUnattendedEncounter(encounter.id); toast.success("Atendimento excluído"); } catch (error) { toast.error(error instanceof Error ? error.message : "Não foi possível excluir"); } }}><X className="h-4 w-4" /></Button>}{!unattended && profile === "Administrador" && <Button size="sm" variant="ghost" className="text-destructive" onClick={() => { if (!window.confirm(`Apagar o atendimento ${encounter.number} de ${patient?.name ?? "paciente"}? Esta ação não pode ser desfeita.`)) return; try { deleteEncounter(encounter.id); toast.success("Atendimento apagado"); } catch (error) { toast.error(error instanceof Error ? error.message : "Não foi possível apagar"); } }}>Apagar</Button>}</div><EncounterTimeline patientId={encounter.patientId} /></div>;
     })}
     {!shown.length && <p className="py-6 text-sm text-muted-foreground">Nenhum atendimento aberto.</p>}
+
+    <Dialog open={!!rectifyEnc} onOpenChange={(open) => !open && setRectifyEnc(null)}>
+      <DialogContent>
+        <DialogHeader><DialogTitle>Retificar abertura · {rectifyEnc?.number}</DialogTitle></DialogHeader>
+        <form className="grid gap-3" onSubmit={(ev) => {
+          ev.preventDefault();
+          if (!rectifyEnc) return;
+          try {
+            rectifyOpenEncounter(rectifyEnc.id, rectifyForm);
+            toast.success("Abertura do atendimento retificada");
+            setRectifyEnc(null);
+          } catch (error) {
+            toast.error(error instanceof Error ? error.message : "Não foi possível retificar");
+          }
+        }}>
+          <label className="grid gap-1 text-xs">Especialidade / Tipo de atendimento<Input value={rectifyForm.specialty} onChange={(e) => setRectifyForm((c) => ({ ...c, specialty: e.target.value }))} required /></label>
+          <label className="grid gap-1 text-xs">Motivo / Observação<Input value={rectifyForm.complaint} onChange={(e) => setRectifyForm((c) => ({ ...c, complaint: e.target.value }))} /></label>
+          <Button type="submit">Salvar retificação</Button>
+        </form>
+      </DialogContent>
+    </Dialog>
 
     <Dialog open={!!created} onOpenChange={(open) => !open && setCreated(null)}>
       <DialogContent><DialogHeader><DialogTitle>Etiqueta / Pulseira · {created?.number}</DialogTitle></DialogHeader>

@@ -16,8 +16,9 @@ import { can, canAct } from "@/lib/hospital-data";
 import { GROUP_LABELS, isObstetricSpecialty, type SadtReport, type SpecialtyGroup } from "@/lib/ambulatorio";
 import type { Encounter } from "@/lib/care-flow";
 import { ExamRequestsBoard } from "./ExamRequestsBoard";
+import { SadtReceptionPanel } from "./SadtReceptionPanel";
 import { doctorsForSpecialty, mergeDoctors } from "@/lib/doctors";
-import { checkInAppointment, createAmbSpecialty, professionalName, quickScheduleAppointment, saveSadtReport, rememberDoctor, scheduleAppointment, setAppointmentStatus, toggleAmbSpecialty, useStore } from "@/lib/hospital-store";
+import { checkInAppointment, createAmbSpecialty, professionalName, quickScheduleAppointment, rectifySadtReport, saveSadtReport, rememberDoctor, scheduleAppointment, setAppointmentStatus, toggleAmbSpecialty, useStore } from "@/lib/hospital-store";
 
 const act = (fn: () => void, ok?: string) => { try { fn(); if (ok) toast.success(ok); } catch (e) { toast.error(e instanceof Error ? e.message : "Ação não concluída"); } };
 const today = () => new Date().toLocaleDateString("sv-SE");
@@ -166,30 +167,58 @@ export function TodayAppointments() {
 export function SadtPanel() {
   const encounters = useStore((s) => s.encounters); const patients = useStore((s) => s.patients); const specs = useStore((s) => s.ambSpecialties); const profile = useStore((s) => s.profile); const accessAreas = useStore((s) => s.accessAreas);
   const sadt = new Set(specs.filter((s) => s.group === "sadt").map((s) => s.name));
-  const list = encounters.filter((e) => e.type === "Ambulatório" && sadt.has(e.specialty));
-  const pending = list.filter((e) => e.status_fluxo !== "ALTA_HOSPITALAR"); const done = list.filter((e) => e.sadtReport).slice(-20).reverse();
-  const [open, setOpen] = useState<Encounter | null>(null); const [print, setPrint] = useState<Encounter | null>(null);
+  const [examDate, setExamDate] = useState("");
+  const list = encounters.filter((e) => e.type === "Ambulatório" && sadt.has(e.specialty) && (!examDate || e.openedAt.startsWith(examDate) || (e.sadtReport?.at ?? "").startsWith(examDate)));
+  const pending = list.filter((e) => e.status_fluxo !== "ALTA_HOSPITALAR"); const done = list.filter((e) => e.sadtReport).slice(-30).reverse();
+  const [open, setOpen] = useState<Encounter | null>(null); const [rectifyTarget, setRectifyTarget] = useState<Encounter | null>(null); const [print, setPrint] = useState<Encounter | null>(null);
   const doPrint = (e: Encounter) => { setPrint(e); setTimeout(printProcedure, 50); };
+  const canRelease = can(profile, "prescrever") || (accessAreas ?? []).includes("ambulatorio:sadt") || canAct(profile, "recepcao", accessAreas);
+  const canRectify = can(profile, "prescrever") || (accessAreas ?? []).includes("ambulatorio:sadt");
   return <div className="space-y-4">
+    <SadtReceptionPanel />
     <ExamRequestsBoard />
-    <h3 className="font-semibold">Aguardando exame / laudo ({pending.length})</h3>
-    {pending.map((e) => <div key={e.id} className="flex flex-wrap items-center justify-between gap-2 border-b py-2"><div><b>{patients.find((p) => p.id === e.patientId)?.name}</b> <span className="text-xs text-muted-foreground">{e.number} · {e.specialty}</span></div><Button size="sm" disabled={!can(profile, "prescrever")} onClick={() => setOpen(e)}>Emitir laudo</Button></div>)}
+    <div className="flex flex-wrap items-end justify-between gap-2">
+      <h3 className="font-semibold">Liberação de laudos · Aguardando ({pending.length})</h3>
+      <label className="grid gap-1 text-xs">Filtrar por data do exame
+        <div className="flex gap-1"><Input type="date" value={examDate} onChange={(e) => setExamDate(e.target.value)} className="w-40" />{examDate && <Button size="sm" variant="ghost" onClick={() => setExamDate("")}>Limpar</Button>}</div>
+      </label>
+    </div>
+    {pending.map((e) => <div key={e.id} className="flex flex-wrap items-center justify-between gap-2 border-b py-2"><div><b>{patients.find((p) => p.id === e.patientId)?.name}</b> <span className="text-xs text-muted-foreground">{e.number} · {e.specialty} · {new Date(e.openedAt).toLocaleDateString("pt-BR")}</span></div><Button size="sm" disabled={!canRelease} onClick={() => setOpen(e)}>Emitir / liberar laudo</Button></div>)}
     {!pending.length && <p className="text-sm text-muted-foreground">Nenhum exame pendente.</p>}
-    <h3 className="pt-2 font-semibold">Laudos emitidos</h3>
-    {done.map((e) => <div key={e.id} className="flex flex-wrap items-center justify-between gap-2 border-b py-2 text-sm"><div><b>{patients.find((p) => p.id === e.patientId)?.name}</b> · {e.sadtReport?.exam} · {new Date(e.sadtReport!.at).toLocaleString("pt-BR")}</div><Button size="sm" variant="outline" onClick={() => doPrint(e)}>Imprimir laudo</Button></div>)}
-    <Dialog open={!!open} onOpenChange={(o) => !o && setOpen(null)}><DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl"><DialogHeader><DialogTitle>Laudo · {open?.specialty}</DialogTitle></DialogHeader>{open && <ReportForm e={open} onDone={(e) => { setOpen(null); doPrint(e); }} />}</DialogContent></Dialog>
+    <h3 className="pt-2 font-semibold">Laudos liberados ({done.length})</h3>
+    {done.map((e) => <div key={e.id} className="flex flex-wrap items-center justify-between gap-2 border-b py-2 text-sm"><div><b>{patients.find((p) => p.id === e.patientId)?.name}</b> · {e.sadtReport?.exam} · {new Date(e.sadtReport!.at).toLocaleString("pt-BR")}{e.sadtReport?.rectifications?.length ? <span className="ml-2 rounded bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-900">Retificado ({e.sadtReport.rectifications.length})</span> : null}</div><div className="flex gap-2">{canRectify && <Button size="sm" variant="outline" onClick={() => setRectifyTarget(e)}>Retificar laudo</Button>}<Button size="sm" variant="outline" onClick={() => doPrint(e)}>Imprimir laudo</Button></div></div>)}
+    <Dialog open={!!open} onOpenChange={(o) => !o && setOpen(null)}><DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl"><DialogHeader><DialogTitle>Emitir e liberar laudo · {open?.specialty}</DialogTitle></DialogHeader>{open && <ReportForm e={open} onDone={(e) => { setOpen(null); doPrint(e); }} />}</DialogContent></Dialog>
+    <Dialog open={!!rectifyTarget} onOpenChange={(o) => !o && setRectifyTarget(null)}><DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl"><DialogHeader><DialogTitle>Retificar laudo · {rectifyTarget?.sadtReport?.exam}</DialogTitle></DialogHeader>{rectifyTarget && <ReportForm e={rectifyTarget} rectify onDone={(e) => { setRectifyTarget(null); doPrint(e); }} />}</DialogContent></Dialog>
     {print?.sadtReport && <ReportSheet e={print} />}
   </div>;
 }
 
-function ReportForm({ e, onDone }: { e: Encounter; onDone: (e: Encounter) => void }) {
+function ReportForm({ e, rectify, onDone }: { e: Encounter; rectify?: boolean; onDone: (e: Encounter) => void }) {
   const name = useStore((s) => professionalName(s.profile));
-  const [r, setR] = useState<Omit<SadtReport, "at">>({ exam: e.specialty, technique: "", findings: "", conclusion: "", professional: name, council: "" });
+  const cur = e.sadtReport;
+  const [r, setR] = useState<Omit<SadtReport, "at" | "rectifications">>({
+    exam: cur?.exam ?? e.specialty, technique: cur?.technique ?? "", findings: cur?.findings ?? "",
+    conclusion: cur?.conclusion ?? "", professional: cur?.professional ?? name, council: cur?.council ?? "",
+  });
+  const [reason, setReason] = useState("");
   const field = (k: keyof typeof r, label: string, area = false) => <label className="grid gap-1 text-xs">{label}{area ? <Textarea rows={4} value={r[k]} onChange={(x) => setR({ ...r, [k]: x.target.value })} /> : <Input value={r[k]} onChange={(x) => setR({ ...r, [k]: x.target.value })} />}</label>;
-  return <form className="grid gap-3" onSubmit={(x) => { x.preventDefault(); act(() => { rememberDoctor(r.professional, r.council); saveSadtReport(e.id, r); onDone({ ...e, sadtReport: { ...r, at: new Date().toISOString() } }); }, "Laudo emitido"); }}>
+  return <form className="grid gap-3" onSubmit={(x) => {
+    x.preventDefault();
+    act(() => {
+      rememberDoctor(r.professional, r.council);
+      if (rectify) {
+        const updated = rectifySadtReport(e.id, r, reason);
+        onDone(updated);
+      } else {
+        saveSadtReport(e.id, r);
+        onDone({ ...e, sadtReport: { ...r, at: new Date().toISOString() } });
+      }
+    }, rectify ? "Laudo retificado" : "Laudo liberado");
+  }}>
     {field("exam", "Exame")}{field("technique", "Técnica / preparo", true)}{field("findings", "Achados / descrição", true)}{field("conclusion", "Conclusão / impressão diagnóstica", true)}
-    <div className="grid gap-3 sm:grid-cols-2"><label className="grid gap-1 text-xs">Profissional responsável<DoctorNameInput value={r.professional} onChange={(v) => setR((x) => ({ ...x, professional: v }))} onCrm={(c) => setR((x) => ({ ...x, council: c }))} /></label>{field("council", "CRM / conselho")}</div>
-    <Button type="submit">Salvar e imprimir laudo</Button>
+    <div className="grid gap-3 sm:grid-cols-2"><label className="grid gap-1 text-xs">Médico laudista responsável<DoctorNameInput value={r.professional} onChange={(v) => setR((x) => ({ ...x, professional: v }))} onCrm={(c) => setR((x) => ({ ...x, council: c }))} /></label>{field("council", "CRM / conselho")}</div>
+    {rectify && <label className="grid gap-1 text-xs">Justificativa da retificação (obrigatória)<Input value={reason} onChange={(ev) => setReason(ev.target.value)} required placeholder="Ex.: correção de medida ou complemento de achado" /></label>}
+    <Button type="submit">{rectify ? "Salvar retificação e imprimir" : "Salvar, liberar e imprimir laudo"}</Button>
   </form>;
 }
 
@@ -199,6 +228,7 @@ function ReportSheet({ e }: { e: Encounter }) {
     <Letterhead title={`LAUDO DE EXAME · ${r.exam.toUpperCase()}`} />
     <p><b>Paciente:</b> {p?.name} · <b>Prontuário:</b> {p?.prontuario} · <b>Nascimento/idade:</b> {p?.age} · <b>BAA:</b> {e.number}</p>
     <p><b>Data do exame:</b> {new Date(r.at).toLocaleString("pt-BR")}</p>
+    {r.rectifications?.length ? <p style={{ fontSize: 12, marginTop: 4 }}><b>LAUDO RETIFICADO</b> em {new Date(r.rectifications[r.rectifications.length - 1]!.at).toLocaleString("pt-BR")} — {r.rectifications[r.rectifications.length - 1]!.reason}</p> : null}
     {r.technique && <><h3 style={{ fontWeight: 700, marginTop: 12 }}>Técnica</h3><p style={{ whiteSpace: "pre-wrap" }}>{r.technique}</p></>}
     <h3 style={{ fontWeight: 700, marginTop: 12 }}>Achados</h3><p style={{ whiteSpace: "pre-wrap" }}>{r.findings}</p>
     <h3 style={{ fontWeight: 700, marginTop: 12 }}>Conclusão</h3><p style={{ whiteSpace: "pre-wrap" }}>{r.conclusion}</p>
