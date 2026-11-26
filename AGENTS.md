@@ -30,6 +30,7 @@ use the editor.
 <!-- LOVABLE:END -->
 
 ## Project rules
+- AIH downloads use aih-export.ts for Salux-style filenames, single-byte TXT and identical ZIP contents; retain the official 1800-position interface until Salux's extra control algorithm is validated, never fabricate its signature.
 - Billing identifiers are shared through institution.ts; SUS exports and TISS guides must use the same CNES to prevent divergence.
 - Reception CPF autofill uses exact normalized matches from patient-registration-mapping; ambiguous matches require selection and identifier changes detach the previous identity to avoid mixed records.
 - ICU/UCI prescription shortcuts use the PEP search parameter `aba=prescricao`, opening the shared prescription tab without changing clinical status or prescribing permissions.

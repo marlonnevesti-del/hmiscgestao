@@ -33,6 +33,7 @@ export function InstitutionForm({ onSaved }: { onSaved?: () => void }) {
     const cnpjDigits = form.cnpj.replace(/\D/g, "");
     if (cnesDigits.length !== 7) { toast.error("CNES deve ter 7 dígitos."); return; }
     if (cnpjDigits.length !== 14) { toast.error("CNPJ do hospital deve ter 14 dígitos."); return; }
+    if (form.orgaoEmissorAih && !/^[EM]\d{9}$/.test(form.orgaoEmissorAih)) { toast.error("Órgão emissor AIH: E ou M seguido de 9 dígitos."); return; }
     try {
       saveInstitution(form);
       toast.success("Dados do hospital salvos e aplicados ao faturamento SUS.");
@@ -68,6 +69,7 @@ export function InstitutionForm({ onSaved }: { onSaved?: () => void }) {
           </label>
           <label className="grid gap-1 text-xs font-medium">Órgão Gestor de Destino (cabeçalho BPA/SUS)<Input required disabled={!allowed} value={form.orgaoGestor} onChange={(e) => setField("orgaoGestor", e.target.value)} /></label>
         </div>
+        <label className="grid gap-1 text-xs font-medium">Código do órgão emissor AIH<Input maxLength={10} disabled={!allowed} value={form.orgaoEmissorAih ?? ""} onChange={(e) => setField("orgaoEmissorAih", e.target.value.toUpperCase())} /></label>
       </section>
 
       <section className="space-y-3 rounded-lg border bg-card p-4">

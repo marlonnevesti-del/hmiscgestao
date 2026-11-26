@@ -22,6 +22,7 @@ import { IcuTrainingPatients } from '@/components/IcuTrainingPanel';
 import { IcuExamples } from '@/components/IcuExamples';
 import { InstitutionForm } from '@/components/InstitutionForm';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { aihFileName, aihTextBytes, aihZip } from '@/lib/aih-export';
 
 export const Route = createFileRoute("/_authenticated/faturamento-sus")({
   validateSearch: trainingSearch,
@@ -56,6 +57,14 @@ function download(name: string, content: string) {
   const a = document.createElement("a"); a.href = url; a.download = name; a.click(); URL.revokeObjectURL(url);
 }
 
+function downloadAih(name: string, bytes: Uint8Array, zipped: boolean) {
+  const copy = new ArrayBuffer(bytes.byteLength);
+  new Uint8Array(copy).set(bytes);
+  const url = URL.createObjectURL(new Blob([copy], { type: zipped ? 'application/zip' : 'text/plain;charset=iso-8859-1' }));
+  const a = document.createElement('a'); a.href = url; a.download = name; a.click();
+  URL.revokeObjectURL(url);
+}
+
 function SusBilling() {
   const encounters = useStore((s) => s.encounters);
   const patients = useStore((s) => s.patients);
@@ -85,6 +94,14 @@ function SusBilling() {
   const allowed = can(profile, "faturar");
   const print = (d: NonNullable<Doc>) => { setDoc(d); printProcedure(); };
   const month = `${comp.slice(4)}/${comp.slice(0, 4)}`;
+  const exportAih = (zipped: boolean) => {
+    if (!allowed || !okCount) return;
+    try {
+      const content = aihFile(rows, comp, prof, institution);
+      const name = aihFileName(comp, activeCnes);
+      downloadAih(zipped ? name.replace(/\.txt$/, '.Zip') : name, zipped ? aihZip(content, comp, activeCnes) : aihTextBytes(content), zipped);
+    } catch (err) { toast.error(err instanceof Error ? err.message : 'Não foi possível gerar a remessa AIH.'); }
+  };
 
   return (
     <div className="space-y-4">
@@ -106,7 +123,8 @@ function SusBilling() {
             <div className="flex flex-wrap gap-2">
               <label className="flex items-center gap-1 text-xs"><input type="checkbox" checked={onlyIssues} onChange={(e) => setOnlyIssues(e.target.checked)} /> Só pendências</label>
               <Button size="sm" variant="outline" disabled={!all.length} onClick={() => print({ title: `RELATÓRIO DE CONFERÊNCIA ${tab === "BPA" ? "BPA-I" : tab === "AIH" ? "AIH" : "CIHA-01"} – COMPETÊNCIA ${month}`, rows: all })}>Imprimir conferência</Button>
-              <Button size="sm" disabled={!allowed || !okCount} onClick={() => tab === "BPA" ? download(`PA${activeCnes}.${comp.slice(4)}`, bpaFile(rows, comp, prof, institution)) : tab === "AIH" ? download(`AIH${activeCnes}_${comp}.txt`, aihFile(rows, comp, prof, institution)) : download(cihaFileName(comp, activeCnes), cihaFile(rows, comp, institution))}>Baixar arquivo {tab === "BPA" ? "BPA" : tab === "AIH" ? "SISAIH01" : "CIHA-01"} ({okCount})</Button>
+              <Button size="sm" disabled={!allowed || !okCount} onClick={() => tab === "BPA" ? download(`PA${activeCnes}.${comp.slice(4)}`, bpaFile(rows, comp, prof, institution)) : tab === "AIH" ? exportAih(false) : download(cihaFileName(comp, activeCnes), cihaFile(rows, comp, institution))}>Baixar arquivo {tab === "BPA" ? "BPA" : tab === "AIH" ? "SISAIH01 TXT" : "CIHA-01"} ({okCount})</Button>
+              {tab === 'AIH' && <Button size="sm" variant="outline" disabled={!allowed || !okCount} onClick={() => exportAih(true)}>Baixar ZIP SISAIH01</Button>}
             </div>
           </div>
           <div className="mb-3 space-y-2">

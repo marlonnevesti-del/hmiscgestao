@@ -13,6 +13,7 @@ export interface InstitutionConfig {
   ibgeMunicipio: string;
   esferaGestao: EsferaGestao;
   orgaoGestor: string;
+  orgaoEmissorAih?: string;
   logradouro: string;
   numero: string;
   complemento: string;
@@ -48,6 +49,7 @@ export const DEFAULT_INSTITUTION: InstitutionConfig = {
   ibgeMunicipio: "420460",
   esferaGestao: "E",
   orgaoGestor: "SECRETARIA DE ESTADO DA SAUDE DE SANTA CATARINA",
+  orgaoEmissorAih: "E420000012",
   logradouro: "Rua Wenceslau Braz",
   numero: "1015",
   complemento: "",

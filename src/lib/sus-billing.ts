@@ -164,7 +164,8 @@ export function bpaFile(rows: SusRow[], competence: string, prof: Professional, 
 export function aihFile(rows: SusRow[], competence: string, prof: Professional, inst: InstitutionConfig = DEFAULT_INSTITUTION): string {
   const cnes = inst.cnes || CNES;
   const mun6 = (inst.ibgeMunicipio || "420460").replace(/\D/g, "").slice(0, 6).padEnd(6, "0");
-  const orgEmis = inst.esferaGestao === "M" ? `M${mun6}000` : `E${mun6.slice(0, 2)}0000000`;
+  const orgEmis = inst.orgaoEmissorAih || (inst.esferaGestao === "M" ? `M${mun6}000` : `E${mun6.slice(0, 2)}0000000`);
+  if (!/^[EM]\d{9}$/.test(orgEmis)) throw new Error("Código do órgão emissor AIH inválido.");
   const dirCns = inst.diretorClinico.cns || prof.cns;
   const ok = rows.filter((r) => r.kind === "AIH" && r.issues.length === 0);
   if (!ok.length) return "";
