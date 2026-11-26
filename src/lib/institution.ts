@@ -39,7 +39,7 @@ export interface InstitutionConfig {
 }
 
 export const DEFAULT_INSTITUTION: InstitutionConfig = {
-  razaoSocial: "IDEAS - INSTITUTO DE DESENVOLVIMENTO, ENSINO E ASSISTENCIA A SAUDE",
+  razaoSocial: "IRMANDADE DA SANTA CASA DE MISERICORDIA DE SAO BERNARDO DO CAMPO",
   nomeFantasia: "HOSPITAL MATERNO-INFANTIL SANTA CATARINA - HMISC",
   sigla: "HMISC",
   cnpj: "47.708.771/0026-50",
@@ -75,9 +75,14 @@ export const DEFAULT_INSTITUTION: InstitutionConfig = {
 
 export function normalizeInstitution(raw?: Partial<InstitutionConfig> | null): InstitutionConfig {
   if (!raw || typeof raw !== "object") return DEFAULT_INSTITUTION;
+  const razaoSocial =
+    raw.razaoSocial && !raw.razaoSocial.toUpperCase().startsWith("IDEAS")
+      ? raw.razaoSocial
+      : DEFAULT_INSTITUTION.razaoSocial;
   return {
     ...DEFAULT_INSTITUTION,
     ...raw,
+    razaoSocial,
     esferaGestao: raw.esferaGestao === "M" ? "M" : "E",
     diretorClinico: { ...DEFAULT_INSTITUTION.diretorClinico, ...(raw.diretorClinico ?? {}) },
     faturista: { ...DEFAULT_INSTITUTION.faturista, ...(raw.faturista ?? {}) },

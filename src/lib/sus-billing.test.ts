@@ -69,6 +69,7 @@ describe("regras HMISC BPA", () => {
 import { DEFAULT_INSTITUTION } from "./institution";
 describe("dados institucionais nas remessas SUS", () => {
   it("pré-carrega CNES 2594277, CNPJ 47.708.771/0026-50 e Diretor Clínico com CNS 708006369271128", () => {
+    expect(DEFAULT_INSTITUTION.razaoSocial).toBe("IRMANDADE DA SANTA CASA DE MISERICORDIA DE SAO BERNARDO DO CAMPO");
     expect(DEFAULT_INSTITUTION.cnes).toBe("2594277");
     expect(DEFAULT_INSTITUTION.cnpj).toBe("47.708.771/0026-50");
     expect(DEFAULT_INSTITUTION.esferaGestao).toBe("E");
@@ -77,6 +78,7 @@ describe("dados institucionais nas remessas SUS", () => {
   });
   it("cabeçalho BPA usa CNPJ (14 dígitos), esfera Estadual e órgão gestor configurados", () => {
     const header = bpaFile([], "202611", { name: "Dr", cns: "708006369271128", cbo: "225125" }, DEFAULT_INSTITUTION).split("\r\n")[0] ?? "";
+    expect(header).toContain("IRMANDADE DA SANTA CASA DE MIS");
     expect(header).toContain("47708771002650");
     expect(header).toContain("SECRETARIA DE ESTADO DA SAUDE DE SANTA C");
     expect(header).toContain("EHMISC 1.0");
