@@ -16,6 +16,7 @@ import { Route as PendenteRouteImport } from './routes/pendente'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated.index'
 import { Route as AuthenticatedAcolhimentoRouteImport } from './routes/_authenticated.acolhimento'
+import { Route as AuthenticatedAjudaRouteImport } from './routes/_authenticated.ajuda'
 import { Route as AuthenticatedAlmoxarifadoRouteImport } from './routes/_authenticated.almoxarifado'
 import { Route as AuthenticatedAmbulatorioRouteImport } from './routes/_authenticated.ambulatorio'
 import { Route as AuthenticatedAtendimentoRouteImport } from './routes/_authenticated.atendimento'
@@ -83,6 +84,11 @@ const AuthenticatedAcolhimentoRoute =
     path: '/acolhimento',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedAjudaRoute = AuthenticatedAjudaRouteImport.update({
+  id: '/ajuda',
+  path: '/ajuda',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedAlmoxarifadoRoute =
   AuthenticatedAlmoxarifadoRouteImport.update({
     id: '/almoxarifado',
@@ -267,6 +273,7 @@ export interface FileRoutesByFullPath {
   '/pendente': typeof PendenteRoute
   '/reset-password': typeof ResetPasswordRoute
   '/acolhimento': typeof AuthenticatedAcolhimentoRoute
+  '/ajuda': typeof AuthenticatedAjudaRoute
   '/almoxarifado': typeof AuthenticatedAlmoxarifadoRoute
   '/ambulatorio': typeof AuthenticatedAmbulatorioRoute
   '/atendimento': typeof AuthenticatedAtendimentoRoute
@@ -305,6 +312,7 @@ export interface FileRoutesByTo {
   '/pendente': typeof PendenteRoute
   '/reset-password': typeof ResetPasswordRoute
   '/acolhimento': typeof AuthenticatedAcolhimentoRoute
+  '/ajuda': typeof AuthenticatedAjudaRoute
   '/almoxarifado': typeof AuthenticatedAlmoxarifadoRoute
   '/ambulatorio': typeof AuthenticatedAmbulatorioRoute
   '/atendimento': typeof AuthenticatedAtendimentoRoute
@@ -346,6 +354,7 @@ export interface FileRoutesById {
   '/pendente': typeof PendenteRoute
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/acolhimento': typeof AuthenticatedAcolhimentoRoute
+  '/_authenticated/ajuda': typeof AuthenticatedAjudaRoute
   '/_authenticated/almoxarifado': typeof AuthenticatedAlmoxarifadoRoute
   '/_authenticated/ambulatorio': typeof AuthenticatedAmbulatorioRoute
   '/_authenticated/atendimento': typeof AuthenticatedAtendimentoRoute
@@ -388,6 +397,7 @@ export interface FileRouteTypes {
     | '/pendente'
     | '/reset-password'
     | '/acolhimento'
+    | '/ajuda'
     | '/almoxarifado'
     | '/ambulatorio'
     | '/atendimento'
@@ -426,6 +436,7 @@ export interface FileRouteTypes {
     | '/pendente'
     | '/reset-password'
     | '/acolhimento'
+    | '/ajuda'
     | '/almoxarifado'
     | '/ambulatorio'
     | '/atendimento'
@@ -466,6 +477,7 @@ export interface FileRouteTypes {
     | '/pendente'
     | '/reset-password'
     | '/_authenticated/acolhimento'
+    | '/_authenticated/ajuda'
     | '/_authenticated/almoxarifado'
     | '/_authenticated/ambulatorio'
     | '/_authenticated/atendimento'
@@ -557,6 +569,13 @@ declare module '@tanstack/react-router' {
       path: '/acolhimento'
       fullPath: '/acolhimento'
       preLoaderRoute: typeof AuthenticatedAcolhimentoRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/ajuda': {
+      id: '/_authenticated/ajuda'
+      path: '/ajuda'
+      fullPath: '/ajuda'
+      preLoaderRoute: typeof AuthenticatedAjudaRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/almoxarifado': {
@@ -781,6 +800,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteChildren {
   AuthenticatedAcolhimentoRoute: typeof AuthenticatedAcolhimentoRoute
+  AuthenticatedAjudaRoute: typeof AuthenticatedAjudaRoute
   AuthenticatedAlmoxarifadoRoute: typeof AuthenticatedAlmoxarifadoRoute
   AuthenticatedAmbulatorioRoute: typeof AuthenticatedAmbulatorioRoute
   AuthenticatedAtendimentoRoute: typeof AuthenticatedAtendimentoRoute
@@ -817,6 +837,7 @@ interface AuthenticatedRouteChildren {
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAcolhimentoRoute: AuthenticatedAcolhimentoRoute,
+  AuthenticatedAjudaRoute: AuthenticatedAjudaRoute,
   AuthenticatedAlmoxarifadoRoute: AuthenticatedAlmoxarifadoRoute,
   AuthenticatedAmbulatorioRoute: AuthenticatedAmbulatorioRoute,
   AuthenticatedAtendimentoRoute: AuthenticatedAtendimentoRoute,
