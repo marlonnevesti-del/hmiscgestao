@@ -146,3 +146,8 @@ describe("Retenção de doses restantes na farmácia (2+ administrações)", () 
     expect(getState().stock.find((s) => s.name === "dipirona")?.quantity).toBe(2);
   });
 });
+import { remainingDoses as rd } from "./pharmacy-schedule";
+import { it as it2, expect as ex2 } from "vitest";
+it2("item em falta sai da fila de dispensação", () => {
+  ex2(rd({ times: ["08:00", "16:00"], pharmacy: "Em falta" })).toEqual([]);
+});

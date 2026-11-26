@@ -73,6 +73,7 @@ function PEP() {
           </div>
           <div className="flex flex-wrap gap-2">
             {realAllergies(p.allergies).length > 0 && <span className="pulse-alert rounded-md bg-maternal px-2 py-1 text-xs font-bold text-primary-foreground">ALERGIA: {realAllergies(p.allergies).join(", ")}</span>}
+            {p.prescriptions.filter((r) => r.pharmacy === "Em falta").map((r) => <span key={`falta-${r.id}`} className="rounded-md border border-destructive bg-destructive/10 px-2 py-1 text-xs font-semibold text-destructive">⚠ Intervenção farmacêutica: {r.item} em falta{r.shortage ? ` (${r.shortage.reason}${r.shortage.suggestion ? ` · sugestão: ${r.shortage.suggestion}` : ""})` : ""} - reavaliar prescrição</span>)}
             {p.risks.map((r) => <span key={r} className={cn("rounded-full px-2 py-1 text-[10px] font-semibold", r === "Queda" ? "bg-mt-yellow text-foreground" : r === "Alergia" ? "bg-maternal-soft text-maternal" : r === "Risco Hemorrágico" ? "bg-maternal text-primary-foreground" : "bg-mt-orange text-primary-foreground")}>{r}</span>)}
           </div>
           <div className="ml-auto flex flex-wrap items-center gap-3">

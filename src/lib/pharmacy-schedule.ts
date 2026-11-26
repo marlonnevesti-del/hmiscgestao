@@ -80,6 +80,7 @@ export function isImmediatePrescription(rx: Pick<Prescription, "immediate" | "fr
 export function remainingDoses(rx: Pick<Prescription, "times" | "dispensedTimes" | "pharmacy">): string[] {
   const times = rx.times ?? [];
   if (!times.length) return [];
+  if (rx.pharmacy === "Em falta") return [];
   if (rx.pharmacy === "Dispensada" && !rx.dispensedTimes) return [];
   const done = new Set(rx.dispensedTimes ?? []);
   return times.filter((t) => !done.has(t));

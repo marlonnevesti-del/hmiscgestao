@@ -261,6 +261,25 @@ export function adjustPrescription(id: string, rxId: string, item: string, posol
   if (!item.trim()) throw new Error('Informe a dose do item.');
   updatePatient(p.id, (x) => ({ prescriptions: x.prescriptions.map((r) => r.id === rxId ? { ...r, item: item.trim().replace(/ · ajuste farmácia$/, '') + ' · ajuste farmácia', posologia: posologia.trim() || r.posologia } : r) }));
 }
+/** Farmácia informa falta de um item: os demais seguem dispensados e o item volta ao médico para reavaliação. */
+export function reportShortage(id: string, rxId: string, reason: string, suggestion = '') {
+  requireAction('farmacia'); const { e, p } = getEncounter(id);
+  const rx = p.prescriptions.find((r) => r.id === rxId);
+  if (!rx || rx.batchId !== e.prescriptionBatchId || !rx.pharmacy) throw new Error('Item não está na farmácia.');
+  if (rx.pharmacy === 'Em falta') throw new Error('Falta já informada para este item.');
+  if (!reason.trim()) throw new Error('Informe o motivo da falta.');
+  const at = new Date().toISOString(); const by = professionalName(state.profile);
+  const shortage = { reason: reason.trim(), ...(suggestion.trim() ? { suggestion: suggestion.trim() } : {}), at, by };
+  const prescriptions = p.prescriptions.map((r) => r.id === rxId ? { ...r, pharmacy: 'Em falta' as const, shortage } : r);
+  const stillPending = prescriptions.some((r) => r.batchId === e.prescriptionBatchId && r.pharmacy && r.pharmacy !== 'Em falta' && remainingDoses(r).length > 0 && r.pharmacy !== 'Dispensada');
+  const note = `Intervenção farmacêutica: ${rx.item} em falta (${shortage.reason})${shortage.suggestion ? ` · sugestão: ${shortage.suggestion}` : ''} - reavaliar prescrição`;
+  const base = { ...e, history: [...e.history, { status: e.status_fluxo, at, by, note }] };
+  const nothingDispensed = !prescriptions.some((r) => r.batchId === e.prescriptionBatchId && (r.pharmacy === 'Dispensada' || r.pharmacy === 'Parcial'));
+  const next = e.status_fluxo === 'AGUARDANDO_FARMACIA' && !stillPending
+    ? transition(e, nothingDispensed ? 'EM_OBSERVACAO_REAVALIACAO' : 'AGUARDANDO_MEDICACAO', by, note, at)
+    : base;
+  commitEncounter(next, { patients: state.patients.map((x) => x.id === p.id ? { ...x, prescriptions } : x) });
+}
 export function dispenseKit(
   id: string,
   intervention: string,
@@ -269,7 +288,7 @@ export function dispenseKit(
 ) {
   requireAction('farmacia'); const { e, p } = getEncounter(id);
   const targetTime = opts?.targetTime?.trim() || undefined;
-  const allBatchMeds = p.prescriptions.filter((r) => r.batchId === e.prescriptionBatchId && r.pharmacy);
+  const allBatchMeds = p.prescriptions.filter((r) => r.batchId === e.prescriptionBatchId && r.pharmacy && r.pharmacy !== 'Em falta');
   const meds = targetTime
     ? allBatchMeds.filter((r) => {
         const pending = remainingDoses(r);
@@ -346,7 +365,7 @@ export function dispenseKit(
           ? {
               ...x,
               prescriptions: x.prescriptions.map((r) => {
-                if (r.batchId !== e.prescriptionBatchId || !r.pharmacy) return r;
+                if (r.batchId !== e.prescriptionBatchId || !r.pharmacy || r.pharmacy === 'Em falta') return r;
                 if (targetTime && !dosePlan.has(r.id)) return r;
                 const dosesNow = (dosePlan.get(r.id) ?? []).filter(Boolean);
                 const nextDispensed = Array.from(new Set([...(r.dispensedTimes ?? []), ...dosesNow]));
@@ -650,7 +669,7 @@ export function addStock(item: string, qty: number) {
 }
 const TERMINAL_ADMIN: Admin['status'][] = ['checado', 'cancelado', 'nao', 'adiado'];
 export function allBatchDosesDone(e: Encounter, p: Patient, admins: Record<string, Admin>) {
-  const items = p.prescriptions.filter((r) => r.batchId === e.prescriptionBatchId && r.times?.length);
+  const items = p.prescriptions.filter((r) => r.batchId === e.prescriptionBatchId && r.times?.length && r.pharmacy !== 'Em falta');
   return items.every((r) => r.times?.every((t) => TERMINAL_ADMIN.includes(admins[`${p.id}|${r.id}|${t}`]?.status as Admin['status'])));
 }
 export function advanceCompletedMedication(id: string) {

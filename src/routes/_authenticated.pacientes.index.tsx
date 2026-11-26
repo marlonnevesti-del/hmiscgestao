@@ -26,11 +26,14 @@ function List() {
   const { treinamento } = Route.useSearch();
   const navigate = Route.useNavigate();
   const patients = useStore((s) => s.patients);
+  const encounters = useStore((s) => s.encounters);
+  const activeIds = useMemo(() => new Set(encounters.filter((e) => e.status_fluxo !== "ALTA_HOSPITALAR" && !e.fia && e.status_fluxo !== "ENCAMINHADO_INTERNACAO").map((e) => e.patientId)), [encounters]);
   const [f, setF] = useState<PatientType | "todos">("todos");
-  const [scope, setScope] = useState<"internados" | "todos">("internados");
+  const [scope, setScope] = useState<"atendimento" | "internados" | "todos">("internados");
   const [q, setQ] = useState("");
 
   const inpatientCount = useMemo(() => patients.filter((p) => p.bed.trim() !== "").length, [patients]);
+  const activeCount = useMemo(() => patients.filter((p) => p.bed.trim() === "" && activeIds.has(p.id)).length, [patients, activeIds]);
 
   const filtered = useMemo(() => {
     const term = q.trim().toLowerCase();
@@ -41,9 +44,10 @@ function List() {
         return [p.name, p.cpf, p.prontuario, p.bed, p.motherName ?? ""].some((v) => v.toLowerCase().includes(term));
       }
       if (scope === "internados") return p.bed.trim() !== "";
+      if (scope === "atendimento") return p.bed.trim() === "" && activeIds.has(p.id);
       return true;
     });
-  }, [patients, f, scope, q]);
+  }, [patients, f, scope, q, activeIds]);
 
   return (
     <div className="space-y-4">
@@ -53,6 +57,9 @@ function List() {
         {!treinamento && <>
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex rounded-md border bg-card p-0.5 text-xs">
+            <button onClick={() => setScope("atendimento")} className={cn("rounded px-2.5 py-1 font-medium transition", scope === "atendimento" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground")}>
+              Em atendimento ({activeCount})
+            </button>
             <button onClick={() => setScope("internados")} className={cn("rounded px-2.5 py-1 font-medium transition", scope === "internados" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground")}>
               Internados ({inpatientCount})
             </button>
