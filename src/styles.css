@@ -207,6 +207,7 @@
   body.print-req > *:not(.req-root) { display: none !important; }
   body.print-req .req-root { display: block !important; color: #000; background: #fff; font-size: 10pt; }
   .req-root .req-page { padding: 1cm 1.2cm; }
+  .req-root .req-page + .req-page { break-before: page; page-break-before: always; }
   .req-root .req-h1 { font-size: 13pt; font-weight: 700; }
   .req-root .req-h2 { font-size: 11pt; font-weight: 700; border-bottom: 2px solid #000; margin-bottom: 6px; }
   .req-root .req-row { display: flex; flex-wrap: wrap; gap: 4px 28px; line-height: 1.5; }
