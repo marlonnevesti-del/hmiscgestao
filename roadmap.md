@@ -1,4 +1,6 @@
 # Roadmap
+- [x] Acrescentar espaço e reprodutor de vídeo único por setor à Ajuda, preservando integralmente passos, regras, dúvidas e impressão; 5 testes aprovados e 12 setores conferidos com administrador em desktop/mobile. Reprodução aguarda gravações reais.
+- [ ] Vincular as gravações dos setores — aguardando vídeos ou links fornecidos pelo HMISC.
 - [x] Adequar nome e empacotamento AIH ao exemplo Salux; TXT/ZIP fictícios 202612 gerados, órgão emissor configurável, 31 testes passaram e tela conferida com administrador. Mantida interface oficial 1800 posições.
 - [ ] Reproduzir controles adicionais Salux de 1925 posições e homologar importação SISAIH01 — depende de especificação do controle e validação no programa da equipe; não inventar assinatura nem prometer equivalência.
 - [x] Corrigir CNES no faturamento e preencher cadastro da Recepção por CPF da base interna; 36 testes passaram e aviso de CPF novo conferido com administrador. Recuperação em paciente real não conferida por ausência de CPF completo nos cadastros carregados; consulta nacional não incluída.

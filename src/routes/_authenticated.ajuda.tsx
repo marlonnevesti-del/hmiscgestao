@@ -6,6 +6,7 @@ import { HELP_SECTORS, type HelpSector } from "@/lib/help-tutorials";
 import { canAccessPage } from "@/lib/hospital-data";
 import { useStore } from "@/lib/hospital-store";
 import { cn } from "@/lib/utils";
+import { HelpSectorVideo } from "@/components/HelpSectorVideo";
 
 export const Route = createFileRoute("/_authenticated/ajuda")({
   head: () => ({
@@ -130,6 +131,8 @@ function HelpPage() {
                   </Button>
                 )}
               </div>
+
+              <HelpSectorVideo key={active.id} title={active.title} {...(active.video ? { video: active.video } : {})} />
 
               <div className="space-y-3">
                 <h3 className="flex items-center gap-2 text-base font-semibold">

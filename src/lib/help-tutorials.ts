@@ -1,3 +1,5 @@
+import type { HelpVideo } from "./help-video";
+
 export interface HelpStep {
   title: string;
   detail: string;
@@ -14,6 +16,7 @@ export interface HelpSector {
   group: "Recepção" | "Assistência" | "Apoio" | "Administrativo";
   route?: string;
   summary: string;
+  video?: HelpVideo;
   steps: HelpStep[];
   rules: string[];
   faq: HelpFaq[];
