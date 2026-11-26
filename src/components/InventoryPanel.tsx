@@ -39,6 +39,7 @@ function matchesInvCategory(item: StockMedication, cat: InvCategory, depot: Depo
   return !isMat && !isCtrl;
 }
 const brl = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+const groupOrder = (g: string) => Number(g.match(/^(\d+)/)?.[1] ?? 999);
 
 export function InventoryPanel({ depot }: { depot: Depot }) {
   const items = useStore((s) => (depot === "farmacia" ? s.stock : s.warehouse));
@@ -50,8 +51,17 @@ export function InventoryPanel({ depot }: { depot: Depot }) {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<Filter>("todos");
   const [invCat, setInvCat] = useState<InvCategory>("todos");
+  const [group, setGroup] = useState("");
   const [approveOpen, setApproveOpen] = useState(false);
   const [justification, setJustification] = useState("");
+
+  const purchaseGroups = useMemo(() => {
+    if (depot !== "almoxarifado") return [];
+    const counts = new Map<string, number>();
+    items.forEach((i) => { if (i.purchaseGroup) counts.set(i.purchaseGroup, (counts.get(i.purchaseGroup) ?? 0) + 1); });
+    return [...counts.entries()].sort((a, b) => groupOrder(a[0]) - groupOrder(b[0]) || a[0].localeCompare(b[0], "pt-BR"));
+  }, [items, depot]);
+  const usePurchaseGroups = depot === "almoxarifado" && purchaseGroups.length > 0;
 
   const draft = useMemo(() => inventories.find((i) => i.depot === depot && i.status === "rascunho"), [inventories, depot]);
   const history = useMemo(() => inventories.filter((i) => i.depot === depot && i.status === "homologado"), [inventories, depot]);
@@ -63,15 +73,17 @@ export function InventoryPanel({ depot }: { depot: Depot }) {
   const filtered = useMemo(() => {
     const q = query.trim().toLocaleLowerCase("pt-BR");
     return items.filter((item) => {
-      if (!matchesInvCategory(item, invCat, depot)) return false;
+      if (usePurchaseGroups) {
+        if (group && item.purchaseGroup !== group) return false;
+      } else if (!matchesInvCategory(item, invCat, depot)) return false;
       const line = lines[item.id];
       if (filter === "contados" && !line) return false;
       if (filter === "pendentes" && line) return false;
       if (filter === "divergentes" && (!line || line.countedQty === item.quantity)) return false;
       if (!q) return true;
-      return item.name.toLocaleLowerCase("pt-BR").includes(q) || (item.code ?? "").toLocaleLowerCase("pt-BR").includes(q) || (item.category ?? "").toLocaleLowerCase("pt-BR").includes(q);
+      return item.name.toLocaleLowerCase("pt-BR").includes(q) || (item.code ?? "").toLocaleLowerCase("pt-BR").includes(q) || (item.category ?? "").toLocaleLowerCase("pt-BR").includes(q) || (item.purchaseGroup ?? "").toLocaleLowerCase("pt-BR").includes(q);
     });
-  }, [items, lines, query, filter, invCat, depot]);
+  }, [items, lines, query, filter, invCat, group, usePurchaseGroups, depot]);
 
   function handleScan(e: React.FormEvent) {
     e.preventDefault();
@@ -119,16 +131,28 @@ export function InventoryPanel({ depot }: { depot: Depot }) {
   }
 
   return <div className="space-y-4">
-    <div className="flex flex-wrap gap-2 border-b pb-3" role="tablist" aria-label="Categorias do inventário">
-      {INV_CATEGORIES.map((c) => {
-        const count = items.filter((it) => matchesInvCategory(it, c.id, depot)).length;
-        return (
-          <Button key={c.id} size="sm" variant={invCat === c.id ? "default" : "outline"} role="tab" aria-selected={invCat === c.id} onClick={() => setInvCat(c.id)}>
-            {c.label} ({count})
-          </Button>
-        );
-      })}
-    </div>
+    {usePurchaseGroups ? (
+      <div className="space-y-1.5 border-b pb-3">
+        <p className="text-xs font-medium text-muted-foreground">Grupo de Compra</p>
+        <div className="flex flex-wrap gap-1.5" role="tablist" aria-label="Grupos de Compra do inventário">
+          <Button size="sm" role="tab" aria-selected={group === ""} variant={group === "" ? "default" : "outline"} onClick={() => setGroup("")}>Todos ({items.length})</Button>
+          {purchaseGroups.map(([g, count]) => (
+            <Button key={g} size="sm" role="tab" aria-selected={group === g} variant={group === g ? "default" : "outline"} onClick={() => setGroup(g)}>{g} ({count})</Button>
+          ))}
+        </div>
+      </div>
+    ) : (
+      <div className="flex flex-wrap gap-2 border-b pb-3" role="tablist" aria-label="Categorias do inventário">
+        {INV_CATEGORIES.map((c) => {
+          const count = items.filter((it) => matchesInvCategory(it, c.id, depot)).length;
+          return (
+            <Button key={c.id} size="sm" variant={invCat === c.id ? "default" : "outline"} role="tab" aria-selected={invCat === c.id} onClick={() => setInvCat(c.id)}>
+              {c.label} ({count})
+            </Button>
+          );
+        })}
+      </div>
+    )}
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
       <div className="rounded-lg border bg-card p-3"><div className="text-xs text-muted-foreground">Itens no estoque</div><div className="text-2xl font-semibold">{summary.totalItems}</div></div>
       <div className="rounded-lg border bg-card p-3"><div className="text-xs text-muted-foreground">Contados / Pendentes</div><div className="text-2xl font-semibold">{summary.countedItems} <span className="text-sm font-normal text-muted-foreground">/ {summary.pendingItems}</span></div></div>
@@ -176,7 +200,7 @@ export function InventoryPanel({ depot }: { depot: Depot }) {
             const fin = delta !== null ? delta * (item.unitCost ?? 0) : 0;
             return <tr key={item.id} className="hover:bg-muted/30">
               <td className="p-2 font-mono text-xs text-muted-foreground">{item.code ?? "-"}</td>
-              <td className="p-2"><div className="font-medium">{item.name}</div><div className="text-xs text-muted-foreground">{item.category ?? item.presentation}{line ? ` · Contado por ${line.countedBy}` : ""}</div></td>
+              <td className="p-2"><div className="font-medium">{item.name}</div><div className="text-xs text-muted-foreground">{item.purchaseGroup ?? item.category ?? item.presentation}{line ? ` · Contado por ${line.countedBy}` : ""}</div></td>
               <td className="p-2 text-right font-mono">{item.quantity} {item.unit}</td>
               <td className="p-2 text-right"><Input type="number" min={0} step={1} aria-label={`Contagem de ${item.name}`} className="h-8 w-28 ml-auto text-right font-mono" placeholder="—" value={line ? String(line.countedQty) : ""} onChange={(e) => handleCountChange(item.id, e.target.value)} /></td>
               <td className="p-2 text-right">{delta === null ? <span className="text-xs text-muted-foreground">Pendente</span> : delta === 0 ? <Badge variant="secondary">Conforme</Badge> : <Badge variant={delta > 0 ? "default" : "destructive"}>{delta > 0 ? `+${delta}` : delta}</Badge>}</td>
