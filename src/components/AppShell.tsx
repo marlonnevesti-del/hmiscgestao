@@ -1,6 +1,6 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useMemo, useState, type ReactNode } from "react";
-import { Activity, Ambulance, Baby, Stethoscope, Package, BedDouble, Bell, ChevronLeft, ClipboardList, HeartPulse, History, Pill, Receipt, Scissors, Search, ShieldCheck, ShieldAlert, Tv, Dumbbell, Milk, Bone, ScanLine, Printer, UserCog, UserPlus, Users, LogOut } from "lucide-react";
+import { Activity, Ambulance, Baby, Stethoscope, Package, BedDouble, Bell, ChevronLeft, ClipboardList, HeartPulse, HelpCircle, History, Pill, Receipt, Scissors, Search, ShieldCheck, ShieldAlert, Tv, Dumbbell, Milk, Bone, ScanLine, Printer, UserCog, UserPlus, Users, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
@@ -112,6 +112,9 @@ export function AppShell({ children }: { children: ReactNode }) {
             );
           })()}
         </nav>
+        <Link to="/ajuda" title="Central de Ajuda e Tutoriais" className={cn("mx-2 mt-2 flex items-center gap-3 rounded-md px-3 py-2 text-xs", path === "/ajuda" ? "bg-sidebar-primary text-sidebar-primary-foreground" : "hover:bg-sidebar-accent")}>
+          <HelpCircle className="h-4 w-4 shrink-0" />{!collapsed && "Ajuda / Tutoriais"}
+        </Link>
         {canAccessPage(profile, "/painel-tv", accessAreas) && <a href="/painel-tv" target="_blank" rel="noopener" title="Painel de Chamadas (TV) – abre em nova aba" className="mx-2 mt-2 flex items-center gap-3 rounded-md border border-sidebar-border px-3 py-2 text-xs hover:bg-sidebar-accent"><Tv className="h-4 w-4 shrink-0" />{!collapsed && "Painel de Chamadas (TV) ↗"}</a>}
         <button onClick={() => setCollapsed(!collapsed)} className="m-2 flex items-center justify-center gap-2 rounded-md p-2 text-xs hover:bg-sidebar-accent" aria-label="Recolher menu">
           <ChevronLeft className={cn("h-4 w-4 transition-transform", collapsed && "rotate-180")} />{!collapsed && "Recolher"}
@@ -136,6 +139,9 @@ export function AppShell({ children }: { children: ReactNode }) {
           <CommandPalette />
           <div className="ml-auto flex items-center gap-3">
             <SyncIndicator />
+            <Button asChild variant="ghost" size="sm" className="gap-1.5 text-xs" title="Central de Ajuda por Setor">
+              <Link to="/ajuda"><HelpCircle className="h-4 w-4" /><span className="hidden sm:inline">Ajuda</span></Link>
+            </Button>
             <Popover>
               <PopoverTrigger className="relative flex items-center gap-1.5 rounded-full bg-maternal-soft px-3 py-1.5 text-xs font-medium text-maternal" aria-label="Alertas críticos">
                 <Bell className="h-4 w-4" /> {alerts.length}
