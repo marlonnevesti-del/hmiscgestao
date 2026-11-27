@@ -40,7 +40,7 @@ function Sheet({ kind, p, e, user }: { kind: SheetKind; p: Patient; e?: Encounte
     <h3>Dados do Atendimento</h3>
     <div className="sheet-row"><F l={`Atendimento ${kind}`} v={num && `${num} / ${year}`} /><F l="Unidade" v={kind === 'FIA' ? ward : ''} /><F l="Quarto" v={kind === 'FIA' ? room : ''} /><F l="Leito" v={kind === 'FIA' ? bed : ''} /></div>
     <div className="sheet-row"><F l="Convênio" v={r.insurance || p.insurance} /><F l={kind === 'FIA' ? 'Data da Internação' : 'Data da Chegada'} v={fmt(kind === 'FIA' ? e?.fia?.openedAt : e?.openedAt)} /></div>
-    {kind === 'FIA' && e?.fia && <><div className="sheet-row"><F l="BAA de origem" v={`${e.number} (encerrada ${fmt(e.baaClosedAt)})`} /><F l="Caráter" v={e.fia.character} /></div><div className="sheet-row"><F l="CID-10" v={e.fia.cid} /><F l="Autorizado por (NIR)" v={e.fia.authorizedBy} /></div><div className="sheet-row"><F l="Justificativa" v={e.fia.justification} /></div></>}
+    {kind === 'FIA' && e?.fia && <><div className="sheet-row"><F l="BAA de origem" v={`${e.number.replace(/^FIA-/i, 'BAA-')} (convertida ${fmt(e.baaClosedAt)})`} /><F l="Caráter" v={e.fia.character} /></div><div className="sheet-row"><F l="CID-10" v={e.fia.cid} /><F l="Autorizado por (NIR)" v={e.fia.authorizedBy} /></div><div className="sheet-row"><F l="Justificativa" v={e.fia.justification} /></div></>}
     <div className="sheet-row"><F l="Setor" v={e ? `Recepção ${e.type}` : ''} /><F l="Tipo" v={e?.specialty} /></div>
     <h3>Dados do Paciente</h3>
     <div className="sheet-row"><F l="Nome" v={`${p.prontuario} - ${p.name}`} /></div>

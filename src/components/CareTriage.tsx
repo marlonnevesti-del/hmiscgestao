@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { RiskBadge, RiskStripe } from "./RiskBadge";
 import { SpecialConditionBadges } from "./SpecialConditions";
@@ -135,13 +136,17 @@ function TriageForm({ encounter, onDone }: { encounter: Encounter; onDone: () =>
 
   const fields: [keyof typeof f, string][] = [
     ["pas", "PA sistólica"], ["pad", "PA diastólica"], ["fc", "FC"], ["fr", "FR"], ["tax", "Temperatura"], ["sat", "SatO2"], ["dor", "Dor (0–10)"],
-    ["weight", obstetric ? "Peso (kg)" : "Peso atual (kg)"], ["allergies", "Alergias (separar por vírgulas)"], ["complaint", "Queixa principal"],
-    ...(obstetric ? [["ig", "Idade gestacional"], ["dum", "DUM"], ["bcf", "BCF"], ["contractions", "Dinâmica uterina"], ["fluid", "Perda de líquido"], ["bleeding", "Sangramento"]] as [keyof typeof f, string][] : [["height", "Estatura (cm)"], ["head", "Perímetro cefálico"], ["guardian", "Responsável legal"]] as [keyof typeof f, string][]),
+    ["weight", obstetric ? "Peso (kg)" : "Peso atual (kg)"], ["allergies", "Alergias (separar por vírgulas)"],
+    ...(obstetric ? [["ig", "Idade gestacional"], ["dum", "DUM"], ["bcf", "BCF"], ["contractions", "Dinâmica uterina"], ["fluid", "Perda de líquido"], ["bleeding", "Sangramento"]] as [keyof typeof f, string][] : [["height", "Estatura (cm)"], ["head", "Perímetro cefálico"]] as [keyof typeof f, string][]),
   ];
   const detectedProcs = detectTriageProcedures({ pas: f.pas, pad: f.pad, tax: f.tax, weight: f.weight, height: f.height, head: f.head });
 
   return <form onSubmit={(event) => { event.preventDefault(); save(); }} className="space-y-5">
-    <section><h2 className="mb-2 font-semibold">Sinais vitais e dados assistenciais</h2><div className="grid grid-cols-2 gap-3 sm:grid-cols-3">{fields.map(([key, label]) => <label key={key} className="grid gap-1 text-xs">{label}<Input value={f[key]} onChange={(event) => setF((current) => ({ ...current, [key]: event.target.value }))} /></label>)}</div></section>
+    <section className="space-y-3">
+      <h2 className="font-semibold">Sinais vitais e dados assistenciais</h2>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">{fields.map(([key, label]) => <label key={key} className="grid gap-1 text-xs">{label}<Input value={f[key]} onChange={(event) => setF((current) => ({ ...current, [key]: event.target.value }))} /></label>)}</div>
+      <label className="grid gap-1 text-xs">Queixa principal<Textarea rows={4} className="min-h-[100px] resize-y" value={f.complaint} onChange={(event) => setF((current) => ({ ...current, complaint: event.target.value }))} /></label>
+    </section>
     <section className="rounded-lg border bg-card p-4"><h2 className="font-semibold">Fluxograma PCACR · {PUBLICO_LABEL[audience]}</h2><p className="mb-3 text-xs text-muted-foreground">Selecione a queixa e marque todos os descritores presentes. A cor mais grave é aplicada automaticamente.</p>
       <div className="mb-4 flex flex-wrap gap-2">{flowcharts.map((flowchart) => <Button type="button" variant={flowchartId === flowchart.id ? "default" : "outline"} size="sm" key={flowchart.id} onClick={() => { setFlowchartId(flowchart.id); setDescriptors([]); }}>{flowchart.nome}</Button>)}</div>
       {currentFlowchart && <div className="grid gap-1.5 md:grid-cols-2">{currentFlowchart.descritores.map((descriptor) => <label key={descriptor.id} className="flex cursor-pointer items-center gap-2 rounded-md border px-2 py-1.5 text-sm hover:bg-muted"><Checkbox checked={descriptors.includes(descriptor.id)} onCheckedChange={(checked) => setDescriptors((current) => checked ? [...current, descriptor.id] : current.filter((id) => id !== descriptor.id))} /><span className={cn("h-3 w-3 shrink-0 rounded-full", MANCHESTER[descriptor.cor].cls)} />{descriptor.texto}</label>)}</div>}

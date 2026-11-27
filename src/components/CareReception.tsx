@@ -112,7 +112,6 @@ export function CareReception({ unit }: { unit?: CareUnit } = {}) {
     if (!parsed.success) throw new Error(parsed.error.issues[0]?.message || "Confira os dados do cadastro.");
     if (requireEncounterFields) {
       if (!f.specialty.trim()) throw new Error("Preencha a especialidade em Abertura de atendimento.");
-      if (!f.complaint.trim()) throw new Error("Preencha a queixa principal em Abertura de atendimento.");
     }
     if (mode === "completo" && ["pediatria", "neonato"].includes(f.patientType) && !registration.guardian.trim() && !registration.parent1.trim()) {
       throw new Error("Para criança ou recém-nascido, preencha o nome do responsável ou da mãe (filiação 1).");
@@ -174,7 +173,7 @@ export function CareReception({ unit }: { unit?: CareUnit } = {}) {
     }
   };
 
-  const textFields = (unit === "Ambulatório" ? [["complaint", "Observação / Queixa (opcional)"]] : [["specialty", "Especialidade"], ["complaint", "Queixa principal"]]) as readonly (readonly ["specialty" | "complaint", string])[];
+  const extraSpecs = ["Obstetrícia", "Pediatria"].filter((name) => !ambSpecialties.some((s) => s.active && s.name.toLowerCase() === name.toLowerCase()));
   const shown = unit ? encounters.filter((encounter) => encounter.type === unit) : encounters;
 
   return <div className="space-y-4">
@@ -225,9 +224,8 @@ export function CareReception({ unit }: { unit?: CareUnit } = {}) {
             </div>
           </div>
           <label className="grid gap-1 text-xs">Motivo de atendimento<select aria-label="Motivo de atendimento" value={f.ambMotive} onChange={(event) => setF((c) => ({ ...c, ambMotive: event.target.value as AmbulatoryMotive }))} className="h-9 rounded-md border bg-background px-2">{AMBULATORY_MOTIVES.map((m) => <option key={m} value={m}>{m}</option>)}</select></label>
-          <label className="grid gap-1 text-xs">Tipo de atendimento (Especialidade)<select aria-label="Especialidade" value={f.specialty} onChange={(event) => set("specialty", event.target.value)} required className="h-9 rounded-md border bg-background px-2"><option value="">Selecione…</option>{(["medica", "nao_medica", "sadt"] as const).map((g) => <optgroup key={g} label={GROUP_LABELS[g]}>{ambSpecialties.filter((x) => x.group === g && x.active).map((x) => <option key={x.id} value={x.name}>{x.name}</option>)}</optgroup>)}</select></label>
         </>}
-        {textFields.map(([key, label]) => <label key={key} className="grid gap-1 text-xs">{label}<Input value={f[key]} onChange={(event) => set(key, event.target.value)} required={unit === "Ambulatório" ? false : ["name", "specialty", "complaint"].includes(key)} /></label>)}
+        <label className="grid gap-1 text-xs">{unit === "Ambulatório" ? "Tipo de atendimento (Especialidade)" : "Especialidade"}<select aria-label="Especialidade" value={f.specialty} onChange={(event) => set("specialty", event.target.value)} required className="h-9 rounded-md border bg-background px-2"><option value="">Selecione…</option>{extraSpecs.length > 0 && <optgroup label="Urgência / Maternidade">{extraSpecs.map((name) => <option key={name} value={name}>{name}</option>)}</optgroup>}{(["medica", "nao_medica", "sadt"] as const).map((g) => <optgroup key={g} label={GROUP_LABELS[g]}>{ambSpecialties.filter((x) => x.group === g && x.active).map((x) => <option key={x.id} value={x.name}>{x.name}</option>)}</optgroup>)}</select></label>
         <label className="grid gap-1 text-xs">Tipo de paciente<select aria-label="Tipo de paciente" value={f.patientType} onChange={(event) => set("patientType", event.target.value)} className="h-9 rounded-md border bg-background px-2">{[["gestante", "Gestante"], ["puerpera", "Puérpera"], ["pediatria", "Criança"], ["neonato", "Recém-nascido"]].map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label>
         {overPedAge && <div role="alert" className={`grid gap-2 rounded-lg border-2 p-3 text-xs md:col-span-3 ${pedError ? "border-destructive bg-destructive/10" : "border-clinical bg-clinical-soft"}`}>
           <div className="font-semibold text-destructive">Paciente com {pedAge} anos excede o limite padrão da Pediatria (14 anos).</div>

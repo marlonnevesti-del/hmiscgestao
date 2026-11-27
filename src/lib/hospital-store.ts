@@ -726,14 +726,19 @@ export function requestAdmission(id: string, req: { ward: string; character: 'Ur
   const note = fromReception ? 'Encaminhamento de internação realizado pela recepção (aguardando leito no NIR)' : 'Internação solicitada ao NIR';
   commitEncounter({ ...e, admission: { ...admReq, cid: req.cid || e.medical?.cid || '', status: 'pendente', requestedAt: at, requestedBy: by }, history: [...e.history, { status: e.status_fluxo, at, by, note }] });
 }
-// Admission closes the BAA and opens the FIA as the official inpatient document.
+// Admission converts the BAA into a FIA keeping the exact same BAA number.
 function openFia(e: Encounter, ward: string, bed: string, at: string, by: string): { e: Encounter; seq: number } {
   if (e.fia) return { e: { ...e, fia: { ...e.fia, ward, bed } }, seq: state.fiaSequence ?? 0 };
-  const seq = takeSequence('fia', (state.fiaSequence ?? 0) + 1);
-  const number = `FIA-${new Date(at).getFullYear()}-${String(seq).padStart(6, '0')}`;
+  const fromBaa = /^BAA-/i.test(e.number);
+  const seq = fromBaa
+    ? Number(e.number.split('-').pop() ?? 0) || (state.fiaSequence ?? 0)
+    : takeSequence('fia', (state.fiaSequence ?? 0) + 1);
+  const number = fromBaa
+    ? e.number.replace(/^BAA-/i, 'FIA-')
+    : `FIA-${new Date(at).getFullYear()}-${String(seq).padStart(6, '0')}`;
   const doctor = e.admission?.requestedBy ?? e.signedBy ?? by;
   const fia = { number, openedAt: at, ward, bed, doctor, authorizedBy: by, cid: e.admission?.cid || e.medical?.cid || '', justification: e.admission?.justification ?? '', character: e.admission?.character ?? 'Urgência' };
-  return { e: { ...e, fia, baaClosedAt: at, history: [...e.history, { status: e.status_fluxo, at, by, note: `${e.number} encerrada / transferida para internação · ${number} aberta` }] }, seq };
+  return { e: { ...e, number, fia, baaClosedAt: at, history: [...e.history, { status: e.status_fluxo, at, by, note: `${e.number} convertida em ${number} (internação)` }] }, seq: Math.max(state.fiaSequence ?? 0, seq) };
 }
 export function authorizeAdmission(id: string, bedId: string) {
   requireAction('nir'); const { e, p } = getEncounter(id);
@@ -833,7 +838,8 @@ export function revertAdmission(id: string, reason: string): string {
   const { fia, baaClosedAt: _b, admission, ...rest } = e;
   const bed = p.bed;
   const actor = state.profile === 'Administrador' ? 'administrador' : 'NIR';
-  commitEncounter({ ...rest, ...(admission ? { admission: { ...admission, status: 'recusada' as const, note: `Internação cancelada pelo ${actor}: ${reason.trim()}` } } : {}), status_fluxo: 'EM_OBSERVACAO_REAVALIACAO', history: [...e.history, { status: 'EM_OBSERVACAO_REAVALIACAO', at, by, note: `${fia.number} cancelada · ${e.number} reaberta pelo ${actor}: ${reason.trim()}` }] }, { patients: state.patients.map((x) => x.id === p.id ? { ...x, bed: '' } : x) });
+  const restoredNumber = /^FIA-/i.test(e.number) ? e.number.replace(/^FIA-/i, 'BAA-') : e.number;
+  commitEncounter({ ...rest, number: restoredNumber, ...(admission ? { admission: { ...admission, status: 'recusada' as const, note: `Internação cancelada pelo ${actor}: ${reason.trim()}` } } : {}), status_fluxo: 'EM_OBSERVACAO_REAVALIACAO', history: [...e.history, { status: 'EM_OBSERVACAO_REAVALIACAO', at, by, note: `${fia.number} cancelada · ${restoredNumber} reaberta pelo ${actor}: ${reason.trim()}` }] }, { patients: state.patients.map((x) => x.id === p.id ? { ...x, bed: '' } : x) });
   return bed;
 }
 /** Registra o parto: cria prontuário "RN de <mãe>" vinculado e converte a mãe em puérpera. */
