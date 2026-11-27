@@ -44,8 +44,9 @@ export function sortMedicalQueue(encounters: Encounter[]) {
   return [...encounters].sort((a, b) => order.indexOf(a.triage?.risk ?? 'azul') - order.indexOf(b.triage?.risk ?? 'azul') || Date.parse(a.openedAt) - Date.parse(b.openedAt));
 }
 export function validateTriage(pediatric: boolean, t: Triage) {
-  if (pediatric && (!Number.isFinite(t.weight) || t.weight <= 0)) throw new Error('Peso atual obrigatório em pediatria.');
+  void pediatric;
+  if (!Number.isFinite(t.weight) || t.weight < 0) throw new Error('Informe um peso válido.');
   if (!['vermelho', 'laranja', 'amarelo', 'verde', 'azul'].includes(t.risk)) throw new Error('Selecione a classificação Manchester.');
   const v = t.vital;
-  if (![v.pas, v.pad, v.fc, v.fr, v.tax, v.sat, v.dor].every(Number.isFinite) || v.pas <= 0 || v.pad <= 0 || v.fc <= 0 || v.fr <= 0 || v.tax <= 0 || v.sat <= 0 || v.sat > 100 || v.dor < 0 || v.dor > 10) throw new Error('Preencha os sinais vitais com valores válidos.');
+  if (![v.pas, v.pad, v.fc, v.fr, v.tax, v.sat, v.dor].every(Number.isFinite) || v.pas < 0 || v.pad < 0 || v.fc < 0 || v.fr < 0 || v.tax < 0 || v.sat < 0 || v.sat > 100 || v.dor < 0 || v.dor > 10) throw new Error('Preencha os sinais vitais com valores válidos.');
 }

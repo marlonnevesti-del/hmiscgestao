@@ -5,6 +5,7 @@ import { AlertTriangle, ClipboardList, Stethoscope } from 'lucide-react';
 import { Letterhead } from '@/components/DischargePrint';
 import { Button } from '@/components/ui/button';
 import { IcuExamples } from '@/components/IcuExamples';
+import { SbarTransferForm } from '@/components/SbarTransferForm';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { NoPermission } from '@/components/AppShell';
 import { useStore, addIntensive, setIntensiveSafety, encounterFor } from '@/lib/hospital-store';
@@ -77,7 +78,10 @@ function PatientPanel({ u, p }: { u: IcuUnit; p: Patient }) {
       <TabsContent value="balanco"><Balance u={u} p={p} /></TabsContent>
       <TabsContent value="bundles"><Bundles u={u} p={p} /></TabsContent>
       <TabsContent value="evolucao"><Notes p={p} templates={UNITS[u].evolutions} /></TabsContent>
-      <TabsContent value="sbar"><Notes p={p} templates={{ SBAR: 'S – Situação: \nB – Breve histórico: \nA – Avaliação: \nR – Recomendação: ', SAE: 'Diagnósticos de enfermagem: \nResultados esperados: \nIntervenções / aprazamento: ' }} /></TabsContent>
+      <TabsContent value="sbar"><div className="space-y-4">
+        <SbarTransferForm key={p.id} patient={p} defaultOrigin={UNITS[u].name} onSave={(text) => run(() => addIntensive(p.id, 'notes', { kind: 'SBAR – Transferência', text }), 'SBAR salvo')} />
+        <Notes p={p} templates={{ SAE: 'Diagnósticos de enfermagem: \nResultados esperados: \nIntervenções / aprazamento: ' }} />
+      </div></TabsContent>
       <TabsContent value="exames"><Exams p={p} /></TabsContent>
       <TabsContent value="seguranca"><SafetyEdit p={p} /></TabsContent>
     </Tabs></div>;

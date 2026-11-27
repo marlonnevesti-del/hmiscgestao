@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { SbarTransferForm } from "@/components/SbarTransferForm";
 import { RiskBadge } from "./RiskBadge";
 import { can, type Patient } from "@/lib/hospital-data";
 import { FLOW_LABELS } from "@/lib/care-flow";
@@ -64,8 +65,9 @@ export function PsObservation() {
 
 /** 4. Escalas assistenciais, SAE/SBAR e protocolos de sepse. */
 export function PsCare() {
-  const { active, name } = usePs(); const profile = useStore((s) => s.profile);
+  const { active, patients, name } = usePs(); const profile = useStore((s) => s.profile);
   const [id, setId] = useState(""); const e = active.find((x) => x.id === id);
+  const patient = e ? patients.find((p) => p.id === e.patientId) : undefined;
   const [scale, setScale] = useState(SCALES[0]!.id); const def = SCALES.find((s) => s.id === scale)!;
   const [ans, setAns] = useState<number[]>([]); const [text, setText] = useState(""); const [kindText, setKindText] = useState<"sae" | "sbar">("sae");
   const ok = can(profile, "checar") || can(profile, "triagem") || can(profile, "prescrever") || can(profile, "evoluir");
@@ -74,12 +76,14 @@ export function PsCare() {
     <select aria-label="Paciente" className={cn(sel, "w-full max-w-md")} value={id} onChange={(ev) => { setId(ev.target.value); setAns([]); }}><option value="">Selecione o paciente do PS Infantil…</option>{active.map((x) => <option key={x.id} value={x.id}>{name(x.patientId)} · {x.number}{x.ps?.bed ? ` · leito ${x.ps.bed}` : ""}</option>)}</select>
     {e && <div className="grid gap-3 xl:grid-cols-2">
       <div className={box}><div className="mb-2 flex flex-wrap gap-1">{SCALES.map((s) => <Button key={s.id} size="sm" variant={s.id === scale ? "default" : "outline"} className="h-7 text-xs" onClick={() => { setScale(s.id); setAns([]); }}>{s.name}</Button>)}</div>
-        <div className="space-y-1 text-xs">{def.items.map((it, i) => <label key={it.label} className="flex items-center justify-between gap-2">{it.label}<select className={cn(sel, "w-64")} value={ans[i] ?? 0} onChange={(ev) => { const n = [...ans]; n[i] = +ev.target.value; setAns(n); }}>{it.options.map((o, j) => <option key={j} value={j}>{o.score} · {o.label}</option>)}</select></label>)}</div>
+        <div className="space-y-1.5 text-xs">{def.items.map((it, i) => <label key={it.label} className="grid gap-1 sm:grid-cols-[1fr_minmax(0,1.2fr)] sm:items-center">{it.label}<select className={cn(sel, "w-full")} value={ans[i] ?? 0} onChange={(ev) => { const n = [...ans]; n[i] = +ev.target.value; setAns(n); }}>{it.options.map((o, j) => <option key={j} value={j}>{o.score} · {o.label}</option>)}</select></label>)}</div>
         <div className="mt-2 rounded bg-secondary px-2 py-1 text-sm font-semibold">{def.name}: {total} pontos · {def.interpret(total)}</div>
         <Button size="sm" className="mt-2" disabled={!ok} onClick={() => run(() => psAddScale(e.id, { scale, total, result: `${total} – ${def.interpret(total)}` }), "Escala registrada")}>Registrar escala</Button>
         <div className="mt-3 border-t pt-2"><div className="mb-1 flex gap-1"><Button size="sm" variant={kindText === "sae" ? "default" : "outline"} className="h-7" onClick={() => setKindText("sae")}>SAE</Button><Button size="sm" variant={kindText === "sbar" ? "default" : "outline"} className="h-7" onClick={() => setKindText("sbar")}>SBAR – transferência</Button></div>
-          <Textarea value={text} onChange={(ev) => setText(ev.target.value)} placeholder={kindText === "sae" ? "Histórico · Diagnóstico de enfermagem · Planejamento · Implementação · Avaliação" : "S – Situação\nB – Breve histórico\nA – Avaliação\nR – Recomendação"} className="min-h-28" />
-          <Button size="sm" className="mt-2" disabled={!ok || !text.trim()} onClick={() => run(() => { psAddScale(e.id, { scale: kindText, result: kindText.toUpperCase(), text: text.trim() }); setText(""); }, "Registro salvo")}>Salvar {kindText.toUpperCase()}</Button></div>
+          {kindText === "sbar" ? <SbarTransferForm key={e.id} patient={patient} defaultOrigin="Pronto Socorro Infantil" disabled={!ok} onSave={(sbarText) => run(() => psAddScale(e.id, { scale: "sbar", result: "SBAR – Transferência Intra-Setorial", text: sbarText }), "SBAR salvo")} /> : <>
+            <Textarea value={text} onChange={(ev) => setText(ev.target.value)} placeholder="Histórico · Diagnóstico de enfermagem · Planejamento · Implementação · Avaliação" className="min-h-28" />
+            <Button size="sm" className="mt-2" disabled={!ok || !text.trim()} onClick={() => run(() => { psAddScale(e.id, { scale: "sae", result: "SAE", text: text.trim() }); setText(""); }, "Registro salvo")}>Salvar SAE</Button>
+          </>}</div>
         <div className="mt-3 border-t pt-2 text-xs"><div className="font-semibold">Histórico</div>{[...(e.ps?.scales ?? [])].reverse().map((r) => <div key={r.id} className="border-b py-1">{fmt(r.at)} · <b>{SCALES.find((s) => s.id === r.scale)?.name ?? r.scale.toUpperCase()}</b> · {r.result} · {r.by}{r.text && <p className="whitespace-pre-wrap text-muted-foreground">{r.text}</p>}</div>)}{!e.ps?.scales?.length && <p className="text-muted-foreground">Sem registros.</p>}</div>
       </div>
       <SepsisBox e={e} ok={ok} />
