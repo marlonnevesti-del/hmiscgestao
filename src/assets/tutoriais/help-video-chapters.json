@@ -1,0 +1,458 @@
+{
+  "recepcao": {
+    "duration": 168.65,
+    "chapters": [
+      {
+        "title": "Recepção (Ambulatório, PS e Maternidade)",
+        "seconds": 0
+      },
+      {
+        "title": "1. Buscar paciente pelo CPF",
+        "seconds": 19
+      },
+      {
+        "title": "2. Abrir atendimento (BAA)",
+        "seconds": 34
+      },
+      {
+        "title": "3. Atalhos de Orelhinha e Punção de Mama",
+        "seconds": 50
+      },
+      {
+        "title": "4. Retificar abertura antes do atendimento",
+        "seconds": 66
+      },
+      {
+        "title": "5. Imprimir documentos e chamar na TV",
+        "seconds": 80
+      },
+      {
+        "title": "Regras importantes e validações",
+        "seconds": 94
+      },
+      {
+        "title": "Como importar a agenda do Ambulatório?",
+        "seconds": 123
+      },
+      {
+        "title": "Troquei o CPF e os dados antigos continuaram?",
+        "seconds": 139
+      },
+      {
+        "title": "Antes de concluir",
+        "seconds": 153
+      }
+    ]
+  },
+  "triagem": {
+    "duration": 129.12,
+    "chapters": [
+      {
+        "title": "Acolhimento & Classificação de Risco",
+        "seconds": 0
+      },
+      {
+        "title": "1. Selecionar paciente da fila",
+        "seconds": 22
+      },
+      {
+        "title": "2. Registrar sinais vitais e antropometria",
+        "seconds": 35
+      },
+      {
+        "title": "3. Definir classificação de risco",
+        "seconds": 51
+      },
+      {
+        "title": "4. Salvar e encaminhar ao médico",
+        "seconds": 62
+      },
+      {
+        "title": "Regras importantes e validações",
+        "seconds": 74
+      },
+      {
+        "title": "Preciso digitar o código SIGTAP da triagem manualmente?",
+        "seconds": 97
+      },
+      {
+        "title": "Antes de concluir",
+        "seconds": 112
+      }
+    ]
+  },
+  "pep-medico": {
+    "duration": 177.41,
+    "chapters": [
+      {
+        "title": "Atendimento Médico & PEP",
+        "seconds": 0
+      },
+      {
+        "title": "1. Abrir o Prontuário (PEP)",
+        "seconds": 21
+      },
+      {
+        "title": "2. Registrar evolução, CID e SIGTAP",
+        "seconds": 33
+      },
+      {
+        "title": "3. Prescrever medicamentos",
+        "seconds": 47
+      },
+      {
+        "title": "4. Solicitar exames, procedimentos ou internação",
+        "seconds": 66
+      },
+      {
+        "title": "5. Finalizar atendimento (Desfecho)",
+        "seconds": 81
+      },
+      {
+        "title": "Regras importantes e validações",
+        "seconds": 95
+      },
+      {
+        "title": "Por que o quadro 'Adicionar item' apareceu bloqueado?",
+        "seconds": 128
+      },
+      {
+        "title": "Dei alta por engano, como desfazer?",
+        "seconds": 146
+      },
+      {
+        "title": "Antes de concluir",
+        "seconds": 160
+      }
+    ]
+  },
+  "enfermagem": {
+    "duration": 120.26,
+    "chapters": [
+      {
+        "title": "Posto de Enfermagem",
+        "seconds": 0
+      },
+      {
+        "title": "1. Conferir painel de medicações do turno",
+        "seconds": 18
+      },
+      {
+        "title": "2. Checar administração",
+        "seconds": 29
+      },
+      {
+        "title": "3. Registrar evolução e procedimentos",
+        "seconds": 44
+      },
+      {
+        "title": "4. Passagem de plantão (SBAR)",
+        "seconds": 58
+      },
+      {
+        "title": "Regras importantes e validações",
+        "seconds": 67
+      },
+      {
+        "title": "Como adicionar vários procedimentos de enfermagem (ex.: PA + temperatura)?",
+        "seconds": 86
+      },
+      {
+        "title": "Antes de concluir",
+        "seconds": 104
+      }
+    ]
+  },
+  "uti-uci": {
+    "duration": 117.65,
+    "chapters": [
+      {
+        "title": "UTI Pediátrica · UCI · UTI Neonatal",
+        "seconds": 0
+      },
+      {
+        "title": "1. Selecionar a unidade intensiva",
+        "seconds": 22
+      },
+      {
+        "title": "2. Sinais vitais e Balanço Hídrico separados",
+        "seconds": 31
+      },
+      {
+        "title": "3. Preencher escalas e bundles",
+        "seconds": 47
+      },
+      {
+        "title": "4. Atalho rápido para prescrição",
+        "seconds": 58
+      },
+      {
+        "title": "Regras importantes e validações",
+        "seconds": 70
+      },
+      {
+        "title": "O balanço hídrico neonatal calcula ml/kg/h sozinho?",
+        "seconds": 85
+      },
+      {
+        "title": "Antes de concluir",
+        "seconds": 101
+      }
+    ]
+  },
+  "nir": {
+    "duration": 113.62,
+    "chapters": [
+      {
+        "title": "NIR & Censo de Internações",
+        "seconds": 0
+      },
+      {
+        "title": "1. Receber solicitação médica",
+        "seconds": 19
+      },
+      {
+        "title": "2. Selecionar leito disponível",
+        "seconds": 29
+      },
+      {
+        "title": "3. Fechamento da BAA e abertura da FIA",
+        "seconds": 39
+      },
+      {
+        "title": "4. Acompanhar Censo e Readmissões",
+        "seconds": 52
+      },
+      {
+        "title": "Regras importantes e validações",
+        "seconds": 65
+      },
+      {
+        "title": "Como cancelar uma internação feita no leito errado?",
+        "seconds": 83
+      },
+      {
+        "title": "Antes de concluir",
+        "seconds": 98
+      }
+    ]
+  },
+  "farmacia": {
+    "duration": 130.06,
+    "chapters": [
+      {
+        "title": "Farmácia Hospitalar",
+        "seconds": 0
+      },
+      {
+        "title": "1. Filtrar a fila por setor",
+        "seconds": 20
+      },
+      {
+        "title": "2. Dispensar medicamento",
+        "seconds": 33
+      },
+      {
+        "title": "3. Conferir bloqueios de antimicrobianos",
+        "seconds": 49
+      },
+      {
+        "title": "4. Consultar Consumo e Inventário",
+        "seconds": 61
+      },
+      {
+        "title": "Regras importantes e validações",
+        "seconds": 77
+      },
+      {
+        "title": "Por que um antibiótico não libera para dispensação?",
+        "seconds": 100
+      },
+      {
+        "title": "Antes de concluir",
+        "seconds": 113
+      }
+    ]
+  },
+  "almoxarifado": {
+    "duration": 108.46,
+    "chapters": [
+      {
+        "title": "Almoxarifado Geral",
+        "seconds": 0
+      },
+      {
+        "title": "1. Navegar pelos Grupos de Compra",
+        "seconds": 18
+      },
+      {
+        "title": "2. Atender solicitações dos setores",
+        "seconds": 34
+      },
+      {
+        "title": "3. Realizar Inventário físico",
+        "seconds": 46
+      },
+      {
+        "title": "Regras importantes e validações",
+        "seconds": 60
+      },
+      {
+        "title": "Como solicitar um item que não aparece na minha lista de categorias?",
+        "seconds": 80
+      },
+      {
+        "title": "Antes de concluir",
+        "seconds": 93
+      }
+    ]
+  },
+  "centro-cirurgico-cme": {
+    "duration": 102.46,
+    "chapters": [
+      {
+        "title": "Centro Cirúrgico · SRPA · CME",
+        "seconds": 0
+      },
+      {
+        "title": "1. Agendar e conduzir cirurgia",
+        "seconds": 19
+      },
+      {
+        "title": "2. Vincular kits esterilizados (CME)",
+        "seconds": 30
+      },
+      {
+        "title": "3. Acompanhar SRPA e CO",
+        "seconds": 41
+      },
+      {
+        "title": "4. Operar ciclos na CME",
+        "seconds": 53
+      },
+      {
+        "title": "Regras importantes e validações",
+        "seconds": 64
+      },
+      {
+        "title": "Onde vejo os indicadores de suspensão cirúrgica e partos?",
+        "seconds": 74
+      },
+      {
+        "title": "Antes de concluir",
+        "seconds": 87
+      }
+    ]
+  },
+  "apoio-sadt": {
+    "duration": 127.56,
+    "chapters": [
+      {
+        "title": "SADT · Fisioterapia · Raio-X · Gesso · BLH · SCIRAS",
+        "seconds": 0
+      },
+      {
+        "title": "1. SADT e Laudos (Ambulatório)",
+        "seconds": 23
+      },
+      {
+        "title": "2. Fisioterapia, Raio-X e Gesso",
+        "seconds": 40
+      },
+      {
+        "title": "3. Banco de Leite Humano (BLH)",
+        "seconds": 54
+      },
+      {
+        "title": "4. SCIRAS / CCIH",
+        "seconds": 66
+      },
+      {
+        "title": "Regras importantes e validações",
+        "seconds": 75
+      },
+      {
+        "title": "Preciso copiar a evolução da Fisioterapia ou Raio-X para o prontuário?",
+        "seconds": 96
+      },
+      {
+        "title": "Antes de concluir",
+        "seconds": 111
+      }
+    ]
+  },
+  "faturamento": {
+    "duration": 142.7,
+    "chapters": [
+      {
+        "title": "Faturamento SUS, TISS e Custos",
+        "seconds": 0
+      },
+      {
+        "title": "1. Conferir Dados do Hospital",
+        "seconds": 23
+      },
+      {
+        "title": "2. Resolver pendências (Semáforo pré-faturamento)",
+        "seconds": 37
+      },
+      {
+        "title": "3. Exportar arquivos mensais",
+        "seconds": 56
+      },
+      {
+        "title": "4. Acompanhar TISS, Custos e Prestação de Contas",
+        "seconds": 69
+      },
+      {
+        "title": "Regras importantes e validações",
+        "seconds": 83
+      },
+      {
+        "title": "Por que o BPA baixa com extensão .11 ou .12 e o CIHA com .CHA?",
+        "seconds": 106
+      },
+      {
+        "title": "Antes de concluir",
+        "seconds": 125
+      }
+    ]
+  },
+  "administracao": {
+    "duration": 129.46,
+    "chapters": [
+      {
+        "title": "Administração, Colaboradores e Backups",
+        "seconds": 0
+      },
+      {
+        "title": "1. Aprovar ou cadastrar colaboradores",
+        "seconds": 21
+      },
+      {
+        "title": "2. Definir Setor e Áreas de Acesso",
+        "seconds": 34
+      },
+      {
+        "title": "3. Corrigir BAAs e FIAs abertas",
+        "seconds": 49
+      },
+      {
+        "title": "4. Segurança & Backups",
+        "seconds": 62
+      },
+      {
+        "title": "Regras importantes e validações",
+        "seconds": 73
+      },
+      {
+        "title": "Um computador ficou com dados antigos na tela, o que fazer?",
+        "seconds": 96
+      },
+      {
+        "title": "Antes de concluir",
+        "seconds": 114
+      }
+    ]
+  }
+}

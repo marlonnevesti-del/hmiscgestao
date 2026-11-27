@@ -74,8 +74,26 @@ function HelpPage() {
         </div>
       </div>
 
+      <div className="space-y-2 lg:hidden print:hidden">
+        <label htmlFor="help-sector" className="text-sm font-medium">Setor do tutorial</label>
+        <select
+          id="help-sector"
+          value={active?.id ?? ""}
+          onChange={(event) => setSelectedId(event.target.value)}
+          className="h-11 w-full rounded-md border bg-background px-3 text-sm text-foreground outline-none focus:ring-2 focus:ring-ring"
+        >
+          {GROUPS.map((group) => (
+            <optgroup key={group} label={group}>
+              {filtered.filter((sector) => sector.group === group).map((sector) => (
+                <option key={sector.id} value={sector.id}>{sector.title}</option>
+              ))}
+            </optgroup>
+          ))}
+        </select>
+      </div>
+
       <div className="grid gap-6 lg:grid-cols-[270px_1fr]">
-        <aside className="space-y-4 print:hidden">
+        <aside className="hidden space-y-4 print:hidden lg:block">
           {GROUPS.map((group) => {
             const items = filtered.filter((s) => s.group === group);
             if (!items.length) return null;
@@ -112,10 +130,10 @@ function HelpPage() {
           )}
         </aside>
 
-        <section className="min-w-0 space-y-6">
+        <section className="min-w-0 flex flex-col space-y-6">
           {active ? (
             <>
-              <div className="flex flex-wrap items-start justify-between gap-3 rounded-lg border bg-card p-5">
+              <div className="order-2 flex flex-wrap items-start justify-between gap-3 rounded-lg border bg-card p-5 lg:order-1">
                 <div className="space-y-1">
                   <div className="text-xs font-semibold uppercase tracking-wider text-clinical">
                     {active.group}
@@ -132,9 +150,11 @@ function HelpPage() {
                 )}
               </div>
 
-              <HelpSectorVideo key={active.id} title={active.title} {...(active.video ? { video: active.video } : {})} />
+              <div className="order-1 lg:order-2">
+                <HelpSectorVideo key={active.id} title={active.title} {...(active.video ? { video: active.video } : {})} />
+              </div>
 
-              <div className="space-y-3">
+              <div className="order-3 space-y-3">
                 <h3 className="flex items-center gap-2 text-base font-semibold">
                   <CheckCircle2 className="h-4 w-4 text-clinical" /> Passo a passo operacional
                 </h3>
@@ -148,7 +168,7 @@ function HelpPage() {
                 </div>
               </div>
 
-              <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-4 space-y-2">
+              <div className="order-4 rounded-lg border border-amber-500/30 bg-amber-500/5 p-4 space-y-2">
                 <h3 className="flex items-center gap-2 text-sm font-semibold">
                   <ShieldAlert className="h-4 w-4 text-amber-600" /> Regras importantes e validações SUS
                 </h3>
@@ -159,7 +179,7 @@ function HelpPage() {
                 </ul>
               </div>
 
-              <div className="space-y-3">
+              <div className="order-5 space-y-3">
                 <h3 className="flex items-center gap-2 text-base font-semibold">
                   <HelpCircle className="h-4 w-4 text-clinical" /> Dúvidas frequentes
                 </h3>

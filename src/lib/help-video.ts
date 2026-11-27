@@ -1,6 +1,7 @@
 export interface HelpVideo {
   url: string;
   title?: string;
+  durationSeconds?: number;
   chapters?: { title: string; seconds: number }[];
 }
 

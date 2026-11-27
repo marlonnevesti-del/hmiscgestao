@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { Film, Play, AlertCircle } from "lucide-react";
+import { Film, Play, AlertCircle, Clock3, ListVideo, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { helpVideoSource, videoTimestamp, type HelpVideo } from "@/lib/help-video";
 
@@ -39,7 +39,16 @@ export function HelpSectorVideo({ title, video }: { title: string; video?: HelpV
         </div>
       ) : (
         <>
-          <p className="text-sm font-medium">{video.title ?? title}</p>
+          <div className="space-y-1">
+            <p className="text-sm font-medium">{video.title ?? title}</p>
+            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+              {video.durationSeconds && (
+                <span className="inline-flex items-center gap-1"><Clock3 className="h-3.5 w-3.5" /> {Math.floor(video.durationSeconds / 60)} min {video.durationSeconds % 60} s</span>
+              )}
+              <span className="inline-flex items-center gap-1"><Volume2 className="h-3.5 w-3.5" /> Narração em português</span>
+              {chapters.length > 0 && <span className="inline-flex items-center gap-1"><ListVideo className="h-3.5 w-3.5" /> {chapters.length} capítulos</span>}
+            </div>
+          </div>
           {source.kind === "file" ? (
             <>
               <video ref={player} className="aspect-video w-full rounded-md bg-muted" controls playsInline preload="metadata" onError={() => setFailed(true)} aria-label={video.title ?? title}>

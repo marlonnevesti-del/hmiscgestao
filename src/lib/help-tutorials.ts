@@ -1,4 +1,5 @@
 import type { HelpVideo } from "./help-video";
+import { HELP_VIDEOS } from "./help-video-catalog";
 
 export interface HelpStep {
   title: string;
@@ -22,7 +23,7 @@ export interface HelpSector {
   faq: HelpFaq[];
 }
 
-export const HELP_SECTORS: HelpSector[] = [
+const HELP_SECTOR_CONTENT: HelpSector[] = [
   {
     id: "recepcao",
     title: "Recepção (Ambulatório, PS e Maternidade)",
@@ -267,3 +268,8 @@ export const HELP_SECTORS: HelpSector[] = [
     ],
   },
 ];
+
+export const HELP_SECTORS: HelpSector[] = HELP_SECTOR_CONTENT.map((sector) => {
+  const video = sector.video ?? HELP_VIDEOS[sector.id];
+  return { ...sector, ...(video ? { video } : {}) };
+});
