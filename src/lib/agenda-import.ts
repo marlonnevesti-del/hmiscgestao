@@ -38,6 +38,13 @@ export const AGENDA_FIELDS: { key: AgendaField; label: string; required?: boolea
 export const normText = (s: string) =>
   s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
 
+/** Remove valores puramente numéricos (ex.: fragmentos de telefone) do campo profissional. */
+export const sanitizeProfessional = (raw: unknown): string => {
+  const s = String(raw ?? "").trim();
+  if (!s || /^[\d\s().-]+$/.test(s)) return "";
+  return s;
+};
+
 export function normalizeDate(raw: unknown): string {
   if (typeof raw === "number" && raw > 25000 && raw < 80000) {
     const d = new Date(Math.round((raw - 25569) * 86400 * 1000));
@@ -119,7 +126,7 @@ export function previewAgendaGrid(
       cns: String(get("cns") ?? "").replace(/\D/g, ""),
       prontuario: String(get("prontuario") ?? "").trim(),
       specialty: String(get("specialty") ?? "").trim(),
-      professional: String(get("professional") ?? "").trim(),
+      professional: sanitizeProfessional(get("professional")),
       note: String(get("note") ?? "").trim(),
     };
     return [{ source, row: headerRow + i + 1, item, errors: validateAgendaItem(item) }];
@@ -178,8 +185,8 @@ export function parseAgendaPdfLines(lines: string[], source: string, fallbackSpe
 
     const specM = /(?:especialidade|agenda|setor|servi[cç]o)\s*:\s*([^|–-]+)/i.exec(line);
     if (specM?.[1]) curSpec = specM[1].trim();
-    const docM = /(?:m[eé]dico|profissional|dr\.?a?)\s*:\s*([^|–-]+)/i.exec(line);
-    if (docM?.[1]) curDoc = docM[1].trim();
+    const docM = /(?:m[eé]dico|profissional|recurso|dr\.?a?)\s*:\s*([^|–-]+)/i.exec(line);
+    if (docM?.[1]) curDoc = sanitizeProfessional(docM[1]);
     const dateHeader = /\b(\d{2}\/\d{2}\/\d{4})\b/.exec(line);
     if (dateHeader?.[1]) curDate = normalizeDate(dateHeader[1]);
 
@@ -194,6 +201,7 @@ export function parseAgendaPdfLines(lines: string[], source: string, fallbackSpe
     let namePart = afterTime
       .replace(cpfM?.[0] ?? "", "")
       .replace(cnsM?.[0] ?? "", "")
+      .replace(/(?:\(?\d{2}\)?\s*)?\b\d{4,5}-\d{4}\b/g, "")
       .replace(/\b\d{2}\/\d{2}\/\d{4}\b/g, "")
       .replace(/\b(agendado|confirmado|retorno|consulta|sisreg|encaixe|faltou|cancelado)\b/gi, "")
       .replace(/\s{2,}/g, " ")
@@ -202,7 +210,7 @@ export function parseAgendaPdfLines(lines: string[], source: string, fallbackSpe
     const parts = namePart.split(/\s*[|–-]\s*/).map((s) => s.trim()).filter(Boolean);
     const patientName = parts[0] ?? "";
     const rowSpec = parts[1] || curSpec;
-    const rowDoc = parts[2] || curDoc;
+    const rowDoc = sanitizeProfessional(parts[2]) || curDoc;
 
     if (patientName.length < 3) return;
     const item: AgendaImportItem = {

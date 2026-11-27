@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { guessColumnMap, markDuplicates, normalizeDate, normalizeTime, parseAgendaPdfLines, parseCsvText, previewAgendaGrid } from "./agenda-import";
+import { guessColumnMap, markDuplicates, normalizeDate, normalizeTime, parseAgendaPdfLines, parseCsvText, previewAgendaGrid, sanitizeProfessional } from "./agenda-import";
 import { getState, importAppointments, setState } from "./hospital-store";
 
 describe("importação de agenda do ambulatório", () => {
@@ -36,6 +36,22 @@ describe("importação de agenda do ambulatório", () => {
     expect(rows[0]?.item.patientName).toBe("MARIA CLARA SOUZA");
     expect(rows[0]?.item.cpf).toBe("12345678901");
     expect(rows[0]?.item.specialty).toBe("Pediatria");
+  });
+
+  it("ignora telefones com hífen e bloqueia números no campo profissional", () => {
+    expect(sanitizeProfessional("5468")).toBe("");
+    expect(sanitizeProfessional("48 99908-5468")).toBe("");
+    expect(sanitizeProfessional("DR. JOÃO SANTOS")).toBe("DR. JOÃO SANTOS");
+    const lines = [
+      "Recurso: DRA. ANA PAULA",
+      "Especialidade: Fisioterapia",
+      "Agenda do dia 30/11/2026",
+      "08:15 ENZO DE SOUZA DA ROSA (48) 99908-5468",
+    ];
+    const rows = parseAgendaPdfLines(lines, "salux.pdf");
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.item.patientName).toBe("ENZO DE SOUZA DA ROSA");
+    expect(rows[0]?.item.professional).toBe("DRA. ANA PAULA");
   });
 
   it("importa no store criando paciente novo e bloqueando duplicidade", () => {

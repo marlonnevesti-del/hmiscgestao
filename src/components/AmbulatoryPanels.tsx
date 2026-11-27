@@ -75,8 +75,13 @@ export function AmbulatoryAgenda() {
   const [quickMode, setQuickMode] = useState(false);
   const [quick, setQuick] = useState({ name: "", birthDate: "", ageText: "", motherOrGuardian: "", phone: "", cpf: "", cns: "" });
   const found = q.length > 1 ? patients.filter((p) => [p.name, p.cpf, p.prontuario, p.registration?.cns ?? ""].some((v) => v.toLowerCase().includes(q.toLowerCase()))).slice(0, 6) : [];
-  const agendaDoctors = useMemo(() => Array.from(new Set(list.map((a) => a.professional.trim()).filter(Boolean))).sort((a, b) => a.localeCompare(b, "pt-BR")), [list]);
-  const day = useMemo(() => list.filter((a) => a.date === date && (!filter || a.specialtyId === filter) && (!docFilter || a.professional.trim() === docFilter)).sort((a, b) => a.time.localeCompare(b.time)), [list, date, filter, docFilter]);
+  const agendaDoctors = useMemo(() => Array.from(new Set(list.map((a) => a.professional.trim()).filter((d) => d && !/^[\d\s().-]+$/.test(d)))).sort((a, b) => a.localeCompare(b, "pt-BR")), [list]);
+  const day = useMemo(() => list.filter((a) => (!date || a.date === date) && (!filter || a.specialtyId === filter) && (!docFilter || a.professional.trim() === docFilter)).sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time)), [list, date, filter, docFilter]);
+  const [printingAgenda, setPrintingAgenda] = useState(false);
+  const handlePrintAgenda = () => {
+    setPrintingAgenda(true);
+    setTimeout(() => { printProcedure(); setTimeout(() => setPrintingAgenda(false), 300); }, 60);
+  };
   const editable = canAct(profile, "recepcao", accessAreas);
   const chosen = patients.find((p) => p.id === f.patientId);
   const learned = useStore((s) => s.doctors);
@@ -91,28 +96,35 @@ export function AmbulatoryAgenda() {
       {find.trim().length > 1 && <ul className="mt-2 space-y-1 text-sm">{findHits.map((a) => <li key={a.id}><button type="button" className="text-left hover:underline" onClick={() => { setDate(a.date); setFilter(""); setDocFilter(""); setFind(""); }}>{new Date(`${a.date}T12:00`).toLocaleDateString("pt-BR")} {a.time} · <b>{patients.find((x) => x.id === a.patientId)?.name}</b> · {specs.find((s) => s.id === a.specialtyId)?.name} · {a.professional || "—"} · {STATUS[a.status]}</button></li>)}{!findHits.length && <li className="text-muted-foreground">Nenhum agendamento encontrado.</li>}</ul>}
     </div>
     <div className="flex flex-wrap items-end gap-2">
-      <label className="grid gap-1 text-xs">Data<Input type="date" value={date} onChange={(e) => setDate(e.target.value)} /></label>
+      <label className="grid gap-1 text-xs">Data
+        <div className="flex items-center gap-1">
+          <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+          {date && <Button type="button" size="sm" variant="ghost" onClick={() => setDate("")} title="Mostrar todas as datas">Todas</Button>}
+        </div>
+      </label>
       <label className="grid gap-1 text-xs">Especialidade<select className={sel} value={filter} onChange={(e) => setFilter(e.target.value)}><option value="">Todas</option>{specs.filter((s) => s.active).map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></label>
       <label className="grid gap-1 text-xs">Médico / Profissional<select className={sel} value={docFilter} onChange={(e) => setDocFilter(e.target.value)}><option value="">Todos</option>{agendaDoctors.map((d) => <option key={d} value={d}>{d}</option>)}</select></label>
+      <Button type="button" variant="outline" disabled={!day.length} onClick={handlePrintAgenda}><Printer className="h-4 w-4" />Imprimir / Salvar em PDF ({day.length})</Button>
       {editable && <AgendaImport />}
     </div>
     {editable && <form className="grid gap-2 rounded-lg border bg-card p-3 md:grid-cols-3" onSubmit={(e) => {
       e.preventDefault();
+      const targetDate = date || today();
       act(() => {
         if (quickMode) {
-          const res = quickScheduleAppointment(quick, { time: f.time, specialtyId: f.specialtyId, professional: f.professional, note: f.note, nursingPreConsult: f.nursingPreConsult, date });
+          const res = quickScheduleAppointment(quick, { time: f.time, specialtyId: f.specialtyId, professional: f.professional, note: f.note, nursingPreConsult: f.nursingPreConsult, date: targetDate });
           setQuick({ name: "", birthDate: "", ageText: "", motherOrGuardian: "", phone: "", cpf: "", cns: "" });
           setQuickMode(false);
           setF({ ...f, time: "", patientId: "", note: "", nursingPreConsult: false });
           toast.success(res.reused ? "Consulta agendada (paciente já cadastrado)" : "Paciente pré-cadastrado e consulta agendada");
         } else {
-          scheduleAppointment({ ...f, date });
+          scheduleAppointment({ ...f, date: targetDate });
           setF({ ...f, time: "", patientId: "", note: "", nursingPreConsult: false });
           toast.success("Consulta agendada");
         }
       });
     }}>
-      <h3 className="text-sm font-semibold md:col-span-3">Agendar consulta em {new Date(`${date}T12:00`).toLocaleDateString("pt-BR")}</h3>
+      <h3 className="text-sm font-semibold md:col-span-3">Agendar consulta em {new Date(`${date || today()}T12:00`).toLocaleDateString("pt-BR")}</h3>
       <div className="grid gap-1 text-xs md:col-span-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <span>Paciente</span>
@@ -140,13 +152,68 @@ export function AmbulatoryAgenda() {
       <label className="grid gap-1 text-xs md:col-span-2">Observação<Input value={f.note} onChange={(e) => setF({ ...f, note: e.target.value })} /></label>
       <div className="flex flex-wrap items-end gap-3"><label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={f.nursingPreConsult || isObstetricSpecialty(specs.find((s) => s.id === f.specialtyId)?.name ?? "")} disabled={isObstetricSpecialty(specs.find((s) => s.id === f.specialtyId)?.name ?? "")} onChange={(e) => setF({ ...f, nursingPreConsult: e.target.checked })} />Pré-consulta de enfermagem</label><Button type="submit">Agendar</Button></div>
     </form>}
-    <table className="w-full text-sm"><thead><tr className="border-b text-left text-xs text-muted-foreground"><th className="py-2">Hora</th><th>Paciente</th><th>Especialidade</th><th>Profissional</th><th>Situação</th><th /></tr></thead>
+    <table className="w-full text-sm"><thead><tr className="border-b text-left text-xs text-muted-foreground">{!date && <th className="py-2">Data</th>}<th className="py-2">Hora</th><th>Paciente</th><th>Especialidade</th><th>Profissional</th><th>Situação</th><th /></tr></thead>
       <tbody>{day.map((a) => { const p = patients.find((x) => x.id === a.patientId); const ph = p?.registration?.phones?.[0]; const phoneLabel = ph?.number ? `${ph.areaCode ? `(${ph.areaCode}) ` : ""}${ph.number}` : ""; return <tr key={a.id} className="border-b">
+        {!date && <td className="py-2 font-mono text-xs">{new Date(`${a.date}T12:00`).toLocaleDateString("pt-BR")}</td>}
         <td className="py-2 font-mono">{a.time}</td><td>{p?.name ?? "—"}{phoneLabel && <div className="text-xs text-muted-foreground">Tel: {phoneLabel}</div>}{a.note && <div className="text-xs text-muted-foreground">{a.note}</div>}{a.nursingPreConsult && <div className="text-xs text-primary">Pré-consulta de enfermagem</div>}</td><td>{specs.find((s) => s.id === a.specialtyId)?.name}</td><td>{a.professional}</td><td>{STATUS[a.status]}</td>
         <td className="space-x-1 text-right">{editable && a.status === "agendado" && <><Button size="sm" onClick={() => act(() => { setCreated(checkInAppointment(a.id)); }, "Chegada registrada · BAA gerado")}>Registrar chegada</Button><Button size="sm" variant="ghost" onClick={() => act(() => setAppointmentStatus(a.id, "faltou"))}>Faltou</Button><Button size="sm" variant="ghost" className="text-destructive" onClick={() => act(() => setAppointmentStatus(a.id, "cancelado"))}>Cancelar</Button></>}</td>
       </tr>; })}</tbody></table>
-    {!day.length && <p className="py-4 text-sm text-muted-foreground">Nenhuma consulta agendada nesta data.</p>}
+    {!day.length && <p className="py-4 text-sm text-muted-foreground">Nenhuma consulta agendada para os filtros selecionados.</p>}
     <BaaArrivalDialog created={created} onClose={() => setCreated(null)} />
+    {printingAgenda && createPortal(
+      <div className="print-doc-root proc-root">
+        <div className="sheet-page" style={{ padding: "1.2cm 1.2cm", fontSize: 11 }}>
+          <Letterhead title="AGENDA DO AMBULATÓRIO" />
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px 18px", marginBottom: 10, borderBottom: "1px solid #ccc", paddingBottom: 6 }}>
+            <span><b>Data:</b> {date ? new Date(`${date}T12:00`).toLocaleDateString("pt-BR") : "Todas as datas"}</span>
+            <span><b>Especialidade:</b> {filter ? (specs.find((s) => s.id === filter)?.name ?? "—") : "Todas"}</span>
+            <span><b>Médico / Profissional:</b> {docFilter || "Todos"}</span>
+            <span><b>Emitido em:</b> {new Date().toLocaleString("pt-BR")}</span>
+          </div>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 10 }}>
+            <thead>
+              <tr style={{ borderBottom: "1.5px solid #000", textAlign: "left" }}>
+                {!date && <th style={{ padding: "4px 4px" }}>Data</th>}
+                <th style={{ padding: "4px 4px" }}>Hora</th>
+                <th style={{ padding: "4px 4px" }}>Paciente</th>
+                <th style={{ padding: "4px 4px" }}>Prontuário</th>
+                <th style={{ padding: "4px 4px" }}>Telefone</th>
+                <th style={{ padding: "4px 4px" }}>Especialidade</th>
+                <th style={{ padding: "4px 4px" }}>Profissional</th>
+                <th style={{ padding: "4px 4px" }}>Situação</th>
+              </tr>
+            </thead>
+            <tbody>
+              {day.map((a) => {
+                const p = patients.find((x) => x.id === a.patientId);
+                const ph = p?.registration?.phones?.[0];
+                const phoneLabel = ph?.number ? `${ph.areaCode ? `(${ph.areaCode}) ` : ""}${ph.number}` : "—";
+                return (
+                  <tr key={a.id} style={{ borderBottom: "1px solid #ddd" }}>
+                    {!date && <td style={{ padding: "4px 4px", whiteSpace: "nowrap" }}>{new Date(`${a.date}T12:00`).toLocaleDateString("pt-BR")}</td>}
+                    <td style={{ padding: "4px 4px", whiteSpace: "nowrap" }}>{a.time}</td>
+                    <td style={{ padding: "4px 4px" }}>{p?.name ?? "—"}{a.note ? ` (${a.note})` : ""}</td>
+                    <td style={{ padding: "4px 4px", whiteSpace: "nowrap" }}>{p?.prontuario ?? "—"}</td>
+                    <td style={{ padding: "4px 4px", whiteSpace: "nowrap" }}>{phoneLabel}</td>
+                    <td style={{ padding: "4px 4px" }}>{specs.find((s) => s.id === a.specialtyId)?.name ?? "—"}</td>
+                    <td style={{ padding: "4px 4px" }}>{a.professional || "—"}</td>
+                    <td style={{ padding: "4px 4px", whiteSpace: "nowrap" }}>{STATUS[a.status] ?? a.status}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          <div style={{ marginTop: 10, paddingTop: 6, borderTop: "1px solid #ccc", display: "flex", gap: 16, fontSize: 10 }}>
+            <b>Total: {day.length}</b>
+            <span>Agendados: {day.filter((a) => a.status === "agendado").length}</span>
+            <span>Chegaram: {day.filter((a) => a.status === "chegou").length}</span>
+            <span>Faltaram: {day.filter((a) => a.status === "faltou").length}</span>
+            <span>Cancelados: {day.filter((a) => a.status === "cancelado").length}</span>
+          </div>
+        </div>
+      </div>,
+      document.body,
+    )}
   </div>;
 }
 
