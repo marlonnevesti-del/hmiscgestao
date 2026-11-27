@@ -693,15 +693,22 @@ export function recordMedication(id: string, rxId: string, time: string, status:
   const allDone = allBatchDosesDone(e, p, admins);
   commitEncounter(allDone && e.status_fluxo === 'AGUARDANDO_MEDICACAO' ? transition(e, 'EM_OBSERVACAO_REAVALIACAO', professionalName(state.profile), 'Medicação concluída - pronto para reavaliação', at) : e, { admins });
 }
-export function requestAdmission(id: string, req: { ward: string; character: 'Urgência' | 'Eletiva'; cid: string; justification: string; isolation: boolean; oxygen: boolean }) {
-  requireAction('prescrever'); const { e, p } = getEncounter(id);
-  if (!['EM_ATENDIMENTO_MEDICO', 'EM_OBSERVACAO_REAVALIACAO'].includes(e.status_fluxo)) throw new Error('Solicitação disponível durante a avaliação médica.');
-  requireMedicalSigtap(e.sigtapCode ?? '');
+export function requestAdmission(id: string, req: { ward: string; character: 'Urgência' | 'Eletiva'; cid: string; justification: string; isolation: boolean; oxygen: boolean; source?: 'medico' | 'recepcao' }) {
+  const fromReception = req.source === 'recepcao' || (!canAct(state.profile, 'prescrever', state.accessAreas) && canAct(state.profile, 'recepcao', state.accessAreas));
+  if (fromReception) requireAction('recepcao'); else requireAction('prescrever');
+  const { e, p } = getEncounter(id);
+  if (e.status_fluxo === 'ALTA_HOSPITALAR' || e.fia) throw new Error('Atendimento já encerrado ou com internação ativa.');
+  if (!fromReception) {
+    if (!['EM_ATENDIMENTO_MEDICO', 'EM_OBSERVACAO_REAVALIACAO'].includes(e.status_fluxo)) throw new Error('Solicitação disponível durante a avaliação médica.');
+    requireMedicalSigtap(e.sigtapCode ?? '');
+  }
   if (e.admission?.status === 'pendente') throw new Error('Já existe uma solicitação aguardando o NIR.');
   if (!req.justification.trim()) throw new Error('Informe a justificativa clínica.');
   if (req.ward) { const ageErr = bedAgeIssue({ birthDate: p.registration?.birthDate, age: p.age, type: p.type }, req.ward, req.ward); if (ageErr) throw new Error(ageErr); }
   const at = new Date().toISOString(); const by = professionalName(state.profile);
-  commitEncounter({ ...e, admission: { ...req, cid: req.cid || e.medical?.cid || '', status: 'pendente', requestedAt: at, requestedBy: by }, history: [...e.history, { status: e.status_fluxo, at, by, note: 'Internação solicitada ao NIR' }] });
+  const { source: _source, ...admReq } = req;
+  const note = fromReception ? 'Encaminhamento de internação realizado pela recepção (aguardando leito no NIR)' : 'Internação solicitada ao NIR';
+  commitEncounter({ ...e, admission: { ...admReq, cid: req.cid || e.medical?.cid || '', status: 'pendente', requestedAt: at, requestedBy: by }, history: [...e.history, { status: e.status_fluxo, at, by, note }] });
 }
 // Admission closes the BAA and opens the FIA as the official inpatient document.
 function openFia(e: Encounter, ward: string, bed: string, at: string, by: string): { e: Encounter; seq: number } {

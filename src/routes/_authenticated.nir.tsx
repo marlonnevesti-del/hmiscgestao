@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { NoPermission } from "@/components/AppShell";
 import { BASE_BEDS, canAct, MANCHESTER, WARDS } from "@/lib/hospital-data";
-import { authorizeAdmission, authorizeAdmissionExternal, rejectAdmission, revertAdmission, transferBed, useStore } from "@/lib/hospital-store";
+import { authorizeAdmission, authorizeAdmissionExternal, rejectAdmission, requestAdmission, revertAdmission, transferBed, useStore } from "@/lib/hospital-store";
 import { bedAgeIssue } from "@/lib/nir-rules";
 import type { Encounter } from "@/lib/care-flow";
 import { cn } from "@/lib/utils";
@@ -34,7 +34,7 @@ const ADM_WARDS = ["AC", "UTIN", "ENFP"];
 const RISK_ORDER = ["vermelho", "laranja", "amarelo", "verde", "azul"];
 
 function NirPage() {
-  const { data: hotelaria } = useSuspenseQuery(hotelariaBedsQuery);
+  const { data: hotelaria, isFetching, refetch } = useSuspenseQuery(hotelariaBedsQuery);
   const profile = useStore((s) => s.profile);
   const accessAreas = useStore((s) => s.accessAreas);
   const encounters = useStore((s) => s.encounters);
@@ -50,7 +50,13 @@ function NirPage() {
   const [transferReason, setTransferReason] = useState("");
   const [cancelEnc, setCancelEnc] = useState<Encounter | null>(null);
   const [cancelReason, setCancelReason] = useState("");
-  if (!canAct(profile, "nir", accessAreas)) return <NoPermission action="acessar o NIR" />;
+  const [forwardOpen, setForwardOpen] = useState(false);
+  const [forwardEncId, setForwardEncId] = useState("");
+  const [forwardForm, setForwardForm] = useState({ ward: "", character: "Urgência" as "Urgência" | "Eletiva", cid: "", justification: "", isolation: false, oxygen: false });
+  const canRegulateBed = canAct(profile, "nir", accessAreas);
+  const canForward = canAct(profile, "recepcao", accessAreas) || canAct(profile, "prescrever", accessAreas);
+  if (!canRegulateBed && !canForward) return <NoPermission action="acessar o NIR" />;
+  const forwardable = encounters.filter((e) => e.status_fluxo !== "ALTA_HOSPITALAR" && !e.fia && e.admission?.status !== "pendente").slice().reverse();
   const occupied = (id: string) => patients.find((p) => p.bed === id);
   const external = hotelaria.status !== "not_configured";
   const connected = hotelaria.status === "connected" && !!hotelaria.snapshot && isHotelariaFresh(hotelaria.snapshot.generatedAt);
@@ -130,9 +136,16 @@ function NirPage() {
 
   return <div className="space-y-6">
     <header className="flex flex-wrap items-end justify-between gap-3">
-      <div><h1 className="text-xl font-semibold">NIR – Núcleo Interno de Regulação</h1><p className="text-sm text-muted-foreground">Solicitações de internação dos médicos e liberação de leitos.</p></div>
-      <div className="flex flex-wrap gap-4 text-sm"><span><b>{pending.length}</b> aguardando</span>{occ && <><span><b>{occ.ocupado}</b> ocupados</span><span><b>{occ.disponivel}</b> livres</span><span>Ocupação <b>{hotelariaOccupancyRate(occ)}%</b></span></>}{!external && <><span><b>{free.length}</b> leitos locais livres</span><span>Ocupação <b>{Math.round(((total - free.length) / total) * 100)}%</b></span></>}</div>
+      <div><h1 className="text-xl font-semibold">NIR – Núcleo Interno de Regulação</h1><p className="text-sm text-muted-foreground">{canRegulateBed ? "Solicitações de internação, mapa em tempo real e liberação de leitos." : "Encaminhamento de internação pela recepção e mapa de leitos em tempo real. A escolha do leito é feita pelo regulador do NIR."}</p></div>
+      <div className="flex flex-wrap items-center gap-4 text-sm">
+        <span><b>{pending.length}</b> aguardando</span>
+        {occ && <><span><b>{occ.ocupado}</b> ocupados</span><span><b>{occ.disponivel}</b> livres</span><span>Ocupação <b>{hotelariaOccupancyRate(occ)}%</b></span></>}
+        {!external && <><span><b>{free.length}</b> leitos locais livres</span><span>Ocupação <b>{Math.round(((total - free.length) / total) * 100)}%</b></span></>}
+        {canForward && <Button size="sm" onClick={() => { setForwardEncId(""); setForwardForm({ ward: "", character: "Urgência", cid: "", justification: "", isolation: false, oxygen: false }); setForwardOpen(true); }}>Encaminhar internação</Button>}
+      </div>
     </header>
+
+    <HotelariaBedMap data={hotelaria} onRefresh={() => void refetch()} refreshing={isFetching} />
 
     <section className="space-y-3">
       <h2 className="font-semibold">Fila de solicitações</h2>
@@ -154,7 +167,7 @@ function NirPage() {
             </div>
           </div>
           <p className="text-sm"><b>CID-10:</b> {a.cid || "—"} · <b>Justificativa:</b> {a.justification}</p>
-          <div className="flex flex-wrap items-center gap-2">
+          {canRegulateBed ? <div className="flex flex-wrap items-center gap-2">
             {external ? <>
               <select disabled={!connected} aria-label="Leito" className="h-9 rounded-md border bg-background px-2 text-sm" value={beds[e.id] ?? ""} onChange={(ev) => setBeds((x) => ({ ...x, [e.id]: ev.target.value }))}>
                 <option value="">Selecionar leito disponível (Hotelaria)</option>
@@ -171,7 +184,7 @@ function NirPage() {
             </>}
             <input aria-label="Motivo da devolução" placeholder="Motivo da devolução ao médico" className="h-9 min-w-52 flex-1 rounded-md border bg-background px-2 text-sm" value={notes[e.id] ?? ""} onChange={(ev) => setNotes((x) => ({ ...x, [e.id]: ev.target.value }))} />
             <Button variant="outline" onClick={() => run(() => rejectAdmission(e.id, notes[e.id] ?? ""), "Solicitação devolvida ao médico")}>Devolver</Button>
-          </div>
+          </div> : <p className="text-xs font-medium text-muted-foreground">Aguardando escolha e autorização de leito pelo regulador do NIR.</p>}
         </article>;
       })}
     </section>
@@ -189,15 +202,14 @@ function NirPage() {
             <div className="text-xs text-muted-foreground">Leito <b>{currentBed}</b> · {e.fia!.ward} · {e.fia!.number} · {e.number}</div>
             {ageAlert && <div className="text-xs font-medium text-destructive">{ageAlert}</div>}
           </div>
-          <div className="flex flex-wrap gap-2">
+          {canRegulateBed && <div className="flex flex-wrap gap-2">
             <Button size="sm" variant="outline" disabled={busy === e.id} onClick={() => { setTransferEnc(e); setTransferBedId(""); setTransferReason(""); }}>Trocar leito</Button>
             <Button size="sm" variant="destructive" disabled={busy === e.id} onClick={() => { setCancelEnc(e); setCancelReason(""); }}>Cancelar internação</Button>
-          </div>
+          </div>}
         </article>;
       })}
     </section>
 
-    <HotelariaBedMap data={hotelaria} />
     {!external && <section className="space-y-3">
       <h2 className="font-semibold">Mapa de leitos</h2>
       {WARDS.filter((w) => ADM_WARDS.includes(w.id)).map((w) => <div key={w.id}>
@@ -210,6 +222,41 @@ function NirPage() {
     </section>}
 
     {!!recent.length && <section className="space-y-2"><h2 className="font-semibold">Últimas decisões</h2><ul className="space-y-1 text-sm">{recent.map((e) => <li key={e.id}>{patients.find((x) => x.id === e.patientId)?.name} · {e.admission!.status === "autorizada" ? `autorizada – leito ${e.admission!.bed}` : `devolvida – ${e.admission!.note}`} · {e.admission!.decidedBy}</li>)}</ul></section>}
+
+    <Dialog open={forwardOpen} onOpenChange={setForwardOpen}>
+      <DialogContent>
+        <DialogHeader><DialogTitle>Encaminhar paciente para internação (NIR)</DialogTitle></DialogHeader>
+        <div className="grid gap-3 text-sm">
+          <p className="text-xs text-muted-foreground">O encaminhamento entra na fila do NIR. A escolha do leito é feita exclusivamente pelo regulador do NIR.</p>
+          <label className="grid gap-1">Atendimento / Paciente
+            <select aria-label="Atendimento do paciente" className="h-9 rounded-md border bg-background px-2" value={forwardEncId} onChange={(ev) => setForwardEncId(ev.target.value)}>
+              <option value="">Selecionar atendimento aberto…</option>
+              {forwardable.map((enc) => { const pt = patients.find((x) => x.id === enc.patientId); return <option key={enc.id} value={enc.id}>{pt?.name ?? "Paciente"} · {enc.number} ({enc.type})</option>; })}
+            </select>
+          </label>
+          <label className="grid gap-1">Caráter
+            <select aria-label="Caráter" className="h-9 rounded-md border bg-background px-2" value={forwardForm.character} onChange={(ev) => setForwardForm((x) => ({ ...x, character: ev.target.value as "Urgência" | "Eletiva" }))}>
+              <option>Urgência</option><option>Eletiva</option>
+            </select>
+          </label>
+          <label className="grid gap-1">Setor sugerido (opcional)
+            <select aria-label="Setor sugerido" className="h-9 rounded-md border bg-background px-2" value={forwardForm.ward} onChange={(ev) => setForwardForm((x) => ({ ...x, ward: ev.target.value }))}>
+              <option value="">Definir pelo NIR</option>
+              {WARDS.filter((w) => ["AC", "UTIN", "ENFP", "UTIP", "UCI"].includes(w.id)).map((w) => <option key={w.id} value={w.id}>{w.name}</option>)}
+            </select>
+          </label>
+          <label className="grid gap-1">CID-10 (opcional)
+            <input value={forwardForm.cid} onChange={(ev) => setForwardForm((x) => ({ ...x, cid: ev.target.value }))} className="h-9 rounded-md border bg-background px-2" placeholder="Ex.: J18.9" />
+          </label>
+          <label className="grid gap-1">Justificativa / Motivo do encaminhamento
+            <textarea value={forwardForm.justification} onChange={(ev) => setForwardForm((x) => ({ ...x, justification: ev.target.value }))} className="min-h-20 rounded-md border bg-background p-2" placeholder="Descreva o motivo do encaminhamento para internação" />
+          </label>
+          <label className="flex items-center gap-2"><input type="checkbox" checked={forwardForm.isolation} onChange={(ev) => setForwardForm((x) => ({ ...x, isolation: ev.target.checked }))} />Precisa de isolamento</label>
+          <label className="flex items-center gap-2"><input type="checkbox" checked={forwardForm.oxygen} onChange={(ev) => setForwardForm((x) => ({ ...x, oxygen: ev.target.checked }))} />Precisa de oxigênio</label>
+          <Button disabled={!forwardEncId} onClick={() => run(() => { requestAdmission(forwardEncId, { ...forwardForm, source: "recepcao" }); setForwardOpen(false); }, "Encaminhamento enviado ao NIR (aguardando leito)")}>Confirmar encaminhamento ao NIR</Button>
+        </div>
+      </DialogContent>
+    </Dialog>
 
     <Dialog open={!!transferEnc} onOpenChange={(o) => !o && setTransferEnc(null)}>
       <DialogContent>

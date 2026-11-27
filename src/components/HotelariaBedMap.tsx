@@ -13,7 +13,7 @@ const STATUS_CLASS: Record<HotelariaStatus, string> = {
   disponivel: "bg-bed-free text-foreground",
   bloqueado: "bg-destructive text-destructive-foreground",
 };
-export function HotelariaBedMap({ data }: { data: HotelariaResult }) {
+export function HotelariaBedMap({ data, onRefresh, refreshing }: { data: HotelariaResult; onRefresh?: () => void; refreshing?: boolean }) {
   const [now, setNow] = useState(0);
   const [selected, setSelected] = useState<string | null>(null);
   const patients = useStore((s) => s.patients);
@@ -25,10 +25,16 @@ export function HotelariaBedMap({ data }: { data: HotelariaResult }) {
   const bed = all.find((b) => b.id === selected);
   return <section className="space-y-4" aria-label="Mapa da Hotelaria">
     <header className="flex flex-wrap justify-between gap-2">
-      <h2 className="font-semibold">Mapa de leitos · Hotelaria HMISC</h2>
-      <span role="status" className={cn("text-sm", fresh ? "text-muted-foreground" : "text-destructive")}>
-        {fresh ? `Atualizado às ${new Date(data.checkedAt).toLocaleTimeString("pt-BR")}` : data.message}
-      </span>
+      <div className="flex flex-wrap items-center gap-2">
+        <h2 className="font-semibold">Mapa de leitos em tempo real · Hospital Care Connect</h2>
+        {fresh && <span className="inline-flex items-center gap-1.5 rounded-full bg-bed-free/30 px-2.5 py-0.5 text-xs font-medium text-foreground"><span className="h-2 w-2 animate-pulse rounded-full bg-primary" />Tempo real (5s)</span>}
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <span role="status" className={cn("text-sm", fresh ? "text-muted-foreground" : "text-destructive")}>
+          {fresh ? `Atualizado às ${new Date(data.checkedAt).toLocaleTimeString("pt-BR")}` : data.message}
+        </span>
+        {onRefresh && <Button type="button" size="sm" variant="outline" disabled={refreshing} onClick={onRefresh}>{refreshing ? "Atualizando…" : "Atualizar agora"}</Button>}
+      </div>
     </header>
     {!fresh && <p className="border-l-4 border-destructive bg-muted p-3 text-sm">Disponibilidade não confirmada. Liberação de leitos da Hotelaria indisponível.</p>}
     {snapshot && <>

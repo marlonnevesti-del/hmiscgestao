@@ -15,8 +15,8 @@ import { PatientRegistrationFields } from "./PatientRegistrationFields";
 import { patientsByCpf, registrationFor, registrationPatch } from "@/lib/patient-registration-mapping";
 import { PEDIATRIC_EXCEPTION_REASONS, ageYears, pediatricAgeIssue, newbornBirthIssue, registrationIssues, registrationSchema, unknownPatientName, type PatientRegistration, type RegistrationMode } from "@/lib/patient-registration";
 import { ATTENDANCE_TYPES, type Encounter } from "@/lib/care-flow";
-import { can, canAct, type Patient } from "@/lib/hospital-data";
-import { cancelUnattendedEncounter, deleteEncounter, openEncounter, professionalName, rectifyOpenEncounter, registerPatientOnly, savePatientRegistration, switchAmbulatorySector, useStore } from "@/lib/hospital-store";
+import { can, canAct, WARDS, type Patient } from "@/lib/hospital-data";
+import { cancelUnattendedEncounter, deleteEncounter, openEncounter, professionalName, rectifyOpenEncounter, registerPatientOnly, requestAdmission, savePatientRegistration, switchAmbulatorySector, useStore } from "@/lib/hospital-store";
 import { SPECIAL_CONDITIONS } from "@/lib/special-conditions";
 import { AMBULATORY_MOTIVES, GROUP_LABELS, canEditOrCancelEncounter, isObstetricSpecialty, type AmbulatoryMotive, type CareUnit } from "@/lib/ambulatorio";
 import { AMBULATORY_PRESETS, buildInfoSusProcedures, type AmbulatoryPreset } from "@/lib/sadt-reception";
@@ -41,6 +41,8 @@ export function CareReception({ unit }: { unit?: CareUnit } = {}) {
   const [infoSusCodes, setInfoSusCodes] = useState<string[]>([]);
   const [rectifyEnc, setRectifyEnc] = useState<Encounter | null>(null);
   const [rectifyForm, setRectifyForm] = useState({ specialty: "", complaint: "" });
+  const [admEnc, setAdmEnc] = useState<Encounter | null>(null);
+  const [admForm, setAdmForm] = useState({ ward: "", character: "Urgência" as "Urgência" | "Eletiva", cid: "", justification: "", isolation: false, oxygen: false });
   // Assim que o atendimento é confirmado, a BAA abre direto para impressão e assinatura.
   useEffect(() => {
     if (!created) return;
@@ -254,9 +256,36 @@ export function CareReception({ unit }: { unit?: CareUnit } = {}) {
       const patient = patients.find((item) => item.id === encounter.patientId);
       const unattended = canEditOrCancelEncounter(encounter);
       const canRec = canAct(profile, "recepcao", accessAreas);
-      return <div key={encounter.id} className="border-b py-2"><div className="flex flex-wrap items-center gap-2"><Button variant="link" asChild><Link to="/pacientes/$id" params={{ id: encounter.patientId }}>{patient?.name}</Link></Button><SpecialConditionBadges patient={patient} /><span className="text-xs text-muted-foreground">{encounter.number}</span>{patient && <InpatientDocsButtons p={patient} e={encounter} />}{encounter.type === "Ambulatório" && unattended && canRec && <Button size="sm" variant="outline" onClick={() => { const toNursing = encounter.status_fluxo !== "AGUARDANDO_TRIAGEM"; try { switchAmbulatorySector(encounter.id, toNursing); toast.success(toNursing ? "Alterado para Triagem / Enfermagem" : "Alterado para Consultório Ambulatório"); } catch (error) { toast.error(error instanceof Error ? error.message : "Não foi possível alterar o setor"); } }}><ArrowLeftRight className="h-3.5 w-3.5" />{encounter.status_fluxo === "AGUARDANDO_TRIAGEM" ? "Mudar para Consultório" : "Mudar para Triagem"}</Button>}{unattended && canRec && <Button size="sm" variant="outline" onClick={() => { setRectifyEnc(encounter); setRectifyForm({ specialty: encounter.specialty, complaint: encounter.complaint }); }}>Retificar abertura</Button>}{unattended && canRec && <Button size="icon" variant="ghost" aria-label={`Excluir atendimento ${encounter.number}`} title="Excluir atendimento não iniciado" className="ml-auto h-7 w-7 text-destructive" onClick={() => { if (!window.confirm(`Excluir o atendimento ${encounter.number} de ${patient?.name ?? "paciente"}? Só é possível enquanto não houver atendimento iniciado.`)) return; try { cancelUnattendedEncounter(encounter.id); toast.success("Atendimento excluído"); } catch (error) { toast.error(error instanceof Error ? error.message : "Não foi possível excluir"); } }}><X className="h-4 w-4" /></Button>}{!unattended && profile === "Administrador" && <Button size="sm" variant="ghost" className="text-destructive" onClick={() => { if (!window.confirm(`Apagar o atendimento ${encounter.number} de ${patient?.name ?? "paciente"}? Esta ação não pode ser desfeita.`)) return; try { deleteEncounter(encounter.id); toast.success("Atendimento apagado"); } catch (error) { toast.error(error instanceof Error ? error.message : "Não foi possível apagar"); } }}>Apagar</Button>}</div><EncounterTimeline patientId={encounter.patientId} /></div>;
+      const canForwardAdm = canRec && encounter.status_fluxo !== "ALTA_HOSPITALAR" && !encounter.fia;
+      return <div key={encounter.id} className="border-b py-2"><div className="flex flex-wrap items-center gap-2"><Button variant="link" asChild><Link to="/pacientes/$id" params={{ id: encounter.patientId }}>{patient?.name}</Link></Button><SpecialConditionBadges patient={patient} /><span className="text-xs text-muted-foreground">{encounter.number}</span>{patient && <InpatientDocsButtons p={patient} e={encounter} />}{canForwardAdm && (encounter.admission?.status === "pendente" ? <span className="rounded border border-primary/40 bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">Aguardando leito no NIR</span> : <Button size="sm" variant="outline" onClick={() => { setAdmEnc(encounter); setAdmForm({ ward: "", character: "Urgência", cid: encounter.medical?.cid ?? "", justification: encounter.complaint || "", isolation: false, oxygen: false }); }}>Encaminhar p/ internação</Button>)}{encounter.type === "Ambulatório" && unattended && canRec && <Button size="sm" variant="outline" onClick={() => { const toNursing = encounter.status_fluxo !== "AGUARDANDO_TRIAGEM"; try { switchAmbulatorySector(encounter.id, toNursing); toast.success(toNursing ? "Alterado para Triagem / Enfermagem" : "Alterado para Consultório Ambulatório"); } catch (error) { toast.error(error instanceof Error ? error.message : "Não foi possível alterar o setor"); } }}><ArrowLeftRight className="h-3.5 w-3.5" />{encounter.status_fluxo === "AGUARDANDO_TRIAGEM" ? "Mudar para Consultório" : "Mudar para Triagem"}</Button>}{unattended && canRec && <Button size="sm" variant="outline" onClick={() => { setRectifyEnc(encounter); setRectifyForm({ specialty: encounter.specialty, complaint: encounter.complaint }); }}>Retificar abertura</Button>}{unattended && canRec && <Button size="icon" variant="ghost" aria-label={`Excluir atendimento ${encounter.number}`} title="Excluir atendimento não iniciado" className="ml-auto h-7 w-7 text-destructive" onClick={() => { if (!window.confirm(`Excluir o atendimento ${encounter.number} de ${patient?.name ?? "paciente"}? Só é possível enquanto não houver atendimento iniciado.`)) return; try { cancelUnattendedEncounter(encounter.id); toast.success("Atendimento excluído"); } catch (error) { toast.error(error instanceof Error ? error.message : "Não foi possível excluir"); } }}><X className="h-4 w-4" /></Button>}{!unattended && profile === "Administrador" && <Button size="sm" variant="ghost" className="text-destructive" onClick={() => { if (!window.confirm(`Apagar o atendimento ${encounter.number} de ${patient?.name ?? "paciente"}? Esta ação não pode ser desfeita.`)) return; try { deleteEncounter(encounter.id); toast.success("Atendimento apagado"); } catch (error) { toast.error(error instanceof Error ? error.message : "Não foi possível apagar"); } }}>Apagar</Button>}</div><EncounterTimeline patientId={encounter.patientId} /></div>;
     })}
     {!shown.length && <p className="py-6 text-sm text-muted-foreground">Nenhum atendimento aberto.</p>}
+
+    <Dialog open={!!admEnc} onOpenChange={(open) => !open && setAdmEnc(null)}>
+      <DialogContent>
+        <DialogHeader><DialogTitle>Encaminhar para internação · {admEnc?.number}</DialogTitle></DialogHeader>
+        <form className="grid gap-3 text-sm" onSubmit={(ev) => {
+          ev.preventDefault();
+          if (!admEnc) return;
+          try {
+            requestAdmission(admEnc.id, { ...admForm, source: "recepcao" });
+            toast.success("Encaminhamento enviado ao NIR (aguardando escolha de leito)");
+            setAdmEnc(null);
+          } catch (error) {
+            toast.error(error instanceof Error ? error.message : "Não foi possível encaminhar");
+          }
+        }}>
+          <p className="text-xs text-muted-foreground">A escolha do leito será feita pelo regulador no NIR.</p>
+          <label className="grid gap-1">Caráter<select aria-label="Caráter" value={admForm.character} onChange={(e) => setAdmForm((c) => ({ ...c, character: e.target.value as "Urgência" | "Eletiva" }))} className="h-9 rounded-md border bg-background px-2"><option>Urgência</option><option>Eletiva</option></select></label>
+          <label className="grid gap-1">Setor sugerido (opcional)<select aria-label="Setor sugerido" value={admForm.ward} onChange={(e) => setAdmForm((c) => ({ ...c, ward: e.target.value }))} className="h-9 rounded-md border bg-background px-2"><option value="">Definir pelo NIR</option>{WARDS.filter((w) => ["AC", "UTIN", "ENFP", "UTIP", "UCI"].includes(w.id)).map((w) => <option key={w.id} value={w.id}>{w.name}</option>)}</select></label>
+          <label className="grid gap-1">CID-10 (opcional)<Input value={admForm.cid} onChange={(e) => setAdmForm((c) => ({ ...c, cid: e.target.value }))} placeholder="Ex.: J18.9" /></label>
+          <label className="grid gap-1">Justificativa / Motivo<textarea value={admForm.justification} onChange={(e) => setAdmForm((c) => ({ ...c, justification: e.target.value }))} className="min-h-20 rounded-md border bg-background p-2" required /></label>
+          <label className="flex items-center gap-2"><input type="checkbox" checked={admForm.isolation} onChange={(e) => setAdmForm((c) => ({ ...c, isolation: e.target.checked }))} />Precisa de isolamento</label>
+          <label className="flex items-center gap-2"><input type="checkbox" checked={admForm.oxygen} onChange={(e) => setAdmForm((c) => ({ ...c, oxygen: e.target.checked }))} />Precisa de oxigênio</label>
+          <Button type="submit">Confirmar encaminhamento ao NIR</Button>
+        </form>
+      </DialogContent>
+    </Dialog>
 
     <Dialog open={!!rectifyEnc} onOpenChange={(open) => !open && setRectifyEnc(null)}>
       <DialogContent>
