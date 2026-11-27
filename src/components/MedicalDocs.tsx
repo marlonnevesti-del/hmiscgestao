@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { toast } from "sonner";
-import { FileText, Pill, Microscope } from "lucide-react";
+import { FileText, Pill, Microscope, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,8 +11,9 @@ import { DoctorNameInput } from "./DoctorNameInput";
 import type { Encounter } from "@/lib/care-flow";
 import type { Patient } from "@/lib/hospital-data";
 import { canAct } from "@/lib/hospital-data";
-import { KIND_LABELS, controlledRxIssues, type ControlledRx, type ExamKind, type ExamRequest } from "@/lib/exam-requests";
+import { KIND_LABELS, PROVIDER_LABELS, controlledRxIssues, defaultProviderForKind, type ControlledRx, type ExamKind, type ExamProvider, type ExamRequest, type ExamRequestItem } from "@/lib/exam-requests";
 import { currentDoctorFields, professionalName, rememberDoctor, requestExam, useStore } from "@/lib/hospital-store";
+import { formatCode, loadSigtap, searchSigtap, type SigtapProc } from "@/lib/sigtap";
 
 const today = () => new Date().toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
 const birth = (p: Patient) => (p.registration?.birthDate ? new Date(`${p.registration.birthDate}T12:00:00`).toLocaleDateString("pt-BR") : p.age);
@@ -32,10 +33,14 @@ function PatientBox({ p }: { p: Patient }) {
 }
 
 function ExamSheet({ p, r }: { p: Patient; r: ExamRequest }) {
+  const prov = r.provider ? PROVIDER_LABELS[r.provider] : "";
   return <section className="doc-page">
     <Letterhead title={r.kind === "patologico" ? "SOLICITAÇÃO DE EXAME ANATOMOPATOLÓGICO" : `SOLICITAÇÃO DE EXAMES · ${KIND_LABELS[r.kind].toUpperCase()}`} />
+    {r.orderNumber && <p style={{ fontSize: "11pt", margin: "4px 0 8px" }}><b>Pedido nº:</b> {r.orderNumber}{prov ? ` · Prestador: ${prov}` : ""}</p>}
     <PatientBox p={p} />
-    <h3>Exame(s) solicitado(s)</h3><p style={{ whiteSpace: "pre-wrap" }}>{r.exams}</p>
+    <h3>Exame(s) solicitado(s)</h3>
+    {r.items?.length ? <ul style={{ margin: "4px 0 8px", paddingLeft: "18px" }}>{r.items.map((it, i) => <li key={i}>{it.sigtapCode ? <><b>{formatCode(it.sigtapCode)}</b> — </> : null}{it.name}</li>)}</ul> : null}
+    <p style={{ whiteSpace: "pre-wrap" }}>{r.exams}</p>
     {r.kind === "patologico" && <><p><b>Material:</b> {r.material} · <b>Local da coleta:</b> {r.site}</p>{r.clinical && <p><b>Dados clínicos / hipótese:</b> {r.clinical}</p>}</>}
     <p><b>Justificativa clínica:</b> {r.justification}</p>{r.cid && <p><b>CID:</b> {r.cid}</p>}
     <p style={{ textAlign: "right", marginTop: "2em" }}>Criciúma - SC, {today()}.</p>
@@ -62,12 +67,53 @@ function RxSheet({ p, rx, name, council }: { p: Patient; rx: ControlledRx; name:
 
 function ExamDialog({ p, e, kind, onClose }: { p: Patient; e: Encounter; kind: ExamKind; onClose: () => void }) {
   const me = useStore((s) => professionalName(s.profile));
-  const [f, setF] = useState(() => { const d = currentDoctorFields(); return { exams: "", justification: e.medical?.diagnosis ?? "", cid: e.medical?.cid ?? "", material: "", site: "", clinical: "", by: d.name || me, council: d.crm }; });
+  const [f, setF] = useState(() => { const d = currentDoctorFields(); return { exams: "", justification: e.medical?.diagnosis ?? "", cid: e.medical?.cid ?? "", material: "", site: "", clinical: "", by: d.name || me, council: d.crm, provider: defaultProviderForKind(kind) as ExamProvider }; });
+  const [sigtapList, setSigtapList] = useState<SigtapProc[]>([]);
+  const [sigtapQ, setSigtapQ] = useState("");
+  const [items, setItems] = useState<ExamRequestItem[]>([]);
   const [printed, setPrinted] = useState<ExamRequest | null>(null);
+  useEffect(() => { loadSigtap().then((all) => setSigtapList(all.filter((x) => x.c.startsWith("02")))); }, []);
+  const matches = useMemo(() => (sigtapQ.trim().length >= 2 ? searchSigtap(sigtapList, sigtapQ, { limit: 8 }) : []), [sigtapList, sigtapQ]);
+  const addSigtap = (proc: SigtapProc) => {
+    if (items.some((x) => x.sigtapCode === proc.c)) return;
+    const next = [...items, { sigtapCode: proc.c, name: proc.n, valueSus: proc.v }];
+    setItems(next);
+    const line = `${formatCode(proc.c)} - ${proc.n}`;
+    setF((cur) => ({ ...cur, exams: cur.exams.trim() ? `${cur.exams.trim()}\n${line}` : line }));
+    setSigtapQ("");
+  };
+  const removeSigtap = (code?: string) => {
+    const next = items.filter((x) => x.sigtapCode !== code);
+    setItems(next);
+  };
   const s = (k: keyof typeof f) => (x: { target: { value: string } }) => setF({ ...f, [k]: x.target.value });
-  const save = () => { try { rememberDoctor(f.by, f.council); const r = requestExam(e.id, { kind, exams: f.exams, justification: f.justification, cid: f.cid, council: f.council, ...(kind === "patologico" ? { material: f.material, site: f.site, clinical: f.clinical } : {}) }); toast.success(kind === "laboratorial" ? "Pedido registrado" : "Pedido enviado ao SADT"); setPrinted(r); print(() => { setPrinted(null); onClose(); }); } catch (x) { toast.error(x instanceof Error ? x.message : "Erro"); } };
+  const save = () => { try { rememberDoctor(f.by, f.council); const r = requestExam(e.id, { kind, exams: f.exams, ...(items.length ? { items } : {}), provider: f.provider, justification: f.justification, cid: f.cid, council: f.council, ...(kind === "patologico" ? { material: f.material, site: f.site, clinical: f.clinical } : {}) }); toast.success(`Pedido ${r.orderNumber ?? ""} registrado`); setPrinted(r); print(() => { setPrinted(null); onClose(); }); } catch (x) { toast.error(x instanceof Error ? x.message : "Erro"); } };
   return <>
     <div className="grid gap-3">
+      <div className="grid gap-1.5 rounded-md border bg-muted/30 p-2.5">
+        <label className="text-xs font-medium">Buscar exame na Tabela SIGTAP (Grupo 02 · código ou nome)</label>
+        <Input placeholder="Ex.: hemograma, ureia, creatinina, 0202020380..." value={sigtapQ} onChange={(x) => setSigtapQ(x.target.value)} />
+        {matches.length > 0 && <div className="max-h-40 divide-y overflow-y-auto rounded-md border bg-background text-xs">
+          {matches.map((m) => <button key={m.c} type="button" onClick={() => addSigtap(m)} className="flex w-full items-center justify-between gap-2 px-2.5 py-1.5 text-left hover:bg-muted">
+            <span><b className="font-mono">{formatCode(m.c)}</b> · {m.n}</span>
+            <Plus className="h-3.5 w-3.5 shrink-0 text-primary" />
+          </button>)}
+        </div>}
+        {items.length > 0 && <div className="flex flex-wrap gap-1.5 pt-1">
+          {items.map((it) => <span key={it.sigtapCode} className="inline-flex items-center gap-1 rounded bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
+            <span className="font-mono">{it.sigtapCode ? formatCode(it.sigtapCode) : ""}</span> {it.name}
+            <button type="button" onClick={() => removeSigtap(it.sigtapCode)} aria-label="Remover"><X className="h-3 w-3" /></button>
+          </span>)}
+        </div>}
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <label className="grid gap-1 text-xs">Prestador do exame
+          <select className="h-9 rounded-md border bg-background px-2 text-sm" value={f.provider} onChange={(x) => setF((cur) => ({ ...cur, provider: x.target.value as ExamProvider }))}>
+            <option value="terceirizada">Terceirizada (Laboratório / Externo)</option>
+            <option value="proprio">Próprio (HMISC)</option>
+          </select>
+        </label>
+      </div>
       <label className="grid gap-1 text-xs">Exame(s) {kind === "laboratorial" ? "(um por linha)" : ""}<Textarea rows={3} value={f.exams} onChange={s("exams")} placeholder={kind === "imagem" ? "Ex.: USG transvaginal; Mamografia bilateral" : kind === "patologico" ? "Ex.: Biópsia de colo uterino" : "Hemograma\nPCR"} /></label>
       {kind === "patologico" && <div className="grid gap-3 sm:grid-cols-2"><label className="grid gap-1 text-xs">Material enviado<Input value={f.material} onChange={s("material")} /></label><label className="grid gap-1 text-xs">Local da coleta<Input value={f.site} onChange={s("site")} /></label><label className="grid gap-1 text-xs sm:col-span-2">Dados clínicos / hipótese<Textarea rows={2} value={f.clinical} onChange={s("clinical")} /></label></div>}
       <label className="grid gap-1 text-xs">Justificativa clínica<Textarea rows={2} value={f.justification} onChange={s("justification")} /></label>

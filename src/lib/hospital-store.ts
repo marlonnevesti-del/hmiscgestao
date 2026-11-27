@@ -53,7 +53,7 @@ export const professionalName = (_p: Profile) => state.employeeName || "Colabora
 export const nowHM = () => new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
 
 import { takeSequence } from './sequence-pool';
-import { examRequestIssues as examRequestIssuesFn, moveExam as moveExamFn } from './exam-requests';
+import { defaultProviderForKind, examRequestIssues as examRequestIssuesFn, moveExam as moveExamFn, nextExamOrderNumber, type ExamAuditStatus } from './exam-requests';
 import type { PsDestination, PsEncounter, PsInfo, ScaleRecord, SepsisKind } from './ps-infantil';
 import { PS_BEDS } from './ps-infantil';
 function requireAction(action: Parameters<typeof can>[1]) {
@@ -1332,11 +1332,22 @@ export function addScirasEvolution(patientId: string, text: string) {
 }
 
 // Pedidos de exames: qualquer médico solicita; o SADT (prescrever ou área ambulatorio:sadt) agenda, confirma e lauda.
-export function requestExam(encounterId: string, r: Omit<import('./exam-requests').ExamRequest, 'id' | 'requestedAt' | 'requestedBy' | 'status'>) {
+export function requestExam(encounterId: string, r: Omit<import('./exam-requests').ExamRequest, 'id' | 'orderNumber' | 'requestedAt' | 'requestedBy' | 'status'>) {
   requireAction('prescrever');
   const { e } = getEncounter(encounterId);
   const issues = examRequestIssuesFn(r); if (issues.length) throw new Error(issues.join(' '));
-  const req = { ...r, id: crypto.randomUUID(), requestedAt: new Date().toISOString(), requestedBy: professionalName(state.profile), status: 'Solicitado' as const };
+  const existingOrders = state.encounters.flatMap((x) => (x.examRequests ?? []).map((q) => q.orderNumber));
+  const orderNumber = nextExamOrderNumber(existingOrders);
+  const req = {
+    ...r,
+    id: crypto.randomUUID(),
+    orderNumber,
+    provider: r.provider ?? defaultProviderForKind(r.kind),
+    requestedAt: new Date().toISOString(),
+    requestedBy: professionalName(state.profile),
+    status: 'Solicitado' as const,
+    auditStatus: 'Pendente' as const,
+  };
   commitEncounter({ ...e, examRequests: [...(e.examRequests ?? []), req] });
   return req;
 }
@@ -1345,6 +1356,14 @@ export function updateExamStatus(encounterId: string, reqId: string, to: import(
   const { e } = getEncounter(encounterId);
   const list = e.examRequests ?? []; const r = list.find((x) => x.id === reqId); if (!r) throw new Error('Pedido não encontrado.');
   const next = moveExamFn(r, to, professionalName(state.profile), new Date().toISOString(), extra);
+  commitEncounter({ ...e, examRequests: list.map((x) => (x.id === reqId ? next : x)) });
+}
+export function auditExamRequest(encounterId: string, reqId: string, auditStatus: ExamAuditStatus, auditNote = '') {
+  if (!canAct(state.profile, 'faturar', state.accessAreas)) throw new Error('Apenas a equipe de Faturamento pode auditar exames.');
+  if (auditStatus === 'Glosado' && !auditNote.trim()) throw new Error('Informe o motivo da glosa.');
+  const { e } = getEncounter(encounterId);
+  const list = e.examRequests ?? []; const r = list.find((x) => x.id === reqId); if (!r) throw new Error('Pedido não encontrado.');
+  const next = { ...r, auditStatus, auditNote: auditNote.trim(), auditedAt: new Date().toISOString(), auditedBy: professionalName(state.profile) };
   commitEncounter({ ...e, examRequests: list.map((x) => (x.id === reqId ? next : x)) });
 }
 

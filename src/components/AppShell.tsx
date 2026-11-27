@@ -44,7 +44,7 @@ const GROUPS = [
     { to: "/solicitacao-almoxarifado", label: "Solicitação ao Almoxarifado", icon: ClipboardList },
     { to: "/solicitacao-farmacia", label: "Solicitação à Farmácia", icon: ClipboardList },
   ] },
-  { label: "Administrativo", items: [{ to: "/faturamento", label: "Faturamento TISS", icon: Receipt }, { to: "/faturamento-sus", label: "Faturamento SUS", icon: Receipt }, { to: "/prestacao-contas", label: "Prestação de contas OS", icon: Receipt }, { to: "/centro-de-custos", label: "Centro de custos", icon: Receipt }] },
+  { label: "Administrativo", items: [{ to: "/faturamento", label: "Faturamento TISS", icon: Receipt }, { to: "/faturamento-sus", label: "Faturamento SUS", icon: Receipt }, { to: "/auditoria-exames", label: "Conferência de Exames", icon: Receipt }, { to: "/prestacao-contas", label: "Prestação de contas OS", icon: Receipt }, { to: "/centro-de-custos", label: "Centro de custos", icon: Receipt }] },
 ] as const;
 
 export function AppShell({ children }: { children: ReactNode }) {
