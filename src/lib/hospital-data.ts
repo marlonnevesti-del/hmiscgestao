@@ -153,6 +153,16 @@ export type PrescCat = "Dieta" | "Hidratação" | "Medicamento" | "Cuidados" | "
 export interface Prescription { id: string; cat: PrescCat; item: string; posologia: string; route?: string | undefined; frequency?: string | undefined; immediate?: boolean | undefined; times?: string[]; dispensedTimes?: string[] | undefined; specialCaseReason?: string | undefined; pharmacy?: "Pendente" | "Validada" | "Parcial" | "Dispensada" | "Em falta" | undefined; shortage?: { reason: string; suggestion?: string | undefined; at: string; by: string } | undefined; lot?: string | undefined; atb?: AtbInfo | undefined; batchId?: string | undefined }
 export interface Newborn { apgar1: number; apgar5: number; pesoNascer: number; comprimento: number; pc: number; tipagem: string; coracaozinho: string; olhinho: string; vacinas: string[]; motherId?: string | undefined }
 
+export interface SimplePrescription {
+  id: string;
+  items: { drug: string; qty: string; dose: string }[];
+  notes?: string;
+  doctor: string;
+  council: string;
+  at: string;
+  encounterNumber?: string;
+}
+
 export interface Patient {
   registration?: PatientRegistration;
   id: string; prontuario: string; name: string; cpf: string; motherName?: string; guardian?: string;
@@ -165,6 +175,7 @@ export interface Patient {
   intensive?: import("./uti-uci").IntensiveRecord;
   physio?: import("./physio").PhysioRequest[];
   services?: import("./service-orders").ServiceRequest[];
+  simplePrescriptions?: SimplePrescription[];
 }
 
 export const PATIENTS: Patient[] = [];

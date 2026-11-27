@@ -19,6 +19,7 @@ import { PatientIcon } from "@/components/PatientIcon";
 import { SpecialConditionsBanner } from "@/components/SpecialConditions";
 import { ADMIN_ROUTES, buildScheduleTimes, formatPosologia, POSOLOGY_OPTIONS, type AdminRoute, type PosologyOption } from "@/lib/pharmacy-schedule";
 import { PatientSheetPrint, printSheet } from "@/components/PatientSheetPrint";
+import { SimplePrescriptionTab } from "@/components/SimplePrescriptionTab";
 import { InpatientDocsButtons } from "@/components/InpatientDocsPrint";
 import { MedicalDocsButtons } from "@/components/MedicalDocs";
 import { PatientRegistrationFields } from "@/components/PatientRegistrationFields";
@@ -98,6 +99,7 @@ function PEP() {
           <TabsTrigger value="resumo">Resumo & Evolução</TabsTrigger>
           <TabsTrigger value="cadastro">Cadastro do paciente</TabsTrigger>
           <TabsTrigger value="prescricao">Prescrição</TabsTrigger>
+          <TabsTrigger value="receita">Receita simples</TabsTrigger>
           <TabsTrigger value="sinais">Sinais vitais & BH</TabsTrigger>
           {obst && <TabsTrigger value="partograma">Obstetrícia & Partograma</TabsTrigger>}
           {(obst || p.type === 'puerpera' || p.type === 'neonato') && <TabsTrigger value="maternidade">Parto seguro e escalas</TabsTrigger>}
@@ -105,6 +107,7 @@ function PEP() {
         </TabsList>
         <TabsContent value="resumo"><MedicalAssessment p={p} /><Evolucao p={p} /></TabsContent>
         <TabsContent value="prescricao"><PrescriptionRelease patientId={p.id} /><Prescricao p={p} /></TabsContent>
+        <TabsContent value="receita"><SimplePrescriptionTab p={p} encounterNumber={sheetEncounter?.number} /></TabsContent>
         <TabsContent value="sinais"><Sinais p={p} /></TabsContent>
         <TabsContent value="cadastro"><PatientRegistrationFields key={p.id} readOnly value={registrationFor(p)} onChange={() => {}} recordNumber={p.prontuario} /></TabsContent>
         {(obst || p.type === 'puerpera' || p.type === 'neonato') && <TabsContent value="maternidade"><MaternityCare patientId={p.id} /></TabsContent>}

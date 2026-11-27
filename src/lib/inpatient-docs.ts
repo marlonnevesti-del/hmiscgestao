@@ -8,7 +8,7 @@ export interface ClinicalDoc { id: string; at: string; by: string; values: Recor
 
 export const CLINICAL_DOCS: Record<ClinicalDocKind, { title: string; button: string; fields: DocField[] }> = {
   uti: { title: 'FICHA DE SOLICITAÇÃO / BUSCA DE LEITO DE UTI', button: 'Busca leito UTI', fields: [
-    { key: 'tipo', label: 'Tipo de UTI', options: ['UTI Neonatal', 'UTI Pediátrica', 'UTI Adulto', 'UTI Obstétrica'], required: true },
+    { key: 'tipo', label: 'Tipo de UTI', options: ['UTI Neonatal', 'UTI Pediátrica', 'UTI Adulto', 'UTI Obstétrica', 'PS Infantil'], required: true },
     { key: 'prioridade', label: 'Prioridade', options: ['1 – Emergência', '2 – Urgência', '3 – Eletiva'], required: true },
     { key: 'cid', label: 'CID principal', required: true },
     { key: 'diagnostico', label: 'Diagnóstico / hipótese', required: true },

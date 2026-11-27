@@ -42,13 +42,19 @@ function Sign({ e }: { e: Encounter }) {
 
 export function DischargePrint({ e, p }: { e: Encounter; p: Patient }) {
   if (!e.discharge || typeof document === 'undefined') return null;
+  const title = e.discharge.kind === 'evasao'
+    ? 'REGISTRO DE ALTA POR EVASÃO'
+    : e.discharge.kind === 'transferencia'
+      ? 'NOTA DE ALTA · TRANSFERÊNCIA PARA OUTRO SERVIÇO'
+      : 'NOTA DE ALTA';
   return createPortal(<div className="print-doc-root">
     <section className="doc-page">
-      <Letterhead title="NOTA DE ALTA" />
+      <Letterhead title={title} />
       <table className="doc-id"><tbody>
         <tr><td><b>Nome do Paciente:</b> {p.name}</td><td><b>Sexo:</b> {p.registration?.sex || '—'}</td></tr>
         <tr><td><b>Data de Nascimento:</b> {p.registration?.birthDate ? new Date(`${p.registration.birthDate}T12:00:00`).toLocaleDateString('pt-BR') : '—'}</td><td><b>Idade:</b> {p.age}</td></tr>
         <tr><td><b>Prontuário:</b> {p.prontuario} · <b>Atendimento:</b> {e.number}</td><td><b>Data da Alta:</b> {fmt(e.discharge.at)}</td></tr>
+        {e.discharge.destination && <tr><td colSpan={2}><b>Serviço / Hospital de Destino:</b> {e.discharge.destination}</td></tr>}
         <tr><td colSpan={2}><b>CID Diagnóstico:</b> {e.medical ? `${e.medical.cid} - ${e.medical.diagnosis}` : '—'}</td></tr>
       </tbody></table>
       <div style={{ border: '1.5px solid currentColor', padding: '0.4em 0.6em', marginTop: '0.6em' }}>
@@ -61,12 +67,12 @@ export function DischargePrint({ e, p }: { e: Encounter; p: Patient }) {
       </div>
       <Sign e={e} />
     </section>
-    <section className="doc-page">
+    {e.discharge.kind !== 'evasao' && <section className="doc-page">
       <Header title="RECEITUÁRIO" e={e} p={p} />
       <h3>Uso domiciliar</h3>
       <p className="pre">{e.discharge.recipe || 'Sem receita domiciliar.'}</p>
       <Sign e={e} />
       <LetterFooter />
-    </section>
+    </section>}
   </div>, document.body);
 }

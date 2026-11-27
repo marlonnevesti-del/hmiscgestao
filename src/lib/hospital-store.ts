@@ -10,7 +10,7 @@ import { AMEND_FIELDS, amendIssue, readField, type AmendField } from './document
 import { DEFAULT_KITS, checkKitUse, findKit, setBio, startCycle, type BioResult, type CmeCycle, type CmeKit, type KitStatus } from './cme';
 import { useSyncExternalStore } from "react";
 import { linkCode } from "./barcode";
-import { PATIENTS, QUEUE, SURGERIES, type Admin, type Newborn, type Patient, type Profile, type QueueItem, type Surgery } from "./hospital-data";
+import { PATIENTS, QUEUE, SURGERIES, type Admin, type Newborn, type Patient, type Profile, type QueueItem, type SimplePrescription, type Surgery } from "./hospital-data";
 
 import { transition, validateTriage, type Encounter, type ExtraProcedure, type Triage, type FlowStatus } from "./care-flow";
 import { BASE_BEDS, can, canAct, canAccessPage, canApproveInventory } from "./hospital-data";
@@ -797,7 +797,7 @@ export function rejectAdmission(id: string, note: string) {
   const at = new Date().toISOString(); const by = professionalName(state.profile);
   commitEncounter({ ...e, admission: { ...e.admission, status: 'recusada', note, decidedAt: at, decidedBy: by }, history: [...e.history, { status: e.status_fluxo, at, by, note: `NIR devolveu: ${note}` }] });
 }
-export function finishEncounter(id: string, outcome: 'internacao' | 'co' | 'exames' | 'alta', details: { bed?: string; summary: string; recipe: string; exam: string }) {
+export function finishEncounter(id: string, outcome: 'internacao' | 'co' | 'exames' | 'alta' | 'evasao' | 'transferencia', details: { bed?: string; summary: string; recipe: string; exam: string; destination?: string }) {
   requireAction('prescrever'); const { e, p } = getEncounter(id);
   if (!['EM_ATENDIMENTO_MEDICO', 'EM_OBSERVACAO_REAVALIACAO', 'ENCAMINHADO_INTERNACAO', 'ENCAMINHADO_CO'].includes(e.status_fluxo)) throw new Error('Desfecho disponível após avaliação médica.');
   requireMedicalSigtap(e.sigtapCode ?? '');
@@ -815,8 +815,45 @@ export function finishEncounter(id: string, outcome: 'internacao' | 'co' | 'exam
     const f = openFia(transition(e, 'ENCAMINHADO_INTERNACAO', by, `Leito ${bed.id}`, at), bed.ward, bed.id, at, by);
     commitEncounter(f.e, { fiaSequence: f.seq, patients: state.patients.map((x) => x.id === p.id ? { ...x, ward: bed.ward, bed: bed.id } : x) }); return;
   }
+  const releasePatient: Partial<State> = { patients: state.patients.map((x) => x.id === p.id ? { ...x, bed: '', dischargeForecast: '' } : x), surgeries: state.surgeries.map((s) => s.patientId === p.id ? { ...s, status: 'Finalizado' as const } : s) };
+  if (outcome === 'evasao') {
+    const note = details.summary.trim();
+    if (!note) throw new Error('Descreva o ocorrido na evasão.');
+    const prevPs = (e as Encounter & { ps?: Record<string, unknown> }).ps;
+    const nextPs = e.type === 'Pronto socorro' ? { ...(prevPs ?? {}), evasion: { at, by, note } } : prevPs;
+    commitEncounter({ ...transition(e, 'ALTA_HOSPITALAR', by, `Alta por evasão: ${note}`, at), ...(nextPs ? { ps: nextPs } : {}), discharge: { kind: 'evasao', summary: note, recipe: '', by, at } } as Encounter, releasePatient);
+    return;
+  }
+  if (outcome === 'transferencia') {
+    const dest = (details.destination ?? '').trim();
+    const note = details.summary.trim();
+    if (!dest) throw new Error('Informe o serviço / hospital de destino.');
+    if (!note) throw new Error('Informe o resumo clínico da transferência.');
+    commitEncounter({ ...transition(e, 'ALTA_HOSPITALAR', by, `Alta para transferência (${dest}): ${note}`, at), discharge: { kind: 'transferencia', destination: dest, summary: note, recipe: details.recipe, by, at } }, releasePatient);
+    return;
+  }
   if (!details.summary.trim()) throw new Error('Informe o resumo de alta.');
-  commitEncounter({ ...transition(e, 'ALTA_HOSPITALAR', by, e.fia ? `${e.fia.number} encerrada (alta)` : 'BAA encerrada', at), discharge: { summary: details.summary, recipe: details.recipe, by, at } }, { patients: state.patients.map((x) => x.id === p.id ? { ...x, bed: '', dischargeForecast: '' } : x), surgeries: state.surgeries.map((s) => s.patientId === p.id ? { ...s, status: 'Finalizado' } : s) });
+  commitEncounter({ ...transition(e, 'ALTA_HOSPITALAR', by, e.fia ? `${e.fia.number} encerrada (alta)` : 'BAA encerrada', at), discharge: { kind: 'alta', summary: details.summary, recipe: details.recipe, by, at } }, releasePatient);
+}
+
+/** Salva uma receita simples no prontuário do paciente (disponível antes ou depois da alta). */
+export function saveSimplePrescription(patientId: string, rx: Omit<SimplePrescription, 'id' | 'at'>): SimplePrescription {
+  requireAction('prescrever');
+  const items = rx.items.filter((i) => i.drug.trim()).map((i) => ({ drug: i.drug.trim(), qty: i.qty.trim(), dose: i.dose.trim() }));
+  if (!items.length) throw new Error('Informe ao menos um medicamento na receita simples.');
+  const record: SimplePrescription = {
+    id: crypto.randomUUID(),
+    items,
+    ...(rx.notes?.trim() ? { notes: rx.notes.trim() } : {}),
+    doctor: rx.doctor.trim() || professionalName(state.profile),
+    council: rx.council.trim(),
+    at: new Date().toISOString(),
+    ...(rx.encounterNumber ? { encounterNumber: rx.encounterNumber } : {}),
+  };
+  setState((s) => ({
+    patients: s.patients.map((x) => x.id === patientId ? { ...x, simplePrescriptions: [record, ...(x.simplePrescriptions ?? [])] } : x),
+  }));
+  return record;
 }
 
 /** Administrador desfaz uma alta lançada por engano, reabrindo o mesmo BAA/FIA. */
