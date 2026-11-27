@@ -1,4 +1,5 @@
 import { EMPTY_MILK_BANK, LHP_VALIDITY_DAYS, batchApproved, kcalFromCrematocrit, type MilkBank } from './milk-bank';
+import { milkCareText, validateMilkCare, type MilkCareRecord } from './milk-care';
 import { canDispenseNow, isImmediatePrescription, remainingDoses } from './pharmacy-schedule';
 import { physioRequestIssues } from './physio';
 import { DEFAULT_TRIAGE_SIGTAP, detectTriageProcedures, medicalSigtapCode, requireMedicalSigtap } from './medical-sigtap';
@@ -1559,6 +1560,24 @@ export function cancelPhysio(patientId: string, reqId: string, note: string) {
 }
 
 // ---- Banco de Leite Humano ----
+export function saveMilkCare(encounterId: string, input: Omit<MilkCareRecord, 'id' | 'at' | 'by'>, finish = false) {
+  requireAction('evoluir');
+  if (!canAccessPage(state.profile, '/banco-de-leite', state.accessAreas)) throw new Error('Sem acesso ao Banco de Leite.');
+  const { e, p } = getEncounter(encounterId);
+  validateMilkCare(input, e, finish);
+  const at = new Date().toISOString(); const by = professionalName(state.profile);
+  const r: MilkCareRecord = { ...input, id: crypto.randomUUID(), at, by, procedures: input.procedures.map((x) => ({ ...x, at, by, sector: 'Banco de Leite' })) };
+  const ambulatory = e.type === 'Ambulatório' && e.specialty === 'Banco de Leite' && !e.fia;
+  const next: Encounter = {
+    ...e, milkCare: [...(e.milkCare ?? []), r],
+    ...(ambulatory ? { sigtapCode: input.consultationCode || e.sigtapCode || '', medical: { ...e.medical, anamnesis: input.assessment, exam: input.assessment, diagnosis: e.medical?.diagnosis ?? '', cid: input.cid } } : {}),
+    extraProcedures: [...(e.extraProcedures ?? []), ...r.procedures],
+    ...(finish ? { status_fluxo: 'ALTA_HOSPITALAR' as const, baaClosedAt: at, discharge: { summary: milkCareText(r), recipe: input.plan, at, by } } : {}),
+    history: [...e.history, { status: finish ? 'ALTA_HOSPITALAR' : e.status_fluxo, at, by, note: `Banco de Leite: ${finish ? 'atendimento finalizado' : 'evolução registrada'} · ${input.council}` }],
+  };
+  commitEncounter(next, { patients: state.patients.map((x) => x.id === p.id ? { ...x, evolutions: [...x.evolutions, { time: new Date(at).toLocaleString('pt-BR'), cat: 'Procedimento' as const, author: `${by} · ${input.council}`, text: milkCareText(r) }] } : x) });
+  return r;
+}
 const milk = (fn: (m: MilkBank) => Partial<MilkBank>) => setState((s) => ({ milkBank: { ...EMPTY_MILK_BANK, ...s.milkBank, ...fn({ ...EMPTY_MILK_BANK, ...s.milkBank }) } }));
 export function addMilkDonor(d: { name: string; phone?: string; origin: 'Interna' | 'Domiciliar'; serologyOk: boolean }) {
   if (!d.name.trim()) throw new Error('Informe o nome da doadora.');

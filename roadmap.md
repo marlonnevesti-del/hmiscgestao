@@ -1,4 +1,6 @@
 # Roadmap
+- [x] Integrar BAA e evolução ambulatorial/internada do Banco de Leite, impressão e requisições de insumos; 66 testes passaram, leitura autenticada conferida e gravação/relatório A4 de duas páginas exercitados em cópia isolada sem alterar registros hospitalares. Homologação estadual e uso simultâneo em estações reais não verificados.
+- [ ] Configurar pacote dos sete exames de doadoras — aguarda lista oficial do setor (documento não identifica exames).
 - [x] Recolher cabeçalho do PEP ao rolar para baixo e expandir ao subir ou pela seta, mantendo identificação e alergias; verificado no prontuário existente em 1280 e 498 px sem alterar dados clínicos.
 - [x] Acrescentar reprodutor de vídeo único por setor à Ajuda, preservando integralmente passos, regras, dúvidas e impressão; seletor no topo em telas menores.
 - [x] Criar e vincular vídeos narrados dos 12 setores, com duração e capítulos; 7 testes específicos aprovados, reprodução/áudio verificados nos 12 setores e na tela de 646 px.

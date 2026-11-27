@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { Baby, CalendarClock, Droplets, FlaskConical, Milk } from 'lucide-react';
 import { NoPermission } from '@/components/AppShell';
+import { MilkCarePanel, MilkSuppliesPanel } from '@/components/MilkCarePanel';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -13,9 +14,9 @@ import { DORNIC_MAX, EMPTY_MILK_BANK, autonomyDays, caloricClass, dailyNeed, day
 export const Route = createFileRoute('/_authenticated/banco-de-leite')({
   head: () => ({ meta: [
     { title: 'Banco de Leite Humano – HMI Gestão' },
-    { name: 'description', content: 'Estoque de leite cru e pasteurizado, pasteurização, controle de qualidade e bebês receptores de LHP.' },
+    { name: 'description', content: 'Banco de Leite HMISC: atendimentos BAA, evolução clínica, insumos, estoque e conferência de procedimentos SUS.' },
     { property: 'og:title', content: 'Banco de Leite Humano – HMI Gestão' },
-    { property: 'og:description', content: 'Gestão do BLH: estoques, lotes de pasteurização, receptores e indicadores mensais.' },
+    { property: 'og:description', content: 'Assistência ambulatorial e aos internados, insumos, estoques, receptores e indicadores do Banco de Leite HMISC.' },
     { property: 'og:type', content: 'website' }, { name: 'twitter:card', content: 'summary' },
   ] }),
   component: Page,
@@ -45,10 +46,12 @@ function Page() {
     <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">{cards.map((c) => <div key={c.title} className={`rounded-lg border bg-card p-4 ${c.warn ? 'border-destructive' : ''}`}>
       <div className="flex items-center gap-2 text-xs text-muted-foreground"><c.icon className="h-4 w-4" />{c.title}</div>
       <div className="mt-1 text-2xl font-semibold">{c.value}</div><div className={`text-xs ${c.warn ? 'text-destructive' : 'text-muted-foreground'}`}>{c.sub}</div></div>)}</div>
-    <Tabs defaultValue="cru"><TabsList className="flex-wrap">
+    <Tabs defaultValue="care"><TabsList className="h-auto flex-wrap justify-start">
+      <TabsTrigger value="care">Atendimentos / Evoluções</TabsTrigger><TabsTrigger value="supplies">Solicitar insumos</TabsTrigger>
       <TabsTrigger value="cru">Leite cru</TabsTrigger><TabsTrigger value="past">Pasteurização</TabsTrigger><TabsTrigger value="lhp">Estoque LHP</TabsTrigger>
       <TabsTrigger value="rec">Receptores</TabsTrigger><TabsTrigger value="doad">Doadoras</TabsTrigger><TabsTrigger value="rel">Relatório mensal</TabsTrigger></TabsList>
       <TabsContent value="cru"><RawTab /></TabsContent><TabsContent value="past"><PastTab /></TabsContent><TabsContent value="lhp"><LhpTab /></TabsContent>
+      <TabsContent value="care"><MilkCarePanel /></TabsContent><TabsContent value="supplies"><MilkSuppliesPanel /></TabsContent>
       <TabsContent value="rec"><RecTab patients={patients} /></TabsContent><TabsContent value="doad"><DonorTab /></TabsContent><TabsContent value="rel"><ReportTab /></TabsContent>
     </Tabs>
   </div>;
