@@ -43,8 +43,50 @@ export const SCALES: ScaleDef[] = [
     { label: 'Cirurgia/sedação', options: [{ label: 'Nenhuma/>48 h', score: 1 }, { label: 'Em 48 h', score: 2 }, { label: 'Em 24 h', score: 3 }] },
     { label: 'Medicamentos', options: [{ label: 'Outros/nenhum', score: 1 }, { label: 'Um dos listados', score: 2 }, { label: '2+ sedativos/hipnóticos/diuréticos', score: 3 }] },
   ], interpret: (t) => t >= 12 ? 'Alto risco de queda' : 'Baixo risco de queda' },
-  { id: 'bradenq', name: 'Braden Q (lesão por pressão)', items: ['Mobilidade', 'Atividade', 'Percepção sensorial', 'Umidade', 'Fricção e cisalhamento', 'Nutrição', 'Perfusão tecidual e oxigenação'].map((label) => ({ label, options: opts(['1 – Muito comprometido', '2 – Comprometido', '3 – Pouco comprometido', '4 – Sem comprometimento'], 1) })),
-    interpret: (t) => t <= 16 ? 'Em risco de lesão por pressão' : 'Sem risco' },
+  { id: 'bradenq', name: 'Escala de Braden Q (Lesão por Pressão)', items: [
+    { label: '1. Mobilidade – Capacidade de mudar e controlar a posição corporal', options: [
+      { label: 'Nenhuma limitação', score: 4 },
+      { label: 'Levemente limitado', score: 3 },
+      { label: 'Muito limitado', score: 2 },
+      { label: 'Completamente imóvel', score: 1 },
+    ] },
+    { label: '2. Atividade – Grau de atividade física', options: [
+      { label: 'Crianças jovens demais para deambular ou deambulam frequentemente', score: 4 },
+      { label: 'Deambulação ocasional', score: 3 },
+      { label: 'Restrito à cadeira', score: 2 },
+      { label: 'Acamado', score: 1 },
+    ] },
+    { label: '3. Percepção sensorial – Capacidade de responder ao desconforto relacionado à pressão', options: [
+      { label: 'Nenhuma alteração', score: 4 },
+      { label: 'Levemente limitado', score: 3 },
+      { label: 'Muito limitada', score: 2 },
+      { label: 'Completamente limitada', score: 1 },
+    ] },
+    { label: '4. Umidade – Grau de exposição da pele à umidade', options: [
+      { label: 'Raramente úmida', score: 4 },
+      { label: 'Ocasionalmente úmida', score: 3 },
+      { label: 'Frequentemente úmida', score: 2 },
+      { label: 'Constantemente úmida', score: 1 },
+    ] },
+    { label: '5. Fricção e cisalhamento – A pele e a superfície óssea adjacente deslizam uma sobre a outra', options: [
+      { label: 'Nenhum problema aparente', score: 4 },
+      { label: 'Problema potencial', score: 3 },
+      { label: 'Problema', score: 2 },
+      { label: 'Problema importante', score: 1 },
+    ] },
+    { label: '6. Nutrição – Padrão habitual de consumo alimentar', options: [
+      { label: 'Excelente', score: 4 },
+      { label: 'Adequada', score: 3 },
+      { label: 'Inadequada', score: 2 },
+      { label: 'Muito pobre', score: 1 },
+    ] },
+    { label: '7. Perfusão tecidual e oxigenação', options: [
+      { label: 'Excelente', score: 4 },
+      { label: 'Adequada', score: 3 },
+      { label: 'Comprometida', score: 2 },
+      { label: 'Extremamente comprometida', score: 1 },
+    ] },
+  ], interpret: (t) => t <= 16 ? 'Alto risco de lesão por pressão' : t <= 22 ? 'Risco moderado' : 'Baixo risco' },
   { id: 'dini', name: 'Escala de Dini (Complexidade Assistencial)', items: [
     { label: '1. Participação do acompanhante (Família)', options: [
       { label: 'Reconhece as necessidades físicas e emocionais do paciente e consegue atendê-las', score: 1 },

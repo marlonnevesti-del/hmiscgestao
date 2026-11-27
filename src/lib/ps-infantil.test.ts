@@ -8,6 +8,14 @@ describe('PS Infantil', () => {
   it('sinaliza desfecho estourado', () => expect(outcomeStatus(enc({ status_fluxo: 'AGUARDANDO_MEDICO' }), '2026-10-05T15:00:00')).toBe('estourado'));
   it('PEWS soma itens', () => { const pews = SCALES.find((s) => s.id === 'pews')!; expect(scaleTotal(pews, [1, 1, 1])).toBe(3); expect(pews.interpret(3)).toMatch(/Atenção/); });
   it('Humpty Dumpty ≥12 é alto risco', () => expect(SCALES.find((s) => s.id === 'humpty')!.interpret(12)).toMatch(/Alto/));
+  it('Braden Q soma 28 para baixo risco e ≤16 para alto risco', () => {
+    const b = SCALES.find((s) => s.id === 'bradenq')!;
+    expect(b.items).toHaveLength(7);
+    expect(scaleTotal(b, [0, 0, 0, 0, 0, 0, 0])).toBe(28);
+    expect(b.interpret(28)).toBe('Baixo risco');
+    expect(b.interpret(20)).toBe('Risco moderado');
+    expect(b.interpret(16)).toMatch(/Alto risco/);
+  });
   it('laranja chamado em 20 min fica fora do prazo de 15 min e só conta o PS', () => {
     const triage = { risk: 'laranja' } as NonNullable<PsEncounter['triage']>;
     const e = enc({ triage, history: [{ status: 'AGUARDANDO_MEDICO', at: '2026-10-05T08:10:00', by: '', note: '' }, { status: 'EM_ATENDIMENTO_MEDICO', at: '2026-10-05T08:30:00', by: '', note: '' }, { status: 'ALTA_HOSPITALAR', at: '2026-10-05T10:00:00', by: '', note: '' }] });
