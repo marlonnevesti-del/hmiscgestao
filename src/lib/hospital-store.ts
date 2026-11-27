@@ -341,6 +341,7 @@ export function dispenseKit(
     stock = changeQty(stock, m.id, -count, (lots[r.id] ?? (targetTime ? r.lot : '') ?? '').trim());
   });
   const at = new Date().toISOString(); const by = professionalName(state.profile);
+  const prescriber = e.signedBy?.trim() || e.fia?.doctor?.trim() || undefined;
   const consumo = meds
     .filter((r) => (dosePlan.get(r.id) ?? []).length > 0)
     .map((r) => {
@@ -348,7 +349,7 @@ export function dispenseKit(
       const dosesNow = dosePlan.get(r.id) ?? [];
       const baseReason = targetTime ? `Dispensação horário ${targetTime}` : 'Dispensação';
       const reason = specialReason ? `${baseReason} (caso especial: ${specialReason})` : baseReason;
-      return { id: crypto.randomUUID(), at, by, kind: 'consumo' as const, from: m.location ?? 'Farmácia', to: p.name, item: m.name, code: m.code, qty: dosesNow.length, lot: (lots[r.id] ?? (targetTime ? r.lot : '') ?? '').trim(), reason, patient: p.name, patientId: p.id, baa: e.number, ...(e.fia ? { fia: e.fia.number } : {}) };
+      return { id: crypto.randomUUID(), at, by, ...(prescriber ? { prescriber } : {}), kind: 'consumo' as const, from: m.location ?? 'Farmácia', to: p.name, item: m.name, code: m.code, qty: dosesNow.length, lot: (lots[r.id] ?? (targetTime ? r.lot : '') ?? '').trim(), reason, patient: p.name, patientId: p.id, baa: e.number, ...(e.fia ? { fia: e.fia.number } : {}) };
     });
   const requisition = `${String(state.movements.length + state.encounters.indexOf(e) * 7 + 230000).slice(-6)}/${new Date().getFullYear()}`;
   const dispensed = e.status_fluxo === 'AGUARDANDO_FARMACIA'
@@ -405,9 +406,10 @@ export function dispenseScheduledDose(
   if (!medication || medication.quantity < 1) throw new Error(`Estoque insuficiente: ${medication?.name ?? medicationKey(rx.item)}.`);
   const stock = changeQty(state.stock, medication.id, -1, cleanLot);
   const at = new Date().toISOString(); const by = professionalName(state.profile);
+  const prescriber = e.signedBy?.trim() || e.fia?.doctor?.trim() || undefined;
   const specialReason = (opts?.specialCaseReason ?? '').trim();
   const reason = specialReason ? `Dispensação programada ${time} (caso especial: ${specialReason})` : `Dispensação programada ${time}`;
-  const movement = { id: crypto.randomUUID(), at, by, kind: 'consumo' as const, from: medication.location ?? 'Farmácia', to: p.name, item: medication.name, code: medication.code, qty: 1, lot: cleanLot, reason, patient: p.name, patientId: p.id, baa: e.number, ...(e.fia ? { fia: e.fia.number } : {}) };
+  const movement = { id: crypto.randomUUID(), at, by, ...(prescriber ? { prescriber } : {}), kind: 'consumo' as const, from: medication.location ?? 'Farmácia', to: p.name, item: medication.name, code: medication.code, qty: 1, lot: cleanLot, reason, patient: p.name, patientId: p.id, baa: e.number, ...(e.fia ? { fia: e.fia.number } : {}) };
   const nextDispensed = Array.from(new Set([...(rx.dispensedTimes ?? []), time]));
   const allDone = rx.times.every((t) => nextDispensed.includes(t));
   setState((s) => ({

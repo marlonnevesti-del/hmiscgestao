@@ -66,6 +66,7 @@ export const PHARMACY_TABS = [
   { id: "entrada", label: "Entrada NF" }, { id: "emprestimo", label: "Empréstimos" },
   { id: "transferencia", label: "Transferência" }, { id: "devolucao", label: "Devolução" },
   { id: "quebra", label: "Quebra / Extravio" }, { id: "dispensados", label: "Medicamentos prescritos" },
+  { id: "rastreabilidade", label: "Rastreabilidade" },
   { id: "kits", label: "Kits do centro cirúrgico" },
   { id: "etiquetas", label: "Etiquetas" },
   { id: "requisicao", label: "Saída via requisição" }, { id: "mapa", label: "Mapa de movimentação" },
