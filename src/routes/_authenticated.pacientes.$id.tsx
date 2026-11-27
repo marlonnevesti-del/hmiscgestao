@@ -1,6 +1,7 @@
 import { ActionGroup } from "@/components/ActionGroup";
 import { FileText, Stethoscope, FlaskConical } from "lucide-react";
 import { EncounterTimeline } from "@/components/EncounterTimeline";
+import { CollapsingPatientHeader } from "@/components/CollapsingPatientHeader";
 import { MaternityCare } from "@/components/MaternityCare";
 import { ProcedurePrintButton } from "@/components/ProcedurePrint";
 import { MedicalAssessment, PrescriptionRelease } from "@/components/CareMedical";
@@ -65,7 +66,13 @@ function PEP() {
   const showNB = p.type === "neonato" || !!p.babyIds?.length;
   return (
     <div className="space-y-4">
-      <div className="sticky top-14 z-20 -mx-5 -mt-5 border-b bg-card px-5 py-3 print:hidden">
+      <CollapsingPatientHeader patientId={id} compact={<>
+        <div className="break-words text-sm font-semibold leading-tight">{p.name}</div>
+        <div className="flex flex-wrap gap-x-2 text-xs text-muted-foreground">
+          {p.bed && <b className="text-foreground">{p.bed}</b>}<span>{p.age} · {p.weight} kg</span>
+        </div>
+        {realAllergies(p.allergies).length > 0 && <div className="mt-1 break-words text-xs font-bold text-destructive">ALERGIA: {realAllergies(p.allergies).join(", ")}</div>}
+      </>}>
         <div className="flex flex-wrap items-center gap-4">
           <div className={cn("flex h-12 w-12 items-center justify-center rounded-full text-primary-foreground", obst || p.type === "puerpera" ? "bg-maternal" : "bg-primary")}><PatientIcon type={p.type} className="h-6 w-6" /></div>
           <div className="min-w-0">
@@ -91,11 +98,11 @@ function PEP() {
         <div className="mt-1 text-xs"><span className="font-medium">Diagnóstico:</span> {p.diagnosis}</div>
         {receptionOnly && <div className="mt-1 inline-block rounded bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">Acesso Recepção · somente visualização do prontuário e impressão de documentos</div>}
         <EncounterTimeline patientId={p.id} />
-      </div>
+      </CollapsingPatientHeader>
       <PatientSheetPrint p={p} e={sheetEncounter} user={employeeName} />
       <SpecialConditionsBanner patient={p} />
       <Tabs key={`${id}-${aba ?? 'resumo'}`} defaultValue={aba ?? 'resumo'} className="print:hidden">
-        <TabsList className="flex-wrap">
+        <TabsList className="h-auto flex-wrap">
           <TabsTrigger value="resumo">Resumo & Evolução</TabsTrigger>
           <TabsTrigger value="cadastro">Cadastro do paciente</TabsTrigger>
           <TabsTrigger value="prescricao">Prescrição</TabsTrigger>

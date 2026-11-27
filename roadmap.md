@@ -1,4 +1,5 @@
 # Roadmap
+- [x] Recolher cabeçalho do PEP ao rolar para baixo e expandir ao subir ou pela seta, mantendo identificação e alergias; verificado no prontuário existente em 1280 e 498 px sem alterar dados clínicos.
 - [x] Acrescentar reprodutor de vídeo único por setor à Ajuda, preservando integralmente passos, regras, dúvidas e impressão; seletor no topo em telas menores.
 - [x] Criar e vincular vídeos narrados dos 12 setores, com duração e capítulos; 7 testes específicos aprovados, reprodução/áudio verificados nos 12 setores e na tela de 646 px.
 - [x] Adequar nome e empacotamento AIH ao exemplo Salux; TXT/ZIP fictícios 202612 gerados, órgão emissor configurável, 31 testes passaram e tela conferida com administrador. Mantida interface oficial 1800 posições.

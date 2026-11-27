@@ -30,6 +30,7 @@ use the editor.
 <!-- LOVABLE:END -->
 
 ## Project rules
+- PEP header collapse is presentation-only in CollapsingPatientHeader; ignore transition-induced scrolls to prevent flicker without modifying clinical data.
 - Sector help videos are optional HelpSector metadata rendered by HelpSectorVideo; keep text tutorials independent so missing recordings never hide instructions or affect printing.
 - AIH downloads use aih-export.ts for Salux-style filenames, single-byte TXT and identical ZIP contents; retain the official 1800-position interface until Salux's extra control algorithm is validated, never fabricate its signature.
 - Billing identifiers are shared through institution.ts; SUS exports and TISS guides must use the same CNES to prevent divergence.
