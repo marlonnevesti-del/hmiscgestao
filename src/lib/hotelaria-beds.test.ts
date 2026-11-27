@@ -25,6 +25,20 @@ d2("hotelaria camelCase payload", () => {
     const s = schema2.parse(norm2({ generatedAt: "2026-11-17T12:04:51.979Z", setores: [{ id: "m", nome: "Maternidade", sigla: "MAT", ordem: 1, leitos: [{ id: "b", codigo: "300.1", status: "disponivel", ordem: 1, atualizadoEm: "2026-11-16T18:27:50.632+00:00" }] }] }));
     e2(s.setores[0]!.leitos[0]!.atualizado_em).toBe("2026-11-16T18:27:50.632+00:00");
   });
+  i2("preserves trimmed observacao from Hotelaria and normalizes blank values to null", () => {
+    const s = schema2.parse(norm2({
+      generatedAt: "2026-11-17T12:04:51.979Z",
+      setores: [{
+        id: "m", nome: "Maternidade", ordem: 1,
+        leitos: [
+          { id: "b1", codigo: "301.1", status: "ocupado", ordem: 1, atualizadoEm: "2026-11-16T18:27:50.632+00:00", observacao: "  ALESSANDRA DOS PASSOS BECKER  " },
+          { id: "b2", codigo: "301.2", status: "ocupado", ordem: 2, atualizadoEm: "2026-11-16T18:27:50.632+00:00", observacao: "   " },
+        ],
+      }],
+    }));
+    e2(s.setores[0]!.leitos[0]!.observacao).toBe("ALESSANDRA DOS PASSOS BECKER");
+    e2(s.setores[0]!.leitos[1]!.observacao).toBeNull();
+  });
 });
 
 describe("Hotelaria occupation counts", () => {

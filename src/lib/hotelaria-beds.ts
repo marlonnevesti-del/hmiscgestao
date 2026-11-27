@@ -17,6 +17,7 @@ export const hotelariaSnapshotSchema = z.object({
       id: z.string().min(1).max(100), codigo: z.string().min(1).max(100), ordem: z.number().int(),
       status: hotelariaStatusSchema, atualizado_em: z.string().datetime({ offset: true }),
       higienizacao_iniciada_em: z.string().datetime({ offset: true }).nullable().optional(),
+      observacao: z.string().max(500).nullable().optional(),
     })).max(1000),
   })).max(100),
 }).superRefine((snapshot, ctx) => {
@@ -59,5 +60,17 @@ export function normalizeHotelaria(raw: unknown): unknown {
   if (!raw || typeof raw !== "object") return raw;
   const r = raw as { setores?: unknown };
   if (!Array.isArray(r.setores)) return raw;
-  return { ...r, setores: r.setores.map((s: Record<string, unknown>) => ({ ...s, leitos: Array.isArray(s["leitos"]) ? (s["leitos"] as Record<string, unknown>[]).map((l) => ({ ...l, atualizado_em: l["atualizado_em"] ?? l["atualizadoEm"] })) : s["leitos"] })) };
+  return {
+    ...r,
+    setores: r.setores.map((s: Record<string, unknown>) => ({
+      ...s,
+      leitos: Array.isArray(s["leitos"])
+        ? (s["leitos"] as Record<string, unknown>[]).map((l) => {
+            const obsRaw = l["observacao"] ?? l["paciente_nome"] ?? l["pacienteNome"];
+            const observacao = typeof obsRaw === "string" ? obsRaw.trim() || null : obsRaw ?? null;
+            return { ...l, atualizado_em: l["atualizado_em"] ?? l["atualizadoEm"], observacao };
+          })
+        : s["leitos"],
+    })),
+  };
 }

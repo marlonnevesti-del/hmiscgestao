@@ -41,11 +41,21 @@ export function HotelariaBedMap({ data, onRefresh, refreshing }: { data: Hotelar
       <div className="flex flex-wrap gap-3 text-xs">{Object.entries(HOTELARIA_LABELS).map(([status, label]) => <span key={status} className="flex items-center gap-2"><span className={cn("h-3 w-3 rounded-sm", STATUS_CLASS[status as HotelariaStatus])} />{label}</span>)}</div>
       {snapshot.setores.map((sector) => { const so = hotelariaOccupancy({ ...snapshot, setores: [sector] }); return <section key={sector.id} className="border-t pt-4">
         <div className="mb-3 flex justify-between gap-2"><h3 className="font-semibold">{sector.nome}</h3><span className="text-xs text-muted-foreground">{so.total} leitos · <b>{so.ocupado}</b> ocupados · {so.disponivel} livres{so.higienizacao ? ` · ${so.higienizacao} em higienização` : ""}{so.bloqueado ? ` · ${so.bloqueado} bloqueados` : ""}</span></div>
-        <div className="grid grid-cols-3 gap-2 sm:grid-cols-8 lg:grid-cols-12">{sector.leitos.map((b) => <Button key={b.id} variant="ghost" onClick={() => setSelected(b.id)} title={`${b.codigo} — ${fresh ? HOTELARIA_LABELS[b.status] : "Situação não confirmada"}`} className={cn("h-auto min-h-12 min-w-0 flex-col whitespace-normal break-words rounded-sm px-1 py-2 text-xs leading-tight", fresh ? STATUS_CLASS[b.status] : "bg-muted text-muted-foreground", /isolamento/i.test(b.codigo) && "ring-2 ring-bed-isolation")}>
-          {b.codigo}{/isolamento/i.test(b.codigo) && <span className="text-xs">ISO</span>}{who(b.codigo) ? <span className="block truncate text-[10px] font-normal">{who(b.codigo)!.name.split(" ").slice(0, 2).join(" ")}</span> : fresh && b.status === "ocupado" && <span className="block truncate text-[10px] font-normal">Hotelaria</span>}
-        </Button>)}</div>
+        <div className="grid grid-cols-3 gap-2 sm:grid-cols-8 lg:grid-cols-12">{sector.leitos.map((b) => {
+          const localPatient = who(b.codigo);
+          const hotelariaNote = b.observacao?.trim() || null;
+          const shortLabel = localPatient
+            ? localPatient.name.split(" ").slice(0, 2).join(" ")
+            : fresh && b.status === "ocupado"
+              ? (hotelariaNote ? hotelariaNote.split(/\s+/).slice(0, 2).join(" ") : "Hotelaria")
+              : null;
+          const tooltip = `${b.codigo} — ${fresh ? HOTELARIA_LABELS[b.status] : "Situação não confirmada"}${localPatient ? ` · ${localPatient.name}` : hotelariaNote ? ` · ${hotelariaNote}` : ""}`;
+          return <Button key={b.id} variant="ghost" onClick={() => setSelected(b.id)} title={tooltip} className={cn("h-auto min-h-12 min-w-0 flex-col whitespace-normal break-words rounded-sm px-1 py-2 text-xs leading-tight", fresh ? STATUS_CLASS[b.status] : "bg-muted text-muted-foreground", /isolamento/i.test(b.codigo) && "ring-2 ring-bed-isolation")}>
+            {b.codigo}{/isolamento/i.test(b.codigo) && <span className="text-xs">ISO</span>}{shortLabel && <span className="block w-full truncate text-[10px] font-normal">{shortLabel}</span>}
+          </Button>;
+        })}</div>
       </section>; })}
     </>}
-    <Dialog open={!!bed} onOpenChange={(open) => { if (!open) setSelected(null); }}><DialogContent><DialogHeader><DialogTitle>Leito {bed?.codigo}</DialogTitle></DialogHeader>{bed && <div className="space-y-2 text-sm"><p>{fresh ? HOTELARIA_LABELS[bed.status] : "Situação não confirmada"}</p>{who(bed.codigo) && <p><b>Paciente:</b> {who(bed.codigo)!.name} · Pront. {who(bed.codigo)!.prontuario}</p>}{fresh && bed.status === "ocupado" && !who(bed.codigo) && <p className="text-muted-foreground">Ocupado na Hotelaria — o paciente ainda não foi registrado no SIShmisc.</p>}<p className="text-muted-foreground">Última alteração: {new Date(bed.atualizado_em).toLocaleString("pt-BR")}</p></div>}</DialogContent></Dialog>
+    <Dialog open={!!bed} onOpenChange={(open) => { if (!open) setSelected(null); }}><DialogContent><DialogHeader><DialogTitle>Leito {bed?.codigo}</DialogTitle></DialogHeader>{bed && <div className="space-y-2 text-sm"><p>{fresh ? HOTELARIA_LABELS[bed.status] : "Situação não confirmada"}</p>{who(bed.codigo) && <p><b>Paciente:</b> {who(bed.codigo)!.name} · Pront. {who(bed.codigo)!.prontuario}</p>}{fresh && bed.status === "ocupado" && !who(bed.codigo) && (bed.observacao?.trim() ? <><p><b>Paciente (Hotelaria):</b> {bed.observacao.trim()}</p><p className="text-muted-foreground">Registrado no Hospital Care Connect — ainda não vinculado a uma internação no SIShmisc.</p></> : <p className="text-muted-foreground">Ocupado na Hotelaria — o paciente ainda não foi registrado no SIShmisc.</p>)}{bed.status !== "ocupado" && bed.observacao?.trim() && <p><b>Observação (Hotelaria):</b> {bed.observacao.trim()}</p>}<p className="text-muted-foreground">Última alteração: {new Date(bed.atualizado_em).toLocaleString("pt-BR")}</p></div>}</DialogContent></Dialog>
   </section>;
 }
