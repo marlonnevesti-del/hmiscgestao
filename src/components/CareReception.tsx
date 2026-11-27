@@ -16,7 +16,7 @@ import { patientsByCpf, registrationFor, registrationPatch } from "@/lib/patient
 import { PEDIATRIC_EXCEPTION_REASONS, ageYears, pediatricAgeIssue, newbornBirthIssue, registrationIssues, registrationSchema, unknownPatientName, type PatientRegistration, type RegistrationMode } from "@/lib/patient-registration";
 import { ATTENDANCE_TYPES, type Encounter } from "@/lib/care-flow";
 import { can, canAct, WARDS, type Patient } from "@/lib/hospital-data";
-import { cancelUnattendedEncounter, deleteEncounter, openEncounter, professionalName, rectifyOpenEncounter, registerPatientOnly, requestAdmission, savePatientRegistration, switchAmbulatorySector, useStore } from "@/lib/hospital-store";
+import { cancelUnattendedEncounter, deleteEncounter, openEncounter, professionalName, rectifyOpenEncounter, registerPatientOnly, reopenBaaForReturn, requestAdmission, savePatientRegistration, switchAmbulatorySector, useStore } from "@/lib/hospital-store";
 import { SPECIAL_CONDITIONS } from "@/lib/special-conditions";
 import { AMBULATORY_MOTIVES, GROUP_LABELS, canEditOrCancelEncounter, isObstetricSpecialty, type AmbulatoryMotive, type CareUnit } from "@/lib/ambulatorio";
 import { AMBULATORY_PRESETS, buildInfoSusProcedures, type AmbulatoryPreset } from "@/lib/sadt-reception";
@@ -41,6 +41,8 @@ export function CareReception({ unit }: { unit?: CareUnit } = {}) {
   const [infoSusCodes, setInfoSusCodes] = useState<string[]>([]);
   const [rectifyEnc, setRectifyEnc] = useState<Encounter | null>(null);
   const [rectifyForm, setRectifyForm] = useState({ specialty: "", complaint: "" });
+  const [reopenEnc, setReopenEnc] = useState<Encounter | null>(null);
+  const [reopenForm, setReopenForm] = useState<{ reason: string; target: "AGUARDANDO_TRIAGEM" | "EM_OBSERVACAO_REAVALIACAO" }>({ reason: "", target: "AGUARDANDO_TRIAGEM" });
   const [admEnc, setAdmEnc] = useState<Encounter | null>(null);
   const [admForm, setAdmForm] = useState({ ward: "", character: "Urgência" as "Urgência" | "Eletiva", cid: "", justification: "", isolation: false, oxygen: false });
   // Assim que o atendimento é confirmado, a BAA abre direto para impressão e assinatura.
@@ -175,6 +177,9 @@ export function CareReception({ unit }: { unit?: CareUnit } = {}) {
 
   const extraSpecs = ["Obstetrícia", "Pediatria"].filter((name) => !ambSpecialties.some((s) => s.active && s.name.toLowerCase() === name.toLowerCase()));
   const shown = unit ? encounters.filter((encounter) => encounter.type === unit) : encounters;
+  const lastDischargedBaa = existing
+    ? [...encounters].reverse().find((e) => e.patientId === existing && e.status_fluxo === "ALTA_HOSPITALAR" && !e.fia && (!unit || e.type === unit))
+    : undefined;
 
   return <div className="space-y-4">
     {!unit && <h1 className="text-xl font-semibold">Recepção · Boletim de Atendimento</h1>}
@@ -183,6 +188,12 @@ export function CareReception({ unit }: { unit?: CareUnit } = {}) {
         <Input aria-label="Buscar paciente cadastrado" placeholder="Buscar paciente por nome, CPF ou prontuário" value={search} onChange={(event) => setSearch(event.target.value)} />
         {search.length > 1 && patients.filter((patient) => [patient.name, patient.registration?.civilName ?? "", patient.registration?.socialName ?? "", patient.cpf, patient.prontuario, patient.registration?.cns ?? ""].some((value) => value.toLowerCase().includes(search.toLowerCase()))).slice(0, 6).map((patient) => <Button variant="outline" className="h-auto max-w-full whitespace-normal" key={patient.id} onClick={() => choose(patient)}>{patient.name} · {patient.prontuario}</Button>)}
         {existing && <div className="text-xs text-clinical">Paciente cadastrado selecionado <Button variant="link" onClick={clearIdentity}>Novo paciente</Button></div>}
+        {lastDischargedBaa && (
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-primary/40 bg-primary/5 p-2.5 text-xs">
+            <span>Paciente teve alta na <b>{lastDischargedBaa.number}</b> ({new Date(lastDischargedBaa.openedAt).toLocaleDateString("pt-BR")}). Precisou retornar?</span>
+            <Button type="button" size="sm" variant="outline" onClick={() => { setReopenEnc(lastDischargedBaa); setReopenForm({ reason: "", target: "AGUARDANDO_TRIAGEM" }); }}>Reabrir {lastDischargedBaa.number} por retorno</Button>
+          </div>
+        )}
       </div>
       <form className="grid gap-3 border-y py-4 md:grid-cols-3" onSubmit={(event) => { event.preventDefault(); submit(); }}>
         <div className="flex flex-wrap gap-2 md:col-span-3" role="group" aria-label="Tipo de cadastro">
@@ -255,7 +266,8 @@ export function CareReception({ unit }: { unit?: CareUnit } = {}) {
       const unattended = canEditOrCancelEncounter(encounter);
       const canRec = canAct(profile, "recepcao", accessAreas);
       const canForwardAdm = canRec && encounter.status_fluxo !== "ALTA_HOSPITALAR" && !encounter.fia;
-      return <div key={encounter.id} className="border-b py-2"><div className="flex flex-wrap items-center gap-2"><Button variant="link" asChild><Link to="/pacientes/$id" params={{ id: encounter.patientId }}>{patient?.name}</Link></Button><SpecialConditionBadges patient={patient} /><span className="text-xs text-muted-foreground">{encounter.number}</span>{patient && <InpatientDocsButtons p={patient} e={encounter} />}{canForwardAdm && (encounter.admission?.status === "pendente" ? <span className="rounded border border-primary/40 bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">Aguardando leito no NIR</span> : <Button size="sm" variant="outline" onClick={() => { setAdmEnc(encounter); setAdmForm({ ward: "", character: "Urgência", cid: encounter.medical?.cid ?? "", justification: encounter.complaint || "", isolation: false, oxygen: false }); }}>Encaminhar p/ internação</Button>)}{encounter.type === "Ambulatório" && unattended && canRec && <Button size="sm" variant="outline" onClick={() => { const toNursing = encounter.status_fluxo !== "AGUARDANDO_TRIAGEM"; try { switchAmbulatorySector(encounter.id, toNursing); toast.success(toNursing ? "Alterado para Triagem / Enfermagem" : "Alterado para Consultório Ambulatório"); } catch (error) { toast.error(error instanceof Error ? error.message : "Não foi possível alterar o setor"); } }}><ArrowLeftRight className="h-3.5 w-3.5" />{encounter.status_fluxo === "AGUARDANDO_TRIAGEM" ? "Mudar para Consultório" : "Mudar para Triagem"}</Button>}{unattended && canRec && <Button size="sm" variant="outline" onClick={() => { setRectifyEnc(encounter); setRectifyForm({ specialty: encounter.specialty, complaint: encounter.complaint }); }}>Retificar abertura</Button>}{unattended && canRec && <Button size="icon" variant="ghost" aria-label={`Excluir atendimento ${encounter.number}`} title="Excluir atendimento não iniciado" className="ml-auto h-7 w-7 text-destructive" onClick={() => { if (!window.confirm(`Excluir o atendimento ${encounter.number} de ${patient?.name ?? "paciente"}? Só é possível enquanto não houver atendimento iniciado.`)) return; try { cancelUnattendedEncounter(encounter.id); toast.success("Atendimento excluído"); } catch (error) { toast.error(error instanceof Error ? error.message : "Não foi possível excluir"); } }}><X className="h-4 w-4" /></Button>}{!unattended && profile === "Administrador" && <Button size="sm" variant="ghost" className="text-destructive" onClick={() => { if (!window.confirm(`Apagar o atendimento ${encounter.number} de ${patient?.name ?? "paciente"}? Esta ação não pode ser desfeita.`)) return; try { deleteEncounter(encounter.id); toast.success("Atendimento apagado"); } catch (error) { toast.error(error instanceof Error ? error.message : "Não foi possível apagar"); } }}>Apagar</Button>}</div><EncounterTimeline patientId={encounter.patientId} /></div>;
+      const canReopenReturn = canRec && encounter.status_fluxo === "ALTA_HOSPITALAR" && !encounter.fia;
+      return <div key={encounter.id} className="border-b py-2"><div className="flex flex-wrap items-center gap-2"><Button variant="link" asChild><Link to="/pacientes/$id" params={{ id: encounter.patientId }}>{patient?.name}</Link></Button><SpecialConditionBadges patient={patient} /><span className="text-xs text-muted-foreground">{encounter.number}</span>{patient && <InpatientDocsButtons p={patient} e={encounter} />}{canReopenReturn && <Button size="sm" variant="outline" onClick={() => { setReopenEnc(encounter); setReopenForm({ reason: "", target: "AGUARDANDO_TRIAGEM" }); }}>Reabrir BAA (retorno)</Button>}{canForwardAdm && (encounter.admission?.status === "pendente" ? <span className="rounded border border-primary/40 bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">Aguardando leito no NIR</span> : <Button size="sm" variant="outline" onClick={() => { setAdmEnc(encounter); setAdmForm({ ward: "", character: "Urgência", cid: encounter.medical?.cid ?? "", justification: encounter.complaint || "", isolation: false, oxygen: false }); }}>Encaminhar p/ internação</Button>)}{encounter.type === "Ambulatório" && unattended && canRec && <Button size="sm" variant="outline" onClick={() => { const toNursing = encounter.status_fluxo !== "AGUARDANDO_TRIAGEM"; try { switchAmbulatorySector(encounter.id, toNursing); toast.success(toNursing ? "Alterado para Triagem / Enfermagem" : "Alterado para Consultório Ambulatório"); } catch (error) { toast.error(error instanceof Error ? error.message : "Não foi possível alterar o setor"); } }}><ArrowLeftRight className="h-3.5 w-3.5" />{encounter.status_fluxo === "AGUARDANDO_TRIAGEM" ? "Mudar para Consultório" : "Mudar para Triagem"}</Button>}{unattended && canRec && <Button size="sm" variant="outline" onClick={() => { setRectifyEnc(encounter); setRectifyForm({ specialty: encounter.specialty, complaint: encounter.complaint }); }}>Retificar abertura</Button>}{unattended && canRec && <Button size="icon" variant="ghost" aria-label={`Excluir atendimento ${encounter.number}`} title="Excluir atendimento não iniciado" className="ml-auto h-7 w-7 text-destructive" onClick={() => { if (!window.confirm(`Excluir o atendimento ${encounter.number} de ${patient?.name ?? "paciente"}? Só é possível enquanto não houver atendimento iniciado.`)) return; try { cancelUnattendedEncounter(encounter.id); toast.success("Atendimento excluído"); } catch (error) { toast.error(error instanceof Error ? error.message : "Não foi possível excluir"); } }}><X className="h-4 w-4" /></Button>}{!unattended && profile === "Administrador" && <Button size="sm" variant="ghost" className="text-destructive" onClick={() => { if (!window.confirm(`Apagar o atendimento ${encounter.number} de ${patient?.name ?? "paciente"}? Esta ação não pode ser desfeita.`)) return; try { deleteEncounter(encounter.id); toast.success("Atendimento apagado"); } catch (error) { toast.error(error instanceof Error ? error.message : "Não foi possível apagar"); } }}>Apagar</Button>}</div><EncounterTimeline patientId={encounter.patientId} /></div>;
     })}
     {!shown.length && <p className="py-6 text-sm text-muted-foreground">Nenhum atendimento aberto.</p>}
 
@@ -302,6 +314,37 @@ export function CareReception({ unit }: { unit?: CareUnit } = {}) {
           <label className="grid gap-1 text-xs">Especialidade / Tipo de atendimento<Input value={rectifyForm.specialty} onChange={(e) => setRectifyForm((c) => ({ ...c, specialty: e.target.value }))} required /></label>
           <label className="grid gap-1 text-xs">Motivo / Observação<Input value={rectifyForm.complaint} onChange={(e) => setRectifyForm((c) => ({ ...c, complaint: e.target.value }))} /></label>
           <Button type="submit">Salvar retificação</Button>
+        </form>
+      </DialogContent>
+    </Dialog>
+
+    <Dialog open={!!reopenEnc} onOpenChange={(open) => !open && setReopenEnc(null)}>
+      <DialogContent>
+        <DialogHeader><DialogTitle>Reabrir BAA por retorno · {reopenEnc?.number}</DialogTitle></DialogHeader>
+        <form className="grid gap-3" onSubmit={(ev) => {
+          ev.preventDefault();
+          if (!reopenEnc) return;
+          try {
+            reopenBaaForReturn(reopenEnc.id, reopenForm.reason, reopenForm.target);
+            toast.success(`${reopenEnc.number} reaberta por retorno do paciente`);
+            setReopenEnc(null);
+          } catch (error) {
+            toast.error(error instanceof Error ? error.message : "Não foi possível reabrir a BAA");
+          }
+        }}>
+          <div className="flex flex-wrap gap-1.5">
+            {["Piora ou persistência dos sintomas", "Retorno para reavaliação / resultado", "Retorno no mesmo turno"].map((opt) => (
+              <Button key={opt} type="button" size="sm" variant="outline" onClick={() => setReopenForm((c) => ({ ...c, reason: opt }))}>{opt}</Button>
+            ))}
+          </div>
+          <label className="grid gap-1 text-xs">Motivo do retorno (obrigatório)<Input value={reopenForm.reason} onChange={(e) => setReopenForm((c) => ({ ...c, reason: e.target.value }))} placeholder="Descreva o motivo do retorno..." required /></label>
+          <label className="grid gap-1 text-xs">Encaminhar para
+            <select className="h-9 rounded-md border bg-background px-2" value={reopenForm.target} onChange={(e) => setReopenForm((c) => ({ ...c, target: e.target.value as "AGUARDANDO_TRIAGEM" | "EM_OBSERVACAO_REAVALIACAO" }))}>
+              <option value="AGUARDANDO_TRIAGEM">Triagem / Acolhimento</option>
+              <option value="EM_OBSERVACAO_REAVALIACAO">Atendimento Médico / Reavaliação</option>
+            </select>
+          </label>
+          <Button type="submit">Confirmar reabertura da BAA</Button>
         </form>
       </DialogContent>
     </Dialog>

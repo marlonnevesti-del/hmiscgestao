@@ -828,6 +828,34 @@ export function reopenEncounter(id: string, reason: string) {
   const { discharge: _d, ...rest } = e;
   commitEncounter({ ...rest, status_fluxo: prev, history: [...e.history, { status: prev, at, by: professionalName(state.profile), note: `Alta desfeita pelo administrador: ${reason.trim()}${prev === 'ENCAMINHADO_INTERNACAO' ? ' (redefinir leito)' : ''}` }] });
 }
+/** Reabre uma BAA já encerrada por alta quando o paciente precisa retornar (Recepção, Enfermagem, Médico ou Administrador). */
+export function reopenBaaForReturn(
+  id: string,
+  reason: string,
+  targetStatus: 'AGUARDANDO_TRIAGEM' | 'EM_OBSERVACAO_REAVALIACAO' = 'AGUARDANDO_TRIAGEM',
+): Encounter {
+  const canReopen = state.profile === 'Administrador'
+    || canAct(state.profile, 'recepcao', state.accessAreas)
+    || canAct(state.profile, 'triagem', state.accessAreas)
+    || canAct(state.profile, 'prescrever', state.accessAreas);
+  if (!canReopen) throw new Error('Sem permissão para reabrir BAA por retorno.');
+  if (!reason.trim()) throw new Error('Informe o motivo do retorno do paciente.');
+  const { e } = getEncounter(id);
+  if (e.status_fluxo !== 'ALTA_HOSPITALAR') throw new Error('Apenas BAAs com alta podem ser reabertas por retorno.');
+  if (e.fia) throw new Error('Atendimentos com internação (FIA) só podem ser reabertos pelo administrador.');
+  const at = new Date().toISOString();
+  const { discharge: _d, ...rest } = e;
+  const updated: Encounter = {
+    ...rest,
+    status_fluxo: targetStatus,
+    history: [
+      ...e.history,
+      { status: targetStatus, at, by: professionalName(state.profile), note: `BAA reaberta por retorno do paciente: ${reason.trim()}` },
+    ],
+  };
+  commitEncounter(updated);
+  return updated;
+}
 /** Administrador ou NIR desfaz uma internação: cancela a FIA, reabre a BAA e libera o leito. Retorna o leito liberado. */
 export function revertAdmission(id: string, reason: string): string {
   if (state.profile !== 'Administrador' && !canAct(state.profile, 'nir', state.accessAreas)) throw new Error('Apenas administradores ou equipe do NIR podem cancelar internações.');

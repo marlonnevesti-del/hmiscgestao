@@ -21,6 +21,7 @@ import { trainingSearch } from '@/lib/icu-examples';
 import { IcuTrainingPatients } from '@/components/IcuTrainingPanel';
 import { IcuExamples } from '@/components/IcuExamples';
 import { InstitutionForm } from '@/components/InstitutionForm';
+import { SusAuditScPanel } from '@/components/SusAuditScPanel';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { aihFileName, aihTextBytes, aihZip } from '@/lib/aih-export';
 
@@ -40,8 +41,9 @@ export const Route = createFileRoute("/_authenticated/faturamento-sus")({
 function BillingPage() {
   const { treinamento, caso } = Route.useSearch();
   return <Tabs key={`${treinamento}-${caso}`} defaultValue={treinamento ? 'treinamento' : 'real'} className="space-y-4">
-    <TabsList className="flex h-auto flex-wrap"><TabsTrigger value="real">Faturamento real</TabsTrigger><TabsTrigger value="instituicao">Dados do Hospital</TabsTrigger><TabsTrigger value="treinamento">TESTE / Treinamento (3)</TabsTrigger></TabsList>
+    <TabsList className="flex h-auto flex-wrap"><TabsTrigger value="real">Faturamento real</TabsTrigger><TabsTrigger value="auditoria-sc">Pré-Auditoria SC & Metas</TabsTrigger><TabsTrigger value="instituicao">Dados do Hospital</TabsTrigger><TabsTrigger value="treinamento">TESTE / Treinamento (3)</TabsTrigger></TabsList>
     <TabsContent value="real"><SusBilling /></TabsContent>
+    <TabsContent value="auditoria-sc"><SusAuditScPanel /></TabsContent>
     <TabsContent value="instituicao"><div className="space-y-4"><div><h1 className="text-xl font-semibold">Dados da Instituição / Hospital</h1><p className="text-sm text-muted-foreground">Identificação oficial usada nos cabeçalhos e remessas BPA, SISAIH01 e CIHA-01 enviadas ao Estado.</p></div><InstitutionForm /></div></TabsContent>
     <TabsContent value="treinamento"><div className="space-y-4"><h1 className="text-xl font-semibold">Faturamento SUS · AIH de treinamento</h1><IcuTrainingPatients /><IcuExamples initialUnit={caso} initialView="billing" /></div></TabsContent>
   </Tabs>;
