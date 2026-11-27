@@ -94,16 +94,5 @@ export function canDispenseNow(
   const now = opts?.now ?? new Date();
   const isBeforeStart = now.getHours() < PHARMACY_START_HOUR;
   const hasImmediate = prescriptions.some((rx) => isImmediatePrescription(rx));
-  if (!isBeforeStart) {
-    return { ok: true, isBeforeStart: false, hasImmediate };
-  }
-  if (hasImmediate || (opts?.specialCaseReason ?? "").trim().length > 0) {
-    return { ok: true, isBeforeStart: true, hasImmediate };
-  }
-  return {
-    ok: false,
-    isBeforeStart: true,
-    hasImmediate: false,
-    reason: `A farmácia só libera medicamentos de rotina a partir das ${PHARMACY_START_HOUR}:00, exceto dose imediata ou caso especial com justificativa.`,
-  };
+  return { ok: true, isBeforeStart, hasImmediate };
 }

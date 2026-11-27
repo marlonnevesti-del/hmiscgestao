@@ -51,4 +51,24 @@ describe("Inventário – permissões e apuração", () => {
     expect(mv.reason).toContain("Dr. Marcos");
     expect(mv.reason).toContain("Conferência física de prateleira");
   });
+
+  it("ajusta lote selecionado ou cria lote manual com validade ao homologar inventário", () => {
+    setState(() => ({
+      profile: "Administrador",
+      employeeName: "Admin",
+      accessAreas: null,
+      inventories: [],
+      movements: [],
+      stock: [
+        { id: "m-lot", code: "9001", name: "Dipirona Teste", presentation: "amp", unit: "amp", quantity: 10, minimum: 2, lots: [{ lot: "L01", expiry: "2027-05-01", quantity: 10 }] },
+      ],
+    }));
+    saveInventoryCount("farmacia", "m-lot", 14, { lot: "L99", expiry: "2028-01-15" });
+    approveInventoryCorrection("farmacia", "Entrada de lote conferido no inventário");
+    const updated = getState().stock.find((x) => x.id === "m-lot")!;
+    expect(updated.quantity).toBe(14);
+    expect(updated.lots?.find((l) => l.lot === "L99")).toEqual({ lot: "L99", expiry: "2028-01-15", quantity: 4 });
+    expect(getState().movements[0]?.lot).toBe("L99");
+    expect(getState().movements[0]?.expiry).toBe("2028-01-15");
+  });
 });

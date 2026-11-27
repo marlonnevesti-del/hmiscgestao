@@ -45,6 +45,7 @@ import { Route as AuthenticatedRecepcaoRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedScirasRouteImport } from './routes/_authenticated.sciras'
 import { Route as AuthenticatedSegurancaBackupsRouteImport } from './routes/_authenticated.seguranca-backups'
 import { Route as AuthenticatedSolicitacaoAlmoxarifadoRouteImport } from './routes/_authenticated.solicitacao-almoxarifado'
+import { Route as AuthenticatedSolicitacaoFarmaciaRouteImport } from './routes/_authenticated.solicitacao-farmacia'
 import { Route as AuthenticatedUtiUciRouteImport } from './routes/_authenticated.uti-uci'
 import { Route as AuthenticatedPacientesIndexRouteImport } from './routes/_authenticated.pacientes.index'
 import { Route as AuthenticatedPacientesIdRouteImport } from './routes/_authenticated.pacientes.$id'
@@ -248,6 +249,12 @@ const AuthenticatedSolicitacaoAlmoxarifadoRoute =
     path: '/solicitacao-almoxarifado',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedSolicitacaoFarmaciaRoute =
+  AuthenticatedSolicitacaoFarmaciaRouteImport.update({
+    id: '/solicitacao-farmacia',
+    path: '/solicitacao-farmacia',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedUtiUciRoute = AuthenticatedUtiUciRouteImport.update({
   id: '/uti-uci',
   path: '/uti-uci',
@@ -302,6 +309,7 @@ export interface FileRoutesByFullPath {
   '/sciras': typeof AuthenticatedScirasRoute
   '/seguranca-backups': typeof AuthenticatedSegurancaBackupsRoute
   '/solicitacao-almoxarifado': typeof AuthenticatedSolicitacaoAlmoxarifadoRoute
+  '/solicitacao-farmacia': typeof AuthenticatedSolicitacaoFarmaciaRoute
   '/uti-uci': typeof AuthenticatedUtiUciRoute
   '/pacientes/$id': typeof AuthenticatedPacientesIdRoute
   '/pacientes/': typeof AuthenticatedPacientesIndexRoute
@@ -341,6 +349,7 @@ export interface FileRoutesByTo {
   '/sciras': typeof AuthenticatedScirasRoute
   '/seguranca-backups': typeof AuthenticatedSegurancaBackupsRoute
   '/solicitacao-almoxarifado': typeof AuthenticatedSolicitacaoAlmoxarifadoRoute
+  '/solicitacao-farmacia': typeof AuthenticatedSolicitacaoFarmaciaRoute
   '/uti-uci': typeof AuthenticatedUtiUciRoute
   '/': typeof AuthenticatedIndexRoute
   '/pacientes/$id': typeof AuthenticatedPacientesIdRoute
@@ -383,6 +392,7 @@ export interface FileRoutesById {
   '/_authenticated/sciras': typeof AuthenticatedScirasRoute
   '/_authenticated/seguranca-backups': typeof AuthenticatedSegurancaBackupsRoute
   '/_authenticated/solicitacao-almoxarifado': typeof AuthenticatedSolicitacaoAlmoxarifadoRoute
+  '/_authenticated/solicitacao-farmacia': typeof AuthenticatedSolicitacaoFarmaciaRoute
   '/_authenticated/uti-uci': typeof AuthenticatedUtiUciRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/pacientes/$id': typeof AuthenticatedPacientesIdRoute
@@ -426,6 +436,7 @@ export interface FileRouteTypes {
     | '/sciras'
     | '/seguranca-backups'
     | '/solicitacao-almoxarifado'
+    | '/solicitacao-farmacia'
     | '/uti-uci'
     | '/pacientes/$id'
     | '/pacientes/'
@@ -465,6 +476,7 @@ export interface FileRouteTypes {
     | '/sciras'
     | '/seguranca-backups'
     | '/solicitacao-almoxarifado'
+    | '/solicitacao-farmacia'
     | '/uti-uci'
     | '/'
     | '/pacientes/$id'
@@ -506,6 +518,7 @@ export interface FileRouteTypes {
     | '/_authenticated/sciras'
     | '/_authenticated/seguranca-backups'
     | '/_authenticated/solicitacao-almoxarifado'
+    | '/_authenticated/solicitacao-farmacia'
     | '/_authenticated/uti-uci'
     | '/_authenticated/'
     | '/_authenticated/pacientes/$id'
@@ -774,6 +787,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSolicitacaoAlmoxarifadoRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/solicitacao-farmacia': {
+      id: '/_authenticated/solicitacao-farmacia'
+      path: '/solicitacao-farmacia'
+      fullPath: '/solicitacao-farmacia'
+      preLoaderRoute: typeof AuthenticatedSolicitacaoFarmaciaRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/uti-uci': {
       id: '/_authenticated/uti-uci'
       path: '/uti-uci'
@@ -829,6 +849,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedScirasRoute: typeof AuthenticatedScirasRoute
   AuthenticatedSegurancaBackupsRoute: typeof AuthenticatedSegurancaBackupsRoute
   AuthenticatedSolicitacaoAlmoxarifadoRoute: typeof AuthenticatedSolicitacaoAlmoxarifadoRoute
+  AuthenticatedSolicitacaoFarmaciaRoute: typeof AuthenticatedSolicitacaoFarmaciaRoute
   AuthenticatedUtiUciRoute: typeof AuthenticatedUtiUciRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedPacientesIdRoute: typeof AuthenticatedPacientesIdRoute
@@ -867,6 +888,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedSegurancaBackupsRoute: AuthenticatedSegurancaBackupsRoute,
   AuthenticatedSolicitacaoAlmoxarifadoRoute:
     AuthenticatedSolicitacaoAlmoxarifadoRoute,
+  AuthenticatedSolicitacaoFarmaciaRoute: AuthenticatedSolicitacaoFarmaciaRoute,
   AuthenticatedUtiUciRoute: AuthenticatedUtiUciRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedPacientesIdRoute: AuthenticatedPacientesIdRoute,

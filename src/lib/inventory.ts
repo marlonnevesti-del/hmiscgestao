@@ -10,6 +10,8 @@ export interface InventoryLine {
   unitCost?: number;
   systemQty: number;
   countedQty: number;
+  lot?: string;
+  expiry?: string;
   countedBy: string;
   countedAt: string;
 }
@@ -38,6 +40,8 @@ export interface InventoryAdjustment {
   countedQty: number;
   delta: number;
   financialDelta: number;
+  lot?: string;
+  expiry?: string;
   countedBy: string;
 }
 
@@ -85,6 +89,8 @@ export function buildInventoryAdjustments(
       countedQty: line.countedQty,
       delta,
       financialDelta: delta * (item.unitCost ?? 0),
+      ...(line.lot ? { lot: line.lot } : {}),
+      ...(line.expiry ? { expiry: line.expiry } : {}),
       countedBy: line.countedBy,
     });
   }

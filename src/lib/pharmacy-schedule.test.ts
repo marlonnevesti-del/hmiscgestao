@@ -17,10 +17,10 @@ describe("Regras de horário e posologia da farmácia", () => {
     expect(formatPosologia("EV", "8x8", true)).toBe("EV · 8x8 (Dose imediata)");
   });
 
-  it("bloqueia dispensação de rotina antes das 16:00 e libera para dose imediata ou caso especial", () => {
+  it("libera dispensação antes e depois das 16:00 sem exigir justificativa obrigatória", () => {
     expect(PHARMACY_START_HOUR).toBe(16);
     const routine = [{ frequency: "8x8", immediate: false }];
-    expect(canDispenseNow(routine, { now: AT_14H }).ok).toBe(false);
+    expect(canDispenseNow(routine, { now: AT_14H }).ok).toBe(true);
     expect(canDispenseNow(routine, { now: AT_14H, specialCaseReason: "Urgência clínica" }).ok).toBe(true);
     expect(canDispenseNow([{ frequency: "Agora", immediate: true }], { now: AT_14H }).ok).toBe(true);
     expect(canDispenseNow(routine, { now: AT_16H }).ok).toBe(true);

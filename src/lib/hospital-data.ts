@@ -108,7 +108,7 @@ export const defaultAreas = (profile: Profile): string[] => [
 export function canAccessPage(profile: Profile, path: string, areas?: readonly string[] | null) {
   if (profile === "Administrador") return true;
   if (path.startsWith("/gestao-atendimentos") || path.startsWith("/seguranca-backups")) return false;
-  if (path === "/" || path === "/solicitacao-almoxarifado" || path === "/ajuda") return true;
+  if (path === "/" || path === "/solicitacao-almoxarifado" || path === "/solicitacao-farmacia" || path === "/ajuda") return true;
   const seg = path.split("/")[1] ?? "";
   if (UNIT_IDS.includes(seg)) { const u = UNIT_AREAS.find((x) => x.id === seg)!; return u.tabs.some((t) => canAccessUnitTab(profile, u.id, t.id, areas)); }
   if (areas && ["internacoes", "uti-uci", "fisioterapia", "raio-x", "gesso", "banco-de-leite"].includes(seg) && areas.includes(seg)) return true;

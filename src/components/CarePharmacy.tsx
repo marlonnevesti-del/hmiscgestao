@@ -13,7 +13,7 @@ import { can, PHARMACY_TABS, WARDS } from "@/lib/hospital-data";
 import { findByBarcode } from "@/lib/barcode";
 import { BarcodeScan } from "./BarcodeScan";
 import { LabelPrint, printLabels, type Label } from "./LabelPrint";
-import { adjustStock, advanceCompletedMedication, allBatchDosesDone, deleteStockItem, createStockMedication, dispenseKit, recordMedication, reportShortage, useStore, validatePrescription } from "@/lib/hospital-store";
+import { advanceCompletedMedication, allBatchDosesDone, deleteStockItem, createStockMedication, dispenseKit, recordMedication, reportShortage, useStore, validatePrescription } from "@/lib/hospital-store";
 import { findStockMedication, fmtExpiry, lotsByExpiry } from "@/lib/pharmacy-stock";
 import { canDispenseNow, isImmediatePrescription, PHARMACY_START_HOUR, remainingDoses } from "@/lib/pharmacy-schedule";
 import { matchesPharmacySector, PHARMACY_SECTORS, pharmacySectorLabel, type PharmacySectorId } from "@/lib/pharmacy-sectors";
@@ -75,6 +75,20 @@ function matchesDoseInterval(time: string, intervalId: string): boolean {
   return h >= found.start && h <= found.end;
 }
 
+function localIsoDate(iso?: string): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+function fmtRxDateTime(iso?: string): string {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "—";
+  return d.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+}
+
 function PrescriptionQueue() {
   const encounters = useStore((state) => state.encounters);
   const patients = useStore((state) => state.patients);
@@ -85,6 +99,7 @@ function PrescriptionQueue() {
   const [specialReasons, setSpecialReasons] = useState<Record<string, string>>({});
   const [sector, setSector] = useState<PharmacySectorId>("todos");
   const [interval, setInterval] = useState<string>("TODOS");
+  const [dateFilter, setDateFilter] = useState<string>("");
   const [expandedKey, setExpandedKey] = useState<string | null>(null);
   const [printTarget, setPrintTarget] = useState<{ id: string; time?: string } | null>(null);
   const [doseLabel, setDoseLabel] = useState<Label | null>(null);
@@ -94,6 +109,7 @@ function PrescriptionQueue() {
     .map((encounter) => ({ encounter, patient: patients.find((item) => item.id === encounter.patientId) }))
     .filter((row): row is { encounter: typeof encounters[number]; patient: NonNullable<typeof patients[number]> } => {
       if (!row.patient || !activePharmacyStatuses.has(row.encounter.status_fluxo)) return false;
+      if (dateFilter && localIsoDate(row.encounter.signedAt ?? row.encounter.openedAt) !== dateFilter) return false;
       if (row.encounter.status_fluxo === "AGUARDANDO_FARMACIA") return true;
       return row.patient.prescriptions.some(
         (rx) => rx.batchId === row.encounter.prescriptionBatchId && rx.pharmacy && (rx.times?.length ? remainingDoses(rx).length > 0 : rx.pharmacy !== "Dispensada"),
@@ -126,7 +142,7 @@ function PrescriptionQueue() {
   return <section>
     <div className={cn("mb-3 rounded-lg border px-3 py-2 text-xs", beforeStart ? "border-mt-yellow bg-mt-yellow/15 text-foreground" : "border-clinical/40 bg-clinical-soft text-clinical")}>
       {beforeStart
-        ? `Horário padrão de dispensação: a partir das ${PHARMACY_START_HOUR}:00. Antes desse horário, somente doses imediatas ou casos especiais com justificativa.`
+        ? `Horário de referência da rotina: ${PHARMACY_START_HOUR}:00. Dispensação liberada a qualquer horário (justificativa opcional).`
         : `Janela de dispensação aberta (a partir das ${PHARMACY_START_HOUR}:00). Cada horário de dose gera a sua própria requisição com quantidade 1.`}
     </div>
     <div className="mb-4 flex flex-wrap gap-2 border-b pb-3" role="tablist" aria-label="Pastas de setores da farmácia">
@@ -142,12 +158,19 @@ function PrescriptionQueue() {
     </div>
     <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
       <h2 className="font-semibold">Prescrições aguardando dispensação ({doseRows.length})</h2>
-      <label className="flex items-center gap-2 text-xs">
-        <span className="text-muted-foreground">Intervalo:</span>
-        <select aria-label="Intervalo de horário" className="h-8 rounded-md border bg-background px-2 text-xs" value={interval} onChange={(e) => setInterval(e.target.value)}>
-          {DOSE_INTERVALS.map((opt) => <option key={opt.id} value={opt.id}>{opt.label}</option>)}
-        </select>
-      </label>
+      <div className="flex flex-wrap items-center gap-2">
+        <label className="flex items-center gap-2 text-xs">
+          <span className="text-muted-foreground">Data:</span>
+          <Input type="date" aria-label="Data da prescrição" className="h-8 w-36 text-xs" value={dateFilter} onChange={(e) => setDateFilter(e.target.value)} />
+        </label>
+        {dateFilter && <Button size="sm" variant="ghost" className="h-8 px-2 text-xs" onClick={() => setDateFilter("")}>Todas as datas</Button>}
+        <label className="flex items-center gap-2 text-xs">
+          <span className="text-muted-foreground">Intervalo:</span>
+          <select aria-label="Intervalo de horário" className="h-8 rounded-md border bg-background px-2 text-xs" value={interval} onChange={(e) => setInterval(e.target.value)}>
+            {DOSE_INTERVALS.map((opt) => <option key={opt.id} value={opt.id}>{opt.label}</option>)}
+          </select>
+        </label>
+      </div>
     </div>
     {!doseRows.length && <p className="py-6 text-muted-foreground">Nenhuma prescrição aguardando farmácia nesta pasta.</p>}
     {doseRows.length > 0 && (
@@ -157,6 +180,7 @@ function PrescriptionQueue() {
             <tr>
               <th className="px-3 py-2">Setor</th>
               <th className="px-3 py-2">Paciente</th>
+              <th className="px-3 py-2">Prescrito em</th>
               <th className="px-3 py-2">Horário</th>
             </tr>
           </thead>
@@ -166,18 +190,20 @@ function PrescriptionQueue() {
               const expanded = expandedKey === rowKey;
     const specialCaseReason = specialReasons[encounter.id] ?? "";
     const gate = canDispenseNow(batchMeds, { specialCaseReason });
+    const rxAt = fmtRxDateTime(encounter.signedAt ?? encounter.openedAt);
               return (
                 <Fragment key={rowKey}>
                   <tr className={cn("cursor-pointer border-b hover:bg-muted/40", expanded && "bg-muted/30")} onClick={() => setExpandedKey(expanded ? null : rowKey)}>
                     <td className="px-3 py-2 font-medium">{sectorName}</td>
                     <td className="px-3 py-2 font-semibold text-primary underline-offset-2 hover:underline">{patient.name}</td>
+                    <td className="px-3 py-2 font-mono text-xs text-muted-foreground">{rxAt}</td>
                     <td className="px-3 py-2 font-mono text-xs">{time}</td>
                   </tr>
                   {expanded && (
                     <tr className="border-b bg-card">
-                      <td colSpan={3} className="space-y-3 p-4">
+                      <td colSpan={4} className="space-y-3 p-4">
                         <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
-                          <span>Peso {patient.weight} kg · Leito {patient.bed || "—"} · Liberada por: {encounter.signedBy}</span>
+                          <span>Peso {patient.weight} kg · Leito {patient.bed || "—"} · Prescrito em: {rxAt} · Liberada por: {encounter.signedBy}</span>
                           <Link to="/pacientes/$id" params={{ id: patient.id }} className="text-primary hover:underline">Abrir prontuário</Link>
                         </div>
                         {medsAtTime.map((prescription) => {
@@ -188,7 +214,7 @@ function PrescriptionQueue() {
       })}
       {beforeStart && (
         <label className="grid gap-1 text-xs">
-          Caso especial (justificativa obrigatória para liberar rotina antes das {PHARMACY_START_HOUR}:00)
+          Observação / caso especial (opcional)
           <Input placeholder="Ex.: urgência clínica / ordem médica" value={specialCaseReason} onChange={(e) => setSpecialReasons((c) => ({ ...c, [encounter.id]: e.target.value }))} />
         </label>
       )}
@@ -222,7 +248,7 @@ function StockManager() {
   const allowed = can(profile, "farmacia");
   const [form, setForm] = useState(EMPTY_MEDICATION);
   return <div className="space-y-4">
-    <StockTable items={stock} allowed={allowed} onAdjust={adjustStock} onDelete={profile === "Administrador" ? (id) => deleteStockItem("stock", id) : undefined} label="Medicamento" />
+    <StockTable items={stock} allowed={allowed} onDelete={profile === "Administrador" ? (id) => deleteStockItem("stock", id) : undefined} label="Medicamento" />
     <form className="rounded-xl border bg-card p-4" onSubmit={(event) => { event.preventDefault(); run(() => { createStockMedication({ name: form.name, presentation: form.presentation, unit: form.unit, quantity: Number(form.quantity), minimum: Number(form.minimum) }); setForm(EMPTY_MEDICATION); toast.success("Medicamento cadastrado"); }); }}><h3 className="mb-3 text-sm font-semibold">Cadastrar medicamento</h3><div className="grid gap-2 md:grid-cols-[2fr_1fr_80px_100px_100px_auto]"><Input aria-label="Nome e concentração" placeholder="Nome e concentração" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} required /><Input aria-label="Apresentação" placeholder="Apresentação" value={form.presentation} onChange={(event) => setForm({ ...form, presentation: event.target.value })} /><Input aria-label="Unidade" placeholder="Unid." value={form.unit} onChange={(event) => setForm({ ...form, unit: event.target.value })} required /><Input aria-label="Estoque inicial" type="number" min="0" placeholder="Estoque" value={form.quantity} onChange={(event) => setForm({ ...form, quantity: event.target.value })} required /><Input aria-label="Estoque mínimo" type="number" min="0" placeholder="Mínimo" value={form.minimum} onChange={(event) => setForm({ ...form, minimum: event.target.value })} required /><Button type="submit" disabled={!allowed}>Cadastrar</Button></div></form>
   </div>;
 }

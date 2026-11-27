@@ -519,10 +519,10 @@ export function settleLoan(depot: Depot, movementId: string, qty: number) {
 }
 /** Pedido do posto de enfermagem para farmácia ou almoxarifado. */
 /** Pedido de qualquer setor ao almoxarifado (colaborador aprovado). */
-export function createSectorRequest(sector: string, items: string, note: string) {
+export function createSectorRequest(sector: string, items: string, note: string, target: Depot = 'almoxarifado') {
   if (!items.trim()) throw new Error('Adicione ao menos um produto.');
   if (!sector.trim()) throw new Error('Selecione o setor solicitante.');
-  const r: SupplyRequest = { id: crypto.randomUUID(), target: 'almoxarifado', items: items.trim(), sector, patient: '', note: note.trim(), status: 'Pendente', at: new Date().toISOString(), by: professionalName(state.profile) };
+  const r: SupplyRequest = { id: crypto.randomUUID(), target, items: items.trim(), sector, patient: '', note: note.trim(), status: 'Pendente', at: new Date().toISOString(), by: professionalName(state.profile) };
   setState((s) => ({ requests: [r, ...s.requests] }));
 }
 export function createSupplyRequest(input: { target: Depot; items: string; sector: string; patient: string; note: string }) {
@@ -581,7 +581,7 @@ export function adjustWarehouse(id: string, delta: number, lot = '') {
   if (lot) { const next = changeQty(state.warehouse, id, delta, lot); setState(() => ({ warehouse: next })); return; }
   setState((s) => ({ warehouse: s.warehouse.map((x) => x.id === id ? { ...x, quantity: x.quantity + delta } : x) }));
 }
-export function saveInventoryCount(depot: Depot, itemId: string, countedQty: number) {
+export function saveInventoryCount(depot: Depot, itemId: string, countedQty: number, lotInfo?: { lot?: string; expiry?: string }) {
   requireAction(depot);
   if (!Number.isInteger(countedQty) || countedQty < 0) throw new Error('Informe uma contagem inteira maior ou igual a zero.');
   const items = depot === 'farmacia' ? state.stock : state.warehouse;
@@ -589,6 +589,8 @@ export function saveInventoryCount(depot: Depot, itemId: string, countedQty: num
   if (!item) throw new Error('Item não encontrado no estoque.');
   const now = new Date().toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
   const by = professionalName(state.profile);
+  const cleanLot = lotInfo?.lot?.trim() || '';
+  const cleanExpiry = lotInfo?.expiry?.trim() || '';
   setState((s) => {
     const list = Array.isArray(s.inventories) ? s.inventories : [];
     const existing = list.find((inv) => inv.depot === depot && inv.status === 'rascunho');
@@ -601,6 +603,8 @@ export function saveInventoryCount(depot: Depot, itemId: string, countedQty: num
       ...(item.unitCost !== undefined ? { unitCost: item.unitCost } : {}),
       systemQty: item.quantity,
       countedQty,
+      ...(cleanLot ? { lot: cleanLot } : {}),
+      ...(cleanExpiry ? { expiry: cleanExpiry } : {}),
       countedBy: by,
       countedAt: now,
     };
@@ -639,7 +643,18 @@ export function approveInventoryCorrection(depot: Depot, justification: string) 
   const byId = new Map(adjustments.map((a) => [a.itemId, a]));
   const updatedItems = items.map((item) => {
     const adj = byId.get(item.id);
-    return adj ? { ...item, quantity: adj.countedQty } : item;
+    if (!adj) return item;
+    if (!adj.lot) return { ...item, quantity: adj.countedQty };
+    const currentLots = item.lots ? [...item.lots] : [];
+    const idx = currentLots.findIndex((l) => l.lot === adj.lot);
+    if (idx >= 0) {
+      const targetLot = currentLots[idx]!;
+      const nextLotQty = Math.max(0, targetLot.quantity + adj.delta);
+      currentLots[idx] = { ...targetLot, quantity: nextLotQty, ...(adj.expiry ? { expiry: adj.expiry } : {}) };
+    } else if (adj.delta > 0) {
+      currentLots.push({ lot: adj.lot, expiry: adj.expiry || '', quantity: adj.delta });
+    }
+    return { ...item, quantity: adj.countedQty, lots: currentLots };
   });
   const newMovements: Movement[] = adjustments.map((adj) => ({
     id: `mv-${crypto.randomUUID()}`,
@@ -649,7 +664,8 @@ export function approveInventoryCorrection(depot: Depot, justification: string) 
     item: adj.name,
     ...(adj.code ? { code: adj.code } : {}),
     qty: Math.abs(adj.delta),
-    lot: adj.delta > 0 ? 'SOBRA' : 'FALTA',
+    lot: adj.lot || (adj.delta > 0 ? 'SOBRA' : 'FALTA'),
+    ...(adj.expiry ? { expiry: adj.expiry } : {}),
     reason: `Inventário (${adj.delta > 0 ? '+' : ''}${adj.delta}) · Contado por ${adj.countedBy} · Homologado por ${approver}: ${note}`,
     at: now,
     by: approver,

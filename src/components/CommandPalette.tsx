@@ -10,7 +10,7 @@ const PAGES = [
   ["/uti-uci", "UTI Ped · UCI · UTI Neo"], ["/pacientes", "Pacientes / PEP"], ["/nir", "NIR – Leitos"],
   ["/internacoes", "Censo · Internações"], ["/centro-cirurgico", "Centro Cirúrgico"], ["/gestao-cirurgica", "SRPA · CO · Indicadores"], ["/cme", "CME"],
   ["/sciras", "SCIRAS / CCIH"], ["/farmacia", "Farmácia"], ["/enfermagem", "Posto de Enfermagem"], ["/almoxarifado", "Almoxarifado"],
-  ["/solicitacao-almoxarifado", "Solicitação ao Almoxarifado"], ["/faturamento", "Faturamento TISS"], ["/faturamento-sus", "Faturamento SUS"], ["/prestacao-contas", "Prestação de contas OS"], ["/centro-de-custos", "Centro de custos"],
+  ["/solicitacao-almoxarifado", "Solicitação ao Almoxarifado"], ["/solicitacao-farmacia", "Solicitação à Farmácia"], ["/faturamento", "Faturamento TISS"], ["/faturamento-sus", "Faturamento SUS"], ["/prestacao-contas", "Prestação de contas OS"], ["/centro-de-custos", "Centro de custos"],
 ] as const;
 
 /** Ctrl+K global search: patients and screens the user can open. */

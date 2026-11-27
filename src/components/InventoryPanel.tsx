@@ -54,6 +54,8 @@ export function InventoryPanel({ depot }: { depot: Depot }) {
   const [group, setGroup] = useState("");
   const [approveOpen, setApproveOpen] = useState(false);
   const [justification, setJustification] = useState("");
+  const [lotChoice, setLotChoice] = useState<Record<string, string>>({});
+  const [manualLot, setManualLot] = useState<Record<string, { lot: string; expiry: string }>>({});
 
   const purchaseGroups = useMemo(() => {
     if (depot !== "almoxarifado") return [];
@@ -104,7 +106,34 @@ export function InventoryPanel({ depot }: { depot: Depot }) {
     }
     const n = Number(raw);
     if (!Number.isInteger(n) || n < 0) return;
-    try { saveInventoryCount(depot, itemId, n); } catch (err) { toast.error((err as Error).message); }
+    const item = items.find((x) => x.id === itemId);
+    const mode = lotChoice[itemId] ?? (lines[itemId]?.lot ? (item?.lots?.some((l) => l.lot === lines[itemId]?.lot) ? lines[itemId]!.lot! : "__manual__") : "");
+    const lotInfo = mode === "__manual__"
+      ? { lot: manualLot[itemId]?.lot ?? lines[itemId]?.lot ?? "", expiry: manualLot[itemId]?.expiry ?? lines[itemId]?.expiry ?? "" }
+      : mode
+        ? { lot: mode, expiry: item?.lots?.find((l) => l.lot === mode)?.expiry ?? "" }
+        : undefined;
+    try { saveInventoryCount(depot, itemId, n, lotInfo); } catch (err) { toast.error((err as Error).message); }
+  }
+
+  function handleLotSelect(item: StockMedication, value: string) {
+    setLotChoice((c) => ({ ...c, [item.id]: value }));
+    const line = lines[item.id];
+    if (!line) return;
+    const lotInfo = value === "__manual__"
+      ? { lot: manualLot[item.id]?.lot ?? "", expiry: manualLot[item.id]?.expiry ?? "" }
+      : value
+        ? { lot: value, expiry: item.lots?.find((l) => l.lot === value)?.expiry ?? "" }
+        : undefined;
+    try { saveInventoryCount(depot, item.id, line.countedQty, lotInfo); } catch (err) { toast.error((err as Error).message); }
+  }
+
+  function handleManualLotChange(itemId: string, patch: Partial<{ lot: string; expiry: string }>) {
+    const next = { lot: manualLot[itemId]?.lot ?? lines[itemId]?.lot ?? "", expiry: manualLot[itemId]?.expiry ?? lines[itemId]?.expiry ?? "", ...patch };
+    setManualLot((c) => ({ ...c, [itemId]: next }));
+    const line = lines[itemId];
+    if (!line) return;
+    try { saveInventoryCount(depot, itemId, line.countedQty, next); } catch (err) { toast.error((err as Error).message); }
   }
 
   function handleApprove() {
@@ -191,16 +220,33 @@ export function InventoryPanel({ depot }: { depot: Depot }) {
     <div className="overflow-x-auto rounded-lg border bg-card">
       <table className="w-full text-sm">
         <thead className="border-b bg-muted/50 text-xs text-muted-foreground">
-          <tr><th className="p-2 text-left">Código</th><th className="p-2 text-left">Produto</th><th className="p-2 text-right">Saldo Sistema</th><th className="p-2 text-right w-36">Contagem Física</th><th className="p-2 text-right">Divergência</th><th className="p-2 text-right">Impacto</th><th className="p-2 w-10"></th></tr>
+          <tr><th className="p-2 text-left">Código</th><th className="p-2 text-left">Produto</th><th className="p-2 text-left">Lote / Validade</th><th className="p-2 text-right">Saldo Sistema</th><th className="p-2 text-right w-36">Contagem Física</th><th className="p-2 text-right">Divergência</th><th className="p-2 text-right">Impacto</th><th className="p-2 w-10"></th></tr>
         </thead>
         <tbody className="divide-y">
           {filtered.slice(0, 150).map((item) => {
             const line = lines[item.id];
             const delta = line ? line.countedQty - item.quantity : null;
             const fin = delta !== null ? delta * (item.unitCost ?? 0) : 0;
+            const currentMode = lotChoice[item.id] ?? (line?.lot ? (item.lots?.some((l) => l.lot === line.lot) ? line.lot : "__manual__") : "");
+            const mLot = manualLot[item.id] ?? { lot: line?.lot ?? "", expiry: line?.expiry ?? "" };
             return <tr key={item.id} className="hover:bg-muted/30">
               <td className="p-2 font-mono text-xs text-muted-foreground">{item.code ?? "-"}</td>
               <td className="p-2"><div className="font-medium">{item.name}</div><div className="text-xs text-muted-foreground">{item.purchaseGroup ?? item.category ?? item.presentation}{line ? ` · Contado por ${line.countedBy}` : ""}</div></td>
+              <td className="p-2">
+                <div className="space-y-1">
+                  <select aria-label={`Lote de ${item.name}`} className="h-8 w-44 rounded-md border bg-background px-2 text-xs" value={currentMode} onChange={(e) => handleLotSelect(item, e.target.value)}>
+                    <option value="">Saldo geral</option>
+                    {(item.lots ?? []).map((l) => <option key={l.lot + l.expiry} value={l.lot}>{`${l.lot} · val. ${l.expiry || "—"} (${l.quantity})`}</option>)}
+                    <option value="__manual__">Digitar lote/validade manual</option>
+                  </select>
+                  {currentMode === "__manual__" && (
+                    <div className="flex gap-1">
+                      <Input aria-label={`Lote manual de ${item.name}`} placeholder="Lote" className="h-7 w-24 text-xs" value={mLot.lot} onChange={(e) => handleManualLotChange(item.id, { lot: e.target.value })} />
+                      <Input aria-label={`Validade manual de ${item.name}`} type="date" className="h-7 w-32 text-xs" value={mLot.expiry} onChange={(e) => handleManualLotChange(item.id, { expiry: e.target.value })} />
+                    </div>
+                  )}
+                </div>
+              </td>
               <td className="p-2 text-right font-mono">{item.quantity} {item.unit}</td>
               <td className="p-2 text-right"><Input type="number" min={0} step={1} aria-label={`Contagem de ${item.name}`} className="h-8 w-28 ml-auto text-right font-mono" placeholder="—" value={line ? String(line.countedQty) : ""} onChange={(e) => handleCountChange(item.id, e.target.value)} /></td>
               <td className="p-2 text-right">{delta === null ? <span className="text-xs text-muted-foreground">Pendente</span> : delta === 0 ? <Badge variant="secondary">Conforme</Badge> : <Badge variant={delta > 0 ? "default" : "destructive"}>{delta > 0 ? `+${delta}` : delta}</Badge>}</td>
@@ -208,7 +254,7 @@ export function InventoryPanel({ depot }: { depot: Depot }) {
               <td className="p-2 text-right">{line && <Button type="button" variant="ghost" size="icon" className="h-7 w-7" title="Limpar contagem" onClick={() => clearInventoryCount(depot, item.id)}><RotateCcw className="h-3.5 w-3.5" /></Button>}</td>
             </tr>;
           })}
-          {filtered.length === 0 && <tr><td colSpan={7} className="p-6 text-center text-muted-foreground">Nenhum item encontrado para o filtro selecionado.</td></tr>}
+          {filtered.length === 0 && <tr><td colSpan={8} className="p-6 text-center text-muted-foreground">Nenhum item encontrado para o filtro selecionado.</td></tr>}
         </tbody>
       </table>
       {filtered.length > 150 && <div className="border-t p-2 text-center text-xs text-muted-foreground">Mostrando os primeiros 150 de {filtered.length} itens. Use a busca ou o leitor de código de barras para localizar rapidamente.</div>}

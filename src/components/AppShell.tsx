@@ -42,6 +42,7 @@ const GROUPS = [
     { to: "/enfermagem", label: "Posto de Enfermagem", icon: HeartPulse },
     { to: "/almoxarifado", label: "Almoxarifado", icon: Package },
     { to: "/solicitacao-almoxarifado", label: "Solicitação ao Almoxarifado", icon: ClipboardList },
+    { to: "/solicitacao-farmacia", label: "Solicitação à Farmácia", icon: ClipboardList },
   ] },
   { label: "Administrativo", items: [{ to: "/faturamento", label: "Faturamento TISS", icon: Receipt }, { to: "/faturamento-sus", label: "Faturamento SUS", icon: Receipt }, { to: "/prestacao-contas", label: "Prestação de contas OS", icon: Receipt }, { to: "/centro-de-custos", label: "Centro de custos", icon: Receipt }] },
 ] as const;
