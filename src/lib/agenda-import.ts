@@ -1,5 +1,6 @@
 import Papa from "papaparse";
 import type { AmbSpecialty, Appointment } from "./ambulatorio";
+import { isAgendaSpecialty } from "./ambulatorio";
 
 export interface AgendaImportItem {
   date: string; // YYYY-MM-DD
@@ -102,6 +103,7 @@ export function validateAgendaItem(item: AgendaImportItem): string[] {
   if (!item.time) errors.push("Horário inválido");
   if (!item.patientName.trim()) errors.push("Paciente ausente");
   if (!item.specialty.trim()) errors.push("Especialidade ausente");
+  if (isAgendaSpecialty(item.specialty)) errors.push("Especialidade contém dados da agenda; selecione somente a especialidade");
   return errors;
 }
 
@@ -183,7 +185,7 @@ export function parseAgendaPdfLines(lines: string[], source: string, fallbackSpe
     const line = rawLine.replace(/\s+/g, " ").trim();
     if (!line) return;
 
-    const specM = /(?:especialidade|agenda|setor|servi[cç]o)\s*:\s*([^|–-]+)/i.exec(line);
+    const specM = /(?:especialidade|servi[cç]o)\s*:\s*([^|–-]+)/i.exec(line);
     if (specM?.[1]) curSpec = specM[1].trim();
     const docM = /(?:m[eé]dico|profissional|recurso|dr\.?a?)\s*:\s*([^|–-]+)/i.exec(line);
     if (docM?.[1]) curDoc = sanitizeProfessional(docM[1]);

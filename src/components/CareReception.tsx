@@ -18,7 +18,7 @@ import { ATTENDANCE_TYPES, type Encounter } from "@/lib/care-flow";
 import { can, canAct, WARDS, type Patient } from "@/lib/hospital-data";
 import { cancelUnattendedEncounter, deleteEncounter, openEncounter, professionalName, rectifyOpenEncounter, registerPatientOnly, reopenBaaForReturn, requestAdmission, savePatientRegistration, switchAmbulatorySector, useStore } from "@/lib/hospital-store";
 import { SPECIAL_CONDITIONS } from "@/lib/special-conditions";
-import { AMBULATORY_MOTIVES, GROUP_LABELS, canEditOrCancelEncounter, isObstetricSpecialty, type AmbulatoryMotive, type CareUnit } from "@/lib/ambulatorio";
+import { AMBULATORY_MOTIVES, GROUP_LABELS, canEditOrCancelEncounter, isAgendaSpecialty, isObstetricSpecialty, type AmbulatoryMotive, type CareUnit } from "@/lib/ambulatorio";
 import { AMBULATORY_PRESETS, buildInfoSusProcedures, type AmbulatoryPreset } from "@/lib/sadt-reception";
 
 const INITIAL_FORM = {
@@ -29,7 +29,8 @@ const INITIAL_FORM = {
 };
 
 export function CareReception({ unit }: { unit?: CareUnit } = {}) {
-  const ambSpecialties = useStore((s) => s.ambSpecialties);
+  const storedSpecialties = useStore((s) => s.ambSpecialties);
+  const ambSpecialties = storedSpecialties.filter((s) => !isAgendaSpecialty(s.name));
   const patients = useStore((s) => s.patients);
   const encounters = useStore((s) => s.encounters);
   const profile = useStore((s) => s.profile); const accessAreas = useStore((s) => s.accessAreas);

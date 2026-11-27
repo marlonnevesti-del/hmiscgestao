@@ -1,8 +1,28 @@
 import { describe, expect, it } from "vitest";
 import { guessColumnMap, markDuplicates, normalizeDate, normalizeTime, parseAgendaPdfLines, parseCsvText, previewAgendaGrid, sanitizeProfessional } from "./agenda-import";
 import { getState, importAppointments, setState } from "./hospital-store";
+import { addSpecialty, DEFAULT_SPECIALTIES } from "./ambulatorio";
 
 describe("importação de agenda do ambulatório", () => {
+  it("rejeita linha de paciente como especialidade sem criar pacientes ou horários", () => {
+    setState(() => ({ profile: "Recepção", accessAreas: null, patients: [], appointments: [], ambSpecialties: DEFAULT_SPECIALTIES }));
+    const item = { date: "2027-01-14", time: "07:30", patientName: "PACIENTE TESTE", cpf: "", cns: "", prontuario: "", specialty: "PACIENTE TESTE 48 AMBULATÓRIO CON SUS/SUS MASTOLOGIA", professional: "PROFISSIONAL TESTE", note: "" };
+    expect(() => importAppointments([item])).toThrow("Especialidade contém dados da agenda");
+    expect(getState().patients).toHaveLength(0);
+    expect(getState().appointments).toHaveLength(0);
+    expect(getState().ambSpecialties).toEqual(DEFAULT_SPECIALTIES);
+  });
+
+  it("bloqueia cadastro de especialidade contaminada mas preserva especialidades legítimas novas", () => {
+    expect(() => addSpecialty(DEFAULT_SPECIALTIES, "PACIENTE TESTE 48 AMBULATÓRIO CON SUS/SUS MASTOLOGIA", "medica")).toThrow("linha de agenda");
+    expect(addSpecialty(DEFAULT_SPECIALTIES, "Banco de Leite", "nao_medica").at(-1)?.name).toBe("Banco de Leite");
+  });
+
+  it("não trata cabeçalho da agenda ou setor como especialidade", () => {
+    const rows = parseAgendaPdfLines(["Especialidade: Mastologia", "Agenda: PACIENTE TESTE 48 AMBULATÓRIO CON SUS/SUS MASTOLOGIA", "Setor: AMBULATÓRIO", "Data: 14/01/2027", "07:30 ANA TESTE"], "salux.pdf");
+    expect(rows[0]?.item.specialty).toBe("Mastologia");
+    expect(rows[0]?.errors).toEqual([]);
+  });
   it("normaliza datas e horários de planilhas", () => {
     expect(normalizeDate("26/11/2026")).toBe("2026-11-26");
     expect(normalizeDate("2026-11-26")).toBe("2026-11-26");

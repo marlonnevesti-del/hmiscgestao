@@ -23,6 +23,8 @@ const NAO_MEDICAS = ['Bucomaxilofacial', 'Fisioterapia', 'Fonoaudiologia', 'Nutr
 const SADT = ['Biópsia de Colo Uterino', 'Cardiotocografia', 'Colposcopia', 'Ecocardiografia Fetal', 'Mamografia Bilateral', 'Histeroscopia Diagnóstica', 'Triagem Punção de Mama', 'USG (Geral, transvaginal, mamas, pélvico, etc)', 'USG Doppler Obstétrico', 'USG Morfológico'];
 
 export const slug = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+/** A specialty is not a patient row from a Salux appointment report. */
+export const isAgendaSpecialty = (name: string) => /sus\s*\/\s*sus|\d+\s+(?:ambulat[oó]rio|banco de leite)|\b(?:data\s*:|\d{2}:\d{2})/i.test(name);
 export const DEFAULT_SPECIALTIES: AmbSpecialty[] = [
   ...MEDICAS.map((name) => ({ id: slug(name), name, group: 'medica' as const, active: true })),
   ...NAO_MEDICAS.map((name) => ({ id: slug(name), name, group: 'nao_medica' as const, active: true })),
@@ -46,6 +48,7 @@ export const canEditOrCancelEncounter = (e: {
 export function addSpecialty(list: AmbSpecialty[], name: string, group: SpecialtyGroup): AmbSpecialty[] {
   const n = name.trim();
   if (!n) throw new Error('Informe o nome da especialidade.');
+  if (isAgendaSpecialty(n)) throw new Error('O campo Especialidade contém uma linha de agenda. Selecione somente a especialidade.');
   if (list.some((s) => slug(s.name) === slug(n))) throw new Error('Especialidade já cadastrada.');
   return [...list, { id: slug(n), name: n, group, active: true }];
 }

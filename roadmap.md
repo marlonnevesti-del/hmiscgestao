@@ -1,4 +1,5 @@
 # Roadmap
+- [x] Retirar 193 linhas de agenda do catálogo de especialidades e corrigir seus vínculos, preservando os 1.182 agendamentos e 1.020 pacientes; proteção de importação/cadastro e seletor validada com 20 testes e seleção/recarga autenticada na Recepção, sem erros.
 - [x] Integrar BAA e evolução ambulatorial/internada do Banco de Leite, impressão e requisições de insumos; 66 testes passaram, leitura autenticada conferida e gravação/relatório A4 de duas páginas exercitados em cópia isolada sem alterar registros hospitalares. Homologação estadual e uso simultâneo em estações reais não verificados.
 - [ ] Configurar pacote dos sete exames de doadoras — aguarda lista oficial do setor (documento não identifica exames).
 - [x] Recolher cabeçalho do PEP ao rolar para baixo e expandir ao subir ou pela seta, mantendo identificação e alergias; verificado no prontuário existente em 1280 e 498 px sem alterar dados clínicos.

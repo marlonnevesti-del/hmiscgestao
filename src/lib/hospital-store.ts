@@ -31,7 +31,7 @@ import { registrationPatch } from "./patient-registration-mapping";
 import { ageYears, emptyRegistration, type PatientRegistration } from "./patient-registration";
 import { doctorKey, validDoctorCns, documentCns, learnDoctor, mergeDoctors, mergeImportedDoctors, resolveDoctor, type Doctor } from "./doctors";
 import { addSpecialty, canEditOrCancelEncounter, DEFAULT_SPECIALTIES, isObstetricSpecialty, type AmbSpecialty, type Appointment, type SadtReport, type SpecialtyGroup } from "./ambulatorio";
-import { normText, type AgendaImportItem } from "./agenda-import";
+import { normText, validateAgendaItem, type AgendaImportItem } from "./agenda-import";
 import { DEFAULT_INSTITUTION, normalizeInstitution, type InstitutionConfig } from "./institution";
 
 interface State { encounters: Encounter[]; beSequence: number; fiaSequence: number; stock: StockMedication[]; warehouse: StockMedication[]; profile: Profile; employeeName: string; patients: Patient[]; queue: QueueItem[]; surgeries: Surgery[]; admins: Record<string, Admin>; rooms: string[]; calls: PanelCall[]; cidGroups: CidGroup[]; cidAreas: CidArea[]; employeeArea: string; accessAreas: string[] | null; removedStock: string[]; movements: Movement[]; requests: SupplyRequest[]; ambSpecialties: AmbSpecialty[]; appointments: Appointment[]; cmeKits: CmeKit[]; cmeCycles: CmeCycle[]; doctors: Doctor[]; milkBank: import('./milk-bank').MilkBank; inventories: InventorySession[]; institution: InstitutionConfig }
@@ -1185,6 +1185,10 @@ export function quickScheduleAppointment(
 export function importAppointments(items: AgendaImportItem[]) {
   requireAction('recepcao');
   if (!items.length) throw new Error('Nenhum agendamento válido para importar.');
+  for (const item of items) {
+    const issues = validateAgendaItem(item);
+    if (issues.length) throw new Error(issues.join('; '));
+  }
   let patients = [...state.patients];
   let ambSpecialties = [...state.ambSpecialties];
   const appointments = [...state.appointments];
@@ -1196,9 +1200,11 @@ export function importAppointments(items: AgendaImportItem[]) {
     let spec = ambSpecialties.find((s) => normText(s.name) === normText(item.specialty));
     if (!spec) {
       ambSpecialties = addSpecialty(ambSpecialties, item.specialty.trim(), 'medica');
-      spec = ambSpecialties[ambSpecialties.length - 1]!;
+      spec = ambSpecialties[ambSpecialties.length - 1];
       createdSpecialties++;
     }
+    if (!spec) continue;
+    const specialtyId = spec.id;
     const cleanCpf = item.cpf.replace(/\D/g, '');
     const cleanCns = item.cns.replace(/\D/g, '');
     const nameKey = normText(item.patientName);
@@ -1237,7 +1243,7 @@ export function importAppointments(items: AgendaImportItem[]) {
       return created;
     })();
     const dup = appointments.some((a) =>
-      a.status !== 'cancelado' && a.date === item.date && a.time === item.time && a.patientId === resolvedPat.id && a.specialtyId === spec!.id
+      a.status !== 'cancelado' && a.date === item.date && a.time === item.time && a.patientId === resolvedPat.id && a.specialtyId === specialtyId
     );
     if (dup) { skippedDuplicates++; continue; }
     appointments.push({
